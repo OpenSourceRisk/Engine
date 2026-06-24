@@ -117,30 +117,27 @@ BOOST_AUTO_TEST_CASE(testTotalLoadComputationWithDST) {
                           false}; // Load factor of 1.0 from 0 to 4am, which includes the DST change at 3am.
     {
         // We on a forward dst day, remove the 2-3am time of it
-        auto adjustedLoad = dstAdjustedTotalLoad(loadFactor, QuantExt::IntradayPowerDSTAdjustment::Forward);
-        BOOST_CHECK_EQUAL(adjustedLoad.startTime, 0);
-        BOOST_CHECK_EQUAL(adjustedLoad.endTime, 4 * 3600);
-        BOOST_CHECK_CLOSE(adjustedLoad.load, 1.0, 1e-12);
+        auto adjustedLoad = daylightSavingAdjustedLoadMWh(loadFactor, QuantExt::IntradayPowerDSTAdjustment::Forward);
         BOOST_CHECK_EQUAL(
-            adjustedLoad.totalMWh,
+            adjustedLoad,
             3.0); // Total MWh should be reduced by the load factor for the 1 hour, since 2-3am doesnt exists
     }
     {
         // No adjutment, all hours count
-        auto adjustedLoad = dstAdjustedTotalLoad(loadFactor, QuantExt::IntradayPowerDSTAdjustment::NoAdjustment);
-        BOOST_CHECK_EQUAL(adjustedLoad.totalMWh, 4.0);
+        auto adjustedLoad = daylightSavingAdjustedLoadMWh(loadFactor, QuantExt::IntradayPowerDSTAdjustment::NoAdjustment);
+        BOOST_CHECK_EQUAL(adjustedLoad, 4.0);
     }
     {
         // We have extra hour and we have a backward day, load should be returned
         LoadFactor loadFactor2{2 * 3600, 2 * 3600 + 1800, 1.0, true};
-        auto adjustedLoad = dstAdjustedTotalLoad(loadFactor2, QuantExt::IntradayPowerDSTAdjustment::Backward);
-        BOOST_CHECK_EQUAL(adjustedLoad.totalMWh, 0.5);
+        auto adjustedLoad = daylightSavingAdjustedLoadMWh(loadFactor2, QuantExt::IntradayPowerDSTAdjustment::Backward);
+        BOOST_CHECK_EQUAL(adjustedLoad, 0.5);
     }
     {
         // Handle case that we have a DST extra hour load, but its not a backward day, so the load should be ignored since it doesnt exist on that day
         LoadFactor loadFactor2{2 * 3600,  2 * 3600 + 1800, 1.0, true};
-        auto adjustedLoad = dstAdjustedTotalLoad(loadFactor2, QuantExt::IntradayPowerDSTAdjustment::NoAdjustment);
-        BOOST_CHECK_EQUAL(adjustedLoad.totalMWh, 0);
+        auto adjustedLoad = daylightSavingAdjustedLoadMWh(loadFactor2, QuantExt::IntradayPowerDSTAdjustment::NoAdjustment);
+        BOOST_CHECK_EQUAL(adjustedLoad, 0);
     }
 }
 
@@ -371,17 +368,13 @@ BOOST_AUTO_TEST_CASE(testIntradayPricesWithShapeTermStructureAndLoadProfile){
 
     for (const auto& [deliveryDate, value] : expectedPrices) {
         const auto& [expectedPrice, expectedMWh] = value;
-        ext::shared_ptr<IntradayPowerLoadProfileWithMWh> adjustedProfile =
-            ext::make_shared<IntradayPowerLoadProfileWithMWh>();
 
-        adjustedProfile->reserve(loadingShape->size());
         auto totalMWh = 0.0;
         for(const auto& loadFactor : *loadingShape) {
-            auto adjustment = dayTimeSavingsAdjustment(deliveryDate, "EU");
-            adjustedProfile->emplace_back(dstAdjustedTotalLoad(loadFactor, adjustment));
-            totalMWh += adjustedProfile->back().totalMWh; // Set the total MWh for the load factor
+            auto mwh = daylightSavingAdjustedLoadMWh(loadFactor, dayTimeSavingsAdjustment(deliveryDate, shapeTs->daylightSavingsLocation()));
+            totalMWh += mwh;
         }
-        auto price = intradayTs->price(deliveryDate, adjustedProfile, true);
+        auto price = intradayTs->price(deliveryDate, loadingShape, true);
         
         BOOST_CHECK_CLOSE(price, 25 * expectedPrice, tol);
         BOOST_CHECK_CLOSE(totalMWh, expectedMWh, tol);

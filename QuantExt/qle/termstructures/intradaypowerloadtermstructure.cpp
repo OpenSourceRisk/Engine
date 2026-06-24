@@ -39,7 +39,7 @@ int overlapWithMissingDSTHour(int start, int end) {
     return std::max(0, std::min(end, QuantExt::THREE_AM_IN_SECONDS) - std::max(start, QuantExt::TWO_AM_IN_SECONDS));
 }
 
-TotalLoadFactor dstAdjustedTotalLoad(const LoadFactor& loadFactor,
+QuantLib::Real daylightSavingAdjustedLoadMWh(const LoadFactor& loadFactor,
                                      QuantExt::IntradayPowerDSTAdjustment dayTimeSavingsAdj) {
     const auto duration = loadFactor.endTime - loadFactor.startTime;
 
@@ -53,7 +53,7 @@ TotalLoadFactor dstAdjustedTotalLoad(const LoadFactor& loadFactor,
                          ? 0.0
                          : loadFactor.load * adjustedDuration / static_cast<QuantLib::Real>(QuantExt::SECONDS_PER_HOUR);
 
-    return {loadFactor.startTime, loadFactor.endTime, loadFactor.load, mwh, loadFactor.isDSTextraHour};
+    return mwh;
 }
 
 QuantLib::ext::shared_ptr<IntradayPowerLoadProfile>

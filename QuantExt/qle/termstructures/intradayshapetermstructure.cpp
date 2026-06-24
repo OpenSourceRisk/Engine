@@ -142,7 +142,7 @@ QuantLib::Real IntradayShapeTermstructure::intradayShapeFactor(const QuantLib::D
 
 QuantLib::Real
 IntradayShapeTermstructure::loadWeightedIntradayShapeFactor(const QuantLib::Date& d,
-                                                            const IntradayPowerLoadProfileWithMWh& load) const {
+                                                            const IntradayPowerLoadProfile& load) const {
     if (load.empty()) {
         return 0.0;
     }
@@ -151,8 +151,12 @@ IntradayShapeTermstructure::loadWeightedIntradayShapeFactor(const QuantLib::Date
     const ShapeFactors& dstShapeFactor = hasShapeFactorsDST(d) ? shapeFactorsDST(d) : ShapeFactors();
     auto amount = 0.0;
     auto totalMWh = 0.0;
-    for (const auto& [start, end, load, mwh, isDSTextraHour] : load) {
-        amount += mwh * calcShapeFactor(d, start, end, isDSTextraHour, shapeFactor, dstShapeFactor, dayTimeSavingsAdj);
+    for (const auto& loadFactor : load) {
+        auto mwh = daylightSavingAdjustedLoadMWh(loadFactor, dayTimeSavingsAdj);
+        if (mwh <= 0.0) {
+            continue;
+        }
+        amount += mwh * calcShapeFactor(d, loadFactor.startTime, loadFactor.endTime, loadFactor.isDSTextraHour, shapeFactor, dstShapeFactor, dayTimeSavingsAdj);
         totalMWh += mwh;
     }
     return (totalMWh > 0.0) ? amount / totalMWh : 0.0;

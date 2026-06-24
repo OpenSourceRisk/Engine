@@ -82,7 +82,7 @@ public:
     QuantLib::Real intradayShapeFactor(const QuantLib::Date& d, int startTime, int endTime, bool isDSTHour) const;
 
     QuantLib::Real loadWeightedIntradayShapeFactor(const QuantLib::Date& d,
-                                                   const IntradayPowerLoadProfileWithMWh& load) const;
+                                                   const IntradayPowerLoadProfile& load) const;
 
     const std::string& daylightSavingsLocation() const { return daylightSavingsLocation_; }
 

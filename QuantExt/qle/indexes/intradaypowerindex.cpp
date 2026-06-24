@@ -43,7 +43,7 @@ IntradayPowerIndex::IntradayPowerIndex(const std::string& underlyingName, const 
                                        const Handle<QuantExt::IntradayPowerPriceTermStructure>& priceCurve,
                                        const QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadProfile>& loadProfile)
     : underlyingName_(underlyingName), deliveryDate_(deliveryDate), fixingCalendar_(fixingCalendar),
-      intradayCurve_(priceCurve) {
+      intradayCurve_(priceCurve), loadProfile_(loadProfile) {
     std::ostringstream o;
     o << "POWER-" << underlyingName << "-" << QuantLib::io::iso_date(deliveryDate_);
     name_ = o.str();
@@ -51,16 +51,13 @@ IntradayPowerIndex::IntradayPowerIndex(const std::string& underlyingName, const 
     registerWith(Settings::instance().evaluationDate());
     registerWith(notifier());
 
-    if (loadProfile != nullptr) {
-        loadProfile_ = QuantLib::ext::make_shared<IntradayPowerLoadProfileWithMWh>();
-        loadProfile_->reserve(loadProfile->size());
+    if (loadProfile_ != nullptr) {
         auto dstAdjustment =
             intradayCurve_.empty()
                 ? QuantExt::IntradayPowerDSTAdjustment::NoAdjustment
                 : QuantExt::dayTimeSavingsAdjustment(deliveryDate_, intradayCurve_->intradayShape()->daylightSavingsLocation());
-        for (const auto& load : *loadProfile) {
-            loadProfile_->push_back(dstAdjustedTotalLoad(load, dstAdjustment));
-            totalLoad_ += loadProfile_->back().totalMWh;
+        for (const auto& load : *loadProfile_) {
+            totalLoad_ += daylightSavingAdjustedLoadMWh(load, dstAdjustment);
             std::string name = bucketName(name_, load.startTime, load.endTime, load.isDSTextraHour);
             QL_DEPRECATED_DISABLE_WARNING
             registerWith(IndexManager::instance().notifier(name));
@@ -159,10 +156,14 @@ Real IntradayPowerIndex::pastFixing(const Date& fixingDate) const {
     // Assume right now, that the prices can be observed at the same granularity as the load profile,
     // future improvement, define a granularity and use it to fetch the price for each time bucket
     auto amount = 0.0;
-    for (const auto& [start, end, load, mwh, isDstHour] : *loadProfile_) {
-        if (load == 0.0)
-            continue;
-        amount += mwh * pastBucketFixing(fixingDate, start, end, isDstHour, enforceTodaysFixing);
+    auto dstAdjustment =
+        intradayCurve_.empty()
+            ? QuantExt::IntradayPowerDSTAdjustment::NoAdjustment
+            : QuantExt::dayTimeSavingsAdjustment(deliveryDate_, intradayCurve_->intradayShape()->daylightSavingsLocation());
+    for (const auto& load : *loadProfile_) {
+        auto mwh = daylightSavingAdjustedLoadMWh(load, dstAdjustment);
+        if (mwh > 0.0)
+            amount += mwh * pastBucketFixing(fixingDate, load.startTime, load.endTime, load.isDSTextraHour, enforceTodaysFixing);
     }
     return (totalLoad_ > 0.0) ? amount / totalLoad_ : 0.0;
 }
@@ -192,9 +193,9 @@ Real IntradayPowerIndex::fixing(const Date& fixingDate, bool forecastTodaysFixin
 const std::vector<std::string> IntradayPowerIndex::intraDayIndexNames() const {
     std::set<std::string> names;
     if (loadProfile_ != nullptr) {
-        for (const auto& [start, end, load, mwh, isDstHour] : *loadProfile_) {
-            if (load > 0.0)
-                names.insert(bucketName(name_, start, end, isDstHour));
+        for (const auto& load : *loadProfile_) {
+            if (load.load > 0.0)
+                names.insert(bucketName(name_, load.startTime, load.endTime, load.isDSTextraHour));
         }
     } else {
         names.insert(name_);

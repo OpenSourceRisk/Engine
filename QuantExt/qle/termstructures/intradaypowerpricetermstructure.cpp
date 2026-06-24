@@ -53,7 +53,7 @@ QuantLib::Real IntradayPowerPriceTermStructure::price(const QuantLib::Date& d, b
 
 QuantLib::Real
 IntradayPowerPriceTermStructure::price(const QuantLib::Date& d,
-                                       const QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadProfileWithMWh>& load,
+                                       const QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadProfile>& load,
                                        bool extrapolate) const {
 
     // No load given assume full day constant load
@@ -69,11 +69,9 @@ IntradayPowerPriceTermStructure::price(const QuantLib::Date& d,
 QuantLib::Real IntradayPowerPriceTermStructure::price(const QuantLib::Date& d, int deliveryStartTime,
                                                       int deliveryEndTime, bool isDSTextraHour,
                                                       bool extrapolate) const {
-    std::vector<TotalLoadFactor> load;
-    auto dstAdjustment = dayTimeSavingsAdjustment(d, shape_->daylightSavingsLocation());
-    load.emplace_back(
-        dstAdjustedTotalLoad(LoadFactor{deliveryStartTime, deliveryEndTime, 1.0, isDSTextraHour}, dstAdjustment));
-    return price(d, QuantLib::ext::make_shared<IntradayPowerLoadProfileWithMWh>(load), extrapolate);
+    std::vector<LoadFactor> load;
+    load.emplace_back(LoadFactor{deliveryStartTime, deliveryEndTime, 1.0, isDSTextraHour});
+    return price(d, QuantLib::ext::make_shared<IntradayPowerLoadProfile>(load), extrapolate);
 }
 
 //@}

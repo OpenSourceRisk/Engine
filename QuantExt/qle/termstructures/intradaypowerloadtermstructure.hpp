@@ -45,27 +45,9 @@ struct LoadFactor {
     }
 };
 
-struct TotalLoadFactor {
-    const int startTime;
-    const int endTime;
-    const QuantLib::Real load;
-    const QuantLib::Real totalMWh;
-    const bool isDSTextraHour;
-
-    TotalLoadFactor(int startTime, int endTime, QuantLib::Real load, QuantLib::Real totalMWh, bool isDSTextraHour)
-        : startTime(startTime), endTime(endTime), load(load), totalMWh(totalMWh), isDSTextraHour(isDSTextraHour) {
-        QL_REQUIRE(startTime >= 0 && startTime < QuantExt::SECONDS_PER_DAY, "startTime must be in [0, 86400)");
-        QL_REQUIRE(endTime > 0 && endTime <= QuantExt::SECONDS_PER_DAY, "endTime must be in (0, 86400]");
-        QL_REQUIRE(endTime > startTime, "endTime must be greater than startTime");
-        QL_REQUIRE(load >= 0, "load must be non-negative");
-        QL_REQUIRE(totalMWh >= 0, "totalMWh must be non-negative");
-    }
-};
-
 using IntradayPowerLoadProfile = std::vector<LoadFactor>;
-using IntradayPowerLoadProfileWithMWh = std::vector<TotalLoadFactor>;
 
-TotalLoadFactor dstAdjustedTotalLoad(const LoadFactor& loadFactor, QuantExt::IntradayPowerDSTAdjustment dayTimeSavingsAdj);
+QuantLib::Real daylightSavingAdjustedLoadMWh(const LoadFactor& loadFactor, QuantExt::IntradayPowerDSTAdjustment dayTimeSavingsAdj);
 class IntradayPowerLoadTermStructure {
 public:
     virtual ~IntradayPowerLoadTermStructure() = default;

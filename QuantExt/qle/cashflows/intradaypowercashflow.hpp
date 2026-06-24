@@ -71,6 +71,8 @@ public:
     QuantLib::Real periodQuantity() const { return periodQuantity_; }
     QuantLib::Real fixing() const;
 
+    QuantLib::Date lastPricingDate() const { return indices_.empty() ? QuantLib::Date() : indices_.back().first; }
+
     QuantLib::Date date() const override { return paymentDate_; }
 
     //! \name CashFlow interface

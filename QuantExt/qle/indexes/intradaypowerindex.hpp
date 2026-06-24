@@ -60,7 +60,7 @@ public:
 
     const Handle<QuantExt::IntradayPowerPriceTermStructure>& priceCurve() const { return intradayCurve_; }
 
-    const QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadProfileWithMWh>& loadProfile() const { return loadProfile_; }
+    const QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadProfile>& loadProfile() const { return loadProfile_; }
 
     const QuantLib::Date& deliveryDate() const { return deliveryDate_; }
 
@@ -88,7 +88,7 @@ private:
 
     Real pastIntradayFixing(const Date& fixingDate, int start, int end, bool isDstHour) const;
     Handle<QuantExt::IntradayPowerPriceTermStructure> intradayCurve_;
-    QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadProfileWithMWh> loadProfile_;
+    QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadProfile> loadProfile_;
     QuantLib::Real totalLoad_ = 0.0;
 };
 

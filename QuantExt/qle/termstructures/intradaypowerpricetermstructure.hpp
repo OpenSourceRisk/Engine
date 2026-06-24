@@ -48,7 +48,7 @@ public:
     QuantLib::Real price(const QuantLib::Date& d, bool extrapolate = false) const override;
     QuantLib::Real price(const QuantLib::Date& d, int deliveryStartTime, int deliveryEndTime, bool isDSTextraHour,
                          bool extrapolate = false) const;
-    QuantLib::Real price(const QuantLib::Date& d, const QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadProfileWithMWh>& load,
+    QuantLib::Real price(const QuantLib::Date& d, const QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadProfile>& load,
                          bool extrapolate = false) const;    
     //@}
 
