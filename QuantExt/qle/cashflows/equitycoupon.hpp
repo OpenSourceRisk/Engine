@@ -33,6 +33,8 @@
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
 
+#include <ql/any.hpp>
+
 namespace QuantExt {
 using namespace QuantLib;
 
@@ -131,6 +133,7 @@ public:
     //@}
     void setPricer(const QuantLib::ext::shared_ptr<EquityCouponPricer>&);
     QuantLib::ext::shared_ptr<EquityCouponPricer> pricer() const;
+    std::map<std::string, QuantLib::ext::any>& additionalResults() const { return additionalResults_; }
 
 protected:
     QuantLib::ext::shared_ptr<EquityCouponPricer> pricer_;
@@ -149,6 +152,7 @@ protected:
     QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
     Real legInitialNotional_;
     Date legFixingDate_;
+    mutable std::map<std::string, ext::any> additionalResults_;
 };
 
 // inline definitions
