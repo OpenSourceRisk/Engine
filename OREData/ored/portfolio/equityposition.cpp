@@ -166,12 +166,14 @@ void EquityPositionInstrumentWrapper::fetchResults(const PricingEngine::results*
 void EquityPositionInstrumentWrapperEngine::calculate() const {
     Real result = 0.0;
     for (Size i = 0; i < arguments_.equities_.size(); ++i) {
-        Real tmp = arguments_.quantity_ * arguments_.equities_[i]->equitySpot()->value();
+        Real spot = arguments_.equities_[i]->equitySpot()->value();
+        Real tmp = arguments_.quantity_ * spot;
         if (!arguments_.fxConversion_[i].empty()) {
             tmp *= arguments_.fxConversion_[i]->value();
         }
         result += tmp * arguments_.weights_[i];
         results_.additionalResults["Name_" + std::to_string(i)] = arguments_.equities_[i]->name();
+        results_.additionalResults["Spot_" + std::to_string(i)] = spot;
     }
     if (!arguments_.npvCcyConversion_.empty()) {
         result *= arguments_.npvCcyConversion_->value();

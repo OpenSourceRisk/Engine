@@ -90,6 +90,13 @@ void HistoricalSimulationVarVariables::loadVariablesImpl(const QuantLib::ext::sh
     inputs->loadParameter<bool>(riskClassBreakdown_, "historicalSimulationVar", "riskClassBreakdown", false, parseBool);
     inputs->loadParameter<bool>(includeTheta_, "historicalSimulationVar", "includeTheta", false, parseBool);
     inputs->loadParameter<bool>(includePeriodCashflow_, "historicalSimulationVar", "includePeriodCashflow", false, parseBool);
+    sensitivityStream_ = inputs->loadSensitivityStream("historicalSimulationVar", "sensitivityInputFile");
+
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiScenarioData;
+    if (inputs->loadParameterXML<SensitivityScenarioData>(
+            sensiScenarioData, "historicalSimulationVar", "sensitivityConfigFile")) {
+        sensiScenarioData_ = sensiScenarioData;
+    }
 }
 
 /***********************************************************************************
@@ -228,6 +235,14 @@ void HistoricalSimulationVarAnalyticImpl::setUpConfigurations() {
     if(riskFactorBreakdown_){
         allowPartialScenarios_ = true;
     }
+    sensiBased_ = varVars->sensitivityStream_ && varVars->sensiScenarioData_;
+    if (varVars->sensitivityStream_ && !varVars->sensiScenarioData_)
+        WLOG("HISTSIM_VAR: sensitivityInputFile provided without sensitivityConfigFile; falling back to full revaluation");
+    if (!varVars->sensitivityStream_ && varVars->sensiScenarioData_)
+        WLOG("HISTSIM_VAR: sensitivityConfigFile provided without sensitivityInputFile; falling back to full revaluation");
+    if (sensiBased_) {
+        analytic()->configurations().sensiScenarioData = varVars->sensiScenarioData_;
+    }
 }
 
 void HistoricalSimulationVarAnalyticImpl::setVarReport(
@@ -266,26 +281,43 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
     simMarket->scenarioGenerator() = scenarios;
     scenarios->baseScenario() = simMarket->baseScenario();
 
-    std::unique_ptr<MarketRiskReport::FullRevalArgs> fullRevalArgs = std::make_unique<MarketRiskReport::FullRevalArgs>(
-        simMarket, inputs_->pricingEngine(), inputs_->refDataManager(), inputs_->iborFallbackConfig());
+    if (sensiBased_) {
+        LOG("HISTSIM_VAR: sensi-based historical simulation VaR");
+        QuantLib::ext::shared_ptr<ScenarioShiftCalculator> shiftCalculator =
+            QuantLib::ext::make_shared<ScenarioShiftCalculator>(varVars->sensiScenarioData_,
+                                                                analytic()->configurations().simMarketParams);
 
-    std::unique_ptr<MarketRiskReport::MultiThreadArgs> multiThreadsArgs;
-    if(inputs_->nThreads()>1)
-        multiThreadsArgs = std::make_unique<MarketRiskReport::MultiThreadArgs>(inputs_->nThreads(), inputs_->asof(), analytic()->loader(), 
-                                                                                analytic()->configurations().curveConfig, analytic()->configurations().todaysMarketParams,
-                                                                                inputs_->marketConfig("simulation"), analytic()->configurations().simMarketParams, "histstimvar-simulation");
+        std::unique_ptr<MarketRiskReport::SensiRunArgs> sensiArgs =
+            std::make_unique<MarketRiskReport::SensiRunArgs>(varVars->sensitivityStream_, shiftCalculator, 0.01);
 
-    varReport_ = ext::make_shared<HistoricalSimulationVarReport>(
-        inputs_->baseCurrency(), analytic()->portfolio(), varVars->portfolioFilter_, varVars->varQuantiles_,
-        benchmarkVarPeriod, scenarios, std::move(fullRevalArgs), std::move(multiThreadsArgs), varVars->varBreakDown_,
-        varVars->includeExpectedShortfall_, varVars->tradePnL_, riskFactorBreakdown_,
-        inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades(), riskClassBreakdown_,
-        varVars->includeTheta_);
+        varReport_ = ext::make_shared<HistoricalSimulationVarReport>(
+            inputs_->baseCurrency(), analytic()->portfolio(), varVars->portfolioFilter_, varVars->varQuantiles_,
+            benchmarkVarPeriod, scenarios, std::move(sensiArgs), varVars->varBreakDown_,
+            varVars->includeExpectedShortfall_, varVars->tradePnL_, riskFactorBreakdown_,
+            inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades(), riskClassBreakdown_);
+    } else {
+        std::unique_ptr<MarketRiskReport::FullRevalArgs> fullRevalArgs =
+            std::make_unique<MarketRiskReport::FullRevalArgs>(
+                simMarket, inputs_->pricingEngine(), inputs_->refDataManager(), inputs_->iborFallbackConfig());
 
-    if (varVars->includeTheta_) {
-        auto thetaMap = computeTheta(loader);
-        auto histSimReport = ext::dynamic_pointer_cast<HistoricalSimulationVarReport>(varReport_);
-        histSimReport->setThetaPerTrade(thetaMap);
+        std::unique_ptr<MarketRiskReport::MultiThreadArgs> multiThreadsArgs;
+        if(inputs_->nThreads()>1)
+            multiThreadsArgs = std::make_unique<MarketRiskReport::MultiThreadArgs>(inputs_->nThreads(), inputs_->asof(), analytic()->loader(),
+                                                                                    analytic()->configurations().curveConfig, analytic()->configurations().todaysMarketParams,
+                                                                                    inputs_->marketConfig("simulation"), analytic()->configurations().simMarketParams, "histstimvar-simulation");
+
+        varReport_ = ext::make_shared<HistoricalSimulationVarReport>(
+            inputs_->baseCurrency(), analytic()->portfolio(), varVars->portfolioFilter_, varVars->varQuantiles_,
+            benchmarkVarPeriod, scenarios, std::move(fullRevalArgs), std::move(multiThreadsArgs), varVars->varBreakDown_,
+            varVars->includeExpectedShortfall_, varVars->tradePnL_, riskFactorBreakdown_,
+            inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades(), riskClassBreakdown_,
+            varVars->includeTheta_);
+
+        if (varVars->includeTheta_) {
+            auto thetaMap = computeTheta(loader);
+            auto histSimReport = ext::dynamic_pointer_cast<HistoricalSimulationVarReport>(varReport_);
+            histSimReport->setThetaPerTrade(thetaMap);
+        }
     }
 }
 

@@ -72,8 +72,8 @@ namespace data {
 Convention::Convention(const string& id, Type type) : type_(type), id_(id) {}
 
 const QuantLib::ext::shared_ptr<ore::data::Conventions>& InstrumentConventions::conventions(QuantLib::Date d) const {
-    QL_REQUIRE(!conventions_.empty(), "InstrumentConventions: No conventions provided.");
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    QL_REQUIRE(!conventions_.empty(), "InstrumentConventions: No conventions provided.");
     Date dt = d == Date() ? Settings::instance().evaluationDate() : d;
     auto it = conventions_.lower_bound(dt);
     if(it != conventions_.end() && it->first == dt)
