@@ -47,6 +47,7 @@
 #include <ql/indexes/iborindex.hpp>
 #include <ql/time/schedule.hpp>
 #include <ql/shared_ptr.hpp>
+#include <ql/math/rounding.hpp>
 
 namespace QuantExt {
 
@@ -150,7 +151,8 @@ protected:
         const QuantLib::Date& rateComputationStartDate = QuantLib::Date(),
         const QuantLib::Date& rateComputationEndDate = QuantLib::Date(),
         bool observationShift = true,
-        bool staleDatesCheck = true);
+        bool staleDatesCheck = true,
+        const QuantLib::ext::optional<QuantLib::Rounding>& rounding = QuantLib::ext::nullopt);
 
 public:
     //! \name Inspectors
@@ -257,6 +259,8 @@ private:
     // Cached adjusted evaluation date i.e. first business day preceding the evaluation date for which the 
     // current date schedules were calculated.
     mutable QuantLib::Date cachedEvalDate_;
+
+    QuantLib::ext::optional<QuantLib::Rounding> rounding_;
 
     // Set value of telescopicDates_ according to whether telescoping can be used or not.
     void setTelescopicDates();

@@ -228,7 +228,8 @@ public:
                     const string& backStubShortIndex = std::string(), const string& backStubLongIndex = std::string(),
                     const string& backStubRoundingType = std::string(), const string& backStubRoundingPrecision = std::string(),
                     bool stubUseOriginalCurve = false,
-                    QuantLib::ext::optional<bool> observationShift = QuantLib::ext::nullopt)
+                    QuantLib::ext::optional<bool> observationShift = QuantLib::ext::nullopt,
+                    const string& roundingPrecision = std::string())
 
         : LegAdditionalData(LegType::Floating), index_(ore::data::internalIndexName(index)),
           fixingDays_(fixingDays), lookback_(lookback), rateCutoff_(rateCutoff), isInArrears_(isInArrears),
@@ -241,7 +242,7 @@ public:
           frontStubRoundingType_(frontStubRoundingType), frontStubRoundingPrecision_(frontStubRoundingPrecision),
           backStubShortIndex_(backStubShortIndex), backStubLongIndex_(backStubLongIndex),
           backStubRoundingType_(backStubRoundingType), backStubRoundingPrecision_(backStubRoundingPrecision),
-          stubUseOriginalCurve_(stubUseOriginalCurve), observationShift_(observationShift) {
+          stubUseOriginalCurve_(stubUseOriginalCurve), observationShift_(observationShift), roundingPrecision_(roundingPrecision) {
         indices_.insert(index_);
     }
 
@@ -282,6 +283,7 @@ public:
     const string& backStubRoundingPrecision() const { return backStubRoundingPrecision_; }
     bool stubUseOriginalCurve() const { return stubUseOriginalCurve_; }
     QuantLib::ext::optional<bool> observationShift() const { return observationShift_; }
+    const string& roundingPrecision() const { return roundingPrecision_; }
     //@}
 
     //! \name Modifiers
@@ -337,6 +339,7 @@ private:
     string backStubRoundingPrecision_;
     bool stubUseOriginalCurve_ = false;
     QuantLib::ext::optional<bool> observationShift_;
+    string roundingPrecision_;
 };
 
 //! Serializable Range Accrual Leg Data
