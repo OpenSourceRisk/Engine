@@ -294,8 +294,7 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
             inputs_->baseCurrency(), analytic()->portfolio(), varVars->portfolioFilter_, varVars->varQuantiles_,
             benchmarkVarPeriod, scenarios, std::move(sensiArgs), varVars->varBreakDown_,
             varVars->includeExpectedShortfall_, varVars->tradePnL_, riskFactorBreakdown_,
-            inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades(), riskClassBreakdown_,
-            varVars->includeTheta_);
+            inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades(), riskClassBreakdown_);
     } else {
         std::unique_ptr<MarketRiskReport::FullRevalArgs> fullRevalArgs =
             std::make_unique<MarketRiskReport::FullRevalArgs>(
