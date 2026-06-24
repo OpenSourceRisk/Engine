@@ -216,10 +216,10 @@ struct Lgm5fTestDataV {
         c[4][0] = 0.3; c[4][1] = -0.1; c[4][2] = 0.1; c[4][3] = 0.3;  c[4][4] = 1.0;  // FX GBP-EUR
         // clang-format on
 
-        ccLgmExact = QuantLib::ext::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
-                                                         IrModel::Measure::LGM, CrossAssetModel::Discretization::Exact);
-        ccLgmEuler = QuantLib::ext::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
-                                                         IrModel::Measure::LGM, CrossAssetModel::Discretization::Euler);
+        ccLgmExact = Handle<CrossAssetModel>(QuantLib::ext::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
+                                                         IrModel::Measure::LGM, CrossAssetModel::Discretization::Exact));
+        ccLgmEuler = Handle<CrossAssetModel>(QuantLib::ext::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
+                                                         IrModel::Measure::LGM, CrossAssetModel::Discretization::Euler));
     }
 
     SavedSettings backup;
@@ -235,7 +235,7 @@ struct Lgm5fTestDataV {
     QuantLib::ext::shared_ptr<FxBsParametrization> fxUsd_p, fxGbp_p;
     std::vector<QuantLib::ext::shared_ptr<Parametrization> > singleModels;
     Matrix c;
-    QuantLib::ext::shared_ptr<CrossAssetModel> ccLgmExact, ccLgmEuler;
+    QuantLib::Handle<CrossAssetModel> ccLgmExact, ccLgmEuler;
 }; // LGM5FTestData
 
 } // anonymous namespace
@@ -270,8 +270,8 @@ BOOST_AUTO_TEST_CASE(testLgmCalibrationVegaBump) {
             Actual360(), d2.eurYts, BlackCalibrationHelper::RelativePriceError, 0.04, 1.0, Normal)));
     }
 
-    QuantLib::ext::shared_ptr<CrossAssetModel> ccLgmExact1=d1.ccLgmExact;
-    QuantLib::ext::shared_ptr<CrossAssetModel> ccLgmExact2=d2.ccLgmExact;
+    QuantLib::Handle<CrossAssetModel> ccLgmExact1(d1.ccLgmExact);
+    QuantLib::Handle<CrossAssetModel> ccLgmExact2(d2.ccLgmExact);
 
     QuantLib::ext::shared_ptr<PricingEngine> eurSwEng = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(ccLgmExact1, 0);
     QuantLib::ext::shared_ptr<PricingEngine> eurSwEng2 = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(ccLgmExact2, 0);
@@ -326,8 +326,9 @@ BOOST_AUTO_TEST_CASE(testIterativeCalibrationParameter) {
             Actual360(), d1.eurYts, BlackCalibrationHelper::RelativePriceError, 0.02, 1.0, Normal)));
     }
 
-    QuantLib::ext::shared_ptr<CrossAssetModel> ccLgmExact1 = d1.ccLgmExact;
-    QuantLib::ext::shared_ptr<PricingEngine> eurSwEng = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(ccLgmExact1, 0);
+    QuantLib::Handle<CrossAssetModel> ccLgmExact1(d1.ccLgmExact);
+    QuantLib::ext::shared_ptr<PricingEngine> eurSwEng =
+        QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(ccLgmExact1, 0);
 
     // assign engines to calibration instruments
     for (Size i = 0; i < basketEur1.size(); ++i) {

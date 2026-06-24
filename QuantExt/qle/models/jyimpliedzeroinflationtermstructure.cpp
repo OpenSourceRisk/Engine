@@ -28,7 +28,7 @@ using QuantLib::Time;
 namespace QuantExt {
 
 JyImpliedZeroInflationTermStructure::JyImpliedZeroInflationTermStructure(
-    const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index,
+    const QuantLib::Handle<CrossAssetModel>& model, Size index,
     const std::optional<QuantLib::DayCounter>& simulationDayCounter)
     : ZeroInflationModelTermStructure(model, index, simulationDayCounter) {}
 
@@ -54,7 +54,7 @@ std::pair<QuantLib::Real, QuantLib::Real> JyImpliedZeroInflationTermStructure::i
     // at time t, we effectivly observe the inflation at time t - simulationLag, so we need to add the simulation lag to
     // get the correct T.
     auto T = relativeTime_ + t + simulationLag();
-    auto ratio = inflationGrowth(model_, index_, S, T, state_[2], state_[0], simulationDayCounter_);
+    auto ratio = inflationGrowth(*model_, index_, S, T, state_[2], state_[0], simulationDayCounter_);
     return std::make_pair(std::exp(state_[1]), ratio);
 }
 

@@ -687,7 +687,7 @@ void CrossAssetModelBuilder::buildModel() const {
                 continue;
             }
             QuantLib::ext::shared_ptr<QuantExt::AnalyticCcLgmFxOptionEngine> engine =
-                QuantLib::ext::make_shared<QuantExt::AnalyticCcLgmFxOptionEngine>(*model_, i);
+                QuantLib::ext::make_shared<QuantExt::AnalyticCcLgmFxOptionEngine>(model_, i);
             engine->cache(true);
             for (Size j = 0; j < fxOptionBaskets_[i].size(); j++)
                 fxOptionBaskets_[i][j]->setPricingEngine(engine);
@@ -784,7 +784,7 @@ void CrossAssetModelBuilder::buildModel() const {
         Currency eqCcy = eqParametrizations[i]->currency();
         Size eqCcyIdx = model_->ccyIndex(eqCcy);
         QuantLib::ext::shared_ptr<QuantExt::AnalyticXAssetLgmEquityOptionEngine> engine =
-            QuantLib::ext::make_shared<QuantExt::AnalyticXAssetLgmEquityOptionEngine>(*model_, i, eqCcyIdx);
+            QuantLib::ext::make_shared<QuantExt::AnalyticXAssetLgmEquityOptionEngine>(model_, i, eqCcyIdx);
         for (Size j = 0; j < eqOptionBaskets_[i].size(); j++)
             eqOptionBaskets_[i][j]->setPricingEngine(engine);
 
@@ -987,7 +987,7 @@ void CrossAssetModelBuilder::calibrateInflation(
     Handle<ZeroInflationIndex> zInfIndex =
         market_.value()->zeroInflationIndex(model_->infdk(modelIdx)->name(), configurationInfCalibration_);
     Real baseCPI = dontCalibrate_ ? 100. : zInfIndex->fixing(zInfIndex->zeroInflationTermStructure()->baseDate());
-    auto engine = QuantLib::ext::make_shared<QuantExt::AnalyticDkCpiCapFloorEngine>(*model_, modelIdx, baseCPI);
+    auto engine = QuantLib::ext::make_shared<QuantExt::AnalyticDkCpiCapFloorEngine>(model_, modelIdx, baseCPI);
     for (Size j = 0; j < cb.size(); j++)
         cb[j]->setPricingEngine(engine);
 

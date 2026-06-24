@@ -460,7 +460,7 @@ void XvaAnalyticImpl::feedCorrelationToCAM(const std::map<std::pair<RiskFactorKe
 }
 
 void XvaAnalyticImpl::reset() {
-    model_.reset();
+    model_ = Handle<CrossAssetModel>();
     scenarioGenerator_.reset();
     scenarioData_.reset();
     dimCalculator_.reset();
@@ -649,7 +649,7 @@ void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationErr
                                                                        grid_->timeGrid());
         scenarioGenerator_ = slg;
     } else {
-        if (!model_)
+        if (model_.empty())
             buildCrossAssetModel(continueOnCalibrationError, allowModelFallbacks);
         ScenarioGeneratorBuilder sgb(analytic()->configurations().scenarioGeneratorData);
         string config = inputs_->marketConfig("simulation");
@@ -686,7 +686,7 @@ void XvaAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError
                                         false, continueOnCalibrationError, "", "xva cam building", false,
                                         allowModelFallbacks);
 
-    model_ = *modelBuilder.model();
+    model_ = modelBuilder.model();
 }
 
 void XvaAnalyticImpl::initCubeDepth() {
@@ -971,7 +971,7 @@ void XvaAnalyticImpl::buildClassicCube(const QuantLib::ext::shared_ptr<Portfolio
 }
 
 QuantLib::ext::shared_ptr<EngineFactory>
-XvaAnalyticImpl::amcEngineFactory(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
+XvaAnalyticImpl::amcEngineFactory(const QuantLib::Handle<QuantExt::CrossAssetModel>& cam,
                                   const std::vector<Date>& simDates, const std::vector<Date>& stickyCloseOutDates) {
 
     auto xvaVars = ext::dynamic_pointer_cast<XvaVariables>(inputVariables_);
@@ -987,7 +987,7 @@ XvaAnalyticImpl::amcEngineFactory(const QuantLib::ext::shared_ptr<QuantExt::Cros
     ext::shared_ptr<ore::data::Market> market = analytic()->offsetScenario() == nullptr ? analytic()->market() : offsetSimMarket_;
     auto factory = QuantLib::ext::make_shared<EngineFactory>(
         edCopy, market, configurations, inputs_->refDataManager(), inputs_->iborFallbackConfig(),
-        EngineBuilderFactory::instance().generateAmcEngineBuilders(cam, simDates, stickyCloseOutDates));
+        EngineBuilderFactory::instance().generateAmcEngineBuilders(*cam, simDates, stickyCloseOutDates));
     return factory;
 }
 
@@ -1119,7 +1119,7 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun, bool continueOnCalibrationError,
                 !analytic()->offsetScenario() ? analytic()->market() : offsetSimMarket_;
 
             AMCValuationEngine amcEngine(
-                model_, analytic()->configurations().scenarioGeneratorData, market,
+                *model_, analytic()->configurations().scenarioGeneratorData, market,
                 analytic()->configurations().simMarketParams->additionalScenarioDataIndices(),
                 analytic()->configurations().simMarketParams->additionalScenarioDataCcys(),
                 analytic()->configurations().simMarketParams->additionalScenarioDataNumberOfCreditStates(),
@@ -1282,7 +1282,7 @@ void XvaAnalyticImpl::runPostProcessor() {
             else
                 ddvOrder = 3;
             QuantLib::ext::shared_ptr<DimHelper> dimHelper = QuantLib::ext::make_shared<DimHelper>(
-                model_, nettingSetCube_, sensitivityStorageManager_, xvaVars->curveSensiGrid_, dimHorizonCalendarDays);
+                *model_, nettingSetCube_, sensitivityStorageManager_, xvaVars->curveSensiGrid_, dimHorizonCalendarDays);
             dimCalculator_ = QuantLib::ext::make_shared<DynamicDeltaVaRCalculator>(
                 analytic()->portfolio(), cube_, cubeInterpreter_, scenarioData_, dimQuantile,
                 dimHorizonCalendarDays, dimHelper, ddvOrder, currentIM, dimScaling);

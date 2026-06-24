@@ -287,7 +287,7 @@ void populateAsd(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& mod
         }
         Size ccyIndex = model->ccyIndex(tmp->currency());
         asdIndexCurve.push_back(QuantLib::ext::make_shared<LgmImpliedYtsFwdFwdCorrected>(
-            model->lgm(ccyIndex), tmp->forwardingTermStructure()));
+            Handle<LGM>(model->lgm(ccyIndex)), tmp->forwardingTermStructure()));
         asdIndex.push_back(tmp->clone(Handle<YieldTermStructure>(asdIndexCurve.back())));
         asdIndexIndex.push_back(ccyIndex);
         asdIndexName.push_back(i);

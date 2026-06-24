@@ -330,7 +330,7 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
     QuantLib::ext::shared_ptr<DateGrid> grid = QuantLib::ext::make_shared<DateGrid>(tenorGrid);
 
     // Model
-    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
+    QuantLib::Handle<QuantExt::CrossAssetModel> model(d.ccLgm);
 
     // State process
     QuantLib::ext::shared_ptr<StochasticProcess> stateProcess = model->stateProcess();
@@ -488,7 +488,7 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket) {
     QuantLib::ext::shared_ptr<DateGrid> grid = QuantLib::ext::make_shared<DateGrid>(tenorGrid);
 
     // Model
-    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
+    QuantLib::Handle<QuantExt::CrossAssetModel> model(d.ccLgm);
 
     // State process
     QuantLib::ext::shared_ptr<StochasticProcess> stateProcess = model->stateProcess();
@@ -629,7 +629,7 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket2) {
     QuantLib::ext::shared_ptr<DateGrid> grid = QuantLib::ext::make_shared<DateGrid>(tenorGrid);
 
     // Model
-    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
+    QuantLib::Handle<QuantExt::CrossAssetModel> model(d.ccLgm);
 
     // State process
     QuantLib::ext::shared_ptr<StochasticProcess> stateProcess = model->stateProcess();
@@ -772,7 +772,7 @@ BOOST_AUTO_TEST_CASE(testVanillaSwapExposure) {
     QuantLib::ext::shared_ptr<DateGrid> grid = QuantLib::ext::make_shared<DateGrid>(tenorGrid);
 
     // Model
-    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
+    QuantLib::Handle<QuantExt::CrossAssetModel> model(d.ccLgm);
     model->irlgm1f(0)->shift() = 20.0;
 
     Size samples = 5000;
@@ -910,7 +910,7 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposure) {
     QuantLib::ext::shared_ptr<DateGrid> grid = QuantLib::ext::make_shared<DateGrid>(tenorGrid);
 
     // Model
-    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
+    QuantLib::Handle<QuantExt::CrossAssetModel> model(d.ccLgm);
 
     // Simulation market parameters
     BOOST_TEST_MESSAGE("set up sim market parameters");
@@ -1025,7 +1025,7 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposureZeroIrVol) {
     QuantLib::ext::shared_ptr<DateGrid> grid = QuantLib::ext::make_shared<DateGrid>(tenorGrid);
 
     // Model
-    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
+    QuantLib::Handle<QuantExt::CrossAssetModel> model(d.ccLgm);
 
     // set ir vols to zero
     for (Size j = 0; j < 3; ++j) {
@@ -1141,7 +1141,7 @@ BOOST_AUTO_TEST_CASE(testCpiSwapExposure) {
     QuantLib::ext::shared_ptr<DateGrid> grid = QuantLib::ext::make_shared<DateGrid>(tenorGrid);
 
     // Model
-    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
+    QuantLib::Handle<QuantExt::CrossAssetModel> model(d.ccLgm);
 
     // set ir vols to zero
     for (Size j = 0; j < 3; ++j) {

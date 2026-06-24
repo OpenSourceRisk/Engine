@@ -76,7 +76,7 @@ private:
     const Handle<YieldTermStructure> discountCurve_;
     const Real reversion_, volatility_, flatRate_;
     //
-    QuantLib::ext::shared_ptr<LGM> model_;
+    QuantLib::Handle<LGM> model_;
     Leg modelLinkedUnderlying_;
     std::vector<bool> modelLinkedUnderlyingIsPayer_;
 

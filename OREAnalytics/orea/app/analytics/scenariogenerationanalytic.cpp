@@ -124,7 +124,7 @@ void ScenarioGenerationAnalyticImpl::buildScenarioGenerator(const bool continueO
 
     auto sgVars = ext::dynamic_pointer_cast<ScenarioGenerationVariables>(inputVariables_);
     if (sgVars->type_ == ScenarioGenerationType::exposure) {
-        if (!model_)
+        if (model_.empty())
             buildCrossAssetModel(continueOnCalibrationError, allowModelFallbacks);
         ScenarioGeneratorBuilder sgb(analytic()->configurations().scenarioGeneratorData);
         string config = inputs_->marketConfig("simulation");
@@ -174,7 +174,7 @@ void ScenarioGenerationAnalyticImpl::buildCrossAssetModel(const bool continueOnC
                                         false, continueOnCalibrationError, "", "xva cam building", false,
                                         allowModelFallbacks);
 
-    model_ = *modelBuilder.model();
+    model_ = modelBuilder.model();
 }
 
 void ScenarioGenerationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,

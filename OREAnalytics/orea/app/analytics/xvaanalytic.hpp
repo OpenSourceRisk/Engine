@@ -208,9 +208,9 @@ protected:
     void buildClassicCube(const QuantLib::ext::shared_ptr<Portfolio>& portfolio);
     QuantLib::ext::shared_ptr<Portfolio> classicRun(const QuantLib::ext::shared_ptr<Portfolio>& portfolio);
 
-    QuantLib::ext::shared_ptr<EngineFactory>
-    amcEngineFactory(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam, const std::vector<Date>& simDates,
-                     const std::vector<Date>& stickyCloseOutDates);
+    QuantLib::ext::shared_ptr<EngineFactory> amcEngineFactory(const QuantLib::Handle<QuantExt::CrossAssetModel>& cam,
+                                                              const std::vector<Date>& simDates,
+                                                              const std::vector<Date>& stickyCloseOutDates);
     void buildAmcPortfolio();
     void amcRun(bool doClassicRun, bool continueOnCalibrationError, bool allowModelFallbacks);
 
@@ -225,7 +225,7 @@ protected:
     QuantLib::ext::shared_ptr<ScenarioSimMarket> offsetSimMarket_;
     QuantLib::ext::shared_ptr<EngineData> engineData_;
     QuantLib::ext::shared_ptr<EngineFactory> engineFactory_;
-    QuantLib::ext::shared_ptr<CrossAssetModel> model_;
+    QuantLib::Handle<CrossAssetModel> model_;
     QuantLib::ext::shared_ptr<ScenarioGenerator> scenarioGenerator_;
     QuantLib::ext::shared_ptr<Portfolio> amcPortfolio_, classicPortfolio_;
     QuantLib::ext::shared_ptr<NPVCube> cube_, nettingSetCube_, cptyCube_, amcCube_;

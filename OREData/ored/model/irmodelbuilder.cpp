@@ -220,7 +220,7 @@ Real IrModelBuilder::error() const {
     return error_;
 }
 
-QuantLib::ext::shared_ptr<QuantExt::IrModel> IrModelBuilder::model() const {
+QuantLib::Handle<QuantExt::IrModel> IrModelBuilder::model() const {
     calculate();
     return model_;
 }

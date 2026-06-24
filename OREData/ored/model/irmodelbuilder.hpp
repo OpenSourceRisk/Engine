@@ -73,7 +73,7 @@ public:
     //@{
     std::string qualifier() { return data_->qualifier(); }
     std::string ccy() { return currency_; }
-    QuantLib::ext::shared_ptr<QuantExt::IrModel> model() const;
+    QuantLib::Handle<QuantExt::IrModel> model() const;
     /* The curve used to build the model parametrization. This is initially the swap index discount curve (see ctor). It
        can be relinked later outside this builder to calibrate fx processes, for which one wants to use a xccy curve
        instead of the in-ccy curve that is used to calibrate the LGM model within this builder. */
@@ -131,7 +131,7 @@ protected:
 
     mutable bool parametrizationIsInitialized_ = false;
     mutable Real error_ = Null<Real>();
-    mutable QuantLib::ext::shared_ptr<QuantExt::IrModel> model_;
+    mutable QuantLib::RelinkableHandle<QuantExt::IrModel> model_;
     mutable Array params_;
     mutable QuantLib::ext::shared_ptr<QuantExt::Parametrization> parametrization_;
 

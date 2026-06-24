@@ -174,10 +174,10 @@ BOOST_AUTO_TEST_CASE(testPiecewiseAsConstant) {
     auto swaptionConstant = QuantLib::ext::make_shared<Swaption>(underlying, exercise);
     auto swaptionPiecewise = QuantLib::ext::make_shared<Swaption>(underlying, exercise);
 
-    ext::shared_ptr<HwModel> constantModel =
-        ext::make_shared<HwModel>(constantParams, IrModel::Measure::BA, HwModel::Discretization::Euler, false);
-    ext::shared_ptr<HwModel> piecewiseModel =
-        ext::make_shared<HwModel>(piecewiseParams, IrModel::Measure::BA, HwModel::Discretization::Euler, false);
+    auto constantModel = Handle<HwModel>(
+        ext::make_shared<HwModel>(constantParams, IrModel::Measure::BA, HwModel::Discretization::Euler, false));
+    auto piecewiseModel = Handle<HwModel>(
+        ext::make_shared<HwModel>(piecewiseParams, IrModel::Measure::BA, HwModel::Discretization::Euler, false));
 
     ext::shared_ptr<PricingEngine> hwConstantEngine = ext::make_shared<AnalyticHwSwaptionEngine>(constantModel, ts);
     ext::shared_ptr<PricingEngine> hwPiecewiseEngine = ext::make_shared<AnalyticHwSwaptionEngine>(piecewiseModel, ts);
@@ -229,8 +229,8 @@ BOOST_AUTO_TEST_CASE(testPiecewiseConstant, *boost::unit_test::disabled()) {
     auto exercise = QuantLib::ext::make_shared<EuropeanExercise>(exerciseDate);
     auto swaption = QuantLib::ext::make_shared<Swaption>(underlying, exercise);
 
-    ext::shared_ptr<HwModel> piecewiseModel =
-        ext::make_shared<HwModel>(piecewiseParams, IrModel::Measure::BA, HwModel::Discretization::Euler, false);
+    auto piecewiseModel = Handle<HwModel>(
+        ext::make_shared<HwModel>(piecewiseParams, IrModel::Measure::BA, HwModel::Discretization::Euler, false));
 
     ext::shared_ptr<PricingEngine> hwPiecewiseEngine = ext::make_shared<AnalyticHwSwaptionEngine>(piecewiseModel, ts);
 

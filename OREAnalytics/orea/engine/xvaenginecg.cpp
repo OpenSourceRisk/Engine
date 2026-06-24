@@ -1436,11 +1436,11 @@ void XvaEngineCG::calculateDynamicIM() {
                                 [this](const Date& d) { return model_->actualTimeFromReference(d); });
 
         irVegaConverter[ccyIndex] = LgmSwaptionVegaParConverter(
-            model_->cam()->lgm(ccyIndex), irVegaTerms, irVegaUnderlyingTerms,
+            Handle<LGM>(model_->cam()->lgm(ccyIndex)), irVegaTerms, irVegaUnderlyingTerms,
             *initMarket_->swapIndex(initMarket_->swapIndexBase(model_->currencies()[ccyIndex])));
 
         if (ccyIndex > 0) {
-            fxVegaConverter[ccyIndex - 1] = CcLgmFxOptionVegaParConverter(*model_->cam(), ccyIndex - 1, fxVegaTerms);
+            fxVegaConverter[ccyIndex - 1] = CcLgmFxOptionVegaParConverter(model_->cam(), ccyIndex - 1, fxVegaTerms);
         }
     }
 

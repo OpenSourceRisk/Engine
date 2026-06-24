@@ -275,7 +275,7 @@ void simulation(string dateGridString, bool checkFixings) {
     // Model Builder & Model
     // model builder
     QuantLib::ext::shared_ptr<CrossAssetModelBuilder> modelBuilder(new CrossAssetModelBuilder(initMarket, config));
-    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model = *modelBuilder->model();
+    auto model = modelBuilder->model();
     modelBuilder = NULL;
 
     // Path generator
