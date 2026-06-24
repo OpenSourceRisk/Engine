@@ -34,6 +34,9 @@ For FX volatility shifts, the configuration can be specified either explicitly o
 In the explicit approach, exact shift values for each expiry and tenor can be provided, as demonstrated in listing \ref{lst:stress_config_fxvol_explicit}}. 
 If only one tenor and shift value are provided, a parallel shift will be applied across all other tenors.
 
+FX volatility stress test only works for ATM curves and not with FX surfaces in the simulation market.
+If in simulation market the pair is set up to simulate a surface, an error message will be shown and the shifts will be ignored.
+
 Two weighting schemas are supported for FX volatility shifts: 
 \begin{itemize} 
 \item {\tt Unadjusted}: The shift is applied solely to the specified tenor, leaving all other tenors unchanged. 
