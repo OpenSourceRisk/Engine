@@ -1598,7 +1598,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     // Generate cube reports to inspect
     if (xvaVars->rawCubeOutput_) {
         map<string, string> nettingSetMap = analytic()->portfolio()->nettingSetMap();
-        auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->setupVariables().reportBufferSize());
+        auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString()).writeCube(*report, cube_, nettingSetMap);
         analytic()->addReport(LABEL, "rawcube", report);
     }
