@@ -163,8 +163,8 @@ void FxDigitalBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory
     // if an 'in' option is triggered it becomes an FxDigitalOption, so we need an fxDigitalOption pricer
     builder = engineFactory->builder("FxDigitalOption");
     QL_REQUIRE(builder, "No builder found for FxDigitalOption");
-    QuantLib::ext::shared_ptr<FxDigitalOptionEngineBuilder> fxOptBuilder =
-        QuantLib::ext::dynamic_pointer_cast<FxDigitalOptionEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<FxDigitalOptionEngineBuilderBase> fxOptBuilder =
+        QuantLib::ext::dynamic_pointer_cast<FxDigitalOptionEngineBuilderBase>(builder);
     setSensitivityTemplate(*builder);
     addProductModelEngine(*builder);
 

@@ -129,6 +129,8 @@ void FxDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engi
         // set pricing engines
         QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("FxDigitalOption");
         QL_REQUIRE(builder, "No builder found for " << tradeType_);
+        if(builder->engine()!="CallSpreadEngine")
+            builder = engineFactory->builder("FxDigitalOptionEuropeanCS");
         QuantLib::ext::shared_ptr<FxDigitalOptionEngineBuilderBase> fxOptBuilder =
             QuantLib::ext::dynamic_pointer_cast<FxDigitalOptionEngineBuilderBase>(builder);
         vanilla->setPricingEngine(fxOptBuilder->engine(forCcy, domCcy, flipResults));

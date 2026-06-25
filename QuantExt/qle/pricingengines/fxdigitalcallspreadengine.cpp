@@ -96,11 +96,8 @@ void FxDigitalCallSpreadEngine::calculate() const {
     Real priceLo = lo.first, deltaLo = lo.second;
     Real priceHi = hi.first, deltaHi = hi.second;
 
-    Real spreadValue;
-    if (type == Option::Call)
-        spreadValue = cash * (priceLo - priceHi) / eps_;
-    else
-        spreadValue = cash * (priceHi - priceLo) / eps_;
+    Real cpSpread = cash * (priceLo - priceHi) / eps_;
+    Real spreadValue = type == Option::Call ? cpSpread : -cpSpread;
 
     // Forward discount factor between expiry and payment date, P(t_e, t_p), under deterministic rates.
     DiscountFactor df_te_tp = dts->discount(arguments_.paymentDate) / dts->discount(expiryDate);
