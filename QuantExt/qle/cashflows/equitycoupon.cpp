@@ -171,7 +171,9 @@ void EquityCoupon::performCalculations() const {
 }
 
 Rate EquityCoupon::rate() const {
-    calculate();
+    // FIXME: laziness does not work for this coupon
+    // calculate();
+    performCalculations();
     return rate_;
 }
 

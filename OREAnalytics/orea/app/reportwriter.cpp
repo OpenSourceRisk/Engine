@@ -1156,7 +1156,6 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, QuantLib::ext::s
                 for (Size j = 0; j < trade->legs()[i].size(); ++j) {
                     auto const& c = trade->legs()[i][j];
                     try {
-                        c->amount(); // ensure the additional results results are available
                         for (auto const& kv : c->additionalResults()) {
                             addAnyResults(report, tradeId,
                                           kv.first + "[" + std::to_string(i) + "][" + std::to_string(j) + "]",

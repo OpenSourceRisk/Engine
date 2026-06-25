@@ -137,7 +137,6 @@ public:
     //@}
     void setPricer(const QuantLib::ext::shared_ptr<EquityCouponPricer>&);
     QuantLib::ext::shared_ptr<EquityCouponPricer> pricer() const;
-    std::map<std::string, QuantLib::ext::any>& additionalResults() const { return additionalResults_; }
 
 protected:
     QuantLib::ext::shared_ptr<EquityCouponPricer> pricer_;
