@@ -1,0 +1,173 @@
+\subsubsection{Intraday Power Floating Leg}
+\label{ss:intradaypowerfloatingleg}
+
+An intraday power floating leg is specified in a \lstinline!LegData! node with \lstinline!LegType! set to \lstinline!IntradayPowerFloating!.
+It is used to define a sequence of cashflows linked to an intraday power index over each calculation period.
+Pricing is done in two aggregation steps: for each pricing date, a daily price per MWh is computed using the given intraday load shape; daily prices are then averaged over pricing dates in the period using daily volume weights.
+The period amount is obtained by applying quantity, gearing and spread. The quantity interpretation depends on \lstinline!QuantityMode!: with \emph{LoadShapeMultiplier}, the load shape defines the absolute intraday and daily loads and
+ \lstinline!Quantity! scales that absolute shape; with \emph{TotalEnergy}, the load shape is normalized and used as relative weights so that \lstinline!Quantity! is the total period energy.
+
+The outline of an intraday power floating leg is given in listing \ref{lst:intradaypowerfloatingleg}. It has the usual \lstinline!LegData! elements described in section \ref{ss:leg_data} and an \lstinline!IntradayPowerFloatingLegData! node that is described in section \ref{ss:intraday_power_floating_leg_data} below.
+
+\begin{listing}[h!]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<LegData>
+  <LegType>IntradayPowerFloating</LegType>
+  <Payer>...</Payer>
+  <Currency>...</Currency>
+  <PaymentConvention>...</PaymentConvention>
+  <PaymentLag>...</PaymentLag>
+  <PaymentCalendar>...</PaymentCalendar>
+  <ScheduleData>
+    ...
+  </ScheduleData>
+  <PaymentDates>
+    <PaymentDate>...</PaymentDate>
+  </PaymentDates>
+  <IntradayPowerFloatingLegData>
+    ...
+  </IntradayPowerFloatingLegData>
+</LegData>
+\end{minted}
+\caption{Intraday power floating leg outline.}
+\label{lst:intradaypowerfloatingleg}
+\end{listing}
+
+\subsubsection{Intraday Power Floating Leg Data}
+\label{ss:intraday_power_floating_leg_data}
+
+The \lstinline!IntradayPowerFloatingLegData! node outline is shown in listing \ref{lst:intraday_power_floating_leg_data}. The meaning and allowable values for each node are as follows:
+
+\begin{itemize}
+
+\item
+\lstinline!Name!: Identifier specifying the intraday power index referenced by the leg.
+
+\item
+\lstinline!Quantities!: This node specifies constant or period-varying quantities. Usage is analogous to \lstinline!Notionals! in section \ref{ss:leg_data}.
+
+\item
+\lstinline!Spreads! [Optional]: Optional additive spread applied to the reference price in each calculation period.
+
+\item
+\lstinline!Gearings! [Optional]: Optional multiplicative gearing applied to the reference price in each calculation period.
+
+\item
+\lstinline!PricingCalendar! [Optional]: Calendar used to generate pricing dates inside each calculation period.
+
+\item
+\lstinline!IncludePeriodStart! [Optional]: If \emph{true}, include the period start date in pricing dates.
+
+Allowable values: \emph{true}, \emph{false}. Defaults to \emph{true} if omitted.
+
+\item
+\lstinline!IncludePeriodEnd! [Optional]: If \emph{true}, include the period end date in pricing dates.
+
+Allowable values: \emph{true}, \emph{false}. Defaults to \emph{false} if omitted.
+
+\item
+\lstinline!BusinessDays! [Optional]: If \emph{true}, pricing dates are business days in \lstinline!PricingCalendar!. If \emph{false}, pricing dates are non-business days. 
+Use NullCalendar with business days set to \emph{true} for all calendar days.
+
+Allowable values: \emph{true}, \emph{false}. Defaults to \emph{true} if omitted.
+
+\item
+\lstinline!PowerLoadProfileReference! [Optional]: Reference to an intraday power load profile convention. If no profile is given, it assumes a constant load over 24h.
+
+\item
+\lstinline!PowerLoadProfileData! [Optional]: Inline load profile data. If both \lstinline!PowerLoadProfileReference! and \lstinline!PowerLoadProfileData! are provided, the reference takes precedence. If neither is given, it assumes a constant load over 24h everyday.
+
+\lstinline!PowerLoadProfileData! supports two mutually exclusive representations:
+\begin{itemize}
+\item \lstinline!ExplicitDates!: Explicit load profiles per date. The load factors will be forward flat filled. On a missing date it will use the factors on the last day before the delivery date.
+\item \lstinline!BusinessDayRules!: Rule-based load profiles using a calendar, with separate factors for business and non-business days. Rules are forward-flat filled. For a delivery date, the rule with the latest effective date less than or equal to the delivery date is applied.
+\end{itemize}
+
+In both cases, load is defined with one or more \lstinline!LoadFactor! elements. Each \lstinline!LoadFactor! has required attributes \lstinline!from! and \lstinline!to!, an optional attribute \lstinline!unit! (defaults to seconds if omitted), and optional attribute \lstinline!dst! to mark the extra hour on a daylight saving backward adjustment date.
+
+\item
+\lstinline!LoadFactor! [within \lstinline!PowerLoadProfileData!]: Defines the relative load level on a time interval. The element value is the load factor multiplier and should be non-negative. The attributes \lstinline!from! and \lstinline!to! define the time interval bounds in the given \lstinline!unit!; if \lstinline!unit! is omitted, seconds are assumed. The optional \lstinline!dst! flag can be used to for the factor during the extra hour between 2am and 3am on daylight saving backward-shift dates.
+
+\item
+\lstinline!FXIndex! [Optional]: FX index used to convert each daily fixing before averaging.
+
+\item
+\lstinline!AvgPricePrecision! [Optional]: Non-negative integer precision for rounding the averaged price.
+
+\item
+\lstinline!Tag! [Optional]: Optional identifier used to link this leg with other related legs.
+
+\item
+\lstinline!QuantityMode! [Optional]: Quantity interpretation mode. 
+
+\begin{itemize}
+\item \emph{TotalEnergy}: The \lstinline!Quantity! is interpreted as the total MWh for the full calculation period. There are relative load factors derived from the given load profile. The total MWh are delivered relatively to the load profile.
+\item \emph{LoadShapeMultiplier}: The \lstinline!Quantity! is interpreted as a multiplier applied to the period load implied by \lstinline!PowerLoadProfileData! (or \lstinline!PowerLoadProfileReference!). In this mode, a load profile is required.
+\end{itemize}
+
+Allowable values: \emph{TotalEnergy}, \emph{LoadShapeMultiplier}. Defaults to \emph{TotalEnergy} if omitted.
+
+\end{itemize}
+
+\begin{listing}[h!]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<PowerLoadProfileData>
+  <ExplicitDates>
+    <LoadProfileDatum>
+      <Date>2026-06-25</Date>
+      <LoadFactors>
+        <LoadFactor from="1" to="24" unit='HOUR' dst="N">1.0</LoadFactor>
+      </LoadFactors>
+    </LoadProfileDatum>
+  </ExplicitDates>
+</PowerLoadProfileData>
+
+<PowerLoadProfileData>
+  <BusinessDayRules>
+    <LoadProfileBusinessDayRule>
+      <Date>2026-01-01</Date>
+      <Calendar>US-NERC</Calendar>
+      <BusinessDayLoadFactors>
+        <LoadFactor from="8" to="20" unit='HOUR'>1.0</LoadFactor>
+      </BusinessDayLoadFactors>
+      <NonBusinessDayLoadFactors>
+        <LoadFactor from="1" to="24" unit='HOUR'>0.6</LoadFactor>
+      </NonBusinessDayLoadFactors>
+    </LoadProfileBusinessDayRule>
+  </BusinessDayRules>
+</PowerLoadProfileData>
+\end{minted}
+\caption{Power load profile data examples.}
+\label{lst:intraday_power_load_profile_data}
+\end{listing}
+
+\begin{listing}[h!]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<IntradayPowerFloatingLegData>
+  <Name>...</Name>
+  <Quantities>
+    <Quantity>...</Quantity>
+  </Quantities>
+  <Spreads>
+    <Spread>...</Spread>
+  </Spreads>
+  <Gearings>
+    <Gearing>...</Gearing>
+  </Gearings>
+  <PricingCalendar>...</PricingCalendar>
+  <IncludePeriodStart>...</IncludePeriodStart>
+  <IncludePeriodEnd>...</IncludePeriodEnd>
+  <BusinessDays>...</BusinessDays>
+  <PowerLoadProfileReference>...</PowerLoadProfileReference>
+  <PowerLoadProfileData>
+    ...
+  </PowerLoadProfileData>
+  <FXIndex>...</FXIndex>
+  <AvgPricePrecision>...</AvgPricePrecision>
+  <Tag>...</Tag>
+  <QuantityMode>...</QuantityMode>
+</IntradayPowerFloatingLegData>
+\end{minted}
+\caption{Intraday power floating leg data outline.}
+\label{lst:intraday_power_floating_leg_data}
+\end{listing}
