@@ -110,6 +110,10 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     if (!amcCgPricingEngine_)
         amcCgPricingEngine_ = inputs->setupVariables().pricingEngine_;
 
+    applyEngineDataOverride(inputs, simulationPricingEngine_, "simulation", "pricingEnginesOverride");
+    applyEngineDataOverride(inputs, amcPricingEngine_, "simulation", "amcPricingEnginesOverride");
+    applyEngineDataOverride(inputs, amcCgPricingEngine_, "simulation", "amcCgPricingEnginesOverride");
+
     inputs->loadParameterXML<ScenarioSimMarketParameters>(exposureSimMarketParams_, "simulation", "simulationConfigFile");
     inputs->loadParameterXML<CrossAssetModelData>(crossAssetModelData_, "simulation", "crossAssetModelData");
     if (!crossAssetModelData_)
@@ -1594,7 +1598,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     // Generate cube reports to inspect
     if (xvaVars->rawCubeOutput_) {
         map<string, string> nettingSetMap = analytic()->portfolio()->nettingSetMap();
-        auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->setupVariables().reportBufferSize_);
+        auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString()).writeCube(*report, cube_, nettingSetMap);
         analytic()->addReport(LABEL, "rawcube", report);
     }
