@@ -238,6 +238,12 @@ QuantLib::ext::shared_ptr<QuantExt::PriceTermStructure> makeInterpolatedPriceCur
     else if (interpolation == "CubicFlat")
         return QuantLib::ext::make_shared<QuantExt::InterpolatedPriceCurve<QuantExt::CubicFlat>>(tenors, quotes,
                                                                                                  dayCounter, currency);
+    else if (interpolation == "LogLinear")
+        return QuantLib::ext::make_shared<QuantExt::InterpolatedPriceCurve<QuantLib::LogLinear>>(tenors, quotes,
+                                                                                                 dayCounter, currency);
+    else if (interpolation == "LogLinearFlat")
+        return QuantLib::ext::make_shared<QuantExt::InterpolatedPriceCurve<QuantExt::LogLinearFlat>>(
+            tenors, quotes, dayCounter, currency);
     else
         QL_FAIL("makeInterpolatedPriceCurve: interpolation '" << interpolation << "' not recognised.");
 }

@@ -34,8 +34,6 @@ namespace {
 QuantLib::ext::shared_ptr<QuantLib::Interpolation>
 makeSpreadInterpolation(const std::string& interpolation, const std::vector<Real>& times,
                         const std::vector<Real>& data) {
-    // Spreads are additive, so log based methods fall back to their linear counterpart and the *Flat variants map to
-    // the base method since flat extrapolation is always applied on top.
     if (interpolation == "Linear")
         return QuantLib::ext::make_shared<LinearInterpolation>(times.begin(), times.end(), data.begin());
     else if (interpolation == "Cubic")
@@ -48,6 +46,9 @@ makeSpreadInterpolation(const std::string& interpolation, const std::vector<Real
         return QuantLib::ext::make_shared<LinearInterpolation>(times.begin(), times.end(), data.begin());
     else if (interpolation == "CubicFlat")
         return QuantLib::ext::make_shared<CubicNaturalSpline>(times.begin(), times.end(), data.begin());
+    else if (interpolation == "LogLinearFlat" || interpolation == "LogLinear")
+        QL_FAIL("SpreadedPriceTermStructure: interpolation '" << interpolation
+                << "' not allowed for spreaded price term structures, as spreads can be negative.");
     else
         QL_FAIL("SpreadedPriceTermStructure: interpolation '" << interpolation << "' not recognised.");
 }
