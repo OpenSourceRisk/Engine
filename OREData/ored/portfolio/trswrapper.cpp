@@ -1153,8 +1153,7 @@ Real TRSWrapperAccrualEngine::assetLegValueForIndex(vector<CashFlowResults>& cfR
 
         // Add a cashflow for this return.
         auto& cf = cfResults.emplace_back();
-        cf.amount = amount;
-        cf.amount *= multiplier;
+        cf.amount = amount * multiplier;
         cf.payDate = today;
         cf.currency = a.returnCurrency_.code();
         cf.legNumber = legNumber_;
@@ -1373,14 +1372,19 @@ Real TRSWrapperAccrualEngine::dailyResetCpnVal(const ext::shared_ptr<FixedRateCo
     // that date in funding currency units. The sum of all daily accruals is the total accrual for the coupon.
     Real result = 0;
     const auto& dc = cpn->dayCounter();
-    const auto& fixCal = a.basketIndex_->fixingCalendar();
     Rate fixedRate = cpn->rate();
     Real fundingNtl = 0;
-    for (Date d = cpn->accrualStartDate(); d < std::min(cpn->accrualEndDate(), today); ++d) {
-        Real dt = dc.yearFraction(d, d + 1);
-        Date fixingDate = fixCal.adjust(d, Preceding);
-        Real effNtl = basketValue(fixingDate, fixingDate, false);
-        Real fx = getFxConversionRate(fixingDate, a.initialPriceCurrency_, a.fundingCurrency_, false);
+
+    // We step on week days only. Can't see a situation where we are getting basket fixings on weekends.
+    WeekendsOnly stepCal;
+    Date stopDate = std::min(cpn->accrualEndDate(), today);
+    pair<Real, Date> lastFixing;
+    for (Date d = cpn->accrualStartDate(), dNext; d < stopDate;  d = dNext) {
+        dNext = stepCal.advance(d, 1, Days);
+        Real dt = dc.yearFraction(d, std::min(dNext, stopDate));
+        lastFixing = lastAvailableFixing(d, lastFixing.second);
+        Real effNtl = lastFixing.first * a.indexQuantity_;
+        Real fx = getFxConversionRate(lastFixing.second, a.initialPriceCurrency_, a.fundingCurrency_, false);
         string extSuffix = ore::data::to_string(d);
         addRes["fundingLegNotional" + extSuffix] = effNtl;
         addRes["fundingLegFxRate" + extSuffix] = fx;
@@ -1395,6 +1399,11 @@ Real TRSWrapperAccrualEngine::dailyResetCpnVal(const ext::shared_ptr<FixedRateCo
 Real TRSWrapperAccrualEngine::dailyResetCpnVal(const ext::shared_ptr<IborCoupon>& cpn, const Date& today,
     Real& outNtl) const {
 
+    // Note, this method is very like the fixed rate function above but I am not sure it is exactly what will be 
+    // expected for Ibor coupons with daily reset. It may be expected that you step on the Ibor index fixing dates and 
+    // use the fixing on each of those dates instead of using the single Ibor coupon fixing for the coupon. Leave it 
+    // as a separate method here in case we need to amend it later.
+
     auto& a = arguments_;
     auto& addRes = results_.additionalResults;
 
@@ -1404,14 +1413,19 @@ Real TRSWrapperAccrualEngine::dailyResetCpnVal(const ext::shared_ptr<IborCoupon>
     // that date in funding currency units. The sum of all daily accruals is the total accrual for the coupon.
     Real result = 0;
     const auto& dc = cpn->dayCounter();
-    const auto& fixCal = a.basketIndex_->fixingCalendar();
     Rate fltRate = cpn->rate();
     Real fundingNtl = 0;
-    for (Date d = cpn->accrualStartDate(); d < std::min(cpn->accrualEndDate(), today); ++d) {
-        Real dt = dc.yearFraction(d, d + 1);
-        Date fixingDate = fixCal.adjust(d, Preceding);
-        Real effNtl = basketValue(fixingDate, fixingDate, false);
-        Real fx = getFxConversionRate(fixingDate, a.initialPriceCurrency_, a.fundingCurrency_, false);
+
+    // We step on week days only. Can't see a situation where we are getting basket fixings on weekends.
+    WeekendsOnly stepCal;
+    Date stopDate = std::min(cpn->accrualEndDate(), today);
+    pair<Real, Date> lastFixing;
+    for (Date d = cpn->accrualStartDate(), dNext; d < stopDate; d = dNext) {
+        dNext = stepCal.advance(d, 1, Days);
+        Real dt = dc.yearFraction(d, std::min(dNext, stopDate));
+        lastFixing = lastAvailableFixing(d, lastFixing.second);
+        Real effNtl = lastFixing.first * a.indexQuantity_;
+        Real fx = getFxConversionRate(lastFixing.second, a.initialPriceCurrency_, a.fundingCurrency_, false);
         string extSuffix = ore::data::to_string(d);
         addRes["fundingLegNotional" + extSuffix] = effNtl;
         addRes["fundingLegFxRate" + extSuffix] = fx;
@@ -1444,8 +1458,8 @@ Real TRSWrapperAccrualEngine::dailyResetCpnVal(const ext::shared_ptr<OvernightIn
     // fixing for the basket level mulitplied by the index quantity giving the basket value in initial price currency 
     // units. This needs to be converted to funding currency units and the rate applied to calculate the accrual for 
     // that date in funding currency units. The sum of all daily accruals is the total accrual for the coupon.
-    const auto& basketFixCal = a.basketIndex_->fixingCalendar();
     Real fundingNtl = 0;
+    pair<Real, Date> lastBasketFixing;
     for (Size i = 0; i < intDates.size() - 1; ++i) {
         const Date& intStart = intDates[i];
 
@@ -1454,9 +1468,9 @@ Real TRSWrapperAccrualEngine::dailyResetCpnVal(const ext::shared_ptr<OvernightIn
             break;
 
         // Get the applicable notional and fx for the single overnight period.
-        Date basketFixingDate = basketFixCal.adjust(intStart, Preceding);
-        Real effNtl = basketValue(basketFixingDate, basketFixingDate, false);
-        Real fx = getFxConversionRate(basketFixingDate, a.initialPriceCurrency_, a.fundingCurrency_, false);
+        lastBasketFixing = lastAvailableFixing(intStart, lastBasketFixing.second);
+        Real effNtl = lastBasketFixing.first * a.indexQuantity_;
+        Real fx = getFxConversionRate(lastBasketFixing.second, a.initialPriceCurrency_, a.fundingCurrency_, false);
         string extSuffix = ore::data::to_string(intStart);
         addRes["fundingLegNotional" + extSuffix] = effNtl;
         addRes["fundingLegFxRate" + extSuffix] = fx;
@@ -1485,6 +1499,33 @@ Real TRSWrapperAccrualEngine::dailyResetCpnVal(const ext::shared_ptr<OvernightIn
 
     outNtl = fundingNtl;
     return accInt + accSpreadInt;
+}
+
+pair<Real, Date> TRSWrapperAccrualEngine::lastAvailableFixing(const Date& fixingDate,
+    const Date& earliestDate, Natural gracePeriod) const {
+
+    const auto& basketIndex = arguments_.basketIndex_;
+    WeekendsOnly stepCal;
+
+    // If no earliestDate provided, go back gracePeriod week days to get the earliest date to look for a fixing.
+    Date earliest = earliestDate;
+    if (earliest == Date())
+        earliest = stepCal.advance(fixingDate, -static_cast<Integer>(gracePeriod), Days);
+
+    // Look for the last available fixing on or before fixingDate, but not before earliest.
+    for (Date effFixingDate = fixingDate; effFixingDate >= earliest;
+        effFixingDate = stepCal.advance(effFixingDate, -1, Days)) {
+        try {
+            Real fixing = basketIndex->fixing(effFixingDate);
+            return { fixing, effFixingDate };
+        } catch (const std::exception&) {
+            // no fixing available on this date; try previous weekday
+        }
+    }
+
+    // If we get here, no fixing was found in the grace period so fail.
+    QL_FAIL("TRSWrapperAccrualEngine::lastAvailableFixing: no fixing found for basket index " << basketIndex->name()
+        << " in the grace period (" << gracePeriod << " days) ending on " << fixingDate);
 }
 
 } // namespace data

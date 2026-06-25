@@ -234,6 +234,11 @@ private:
         const QuantLib::Date& today, QuantLib::Real& outNtl) const;
     QuantLib::Real dailyResetCpnVal(const QuantLib::ext::shared_ptr<QuantExt::OvernightIndexedCouponBase>& cpn,
         const QuantLib::Date& today, QuantLib::Real& outNtl) const;
+
+    // Last available fixing used in daily reset coupon valuation for a bespoke basket index where price is per unit.
+    // This allows some flexibility in the dates on which we require basket fixings to be available.
+    std::pair<QuantLib::Real, QuantLib::Date> lastAvailableFixing(const QuantLib::Date& fixingDate,
+        const QuantLib::Date& earliestDate = {}, QuantLib::Natural gracePeriod = 5) const;
 };
 
 } // namespace data
