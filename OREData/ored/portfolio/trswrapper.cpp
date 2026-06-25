@@ -297,7 +297,8 @@ bool TRSWrapperAccrualEngine::computeStartValue(std::vector<Real>& underlyingSta
                         } else {
                             // i > 0: use individual underlying component fixing so that s0 == s1 in same-day
                             // periods and the reported notional matches the fixing value (like the non-basket path).
-                            s0 = getUnderlyingFixing(i, v0, false, s0AdditionalData) * arguments_.underlyingMultiplier_[i];
+                            // s0 = getUnderlyingFixing(i, v0, false, s0AdditionalData) * arguments_.underlyingMultiplier_[i];
+                            s0 = 0.0;
                             fx0 = getFxConversionRate(fxDate, arguments_.assetCurrency_[i], arguments_.returnCurrency_, false);
                         }
                     }
@@ -517,7 +518,11 @@ void TRSWrapperAccrualEngine::calculate() const {
                     // If basket fixing is unavailable, fall back to underlying valuation.
                     Real multiplier = (i == 0) ? arguments_.indexQuantity_ : arguments_.underlyingMultiplier_[i];
                     const Currency& priceCurrency = (i == 0) ? arguments_.initialPriceCurrency_ : arguments_.assetCurrency_[i];
-                    s1 = getUnderlyingFixing(i, endDate, false, s1AdditionalData) * multiplier;
+                    if(i==0){
+                        s1 = getUnderlyingFixing(i, endDate, false, s1AdditionalData) * multiplier;
+                    }else{
+                        s1 = 0.0;
+                    }
                     fx1 = getFxConversionRate(endDate, priceCurrency, arguments_.returnCurrency_, false);
                 } else {
                     s1 = getUnderlyingFixing(i, endDate, false, s1AdditionalData) * arguments_.underlyingMultiplier_[i];
@@ -945,10 +950,8 @@ void TRSWrapperAccrualEngine::calculate() const {
             if (!arguments_.portfolioId_.empty() && arguments_.pricePerIndexUnit_) {
                 if (j == 0) {
                     try {
-                        if(startDate != Settings::instance().evaluationDate()){
-                            startFixing = getUnderlyingFixing(j, startDate, false);
-                            results_.additionalResults["startFixing"] = startFixing;
-                        }
+                        startFixing = getUnderlyingFixing(j, startDate, false);
+                        results_.additionalResults["startFixing"] = startFixing;
                     } catch (...) {
                     }
                 }
