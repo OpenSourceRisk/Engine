@@ -411,17 +411,26 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     if (!portfolioId_.empty() && portfolioDeriv_) {
         populateFromReferenceData(engineFactory->referenceData());
         std::string indexName = "GENERIC-" + portfolioId_;
-        RequiredFixings portfolioFixing;
-        QuantLib::Schedule schedule = makeSchedule(returnData_.scheduleData());
-        Date date = schedule.dates().at(0);
-        portfolioFixing.addFixingDate(date, indexName);
-        requiredFixings_.addData(portfolioFixing);
         IndexNameTranslator::instance().add(indexName, indexName);
         auto underlyingIndex = QuantLib::ext::make_shared<QuantExt::GenericIndex>(indexName);
-        // The try-catch is used to avoid a failure as we load the data (i.e fixings) at the second run after portfolio construction.
-        try {
-            portfolioInitialPrice = underlyingIndex->fixing(date);
-        } catch (...) { }
+
+        // Only create the return schedule and add a fixing date for its first date if no initial price is provided.
+        // Note: if pricing date is beyond the first valuation schedule period we will not need an initial price or a 
+        //       fixing at the initial valuation date i.e. portfolioInitialPrice below but we look it up anyway.
+        if (returnData_.initialPrice() == Null<Real>()) {
+            RequiredFixings portfolioFixing;
+            QuantLib::Schedule schedule = makeSchedule(returnData_.scheduleData());
+            Date date = schedule.dates().at(0);
+            portfolioFixing.addFixingDate(date, indexName);
+            requiredFixings_.addData(portfolioFixing);
+
+            // The try-catch is used to avoid a failure as we load the data (i.e fixings) at the second run 
+            // after portfolio construction.
+            try {
+                portfolioInitialPrice = underlyingIndex->fixing(date);
+            } catch (...) {}
+        }
+
         if (pricePerIndexUnit_.value_or(false))
             quantityForWrapper = indexQuantity_;
         // Make the portfolio ID available in the TRS trade additional data.
