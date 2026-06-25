@@ -7,6 +7,8 @@ Pricing is done in two aggregation steps: for each pricing date, a daily price p
 The period amount is obtained by applying quantity, gearing and spread. The quantity interpretation depends on \lstinline!QuantityMode!: with \emph{LoadShapeMultiplier}, the load shape defines the absolute intraday and daily loads and
  \lstinline!Quantity! scales that absolute shape; with \emph{TotalEnergy}, the load shape is normalized and used as relative weights so that \lstinline!Quantity! is the total period energy.
 
+For a detailed explanation of the pricing methodology, including the three key components (commodity curve, shape factors, and load profile), formulas for daily and period-average prices, and daylight-saving adjustments, see Section \ref{ss:intraday_power_pricing}.
+
 The outline of an intraday power floating leg is given in listing \ref{lst:intradaypowerfloatingleg}. It has the usual \lstinline!LegData! elements described in section \ref{ss:leg_data} and an \lstinline!IntradayPowerFloatingLegData! node that is described in section \ref{ss:intraday_power_floating_leg_data} below.
 
 \begin{listing}[h!]
@@ -75,18 +77,7 @@ Allowable values: \emph{true}, \emph{false}. Defaults to \emph{true} if omitted.
 \lstinline!PowerLoadProfileReference! [Optional]: Reference to an intraday power load profile convention. If no profile is given, it assumes a constant load over 24h.
 
 \item
-\lstinline!PowerLoadProfileData! [Optional]: Inline load profile data. If both \lstinline!PowerLoadProfileReference! and \lstinline!PowerLoadProfileData! are provided, the reference takes precedence. If neither is given, it assumes a constant load over 24h everyday.
-
-\lstinline!PowerLoadProfileData! supports two mutually exclusive representations:
-\begin{itemize}
-\item \lstinline!ExplicitDates!: Explicit load profiles per date. The load factors will be forward flat filled. On a missing date it will use the factors on the last day before the delivery date.
-\item \lstinline!BusinessDayRules!: Rule-based load profiles using a calendar, with separate factors for business and non-business days. Rules are forward-flat filled. For a delivery date, the rule with the latest effective date less than or equal to the delivery date is applied.
-\end{itemize}
-
-In both cases, load is defined with one or more \lstinline!LoadFactor! elements. Each \lstinline!LoadFactor! has required attributes \lstinline!from! and \lstinline!to!, an optional attribute \lstinline!unit! (defaults to seconds if omitted), and optional attribute \lstinline!dst! to mark the extra hour on a daylight saving backward adjustment date.
-
-\item
-\lstinline!LoadFactor! [within \lstinline!PowerLoadProfileData!]: Defines the relative load level on a time interval. The element value is the load factor multiplier and should be non-negative. The attributes \lstinline!from! and \lstinline!to! define the time interval bounds in the given \lstinline!unit!; if \lstinline!unit! is omitted, seconds are assumed. The optional \lstinline!dst! flag can be used to for the factor during the extra hour between 2am and 3am on daylight saving backward-shift dates.
+\lstinline!PowerLoadProfileData! [Optional]: Inline load profile data. If both \lstinline!PowerLoadProfileReference! and \lstinline!PowerLoadProfileData! are provided, the reference takes precedence. If neither is given, it assumes a constant load over 24h everyday. The structure and semantics of \lstinline!PowerLoadProfileData! are described in Section \ref{sss:intraday_power_load_conventions}.
 
 \item
 \lstinline!FXIndex! [Optional]: FX index used to convert each daily fixing before averaging.
@@ -108,38 +99,6 @@ In both cases, load is defined with one or more \lstinline!LoadFactor! elements.
 Allowable values: \emph{TotalEnergy}, \emph{LoadShapeMultiplier}. Defaults to \emph{TotalEnergy} if omitted.
 
 \end{itemize}
-
-\begin{listing}[h!]
-\begin{minted}[fontsize=\footnotesize]{xml}
-<PowerLoadProfileData>
-  <ExplicitDates>
-    <LoadProfileDatum>
-      <Date>2026-06-25</Date>
-      <LoadFactors>
-        <LoadFactor from="1" to="24" unit='HOUR' dst="N">1.0</LoadFactor>
-      </LoadFactors>
-    </LoadProfileDatum>
-  </ExplicitDates>
-</PowerLoadProfileData>
-
-<PowerLoadProfileData>
-  <BusinessDayRules>
-    <LoadProfileBusinessDayRule>
-      <Date>2026-01-01</Date>
-      <Calendar>US-NERC</Calendar>
-      <BusinessDayLoadFactors>
-        <LoadFactor from="8" to="20" unit='HOUR'>1.0</LoadFactor>
-      </BusinessDayLoadFactors>
-      <NonBusinessDayLoadFactors>
-        <LoadFactor from="1" to="24" unit='HOUR'>0.6</LoadFactor>
-      </NonBusinessDayLoadFactors>
-    </LoadProfileBusinessDayRule>
-  </BusinessDayRules>
-</PowerLoadProfileData>
-\end{minted}
-\caption{Power load profile data examples.}
-\label{lst:intraday_power_load_profile_data}
-\end{listing}
 
 \begin{listing}[h!]
 \begin{minted}[fontsize=\footnotesize]{xml}
