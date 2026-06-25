@@ -38,7 +38,7 @@ namespace ore {
 namespace analytics {
 
 CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
-    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model,
+    QuantLib::Handle<QuantExt::CrossAssetModel> model,
     QuantLib::ext::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGenerator,
     QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketConfig, Date today,
     QuantLib::ext::shared_ptr<DateGrid> grid, QuantLib::ext::shared_ptr<ore::data::Market> initMarket,
@@ -322,9 +322,9 @@ void CrossAssetModelScenarioGenerator::init() {
     // cache curves
 
     // we need a copy of the ir models to enable the cache for the purpose of this path generator
-    std::vector<ext::shared_ptr<IrModel>> irModel(n_ccy_);
+    std::vector<Handle<IrModel>> irModel(n_ccy_);
     for (Size j = 0; j < n_ccy_; ++j) {
-        irModel[j] = model_->irModel(j)->clone();
+        irModel[j] = Handle<IrModel>(model_->irModel(j)->clone());
     }
 
     std::vector<Size> curvesCacheLoopSize(n_ccy_, 0);
@@ -621,7 +621,7 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
             Real y = sample.value[model_->pIdx(CrossAssetModel::AssetType::INF, j, 1)][gridIndexInPath_[i + 1]];
             auto index = *initMarket_->zeroInflationIndex(model_->inf(j)->name());
             auto zts = index->zeroInflationTermStructure();
-            Real cpi = scenarioBaseCpi(y, z, dates_[i], model_, j, dateGrid_->dayCounter(), index);
+            Real cpi = scenarioBaseCpi(y, z, dates_[i], *model_, j, dateGrid_->dayCounter(), index);
             Date fixingDate = inflationPeriod(dates_[i] - simulationLag(zts), zts->frequency()).first;
             cpi = seasonalizeCPI(fixingDate, cpi, zts);
             scenarios[i]->add(rfKeyCounter++, cpi);

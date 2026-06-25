@@ -81,10 +81,6 @@ public:
                                   const bool useAtParCouponsCurves = true, const bool useAtParCouponsTrades = true,
                                   const bool riskClassBreakdown = true,
                                   const bool includeTheta = false);
-
-    //! Set per-trade theta values to be added to historical PnLs
-    void setThetaPerTrade(const std::map<std::string, QuantLib::Real>& thetaPerTrade) { thetaPerTrade_ = std::move(thetaPerTrade); }
-
     HistoricalSimulationVarReport(const std::string& baseCurrency,
                                   const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
                                   const std::string& portfolioFilter, const vector<Real>& p,
@@ -134,7 +130,6 @@ private:
     bool tradePnl_ = false;
     bool riskFactorBreakdown_ = false;
     bool includeTheta_ = false;
-    std::map<std::string, QuantLib::Real> thetaPerTrade_;
     int countRF_ = 0;
 };
 

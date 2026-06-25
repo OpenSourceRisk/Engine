@@ -25,7 +25,7 @@ namespace QuantExt {
 
 using namespace CrossAssetAnalytics;
 
-AnalyticCcLgmFxOptionEngine::AnalyticCcLgmFxOptionEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
+AnalyticCcLgmFxOptionEngine::AnalyticCcLgmFxOptionEngine(const QuantLib::Handle<CrossAssetModel>& model,
                                                          const Size foreignCurrency)
     : model_(model), foreignCurrency_(foreignCurrency) {}
 

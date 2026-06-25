@@ -196,7 +196,7 @@ void runTest(const std::vector<Real>& nominals, const bool isPayer, const Real e
             EURCurrency(), dsc, stepTimes, Array(stepTimes.size() + 1, 0.0050), stepTimes,
             Array(stepTimes.size() + 1, 0.0));
         lgm_p->shift() = -lgm_p->H(20.0);
-        auto lgm = QuantLib::ext::make_shared<LGM>(lgm_p);
+        auto lgm = Handle<LGM>(QuantLib::ext::make_shared<LGM>(lgm_p));
         auto swaptionEngineLgm = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(lgm);
         for (Size i = 0; i < basket.size(); ++i) {
             basket[i]->setPricingEngine(swaptionEngineLgm);

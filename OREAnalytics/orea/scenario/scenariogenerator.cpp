@@ -22,6 +22,7 @@ namespace ore {
 namespace analytics {
 
 QuantLib::ext::shared_ptr<Scenario> ScenarioPathGenerator::next(const Date& d) {
+    QL_REQUIRE(d != Date(), "ScenarioPathGenerator::next(): input date d is required for this scenario generator.");
     if (d == dates_.front()) { // new path
         path_ = nextPath();
         pathStep_ = 0;

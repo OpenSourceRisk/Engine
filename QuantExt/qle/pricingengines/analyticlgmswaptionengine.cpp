@@ -29,7 +29,7 @@
 
 namespace QuantExt {
 
-AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
+AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const QuantLib::Handle<LinearGaussMarkovModel>& model,
                                                      const Handle<YieldTermStructure>& discountCurve,
                                                      const FloatSpreadMapping floatSpreadMapping, const Real x0)
     : GenericEngine<Swaption::arguments, Swaption::results>(), p_(model->parametrization()),
@@ -39,7 +39,7 @@ AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const QuantLib::ext::shared
     registerWith(c_);
 }
 
-AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
+AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const QuantLib::Handle<CrossAssetModel>& model,
                                                      const Size ccy, const Handle<YieldTermStructure>& discountCurve,
                                                      const FloatSpreadMapping floatSpreadMapping, const Real x0)
     : GenericEngine<Swaption::arguments, Swaption::results>(), p_(model->irlgm1f(ccy)),

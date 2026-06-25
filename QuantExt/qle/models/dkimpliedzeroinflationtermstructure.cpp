@@ -25,7 +25,8 @@ using QuantLib::Time;
 namespace QuantExt {
 
 DkImpliedZeroInflationTermStructure::DkImpliedZeroInflationTermStructure(
-    const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index, const std::optional<QuantLib::DayCounter>& simulationDayCounter)
+    const QuantLib::Handle<CrossAssetModel>& model, Size index,
+    const std::optional<QuantLib::DayCounter>& simulationDayCounter)
     : ZeroInflationModelTermStructure(model, index, simulationDayCounter) {}
 
 Real DkImpliedZeroInflationTermStructure::zeroRateImpl(Time t) const {

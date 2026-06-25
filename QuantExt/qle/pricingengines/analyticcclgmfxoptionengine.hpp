@@ -35,7 +35,7 @@ namespace QuantExt {
  */
 class AnalyticCcLgmFxOptionEngine : public VanillaOption::engine {
 public:
-    AnalyticCcLgmFxOptionEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, const Size foreignCurrency);
+    AnalyticCcLgmFxOptionEngine(const QuantLib::Handle<CrossAssetModel>& model, const Size foreignCurrency);
     void calculate() const override;
 
     /*! if cache is enabled, the integrals independent of fx
@@ -57,7 +57,7 @@ public:
     void resetSigmaShift() const;
 
 private:
-    const QuantLib::ext::shared_ptr<CrossAssetModel> model_;
+    const QuantLib::Handle<CrossAssetModel> model_;
     const Size foreignCurrency_;
     bool cacheEnabled_ = false;
     mutable bool cacheDirty_ = true;

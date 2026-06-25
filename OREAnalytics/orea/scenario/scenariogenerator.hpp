@@ -46,7 +46,7 @@ public:
     virtual ~ScenarioGenerator() {}
 
     //! Return the next scenario for the given date.
-    virtual QuantLib::ext::shared_ptr<Scenario> next(const Date& d) = 0;
+    virtual QuantLib::ext::shared_ptr<Scenario> next(const Date& d = Date()) = 0;
 
     //! Reset the generator so calls to next() return the first scenario.
     /*! This allows re-generation of scenarios if required. */
@@ -92,7 +92,7 @@ public:
     StaticScenarioGenerator() {}
 
     void reset() override {}
-    QuantLib::ext::shared_ptr<Scenario> next(const Date&) override { return s_; }
+    QuantLib::ext::shared_ptr<Scenario> next(const Date& = Date()) override { return s_; }
 
     void setScenario(const QuantLib::ext::shared_ptr<Scenario>& s) { s_ = s; }
 

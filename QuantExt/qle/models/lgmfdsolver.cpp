@@ -25,7 +25,7 @@
 
 namespace QuantExt {
 
-LgmFdSolver::LgmFdSolver(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime,
+LgmFdSolver::LgmFdSolver(const QuantLib::Handle<LinearGaussMarkovModel>& model, const Real maxTime,
                          const QuantLib::FdmSchemeDesc scheme, const Size stateGridPoints, const Size timeStepsPerYear,
                          const Real mesherEpsilon)
     : model_(model), maxTime_(maxTime), scheme_(scheme), stateGridPoints_(stateGridPoints),
@@ -44,7 +44,7 @@ Size LgmFdSolver::gridSize() const { return stateGridPoints_; }
 
 RandomVariable LgmFdSolver::stateGrid(Real) const { return mesherLocations_; }
 
-const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& LgmFdSolver::model() const { return model_; }
+const QuantLib::Handle<LinearGaussMarkovModel>& LgmFdSolver::model() const { return model_; }
 
 RandomVariable LgmFdSolver::rollback(const RandomVariable& v, const Real t1, const Real t0, Size steps) const {
 

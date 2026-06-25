@@ -41,13 +41,13 @@ namespace QuantExt {
 // the base class throws at null (missing base rate)
 // seems incomplete refactoring in QL, since yoy termstructure still has base rate.
 YoYInflationModelTermStructure::YoYInflationModelTermStructure(
-    const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index,
+    const QuantLib::Handle<CrossAssetModel>& model, Size index,
     const std::optional<QuantLib::DayCounter>& simulationDayCounter)
-    : YoYInflationTermStructure(
-          inflationTermStructure(model, index)->baseDate(), 0.0,
-          inflationTermStructure(model, index)->frequency(), inflationTermStructure(model, index)->dayCounter()),
+    : YoYInflationTermStructure(inflationTermStructure(*model, index)->baseDate(), 0.0,
+                                inflationTermStructure(*model, index)->frequency(),
+                                inflationTermStructure(*model, index)->dayCounter()),
       model_(model), index_(index), simulationDayCounter_(simulationDayCounter),
-      referenceDate_(inflationTermStructure(model_, index_)->referenceDate()), relativeTime_(0.0) {
+      referenceDate_(inflationTermStructure(*model_, index_)->referenceDate()), relativeTime_(0.0) {
     registerWith(model_);
     update();
 }
@@ -70,7 +70,7 @@ void YoYInflationModelTermStructure::referenceDate(const Date& d) {
     referenceDate_ = d;
     // we use the simulation day counter, otherwise both times could be from different times
     relativeTime_ = simulationDayCounter_.value_or(dayCounter())
-                        .yearFraction(inflationTermStructure(model_, index_)->referenceDate(), referenceDate_);
+                        .yearFraction(inflationTermStructure(*model_, index_)->referenceDate(), referenceDate_);
     update();
 }
 

@@ -375,6 +375,7 @@ CrossAssetModel::getComponentType(const Size i) const {
         return std::make_pair(CrossAssetModel::AssetType::COM, CrossAssetModel::ModelType::BS);
     if (QuantLib::ext::dynamic_pointer_cast<CrStateParametrization>(p_[i]))
         return std::make_pair(CrossAssetModel::AssetType::CrState, CrossAssetModel::ModelType::GENERIC);
+    QL_REQUIRE(p_[i] != nullptr, "parametrization " << i << " is nullptr.");
     QL_FAIL("parametrization " << i << " has unknown type");
 }
 
