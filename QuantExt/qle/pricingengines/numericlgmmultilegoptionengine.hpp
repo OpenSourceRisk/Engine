@@ -103,13 +103,13 @@ class NumericLgmMultiLegOptionEngine
     : public QuantLib::GenericEngine<MultiLegOption::arguments, MultiLegOption::results>,
       public NumericLgmMultiLegOptionEngineBase {
 public:
-    NumericLgmMultiLegOptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real sy,
+    NumericLgmMultiLegOptionEngine(const QuantLib::Handle<LinearGaussMarkovModel>& model, const Real sy,
                                    const Size ny, const Real sx, const Size nx,
                                    const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
                                    const Size americanExerciseTimeStepsPerYear = 24,
                                    const bool generateAdditionalResults = false);
 
-    NumericLgmMultiLegOptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
+    NumericLgmMultiLegOptionEngine(const QuantLib::Handle<LinearGaussMarkovModel>& model,
                                    const Real maxTime = 50.0,
                                    const QuantLib::FdmSchemeDesc scheme = QuantLib::FdmSchemeDesc::Douglas(),
                                    const Size stateGridPoints = 64, const Size timeStepsPerYear = 24,
@@ -124,13 +124,13 @@ public:
 class NumericLgmSwaptionEngine : public QuantLib::GenericEngine<Swaption::arguments, Swaption::results>,
                                  public NumericLgmMultiLegOptionEngineBase {
 public:
-    NumericLgmSwaptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real sy,
+    NumericLgmSwaptionEngine(const QuantLib::Handle<LinearGaussMarkovModel>& model, const Real sy,
                              const Size ny, const Real sx, const Size nx,
                              const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
                              const Size americanExerciseTimeStepsPerYear = 24,
                              const bool generateAdditionalResults = false);
 
-    NumericLgmSwaptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime = 50.0,
+    NumericLgmSwaptionEngine(const QuantLib::Handle<LinearGaussMarkovModel>& model, const Real maxTime = 50.0,
                              const QuantLib::FdmSchemeDesc scheme = QuantLib::FdmSchemeDesc::Douglas(),
                              const Size stateGridPoints = 64, const Size timeStepsPerYear = 24,
                              const Real mesherEpsilon = 1E-4,
@@ -145,13 +145,13 @@ class NumericLgmNonstandardSwaptionEngine
     : public QuantLib::GenericEngine<NonstandardSwaption::arguments, NonstandardSwaption::results>,
       public NumericLgmMultiLegOptionEngineBase {
 public:
-    NumericLgmNonstandardSwaptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real sy,
+    NumericLgmNonstandardSwaptionEngine(const QuantLib::Handle<LinearGaussMarkovModel>& model, const Real sy,
                                         const Size ny, const Real sx, const Size nx,
                                         const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
                                         const Size americanExerciseTimeStepsPerYear = 24,
                                         const bool generateAdditionalResults = false);
 
-    NumericLgmNonstandardSwaptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
+    NumericLgmNonstandardSwaptionEngine(const QuantLib::Handle<LinearGaussMarkovModel>& model,
                                         const Real maxTime = 50.0,
                                         const QuantLib::FdmSchemeDesc scheme = QuantLib::FdmSchemeDesc::Douglas(),
                                         const Size stateGridPoints = 64, const Size timeStepsPerYear = 24,

@@ -70,7 +70,7 @@ protected:
     void buildScenarioGenerator(const bool continueOnError, const bool allowModelFallbacks);
 
     QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket_;
-    QuantLib::ext::shared_ptr<CrossAssetModel> model_;
+    QuantLib::Handle<CrossAssetModel> model_;
     QuantLib::ext::shared_ptr<ScenarioGenerator> scenarioGenerator_;
 
     QuantLib::ext::shared_ptr<DateGrid> grid_;

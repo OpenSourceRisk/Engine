@@ -334,8 +334,8 @@ void Analytic::applyOffsetScenario(bool continueOnError, bool useSpreadedTermStr
     auto offsetMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
         market_, offsetSimMarketParams(), marketConfiguration,
         curveConfigs ? *curveConfigs : ore::data::CurveConfigurations(), *configurations_.todaysMarketParams,
-        continueOnError, useSpreadedTermStructures, continueOnError, overrideTenors, true,
-        inputs_->iborFallbackConfig(), true, offsetScenario());
+        continueOnError, useSpreadedTermStructures, continueOnError, overrideTenors, inputs_->iborFallbackConfig(),
+        true, offsetScenario());
     setMarket(offsetMarket);
 }
 

@@ -178,19 +178,19 @@ struct TestData {
             tolerance, measure, CrossAssetModel::Discretization::Euler));
 
         CrossAssetModelBuilder modelBuilder1(market, config1);
-        ccLgmExact = *modelBuilder1.model();
+        ccLgmExact = modelBuilder1.model();
 
         CrossAssetModelBuilder modelBuilder2(market, config2);
-        ccLgmEuler = *modelBuilder2.model();
+        ccLgmEuler = modelBuilder2.model();
 
-        lgm = QuantLib::ext::make_shared<QuantExt::LGM>(ccLgmExact->irlgm1f(0));
+        lgm = QuantLib::Handle<QuantExt::LGM>(QuantLib::ext::make_shared<QuantExt::LGM>(ccLgmExact->irlgm1f(0)));
     }
 
     SavedSettings backup;
     Date referenceDate;
     QuantLib::ext::shared_ptr<CrossAssetModelData> config;
-    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> ccLgmExact, ccLgmEuler;
-    QuantLib::ext::shared_ptr<QuantExt::LGM> lgm;
+    QuantLib::Handle<QuantExt::CrossAssetModel> ccLgmExact, ccLgmEuler;
+    QuantLib::Handle<QuantExt::LGM> lgm;
     QuantLib::ext::shared_ptr<ore::data::Market> market;
 };
 
@@ -219,7 +219,7 @@ void test_measure(std::string measureName, Real shiftHorizon, std::string discNa
     QuantLib::ext::shared_ptr<DateGrid> grid = QuantLib::ext::make_shared<DateGrid>(tenorGrid);
 
     // Model
-    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model = discName == "exact" ? d.ccLgmExact : d.ccLgmEuler;
+    QuantLib::Handle<CrossAssetModel> model(discName == "exact" ? d.ccLgmExact : d.ccLgmEuler);
 
     // Simulation market parameters, we just need the yield curve structure here
     QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketConfig(new ScenarioSimMarketParameters);

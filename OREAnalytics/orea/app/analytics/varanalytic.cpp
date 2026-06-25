@@ -206,7 +206,7 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
         auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
             analytic()->market(), analytic()->configurations().simMarketParams, Market::defaultConfiguration,
             *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, true, false,
-            false, false, true, inputs_->iborFallbackConfig());
+            false, false, inputs_->iborFallbackConfig());
         simMarket->scenarioGenerator() = scenarios;
         scenarios->baseScenario() = simMarket->baseScenario();
 
@@ -267,7 +267,7 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
     auto scenarios = buildHistoricalScenarioGenerator(
         varVars->scenarioReader_, adjFactors, benchmarkVarPeriod, varVars->horizonCalendar_, varVars->horizonDays_,
         analytic()->configurations().simMarketParams, analytic()->configurations().todaysMarketParams,
-        returnConfig, varVars->horizonOverlappingPeriods_, riskFactorBreakdown_);
+        returnConfig, varVars->horizonOverlappingPeriods_, riskFactorBreakdown_, varVars->includeTheta_);
 
     if (varVars->outputHistoricalScenarios_)
         ore::analytics::ReportWriter().writeHistoricalScenarios(
@@ -276,7 +276,7 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
                                               false, inputs_->csvQuoteChar(), inputs_->reportNaString()));
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), analytic()->configurations().simMarketParams, Market::defaultConfiguration,
-        *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, true, false, false,
+        *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, true, false,
         allowPartialScenarios_, true, inputs_->iborFallbackConfig());
     simMarket->scenarioGenerator() = scenarios;
     scenarios->baseScenario() = simMarket->baseScenario();
@@ -312,12 +312,6 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
             varVars->includeExpectedShortfall_, varVars->tradePnL_, riskFactorBreakdown_,
             inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades(), riskClassBreakdown_,
             varVars->includeTheta_);
-
-        if (varVars->includeTheta_) {
-            auto thetaMap = computeTheta(loader);
-            auto histSimReport = ext::dynamic_pointer_cast<HistoricalSimulationVarReport>(varReport_);
-            histSimReport->setThetaPerTrade(thetaMap);
-        }
     }
 }
 
@@ -336,91 +330,6 @@ void HistoricalSimulationVarAnalyticImpl::addAdditionalReports(
             reports->add(histPnLRFReport);
             analytic()->addReport(label_, "riskFactor_PnL", histPnLRFReport);
         }
-}
-
-std::map<std::string, QuantLib::Real>
-HistoricalSimulationVarAnalyticImpl::computeTheta(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) const {
-    auto varVars = ext::dynamic_pointer_cast<HistoricalSimulationVarVariables>(inputVariables_);
-    std::map<std::string, Real> thetaMap;
-
-    Date t0 = inputs_->asof();
-    Date thetaDate = varVars->horizonCalendar_.advance(t0, varVars->horizonDays_ * Days);
-
-    LOG("Computing theta for historical simulation VaR, t0=" << t0 << ", thetaDate=" << thetaDate);
-
-    // Collect t0 NPVs from the portfolio already built against TodaysMarket
-    std::map<std::string, Real> t0Npvs;
-    auto baseCcy = inputs_->baseCurrency();
-    for (auto const& [id, trade] : analytic()->portfolio()->trades()) {
-        try {
-            Real npv = trade->instrument()->NPV();
-            Real fx = 1.0;
-            if (trade->npvCurrency() != baseCcy)
-                fx = analytic()->market()->fxRate(trade->npvCurrency() + baseCcy)->value();
-            t0Npvs[id] = npv * fx;
-        } catch (const std::exception& e) {
-            ALOG("Error getting t0 NPV for trade " << id << " in theta computation: " << e.what());
-            t0Npvs[id] = 0.0;
-        }
-    }
-
-    // Create a sim market at thetaDate for theta pricing
-    Settings::instance().evaluationDate() = thetaDate;
-
-    auto thetaSimMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
-        analytic()->market(), analytic()->configurations().simMarketParams, Market::defaultConfiguration,
-        *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, true, false, false,
-        false, true, inputs_->iborFallbackConfig());
-
-    // Build the portfolio against the theta sim market
-    QuantLib::ext::shared_ptr<EngineData> edCopy = QuantLib::ext::make_shared<EngineData>(*inputs_->pricingEngine());
-    edCopy->globalParameters()["GenerateAdditionalResults"] = "true";
-    edCopy->globalParameters()["RunType"] = "HistoricalPnL";
-    auto thetaFactory = QuantLib::ext::make_shared<EngineFactory>(
-        edCopy, thetaSimMarket, std::map<MarketContext, string>(), inputs_->refDataManager(),
-        inputs_->iborFallbackConfig());
-
-    auto thetaPortfolio = QuantLib::ext::make_shared<Portfolio>();
-    thetaPortfolio->fromXMLString(analytic()->portfolio()->toXMLString());
-    thetaPortfolio->build(thetaFactory, "theta computation", true);
-
-    // Backfill fixings from t0 to thetaDate
-    auto thetaFixingManager = QuantLib::ext::make_shared<FixingManager>(t0);
-    thetaFixingManager->initialise(thetaPortfolio, thetaSimMarket, Market::defaultConfiguration);
-    thetaFixingManager->update(thetaDate);
-
-    // Reprice each trade at thetaDate and compute theta
-    for (auto const& [id, trade] : thetaPortfolio->trades()) {
-        try {
-            Real npv = trade->instrument()->NPV();
-            Real fx = 1.0;
-            if (trade->npvCurrency() != baseCcy)
-                fx = thetaSimMarket->fxRate(trade->npvCurrency() + baseCcy)->value();
-            Real thetaNpv = npv * fx;
-            Real cashflow = 0.0;
-            if (varVars->includePeriodCashflow_) {
-                auto cfData = trade->cashflows(baseCcy, thetaSimMarket, Market::defaultConfiguration, false);
-                for (const auto& cf : cfData) {
-                    if (cf.payDate <= t0 || cf.payDate > thetaDate)
-                        continue;
-                    Real cfFx = 1.0;
-                    if (cf.currency != baseCcy)
-                        cfFx = thetaSimMarket->fxRate(cf.currency + baseCcy)->value();
-                    cashflow += cfFx * cf.amount;
-                }
-            }
-            thetaMap[id] = thetaNpv - t0Npvs[id] + cashflow;
-        } catch (const std::exception& e) {
-            ALOG("Error computing theta for trade " << id << ": " << e.what());
-            thetaMap[id] = 0.0;
-        }
-    }
-
-    // Restore fixings and evaluation date
-    thetaFixingManager->reset();
-    Settings::instance().evaluationDate() = t0;
-
-    return thetaMap;
 }
 
 } // namespace analytics

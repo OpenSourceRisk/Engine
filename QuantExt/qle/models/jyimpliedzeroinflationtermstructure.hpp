@@ -37,7 +37,7 @@ public:
     /*! Constructor taking the cross asset model, \p model, and the index of the relevant inflation component within
         the model, \p index.
     */
-    JyImpliedZeroInflationTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, QuantLib::Size index,
+    JyImpliedZeroInflationTermStructure(const QuantLib::Handle<CrossAssetModel>& model, QuantLib::Size index,
                                         const std::optional<QuantLib::DayCounter>& simulationDayCounter = std::nullopt);
 
     std::pair<QuantLib::Real, QuantLib::Real> indexGrowth(Time t) const override;
