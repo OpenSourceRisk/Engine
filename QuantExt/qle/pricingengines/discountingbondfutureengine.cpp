@@ -39,28 +39,31 @@ void DiscountingBondFutureEngine::calculate() const {
     Date priceDate = std::min(arguments_.index->futureExpiryDate(), today);
     Real strike = arguments_.index->fixing(priceDate, false);
     Real fwd = arguments_.index->fixing(priceDate, true);
+    Real multiplier = arguments_.isLong ? 1.0 : -1.0;
 
     results_.value = discountCurve_->discount(arguments_.futureSettlement) * (fwd - strike) *
-                     conversionFactor_->value() * (arguments_.isLong ? 1.0 : -1.0) * arguments_.contractNotional;
+                     conversionFactor_->value() * multiplier * arguments_.contractNotional;
 
     std::vector<CashFlowResults> cashFlowResults;
 
     CashFlowResults strikeFlow;
     strikeFlow.payDate = arguments_.futureSettlement;
     strikeFlow.amount =
-        strike * conversionFactor_->value() * (arguments_.isLong ? -1.0 : 1.0) * arguments_.contractNotional;
+        strike * conversionFactor_->value() * -multiplier * arguments_.contractNotional;
     strikeFlow.type = "StrikeFlow";
     cashFlowResults.push_back(strikeFlow);
 
     CashFlowResults bondFlow;
     bondFlow.payDate = arguments_.futureSettlement;
-    bondFlow.amount = fwd * conversionFactor_->value() * (arguments_.isLong ? 1.0 : -1.0) * arguments_.contractNotional;
+    bondFlow.amount = fwd * conversionFactor_->value() * multiplier * arguments_.contractNotional;
     bondFlow.type = "BondValueFlow";
     bondFlow.fixingDate = arguments_.index->futureExpiryDate();
     bondFlow.fixingValue = fwd;
     cashFlowResults.push_back(bondFlow);
 
     results_.additionalResults["cashFlowResults"] = cashFlowResults;
+    results_.additionalResults["futurePrice"] = fwd;
+    results_.additionalResults["contractNotional"] = arguments_.contractNotional;
 }
 
 } // namespace QuantExt
