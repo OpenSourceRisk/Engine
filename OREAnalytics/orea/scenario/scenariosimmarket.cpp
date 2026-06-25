@@ -232,6 +232,12 @@ QuantLib::ext::shared_ptr<QuantExt::PriceTermStructure> makeInterpolatedPriceCur
     else if (interpolation == "ForwardFlat")
         return QuantLib::ext::make_shared<QuantExt::InterpolatedPriceCurve<QuantLib::ForwardFlat>>(
             tenors, quotes, dayCounter, currency);
+    else if (interpolation == "LinearFlat")
+        return QuantLib::ext::make_shared<QuantExt::InterpolatedPriceCurve<QuantExt::LinearFlat>>(tenors, quotes,
+                                                                                                  dayCounter, currency);
+    else if (interpolation == "CubicFlat")
+        return QuantLib::ext::make_shared<QuantExt::InterpolatedPriceCurve<QuantExt::CubicFlat>>(tenors, quotes,
+                                                                                                 dayCounter, currency);
     else
         QL_FAIL("makeInterpolatedPriceCurve: interpolation '" << interpolation << "' not recognised.");
 }

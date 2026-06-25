@@ -26,8 +26,6 @@
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 
-#include <boost/algorithm/string.hpp>
-
 using namespace QuantLib;
 
 namespace QuantExt {
@@ -38,15 +36,18 @@ makeSpreadInterpolation(const std::string& interpolation, const std::vector<Real
                         const std::vector<Real>& data) {
     // Spreads are additive, so log based methods fall back to their linear counterpart and the *Flat variants map to
     // the base method since flat extrapolation is always applied on top.
-    std::string i = boost::to_lower_copy(interpolation);
-    if (i == "linear")
+    if (interpolation == "Linear")
         return QuantLib::ext::make_shared<LinearInterpolation>(times.begin(), times.end(), data.begin());
-    else if (i == "cubic")
+    else if (interpolation == "Cubic")
         return QuantLib::ext::make_shared<CubicNaturalSpline>(times.begin(), times.end(), data.begin());
-    else if (i == "backwardflat")
+    else if (interpolation == "BackwardFlat")
         return QuantLib::ext::make_shared<BackwardFlatInterpolation>(times.begin(), times.end(), data.begin());
-    else if (i == "forwardflat")
+    else if (interpolation == "ForwardFlat")
         return QuantLib::ext::make_shared<ForwardFlatInterpolation>(times.begin(), times.end(), data.begin());
+    else if (interpolation == "LinearFlat")
+        return QuantLib::ext::make_shared<LinearInterpolation>(times.begin(), times.end(), data.begin());
+    else if (interpolation == "CubicFlat")
+        return QuantLib::ext::make_shared<CubicNaturalSpline>(times.begin(), times.end(), data.begin());
     else
         QL_FAIL("SpreadedPriceTermStructure: interpolation '" << interpolation << "' not recognised.");
 }
