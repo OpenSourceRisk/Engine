@@ -94,9 +94,20 @@ void IntradayPowerForward::build(const QuantLib::ext::shared_ptr<EngineFactory>&
         additionalData_["fixingDate"] = fixingDate_;
         additionalData_["fxIndex"] = fxIndex;
     }
-    std::vector<QuantExt::LoadFactor> factors(1, QuantExt::LoadFactor {deliveryStart_, deliveryEnd_, quantity_, isDstHour_});
-
-    auto loadProfile = QuantLib::ext::make_shared<QuantExt::IntradayPowerLoadProfile>(factors);
+    QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadProfile> loadProfile = nullptr;
+    if (deliveryStart_.has_value() && deliveryEnd_.has_value()) {
+        std::vector<QuantExt::LoadFactor> factors(1,
+                                                  QuantExt::LoadFactor{*deliveryStart_, *deliveryEnd_, quantity_, isDstHour_});
+        loadProfile = QuantLib::ext::make_shared<QuantExt::IntradayPowerLoadProfile>(factors);
+    } else if (loadProfileData_.has_value()) {
+        auto loadCurve = loadProfileData_->loadTermStructure();
+        QL_REQUIRE(loadCurve != nullptr && !loadCurve->empty(),
+                   "No non-empty PowerLoadProfileData provided for intraday power forward " << id());
+        loadProfile = loadCurve->loadProfile(deliveryDate_);
+        QL_REQUIRE(loadProfile != nullptr,
+                   "No load profile for delivery date " << io::iso_date(deliveryDate_) << " in intraday power "
+                                                         "forward " << id());
+    }
 
     index = index->clone(deliveryDate_, loadProfile);
 
@@ -196,9 +207,29 @@ void IntradayPowerForward::fromXML(XMLNode* node) {
     strike_ = XMLUtils::getChildValueAsDouble(commodityDataNode, "Strike", true);
 
     deliveryDate_ = parseDate(XMLUtils::getChildValue(commodityDataNode, "DeliveryDate", true));
-    deliveryStart_ = XMLUtils::getChildValueAsInt(commodityDataNode, "DeliveryStart", true);
-    deliveryEnd_ = XMLUtils::getChildValueAsInt(commodityDataNode, "DeliveryEnd", true);
-    isDstHour_ = XMLUtils::getChildValueAsBool(commodityDataNode, "IsDstHour", false, false);
+    const auto* deliveryStartNode = XMLUtils::getChildNode(commodityDataNode, "DeliveryStart");
+    const auto* deliveryEndNode = XMLUtils::getChildNode(commodityDataNode, "DeliveryEnd");
+    const bool hasDeliveryStart = deliveryStartNode != nullptr;
+    const bool hasDeliveryEnd = deliveryEndNode != nullptr;
+    QL_REQUIRE(hasDeliveryStart == hasDeliveryEnd,
+               "IntradayPowerForwardData must contain both DeliveryStart and DeliveryEnd or neither");
+
+    deliveryStart_ = std::nullopt;
+    deliveryEnd_ = std::nullopt;
+    loadProfileData_ = std::nullopt;
+    powerLoadProfileReference_.clear();
+
+    if (hasDeliveryStart) {
+        deliveryStart_ = XMLUtils::getChildValueAsInt(commodityDataNode, "DeliveryStart", true);
+        deliveryEnd_ = XMLUtils::getChildValueAsInt(commodityDataNode, "DeliveryEnd", true);
+        isDstHour_ = XMLUtils::getChildValueAsBool(commodityDataNode, "IsDstHour", false, false);
+    }
+
+    if (XMLNode* n = XMLUtils::getChildNode(commodityDataNode, "PowerLoadProfileData");
+        !loadProfileData_.has_value() && n != nullptr) {
+        loadProfileData_ = PowerLoadProfileData();
+        loadProfileData_->fromXML(n);
+    }
     
     physicallySettled_ = QuantLib::ext::nullopt;
     if (XMLNode* n = XMLUtils::getChildNode(commodityDataNode, "PhysicallySettled"))
@@ -230,10 +261,19 @@ XMLNode* IntradayPowerForward::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, commodityDataNode, "Strike", strike_);
     XMLUtils::addChild(doc, commodityDataNode, "Quantity", quantity_);
     XMLUtils::addChild(doc, commodityDataNode, "DeliveryDate", to_string(deliveryDate_));
-    XMLUtils::addChild(doc, commodityDataNode, "DeliveryStart", to_string(deliveryStart_));
-    XMLUtils::addChild(doc, commodityDataNode, "DeliveryEnd", to_string(deliveryEnd_));
-    XMLUtils::addChild(doc, commodityDataNode, "IsDstHour", isDstHour_);
-    if (physicallySettled_)
+
+    if (deliveryStart_.has_value() && deliveryEnd_.has_value()) {
+        XMLUtils::addChild(doc, commodityDataNode, "DeliveryStart", to_string(*deliveryStart_));
+        XMLUtils::addChild(doc, commodityDataNode, "DeliveryEnd", to_string(*deliveryEnd_));
+        XMLUtils::addChild(doc, commodityDataNode, "IsDstHour", isDstHour_);
+    }
+
+    if (loadProfileData_.has_value()) {
+        auto lpNode = loadProfileData_->toXML(doc);
+        XMLUtils::appendNode(commodityDataNode, lpNode);
+    }
+
+    if (physicallySettled_.has_value())
         XMLUtils::addChild(doc, commodityDataNode, "PhysicallySettled", *physicallySettled_);
 
     if (paymentDate_ != Date())

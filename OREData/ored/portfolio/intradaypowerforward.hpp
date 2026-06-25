@@ -24,7 +24,10 @@
 
 #pragma once
 
+#include <ored/portfolio/powerloadprofiledata.hpp>
 #include <ored/portfolio/trade.hpp>
+
+#include <optional>
 
 namespace ore {
 namespace data {
@@ -55,6 +58,7 @@ public:
     std::string maturityDate() { return maturityDate_; }
     QuantLib::Real strike() { return strike_; }
     const QuantLib::Date& deliveryDate() const { return deliveryDate_; }
+    const std::optional<PowerLoadProfileData>& loadProfileData() const { return loadProfileData_; }
     const QuantLib::ext::optional<bool>& physicallySettled() const { return physicallySettled_; }
     const QuantLib::Date& paymentDate() const { return paymentDate_; }
     //@}
@@ -83,9 +87,11 @@ private:
     std::string maturityDate_;
     QuantLib::Real strike_;
     QuantLib::Date deliveryDate_;
-    int deliveryStart_;
-    int deliveryEnd_;
-    bool isDstHour_;
+    std::string powerLoadProfileReference_;
+    std::optional<PowerLoadProfileData> loadProfileData_ = std::nullopt;
+    std::optional<int> deliveryStart_ = std::nullopt;
+    std::optional<int> deliveryEnd_ = std::nullopt;
+    bool isDstHour_ = false;
     QuantLib::ext::optional<bool> physicallySettled_;
     QuantLib::Date paymentDate_;
 
