@@ -165,15 +165,17 @@ Real EquityCoupon::accruedAmount(const Date& d) const {
 
 void EquityCoupon::performCalculations() const {
     CashFlow::performCalculations();
-    QL_REQUIRE(pricer_, "pricer not set");
-    pricer_->initialize(*this);
-    rate_ = pricer_->swapletRate();
+    // QL_REQUIRE(pricer_, "pricer not set");
+    // pricer_->initialize(*this);
+    // rate_ = pricer_->swapletRate();
 }
 
 Rate EquityCoupon::rate() const {
     // FIXME: laziness does not work for this coupon
     // calculate();
-    performCalculations();
+    QL_REQUIRE(pricer_, "pricer not set");
+    pricer_->initialize(*this);
+    rate_ = pricer_->swapletRate();
     return rate_;
 }
 
