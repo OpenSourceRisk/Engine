@@ -446,10 +446,23 @@ void setAssertHandler() {
 #endif
 
 unsigned long long nanosecondsClock() {
-#if defined(__unix__) or defined(__unix) or defined(__linux__) or defined(__APPLE__)
-    static timespec t;
+#if defined(_WIN32) || defined(_WIN64)
+    // QueryPerformanceFrequency is constant after boot; cache it once.
+    static LARGE_INTEGER freq = []() {
+        LARGE_INTEGER f;
+        QueryPerformanceFrequency(&f);
+        return f;
+    }();
+    LARGE_INTEGER count;
+    QueryPerformanceCounter(&count);
+    // Split division to avoid 64-bit overflow before the *1e9 multiply.
+    return (count.QuadPart / freq.QuadPart) * 1000000000ULL +
+           (count.QuadPart % freq.QuadPart) * 1000000000ULL / freq.QuadPart;
+#elif defined(__unix__) || defined(__unix) || defined(__linux__) || defined(__APPLE__)
+    thread_local timespec t;
     clock_gettime(CLOCK_REALTIME, &t);
-    return t.tv_nsec + 1000000000UL * t.tv_sec;
+    return static_cast<unsigned long long>(t.tv_nsec) +
+           1000000000ULL * static_cast<unsigned long long>(t.tv_sec);
 #else
     return 0;
 #endif
