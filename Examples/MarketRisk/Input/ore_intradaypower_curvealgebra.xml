@@ -3,7 +3,7 @@
   <Setup>
     <Parameter name="asofDate">2021-01-05</Parameter>
     <Parameter name="inputPath">Input/Intradaypower</Parameter>
-    <Parameter name="outputPath">Output/Intradaypower</Parameter>
+    <Parameter name="outputPath">Output/Intradaypower_curveAlgebra</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
     <Parameter name="logMask">255</Parameter>
     <Parameter name="marketDataFile">market.txt</Parameter>
@@ -31,16 +31,15 @@
     </Analytic>
     <Analytic type="sensitivity">
       <Parameter name="active">Y</Parameter>
-      <Parameter name="marketConfigFile">simulation.xml</Parameter>
-      <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
+      <Parameter name="marketConfigFile">simulation_curveAlgebra.xml</Parameter>
+      <Parameter name="sensitivityConfigFile">sensitivity_curveAlgebra.xml</Parameter>
       <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
       <Parameter name="optimiseRiskFactors">Y</Parameter>
     </Analytic>
     <Analytic type="stress">
       <Parameter name="active">Y</Parameter>
-      <Parameter name="marketConfigFile">simulation.xml</Parameter>
-      <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
-      <Parameter name="stressConfigFile">stresstest.xml</Parameter>
+      <Parameter name="marketConfigFile">simulation_curveAlgebra.xml</Parameter>
+      <Parameter name="stressConfigFile">stresstest_curveAlgebra.xml</Parameter>
     </Analytic>
   </Analytics>
 </ORE>

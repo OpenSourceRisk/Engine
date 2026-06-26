@@ -16,15 +16,13 @@
 			<Index>USD-FedFunds</Index>
 		</Indices>
 		<BenchmarkCurves />
-		<CommodityCurves>
+		<Commodities>
 			<Simulate>true</Simulate>
 			<Names>
 				<Name>PJM_WH_RT_PK</Name>
 			</Names>
-			<Interpolation name="">Linear</Interpolation>
-			<Interpolation name="PJM_WH_RT_PK">BackwardFlat</Interpolation>
 			<Tenors name="" />
-		</CommodityCurves>
+		</Commodities>
 		<IntradayPowerCurves>
 			<Simulate>true</Simulate>
 			<Names>
@@ -42,5 +40,25 @@
 		<AggregationScenarioDataCreditStates>
 			<NumberOfFactors>0</NumberOfFactors>
 		</AggregationScenarioDataCreditStates>
+		<CurveAlgebra>
+			<Curve>
+				<Key>IntradayPowerCurve/PJM_WH_RT_PK</Key>
+				<Operation>
+					<Type>Spreaded</Type>
+					<Arguments>
+						<Argument>CommodityCurve/PJM_WH_RT_PK,1</Argument>
+					</Arguments>
+				</Operation>
+			</Curve>
+			<Curve>
+				<Key>IntradayPowerCurve/PJM_WH_RT_PK_15MIN</Key>
+				<Operation>
+					<Type>Spreaded</Type>
+					<Arguments>
+						<Argument>CommodityCurve/PJM_WH_RT_PK,1</Argument>
+					</Arguments>
+				</Operation>
+			</Curve>
+		</CurveAlgebra>
 	</Market>
 </Simulation>

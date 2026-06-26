@@ -281,7 +281,7 @@
       <Name>PJM_WH_RT_PK</Name>
       <Currency>USD</Currency>
       <Strike>32.900000</Strike>
-      <Quantity>1</Quantity>
+      <Quantity>50</Quantity>
       <DeliveryDate>2021-06-01</DeliveryDate>
       <DeliveryStart>0</DeliveryStart>
       <DeliveryEnd>3600</DeliveryEnd>
@@ -299,7 +299,7 @@
       <Name>PJM_WH_RT_PK</Name>
       <Currency>USD</Currency>
       <Strike>32.900000</Strike>
-      <Quantity>1</Quantity>
+      <Quantity>50</Quantity>
       <DeliveryDate>2021-06-01</DeliveryDate>
       <DeliveryStart>2700</DeliveryStart>
       <DeliveryEnd>4500</DeliveryEnd>
@@ -317,7 +317,7 @@
       <Name>PJM_WH_RT_PK_15MIN</Name>
       <Currency>USD</Currency>
       <Strike>32.900000</Strike>
-      <Quantity>1</Quantity>
+      <Quantity>50</Quantity>
       <DeliveryDate>2021-06-01</DeliveryDate>
       <DeliveryStart>0</DeliveryStart>
       <DeliveryEnd>3600</DeliveryEnd>
@@ -335,7 +335,7 @@
       <Name>PJM_WH_RT_PK_15MIN</Name>
       <Currency>USD</Currency>
       <Strike>32.900000</Strike>
-      <Quantity>1</Quantity>
+      <Quantity>50</Quantity>
       <DeliveryDate>2021-06-01</DeliveryDate>
       <DeliveryStart>2700</DeliveryStart>
       <DeliveryEnd>4500</DeliveryEnd>

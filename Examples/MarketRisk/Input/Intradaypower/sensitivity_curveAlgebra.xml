@@ -37,6 +37,7 @@
 	</IndexCurves>
 	<CommodityCurves>
 		<CommodityCurve name="PJM_WH_RT_PK">
+			<Currency>USD</Currency>
 			<ShiftType>Relative</ShiftType>
 			<ShiftSize>0.01</ShiftSize>
 			<ShiftScheme>Forward</ShiftScheme>

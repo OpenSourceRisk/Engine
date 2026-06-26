@@ -22,25 +22,21 @@
     <Parameter name="pricing">default</Parameter>
   </Markets>
   <Analytics>
-    <Analytic type="npv">
+    <Analytic type="historicalSimulationVar">
       <Parameter name="active">Y</Parameter>
-    </Analytic>
-    <Analytic type="cashflow">
-      <Parameter name="active">Y</Parameter>
-      <Parameter name="outputFileName">flows.csv</Parameter>
-    </Analytic>
-    <Analytic type="sensitivity">
-      <Parameter name="active">Y</Parameter>
-      <Parameter name="marketConfigFile">simulation.xml</Parameter>
-      <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
-      <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
-      <Parameter name="optimiseRiskFactors">Y</Parameter>
-    </Analytic>
-    <Analytic type="stress">
-      <Parameter name="active">Y</Parameter>
-      <Parameter name="marketConfigFile">simulation.xml</Parameter>
-      <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
-      <Parameter name="stressConfigFile">stresstest.xml</Parameter>
+      <Parameter name="historicalScenarioFile">scenario.csv</Parameter>
+      <Parameter name="simulationConfigFile">simulation_curvealgebra.xml</Parameter>
+      <Parameter name="historicalPeriod">2020-05-12,2020-12-17</Parameter>
+      <Parameter name="mporDays">10</Parameter>
+      <Parameter name="mporCalendar">USD</Parameter>
+      <Parameter name="mporOverlappingPeriods">true</Parameter>
+      <Parameter name="quantiles">0.01,0.05,0.95,0.99</Parameter>
+      <Parameter name="includeExpectedShortfall">Y</Parameter>
+      <Parameter name="breakdown">Y</Parameter>
+      <Parameter name="tradePnl">Y</Parameter>
+      <Parameter name="riskFactorBreakdown">Y</Parameter>
+      <Parameter name="riskClassBreakdown">N</Parameter>
+      <Parameter name="outputFile">var.csv</Parameter>
     </Analytic>
   </Analytics>
 </ORE>
