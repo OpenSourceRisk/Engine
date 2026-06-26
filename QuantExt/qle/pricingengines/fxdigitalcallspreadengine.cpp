@@ -154,13 +154,51 @@ void FxDigitalCallSpreadEngine::calculate() const {
         results_.value = df_te_tp * spreadValue * fxRate;
         results_.delta = df_te_tp * spreadDelta * fxRate;
 
+        Real spot = bsp_->x0();
+        DiscountFactor dividendDiscount = bsp_->dividendYield()->discount(expiryDate);
+        DiscountFactor riskFreeDiscount = bsp_->riskFreeRate()->discount(expiryDate);
+
+        results_.additionalResults["spot"] = spot;
+        results_.additionalResults["forward"] = spot * dividendDiscount / riskFreeDiscount;;
+        results_.additionalResults["strike"] = strike;
+        results_.additionalResults["dividendDiscount"] = dividendDiscount;
+        results_.additionalResults["riskFreeDiscount"] = riskFreeDiscount;
+        results_.additionalResults["settlementFxFwd"] = fxRate;
+
         results_.additionalResults["discountFactorTeTp"] = df_te_tp;
         results_.additionalResults["settlementFxFwd"] = fxRate;
         results_.additionalResults["priceLo"] = priceLo;
         results_.additionalResults["priceHi"] = priceHi;
         results_.additionalResults["deltaLo"] = deltaLo;
         results_.additionalResults["deltaHi"] = deltaHi;
+    }
 
+    if (flipResults_) {
+
+        // Invert strike, spot, forward
+
+        auto resToInvert = std::vector<std::string>({"spot", "forward", "strike"});
+        for (const std::string& res : resToInvert) {
+            auto it = results_.additionalResults.find(res);
+            if (it != results_.additionalResults.end()) {
+                std::string resPricing = res + "_pricing";
+                results_.additionalResults[resPricing] = it->second;
+                it->second = 1. / QuantLib::ext::any_cast<Real>(it->second);
+            }
+        }
+
+        // Swap riskFreeDiscount and dividendDiscount, discountFactor stays what it is
+
+        Real rfDiscount = Null<Real>();
+        Real divDiscount = Null<Real>();
+
+        if (auto tmp = results_.additionalResults.find("riskFreeDiscount"); tmp != results_.additionalResults.end())
+            rfDiscount = QuantLib::ext::any_cast<Real>(tmp->second);
+        if (auto tmp = results_.additionalResults.find("dividendDiscount"); tmp != results_.additionalResults.end())
+            divDiscount = QuantLib::ext::any_cast<Real>(tmp->second);
+
+        results_.additionalResults["riskFreeDiscount"] = divDiscount;
+        results_.additionalResults["dividendDiscount"] = rfDiscount;
     }
 
     
