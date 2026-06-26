@@ -231,7 +231,7 @@ endif()
 set(Boost_NO_WARN_NEW_VERSIONS ON)
 
 # Find Boost components.
-list(APPEND BOOST_COMPONENT_LIST filesystem serialization timer log iostreams thread)
+list(APPEND BOOST_COMPONENT_LIST filesystem serialization timer log iostreams thread program_options)
 if(NOT MSVC)
     list(APPEND BOOST_COMPONENT_LIST stacktrace_basic)
 endif()
