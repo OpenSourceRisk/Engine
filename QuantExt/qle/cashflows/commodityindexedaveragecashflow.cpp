@@ -84,6 +84,8 @@ CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
 
 void CommodityIndexedAverageCashFlow::performCalculations() const {
 
+    CashFlow::performCalculations();
+
     // Calculate the average price
     averagePrice_ = 0.0;
     Real fxRate = 0.0;

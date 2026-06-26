@@ -3157,13 +3157,10 @@ Leg makeEquityLeg(const LegData& data, const QuantLib::ext::shared_ptr<EquityInd
         // Get a coupon pricer for the leg
         QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("EquityLeg");
         QL_REQUIRE(builder, "No Equity builder found for EquityLeg");
-        LOG("Before cast");
         QuantLib::ext::shared_ptr<EquityCouponPricerBuilderBase> equityBuilder =
             QuantLib::ext::dynamic_pointer_cast<EquityCouponPricerBuilderBase>(builder);
-        LOG("After cast");
         auto equityPricer = QuantLib::ext::dynamic_pointer_cast<EquityCouponPricer>(
             equityBuilder->engine(dataCurrency, equityCurve->name(), eqLegData->fxIndex()));
-        LOG("After cast2");
         QL_REQUIRE(equityPricer, "Expected Equity Pricer");
 
         if (productModelEngines)
