@@ -3,7 +3,7 @@
   <Setup>
     <Parameter name="asofDate">2021-01-05</Parameter>
     <Parameter name="inputPath">Input/Intradaypower</Parameter>
-    <Parameter name="outputPath">Output/Intradaypower</Parameter>
+    <Parameter name="outputPath">Output/Intradaypower/HistSimVar</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
     <Parameter name="logMask">255</Parameter>
     <Parameter name="marketDataFile">market.txt</Parameter>
@@ -26,7 +26,7 @@
       <Parameter name="active">Y</Parameter>
       <Parameter name="historicalScenarioFile">scenario.csv</Parameter>
       <Parameter name="simulationConfigFile">simulation_curvealgebra.xml</Parameter>
-      <Parameter name="historicalPeriod">2020-05-12,2020-12-17</Parameter>
+      <Parameter name="historicalPeriod">2020-05-12,2020-05-22</Parameter>
       <Parameter name="mporDays">10</Parameter>
       <Parameter name="mporCalendar">USD</Parameter>
       <Parameter name="mporOverlappingPeriods">true</Parameter>
@@ -35,7 +35,9 @@
       <Parameter name="breakdown">Y</Parameter>
       <Parameter name="tradePnl">Y</Parameter>
       <Parameter name="riskFactorBreakdown">Y</Parameter>
-      <Parameter name="riskClassBreakdown">N</Parameter>
+      <Parameter name="riskClassBreakdown">Y</Parameter>
+      <Parameter name="outputHistoricalScenarios">Y</Parameter>
+      <Parameter name="outputHistoricalScenarios">Y</Parameter>
       <Parameter name="outputFile">var.csv</Parameter>
     </Analytic>
   </Analytics>
