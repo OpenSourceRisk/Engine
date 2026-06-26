@@ -81,7 +81,6 @@ Analytic::Analytic(std::unique_ptr<Impl> impl,
     }
 }
 
-
 Analytic::analytic_reports Analytic::reports() { 
     auto rpts = reports_;
     for (const auto& [key, a] : impl_->dependentAnalytics()) {

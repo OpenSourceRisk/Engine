@@ -678,7 +678,9 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
 
             std::vector<RandomVariable> derivatives(g->size(), RandomVariable(model_->size(), 0.0));
             derivatives[cg_var(*g, npv_ + "_0")] = RandomVariable(model_->size(), 1.0);
-            backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodes);
+            backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodes, {}, {}, {},
+                                RandomVariableOpCode::ConditionalExpectation,
+                                ops_[RandomVariableOpCode::ConditionalExpectation]);
 
             sensis_.resize(baseModelParams_.size());
             for (Size i = 0; i < baseModelParams_.size(); ++i) {
