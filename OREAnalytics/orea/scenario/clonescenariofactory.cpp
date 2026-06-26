@@ -32,12 +32,8 @@ const QuantLib::ext::shared_ptr<Scenario> CloneScenarioFactory::buildScenario(Qu
                                                                               bool isPar, const std::string& label,
                                                                               QuantLib::Real numeraire) const {
     QuantLib::ext::shared_ptr<Scenario> newScen = baseScenario_->clone();
-    QL_REQUIRE(asof == newScen->asof(),
-               "CloneScenarioFactory: unexpected asof date (" << asof << "), does not match base - " << baseScenario_->asof());
+    newScen->setAsof(asof);
     newScen->label(label);
-    QL_REQUIRE((label == newScen->label()) || (label == ""), "CloneScenarioFactory has not updated scenario label");
-    if (numeraire != 0.0)
-        newScen->setNumeraire(numeraire);
     newScen->setAbsolute(isAbsolute);
     newScen->setPar(isPar);
     return newScen;

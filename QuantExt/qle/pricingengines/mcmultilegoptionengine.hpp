@@ -57,7 +57,7 @@ public:
         const bool generateAdditionalResults = false);
 
     McMultiLegOptionEngine(
-        const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const SequenceType calibrationPathGenerator,
+        const QuantLib::Handle<LinearGaussMarkovModel>& model, const SequenceType calibrationPathGenerator,
         const SequenceType pricingPathGenerator, const Size calibrationSamples, const Size pricingSamples,
         const Size calibrationSeed, const Size pricingSeed, const Size polynomOrder,
         const LsmBasisSystem::PolynomialType polynomType,

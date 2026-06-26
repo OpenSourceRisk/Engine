@@ -99,9 +99,6 @@ Real ExerciseCalculator::npv(Size tradeIndex, const QuantLib::ext::shared_ptr<Tr
     Real fx = fxRates_[tradeCcyIndex_[tradeIndex]];
     Real numeraire = simMarket->numeraire();
 
-    // DLOG("trade " << trade->id() << " " << io::iso_date(today) << " exercised " << exerciseValue << " index "
-    //               << index_);
-
     return exerciseValue * fx / numeraire;
 }
 

@@ -23,10 +23,13 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
-#include <orea/app/inputvariables.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
-#include <ored/report/inmemoryreport.hpp>
+#include <orea/app/inputvariables.hpp>
+#include <orea/scenario/scenariosimmarketparameters.hpp>
+#include <orea/scenario/sensitivityscenariodata.hpp>
+#include <orea/scenario/stressscenariodata.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
+#include <ored/report/inmemoryreport.hpp>
 namespace ore {
 namespace analytics {
 
@@ -34,33 +37,41 @@ class InputParameters;
 
 struct SensitivityStressVariables : public InputVariables {
     void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+    bool calcBaseScenario_ = false;
 };
 
 class SensitivityStressAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "SENSITIVITY_STRESS";
-    explicit SensitivityStressAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs, const QuantLib::ext::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios = {});
+    explicit SensitivityStressAnalyticImpl(
+        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+        const QuantLib::ext::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios = std::nullopt,
+        const std::string& reportNamePrefix = "");
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
     void buildDependencies() override;
-    void setStressScenarios(const QuantLib::ext::shared_ptr<StressTestScenarioData>& stressScenarios) { stressScenarios_ = stressScenarios; }
 
 private:
     void runStressTest(const QuantLib::ext::shared_ptr<ore::analytics::StressScenarioGenerator>& scenarioGenerator,
-                       const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader);
-    void concatReports(const std::map<std::string, std::vector<QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>>& sensitivityReports);
+                       const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
+                       bool calcBaseScenario);
+    void concatReports(const std::map<std::string, std::vector<QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>>&
+                           sensitivityReports);
 
-    QuantLib::ext::shared_ptr<StressTestScenarioData> stressScenarios_;
+    std::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>> stressScenarios_;
+    std::string reportNamePrefix = "";
 };
 
 class SensitivityStressAnalytic : public Analytic {
 public:
-    explicit SensitivityStressAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                               const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager,
-        const QuantLib::ext::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios = {})
-        : Analytic(std::make_unique<SensitivityStressAnalyticImpl>(inputs, scenarios), {"SENSITIVITY_STRESS"}, inputs, analyticsManager,
-                   true, false, false, false) {}
+    explicit SensitivityStressAnalytic(
+        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+        const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager,
+        const QuantLib::ext::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios = std::nullopt,
+        const std::string& reportNamePrefix = "")
+        : Analytic(std::make_unique<SensitivityStressAnalyticImpl>(inputs, scenarios, reportNamePrefix), {"SENSITIVITY_STRESS"}, inputs,
+                   analyticsManager, true, true, false, false) {}
 };
 
 } // namespace analytics

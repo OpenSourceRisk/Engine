@@ -81,7 +81,6 @@ Analytic::Analytic(std::unique_ptr<Impl> impl,
     }
 }
 
-
 Analytic::analytic_reports Analytic::reports() { 
     auto rpts = reports_;
     for (const auto& [key, a] : impl_->dependentAnalytics()) {
@@ -335,8 +334,8 @@ void Analytic::applyOffsetScenario(bool continueOnError, bool useSpreadedTermStr
     auto offsetMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
         market_, offsetSimMarketParams(), marketConfiguration,
         curveConfigs ? *curveConfigs : ore::data::CurveConfigurations(), *configurations_.todaysMarketParams,
-        continueOnError, useSpreadedTermStructures, continueOnError, overrideTenors, true,
-        inputs_->iborFallbackConfig(), true, offsetScenario());
+        continueOnError, useSpreadedTermStructures, continueOnError, overrideTenors, inputs_->iborFallbackConfig(),
+        true, offsetScenario());
     setMarket(offsetMarket);
 }
 

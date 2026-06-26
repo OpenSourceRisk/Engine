@@ -39,10 +39,9 @@ public:
     NumericLgmRiskParticipationAgreementEngine(
         const std::string& baseCcy, const std::map<std::string, Handle<YieldTermStructure>>& discountCurves,
         const std::map<std::string, Handle<Quote>>& fxSpots,
-        const QuantLib::ext::shared_ptr<QuantExt::LinearGaussMarkovModel>& model, const Real sy, const Size ny,
-        const Real sx, const Size nx, const Handle<DefaultProbabilityTermStructure>& defaultCurve,
-        const Handle<Quote>& recoveryRate, const Size maxGapDays = Null<Size>(),
-        const Size maxDiscretisationPoints = Null<Size>(),
+        const QuantLib::Handle<QuantExt::LinearGaussMarkovModel>& model, const Real sy, const Size ny, const Real sx,
+        const Size nx, const Handle<DefaultProbabilityTermStructure>& defaultCurve, const Handle<Quote>& recoveryRate,
+        const Size maxGapDays = Null<Size>(), const Size maxDiscretisationPoints = Null<Size>(),
         const OptionExpiryPosition optionExpiryPosition = OptionExpiryPosition::Mid);
 
 private:

@@ -66,7 +66,7 @@ public:
     explicit StressedSimmAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
                                   const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
         : Analytic(std::make_unique<StressedSimmAnalyticImpl>(inputs), {"SIMM_STRESS"}, inputs, analyticsManager, true,
-                   false, true, false) {
+                   true, false, false) {
     }
 };
 

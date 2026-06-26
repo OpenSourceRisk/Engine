@@ -39,7 +39,7 @@ namespace ore {
 namespace analytics {
 
 QuantLib::ext::shared_ptr<ScenarioGenerator>
-ScenarioGeneratorBuilder::build(QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model,
+ScenarioGeneratorBuilder::build(QuantLib::Handle<QuantExt::CrossAssetModel> model,
                                 QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> marketConfig, Date asof,
                                 QuantLib::ext::shared_ptr<ore::data::Market> initMarket, const std::string& configuration,
                                 const QuantLib::ext::shared_ptr<PathGeneratorFactory>& pf, const std::string& amcPathDataInput) {

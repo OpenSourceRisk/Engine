@@ -127,6 +127,10 @@ void SetupVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
     inputs->loadParameterXML<Portfolio>(portfolio_, "setup", "portfolioFile");
     scaleUpPortfolio(portfolio_);
     inputs->loadParameterXML<EngineData>(pricingEngine_, "setup", "pricingEnginesFile");
+    ext::shared_ptr<EngineData> pricingEngineOverride;
+    inputs->loadParameterXML<EngineData>(pricingEngineOverride, "setup", "pricingEnginesOverride");
+    if (pricingEngine_ && pricingEngineOverride)
+        pricingEngine_->setEngineDataOverride(pricingEngineOverride);
     inputs->loadParameterXML<TodaysMarketParameters>(todaysMarketParams_, "setup", "marketConfigFile");
     inputs->loadParameterXML<BaselTrafficLightData>(baselTrafficLightConfig_, "setup", "baselTrafficLightConfig");
     inputs->loadParameterXML<CounterpartyManager>(counterpartyManager_, "setup", "counterpartyFile");
