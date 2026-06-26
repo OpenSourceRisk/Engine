@@ -27,6 +27,9 @@
 #include <ql/shared_ptr.hpp>
 
 namespace ore {
+namespace data {
+class EngineData;
+}
 namespace analytics {
 
 class InputParameters;
@@ -43,6 +46,14 @@ struct InputVariables {
     virtual ~InputVariables() = default;
     virtual void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) = 0;
     void loadVariables(const QuantLib::ext::weak_ptr<InputParameters>& inputs);
+
+protected:
+    /*! Load an optional pricing-engine override for (analytic, param) and, if one is configured, apply it to
+        \p engine. The engine is copied before the override is applied so that a shared engine (e.g. the setup
+        pricing engine reached via a fallback) is never mutated in place. */
+    static void applyEngineDataOverride(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                                        QuantLib::ext::shared_ptr<ore::data::EngineData>& engine,
+                                        const std::string& analytic, const std::string& param);
 };
 
 }; // namespace analytics
