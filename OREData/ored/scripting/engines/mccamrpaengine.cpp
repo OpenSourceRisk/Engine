@@ -16,17 +16,22 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/pricingengines/mccamrpaengine.hpp>
+#include <ored/scripting/engines/mccamrpaengine.hpp>
+#include <ored/scripting/engines/riskparticipationagreementbaseengine.hpp>
 
-namespace QuantExt {
+#include <ored/utilities/parsers.hpp>
+
+namespace ore::data {
 
 using namespace QuantLib;
+using namespace QuantExt;
 
 McCamRpaEngine::McCamRpaEngine(
-    const Handle<CrossAssetModel>& model, const Handle<DefaultProbabilityTermStructure>& crediCurve,
-    const Handle<Quote>& recoveryRate, const Size maxGapDays, const Size maxDiscretisationPoints,
-    const SequenceType calibrationPathGenerator, const SequenceType pricingPathGenerator, const Size calibrationSamples,
-    const Size pricingSamples, const Size calibrationSeed, const Size pricingSeed, const Size polynomOrder,
+    const Handle<CrossAssetModel>& model, const std::vector<Currency>& currencies, const Currency& npvCcy,
+    const Handle<DefaultProbabilityTermStructure>& creditCurve, const Handle<Quote>& recoveryRate,
+    const Size maxGapDays, const Size maxDiscretisationPoints, const SequenceType calibrationPathGenerator,
+    const SequenceType pricingPathGenerator, const Size calibrationSamples, const Size pricingSamples,
+    const Size calibrationSeed, const Size pricingSeed, const Size polynomOrder,
     const LsmBasisSystem::PolynomialType polynomType, const SobolBrownianGenerator::Ordering ordering,
     const SobolRsg::DirectionIntegers directionIntegers, const std::vector<Handle<YieldTermStructure>>& discountCurves,
     const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates,
@@ -42,32 +47,32 @@ McCamRpaEngine::McCamRpaEngine(
           stickyCloseOutDates, externalModelIndices, minimalObsDate, regressorModel, regressionVarianceCutoff,
           recalibrateOnStickyCloseOutDates, reevaluateExerciseInStickyRun, cfOnCpnMaxSimTimes, cfOnCpnAddSimTimesCutoff,
           regressionMaxSimTimesIr, regressionMaxSimTimesFx, regressionMaxSimTimesEq, regressionVarGroupMode),
-      creditCurve_(creditCurve), recoveryRate_(recoveryRate), maxGapDays_(maxGapDays),
-      maxDiscretisationPoints_(maxDiscretisationPoints) {
+      maxGapDays_(maxGapDays), maxDiscretisationPoints_(maxDiscretisationPoints) {
+
+    defaultCurve_ = creditCurve;
+    recoveryRate_ = recoveryRate;
+
     registerWith(model_);
-    registerWith(creditCurve_);
+    registerWith(defaultCurve_);
     registerWith(recoveryRate_);
 }
 
-void McCamCurrencySwapEngine::calculate() const {
+void McCamRpaEngine::calculate() const {
 
     std::vector<Currency> underlyingCcys;
     std::for_each(arguments_.underlyingCcys.begin(), arguments_.underlyingCcys.end(),
-                  [&underlyingCcys]() { underlyingCcys.push_back(parseCurrency(c)); });
+                  [&underlyingCcys](auto const& c) { underlyingCcys.push_back(ore::data::parseCurrency(c)); });
 
     leg_ = arguments_.underlying;
-    currency_ = arguments_.underlyingCcys;
+    currency_ = underlyingCcys;
     payer_ = arguments_.underlyingPayer;
     exercise_ = arguments_.exercise;
-
-    defaultCurve_ = creditCurve_;
-    recoveryRate_ = recoveryRate_;
 
     Date today = Settings::instance().evaluationDate();
 
     rpaDiscretizationDates_ = RiskParticipationAgreementBaseEngine::buildDiscretisationGrid(
         today, arguments_.protectionStart, arguments_.protectionEnd, arguments_.underlying, maxGapDays_,
-        maxDiscretizsationPoints_);
+        maxDiscretisationPoints_);
 
     // base engine extensions:
     // - nakedOption = true/false flag
@@ -76,9 +81,13 @@ void McCamCurrencySwapEngine::calculate() const {
 
     McMultiLegBaseEngine::calculate();
 
-    results_.value = resultValue_;
+    // convert base ccy result from McMultiLegbaseEngine to desired npv currency
+    Real fxSpot = 1.0;
+    Size npvCcyIndex = model_->ccyIndex(npvCcy_);
+    if (npvCcyIndex > 0)
+        fxSpot = model_->fxModel(npvCcyIndex - 1)->fxSpotToday()->value();
+    results_.value = resultValue_ / fxSpot;
     results_.additionalResults["amcCalculator"] = amcCalculator();
-
 } // calculate
 
-} // namespace QuantExt
+} // namespace ore::data

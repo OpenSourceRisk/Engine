@@ -55,7 +55,7 @@ public:
 
 protected:
     QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id,
-                                                          RiskParticipationAgreement* rpa) override;
+                                                                  RiskParticipationAgreement* rpa) override;
 };
 
 //! RPA XCcy Black engine builder
@@ -67,7 +67,7 @@ public:
 
 protected:
     QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id,
-                                                          RiskParticipationAgreement* rpa) override;
+                                                                  RiskParticipationAgreement* rpa) override;
 };
 
 //! RPA Numeric LGM base builder
@@ -90,7 +90,7 @@ public:
 
 protected:
     QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id,
-                                                          RiskParticipationAgreement* rpa) override;
+                                                                  RiskParticipationAgreement* rpa) override;
 };
 
 //! RPA Numeric LGM engine builder for tlock underlyings
@@ -101,7 +101,7 @@ public:
 
 protected:
     QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id,
-                                                          RiskParticipationAgreement* rpa) override;
+                                                                  RiskParticipationAgreement* rpa) override;
 };
 
 //! RPA AMC engine builder (all underlyings except t-lock)
@@ -120,9 +120,12 @@ protected:
                                                                   RiskParticipationAgreement* rpa) override;
 
 private:
-    QuantLib::ext::shared_ptr<PricingEngine> buildMcEngine(const QuantLib::Handle<QuantExt::CrossAssetModel>& lgm,
-                                                           const Handle<YieldTermStructure>& discountCurve,
-                                                           const std::vector<Size>& externalModelIndices);
+    QuantLib::ext::shared_ptr<PricingEngine>
+    buildMcEngine(const QuantLib::Handle<QuantExt::CrossAssetModel>& model, const std::vector<QuantLib::Currency>& ccys,
+                  const Currency& base, const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve,
+                  const QuantLib::Handle<QuantLib::Quote>& recoveryRate,
+                  const std::vector<QuantLib::Size>& externalModelIndices);
+
     const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
     const std::vector<Date> simulationDates_;
     const std::vector<Date> stickyCloseOutDates_;

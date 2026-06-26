@@ -24,18 +24,28 @@
 #include <ored/scripting/engines/numericlgmriskparticipationagreementengine_tlock.hpp>
 
 #include <ored/model/lgmbuilder.hpp>
+#include <ored/scripting/engines/mccamrpaengine.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 
-#include <qle/pricingengines/mccamrpaengine.hpp>
+#include <qle/models/projectedcrossassetmodel.hpp>
 
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
 
 namespace ore {
 namespace data {
+
+namespace detail {
+struct CcyComp {
+    bool operator()(const Currency& c1, const Currency& c2) const { return c1.code() < c2.code(); }
+};
+} // namespace detail
+
+using namespace QuantLib;
+using namespace QuantExt;
 
 std::map<std::string, Handle<YieldTermStructure>>
 RiskParticipationAgreementEngineBuilderBase::getDiscountCurves(RiskParticipationAgreement* rpa) {
@@ -63,7 +73,8 @@ RiskParticipationAgreementBlackEngineBuilder::engineImpl(const std::string& id, 
     string config = configuration(MarketContext::pricing);
     // the first ibor / ois index found
     QuantLib::ext::shared_ptr<IborIndex> index;
-    auto qlInstr = QuantLib::ext::dynamic_pointer_cast<QuantExt::RiskParticipationAgreement>(rpa->instrument()->qlInstrument());
+    auto qlInstr =
+        QuantLib::ext::dynamic_pointer_cast<QuantExt::RiskParticipationAgreement>(rpa->instrument()->qlInstrument());
     QL_REQUIRE(qlInstr != nullptr, "RiskParticipationAgreementBlackEngineBuilder: internal error, could not "
                                    "cast to RiskParticipationAgreement");
     for (auto const& l : qlInstr->underlying()) {
@@ -248,7 +259,8 @@ RiskParticipationAgreementSwapLGMGridEngineBuilder::engineImpl(const std::string
 
     // determine expiries and strikes for calibration basket (simple approach, a la summit)
 
-    auto qlInstr = QuantLib::ext::dynamic_pointer_cast<QuantExt::RiskParticipationAgreement>(rpa->instrument()->qlInstrument());
+    auto qlInstr =
+        QuantLib::ext::dynamic_pointer_cast<QuantExt::RiskParticipationAgreement>(rpa->instrument()->qlInstrument());
     QL_REQUIRE(qlInstr != nullptr, "RiskParticipationAgreementSwapLGMGridEngineBuilder: internal error, could not "
                                    "cast to RiskParticipationAgreement");
 
@@ -285,7 +297,7 @@ RiskParticipationAgreementSwapLGMGridEngineBuilder::engineImpl(const std::string
                     floatingCpns.push_back(floatingCpn);
                     if (index == nullptr)
                         index = QuantLib::ext::dynamic_pointer_cast<IborIndex>(floatingCpn->index());
-		}
+                }
             }
         }
         auto cpnLt = [](const QuantLib::ext::shared_ptr<Coupon>& x, const QuantLib::ext::shared_ptr<Coupon>& y) {
@@ -294,7 +306,9 @@ RiskParticipationAgreementSwapLGMGridEngineBuilder::engineImpl(const std::string
         std::sort(fixedCpns.begin(), fixedCpns.end(), cpnLt);
         std::sort(floatingCpns.begin(), floatingCpns.end(), cpnLt);
 
-        auto accLt = [](const QuantLib::ext::shared_ptr<Coupon>& x, const Date& e) { return x->accrualStartDate() < e; };
+        auto accLt = [](const QuantLib::ext::shared_ptr<Coupon>& x, const Date& e) {
+            return x->accrualStartDate() < e;
+        };
         for (auto const& expiry : expiries) {
             // look for the first fixed and float coupon with accrual start >= expiry
             auto firstFix = std::lower_bound(fixedCpns.begin(), fixedCpns.end(), expiry, accLt);
@@ -342,8 +356,8 @@ RiskParticipationAgreementTLockLGMGridEngineBuilder::engineImpl(const std::strin
     // determine expiries and strikes for calibration basket (coterminal ATM until termination date, spacing as
     // specified in config)
 
-    auto qlInstr =
-        QuantLib::ext::dynamic_pointer_cast<QuantExt::RiskParticipationAgreementTLock>(rpa->instrument()->qlInstrument());
+    auto qlInstr = QuantLib::ext::dynamic_pointer_cast<QuantExt::RiskParticipationAgreementTLock>(
+        rpa->instrument()->qlInstrument());
     QL_REQUIRE(qlInstr != nullptr, "RiskParticipationAgreementTLockLGMGridEngineBuilder: internal error, could not "
                                    "cast to RiskParticipationAgreementTLock");
 
@@ -393,30 +407,27 @@ RiskParticipationAgreementTLockLGMGridEngineBuilder::engineImpl(const std::strin
         recoveryRate, timeStepsPerYear);
 }
 
-namespace {
+QuantLib::ext::shared_ptr<PricingEngine> CamAmcRiskParticipationAgreementEngineBuilder::buildMcEngine(
+    const QuantLib::Handle<CrossAssetModel>& model, const std::vector<Currency>& ccys, const Currency& base,
+    const Handle<DefaultProbabilityTermStructure>& creditCurve, const Handle<Quote>& recoveryRate,
+    const std::vector<Size>& externalModelIndices) {
 
-struct CcyComp {
-    bool operator()(const Currency& c1, const Currency& c2) const { return c1.code() < c2.code(); }
-};
-
-QuantLib::ext::shared_ptr<PricingEngine>
-CamAmcSwapEngineBuilder::buildMcEngine(const QuantLib::Handle<CrossAssetModel>& model, const std::set<Currency>& ccys,
-                                       const Handle<DefaultProbabilityTermStrucutre>& creditCurve,
-                                       const Handle<Quote>& recoveryRate,
-                                       const std::vector<Size>& externalModelIndices) {
     Size maxDiscretisationPoints = parseInteger(engineParameter("MaxDiscretisationPoints"));
+
     if (maxDiscretisationPoints == 0)
         maxDiscretisationPoints = Null<Size>();
-    return QuantLib::ext::make_shared<QuantExt::McCamRpaEngine>(
-        model, ccys, creditCurve, recoveryRate, parseInteger(engineParameter("MaxGapDays")), maxDiscretisationPoints,
-        parseSequenceType(engineParameter("Training.Sequence")), parseSequenceType(engineParameter("Pricing.Sequence")),
-        parseInteger(engineParameter("Training.Samples")), parseInteger(engineParameter("Pricing.Samples")),
-        parseInteger(engineParameter("Training.Seed")), parseInteger(engineParameter("Pricing.Seed")),
-        parseInteger(engineParameter("Training.BasisFunctionOrder")),
+
+    return QuantLib::ext::make_shared<McCamRpaEngine>(
+        model, ccys, base, creditCurve, recoveryRate, parseInteger(engineParameter("MaxGapDays")),
+        maxDiscretisationPoints, parseSequenceType(engineParameter("Training.Sequence")),
+        parseSequenceType(engineParameter("Pricing.Sequence")), parseInteger(engineParameter("Training.Samples")),
+        parseInteger(engineParameter("Pricing.Samples")), parseInteger(engineParameter("Training.Seed")),
+        parseInteger(engineParameter("Pricing.Seed")), parseInteger(engineParameter("Training.BasisFunctionOrder")),
         parsePolynomType(engineParameter("Training.BasisFunction")),
         parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering")),
-        parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")), discountCurve, simulationDates_,
-        stickyCloseOutDates_, externalModelIndices, parseBool(engineParameter("MinObsDate")),
+        parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")),
+        std::vector<Handle<YieldTermStructure>>{}, simulationDates_, stickyCloseOutDates_, externalModelIndices,
+        parseBool(engineParameter("MinObsDate")),
         parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
         parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
         parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
@@ -429,8 +440,6 @@ CamAmcSwapEngineBuilder::buildMcEngine(const QuantLib::Handle<CrossAssetModel>& 
         parseVarGroupMode(engineParameter("Regression.VarGroupMode", {}, false, "Global")));
 }
 
-} // namespace
-
 QuantLib::ext::shared_ptr<PricingEngine>
 CamAmcRiskParticipationAgreementEngineBuilder::engineImpl(const std::string& id, RiskParticipationAgreement* rpa) {
     DLOG("Building AMC engine for rpa " << id << " (from externally given CAM)");
@@ -439,18 +448,18 @@ CamAmcRiskParticipationAgreementEngineBuilder::engineImpl(const std::string& id,
 
     // collect currencies
 
-    std::set<Currency, CcyComp> allCurrencies;
-    std::for_each(rpa->underlyingCcys().begin(), rpa->underlyingCcys().end(),
-                  [&allCurrencies](const std::string& c) { allCurrencies.push_back(parseCurrency(c)); });
-    std::for_each(rpa->protectionFeeCcys().begin(), rpa->protectionFeeCcys().end(),
-                  [&allCurrencies](const std::string& c) { allCurrencies.push_back(parseCurrency(c)); });
+    std::set<Currency, ore::data::detail::CcyComp> allCurrencies;
+    std::for_each(rpa->underlying().begin(), rpa->underlying().end(),
+                  [&allCurrencies](const LegData& c) { allCurrencies.insert(parseCurrency(c.currency())); });
+    std::for_each(rpa->protectionFee().begin(), rpa->protectionFee().end(),
+                  [&allCurrencies](const LegData& c) { allCurrencies.insert(parseCurrency(c.currency())); });
 
     // get projected model
 
     bool needBaseCcy = allCurrencies.size() > 1;
 
     std::set<std::pair<CrossAssetModel::AssetType, Size>> selectedComponents;
-    if(needBaseCcy) {
+    if (needBaseCcy) {
         selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, 0));
     }
     for (auto const& c : allCurrencies) {
@@ -459,9 +468,6 @@ CamAmcRiskParticipationAgreementEngineBuilder::engineImpl(const std::string& id,
             selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, ccyIdx));
         if (needBaseCcy && ccyIdx > 0)
             selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::FX, ccyIdx - 1));
-    }
-    for (auto const& eq : eqNames) {
-        selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::EQ, cam_->eqIndex(eq)));
     }
     std::vector<Size> externalModelIndices;
     Handle<CrossAssetModel> model(getProjectedCrossAssetModel(cam_, selectedComponents, externalModelIndices));
@@ -473,7 +479,8 @@ CamAmcRiskParticipationAgreementEngineBuilder::engineImpl(const std::string& id,
         market_->defaultCurve(rpa->creditCurveId(), configuration(MarketContext::pricing))->curve();
     Handle<Quote> recoveryRate = market_->recoveryRate(rpa->creditCurveId(), configuration(MarketContext::pricing));
 
-    return buildMcEngine(model, allCurrencies, creditCurve, recoveryCurve, externalModelIndices);
+    return buildMcEngine(model, std::vector<Currency>(allCurrencies.begin(), allCurrencies.end()),
+                         parseCurrency(rpa->npvCurrency()), creditCurve, recoveryRate, externalModelIndices);
 }
 
 } // namespace data
