@@ -901,18 +901,22 @@ void McMultiLegBaseEngine::MultiLegBaseAmcCalculator::serialize(Archive& ar, con
     ar & exerciseXvaRpaTimes_;
     ar & exerciseTimes_;
     ar & xvaTimes_;
+    ar & rpaTimes_;
 
     ar & regModelUndDirty_;
     ar & regModelUndExInto_;
     ar & regModelRebate_;
     ar & regModelContinuationValue_;
     ar & regModelOption_;
+    ar & regModelRpaUndDirty_;
+    ar & regModelRpaOption_;
     ar & resultValue_;
     ar & initialState_;
     ar & baseCurrency_;
     ar & reevaluateExerciseInStickyRun_;
     ar & includeTodaysCashflows_;
     ar & includeReferenceDateEvents_;
+    ar & isRpa_;
 }
 
 template void QuantExt::McMultiLegBaseEngine::MultiLegBaseAmcCalculator::serialize(boost::archive::binary_iarchive& ar,

@@ -198,7 +198,6 @@ public:
         bool includeReferenceDateEvents_;
 
         bool isRpa_;
-        std::vector<Real> rpaWeights_;
 
         std::vector<Filter> exercised_;
 
