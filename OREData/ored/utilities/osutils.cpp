@@ -459,7 +459,7 @@ unsigned long long nanosecondsClock() {
     return (count.QuadPart / freq.QuadPart) * 1000000000ULL +
            (count.QuadPart % freq.QuadPart) * 1000000000ULL / freq.QuadPart;
 #elif defined(__unix__) || defined(__unix) || defined(__linux__) || defined(__APPLE__)
-    timespec t;
+    thread_local timespec t;
     clock_gettime(CLOCK_REALTIME, &t);
     return static_cast<unsigned long long>(t.tv_nsec) +
            1000000000ULL * static_cast<unsigned long long>(t.tv_sec);
