@@ -26,6 +26,9 @@
 #include <orea/scenario/scenariofilereader.hpp>
 #include <orea/scenario/scenarioloader.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
+#include <orea/scenario/historicalscenarioreturn.hpp>
+#include <orea/scenario/historicalscenariogenerator.hpp>
+#include <orea/scenario/scenariowriter.hpp>
 %}
 
 // STL templates needed by this module
@@ -148,6 +151,164 @@ public:
     const ext::shared_ptr<QuantExt::Scenario> buildScenario(
         QuantLib::Date asof, bool isAbsolute, bool isPar = false,
         const std::string& label = "", QuantLib::Real numeraire = 0.0) const override;
+};
+}}
+
+// --- ReturnConfiguration ---
+%rename(ReturnConfigurationReturnType) ore::analytics::ReturnConfiguration::ReturnType;
+%feature("flatnested") ReturnType;
+
+%shared_ptr(ore::analytics::ReturnConfiguration)
+
+namespace ore { namespace analytics {
+class ReturnConfiguration : public ore::data::XMLSerializable {
+public:
+    enum class ReturnType { Absolute, Relative, Log };
+
+    ReturnConfiguration();
+    explicit ReturnConfiguration(
+        const std::map<QuantExt::RiskFactorKey::KeyType, ReturnType>& returnType);
+
+    QuantLib::Real returnValue(const QuantExt::RiskFactorKey& key,
+                               QuantLib::Real v1, QuantLib::Real v2,
+                               const QuantLib::Date& d1, const QuantLib::Date& d2) const;
+    QuantLib::Real applyReturn(const QuantExt::RiskFactorKey& key,
+                               QuantLib::Real baseValue,
+                               QuantLib::Real returnValue) const;
+
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+};
+}}
+
+%template(KeyTypeReturnTypeMap) std::map<QuantExt::RiskFactorKey::KeyType, ore::analytics::ReturnConfiguration::ReturnType>;
+
+// --- HistoricalScenarioGenerator ---
+%shared_ptr(ore::analytics::HistoricalScenarioGenerator)
+
+// Python-friendly base scenario setter (the C++ non-const ref overload is unusable from Python)
+%extend ore::analytics::HistoricalScenarioGenerator {
+    void setBaseScenario(const ext::shared_ptr<QuantExt::Scenario>& s) {
+        self->baseScenario() = s;
+    }
+}
+
+namespace ore { namespace analytics {
+class HistoricalScenarioGenerator : public ScenarioGenerator {
+public:
+    HistoricalScenarioGenerator(
+        const ext::shared_ptr<ore::analytics::HistoricalScenarioLoader>& historicalScenarioLoader,
+        const ext::shared_ptr<ore::analytics::ScenarioFactory>& scenarioFactory,
+        const ext::shared_ptr<ore::analytics::ReturnConfiguration>& returnConfiguration,
+        const QuantLib::Calendar& cal,
+        const ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors =
+            ext::shared_ptr<ore::data::AdjustmentFactors>(),
+        QuantLib::Size mporDays = 10,
+        bool overlapping = true,
+        const std::string& labelPrefix = "",
+        bool generateDifferenceScenarios = false,
+        bool riskFactorBreakdown = false);
+
+    HistoricalScenarioGenerator(
+        const ext::shared_ptr<ore::analytics::HistoricalScenarioLoader>& historicalScenarioLoader,
+        const ext::shared_ptr<ore::analytics::ScenarioFactory>& scenarioFactory,
+        const ext::shared_ptr<ore::analytics::ReturnConfiguration>& returnConfiguration,
+        const ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors =
+            ext::shared_ptr<ore::data::AdjustmentFactors>(),
+        const std::string& labelPrefix = "",
+        bool generateDifferenceScenarios = false,
+        bool riskFactorBreakdown = false);
+
+    ext::shared_ptr<QuantExt::Scenario>& baseScenario();
+    const QuantLib::Calendar& cal() const;
+    QuantLib::Size mporDays() const;
+    bool overlapping() const;
+
+    ext::shared_ptr<QuantExt::Scenario> next(const QuantLib::Date& d) override;
+    void reset() override;
+
+    QuantLib::Size numScenarios() const;
+    const std::vector<QuantLib::Date>& startDates() const;
+    const std::vector<QuantLib::Date>& endDates() const;
+
+    const ext::shared_ptr<ore::analytics::HistoricalScenarioLoader>& scenarioLoader() const;
+    const ext::shared_ptr<ore::analytics::ScenarioFactory>& scenarioFactory() const;
+    const ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors() const;
+    const std::string& labelPrefix() const;
+
+    void setGenerateDifferenceScenarios(bool b);
+    bool generateDifferenceScenarios() const;
+};
+}}
+
+// --- HistoricalScenarioGeneratorRandom ---
+%shared_ptr(ore::analytics::HistoricalScenarioGeneratorRandom)
+
+namespace ore { namespace analytics {
+class HistoricalScenarioGeneratorRandom : public HistoricalScenarioGenerator {
+public:
+    HistoricalScenarioGeneratorRandom(
+        const ext::shared_ptr<ore::analytics::HistoricalScenarioLoader>& historicalScenarioLoader,
+        const ext::shared_ptr<ore::analytics::ScenarioFactory>& scenarioFactory,
+        const ext::shared_ptr<ore::analytics::ReturnConfiguration>& returnConfiguration,
+        const QuantLib::Calendar& cal,
+        const ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors =
+            ext::shared_ptr<ore::data::AdjustmentFactors>(),
+        QuantLib::Size mporDays = 10,
+        bool overlapping = true);
+
+    ext::shared_ptr<QuantExt::Scenario> next(const QuantLib::Date& d) override;
+    void reset() override;
+};
+}}
+
+// --- HistoricalScenarioGeneratorTransform ---
+// The C++ ctor takes hsg by non-const ref; %extend provides a const-ref overload usable from Python.
+%shared_ptr(ore::analytics::HistoricalScenarioGeneratorTransform)
+
+%extend ore::analytics::HistoricalScenarioGeneratorTransform {
+    HistoricalScenarioGeneratorTransform(
+        const ext::shared_ptr<ore::analytics::HistoricalScenarioGenerator>& hsg,
+        const ext::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
+        const ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketConfig)
+    {
+        auto hsg_ref = const_cast<ext::shared_ptr<ore::analytics::HistoricalScenarioGenerator>&>(hsg);
+        return new ore::analytics::HistoricalScenarioGeneratorTransform(hsg_ref, simMarket, simMarketConfig);
+    }
+}
+
+namespace ore { namespace analytics {
+class HistoricalScenarioGeneratorTransform : public HistoricalScenarioGenerator {
+public:
+    ext::shared_ptr<QuantExt::Scenario> next(const QuantLib::Date& d) override;
+};
+}}
+
+// --- ScenarioWriter ---
+%shared_ptr(ore::analytics::ScenarioWriter)
+
+%template(RiskFactorKeyVector) std::vector<QuantExt::RiskFactorKey>;
+
+namespace ore { namespace analytics {
+class ScenarioWriter : public ScenarioGenerator {
+public:
+    // File-based ctor with source generator
+    ScenarioWriter(const ext::shared_ptr<ore::analytics::ScenarioGenerator>& src,
+                   const std::string& filename,
+                   const char sep = ',',
+                   const std::string& filemode = "w+");
+
+    // File-based ctor for writing single scenarios
+    ScenarioWriter(const std::string& filename,
+                   const char sep = ',',
+                   const std::string& filemode = "w+");
+
+    virtual ~ScenarioWriter();
+
+    ext::shared_ptr<QuantExt::Scenario> next(const QuantLib::Date& d) override;
+    void writeScenario(const ext::shared_ptr<QuantExt::Scenario>& s, bool writeHeader);
+    void reset() override;
+    void close();
 };
 }}
 

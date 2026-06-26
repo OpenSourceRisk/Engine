@@ -1,0 +1,222 @@
+\subsubsection{Forward Volatility Agreement}
+\label{input:forwardvolatilityagreement}
+
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+A Forward Volatility Agreement (FVA) is a contract between two counterparties that agrees on the implied volatility of a
+forward-starting option. The trade supports two payoff types: \emph{Straddle} (default) and \emph{Put}.
+
+\textbf{Straddle payoff.} The long party pays a fixed premium computed as the sum of a call and a put with the
+aggreed implied volatility strike, and in return receives the absolute payoff of the forward-starting straddle.
+
+The fixed premium paid at the premium date is:
+
+$$
+\text{fixedPremium} = \text{Black}(\text{call}, F, K, \sigma, \tau) + \text{Black}(\text{put}, F, K, \sigma, \tau)
+$$
+
+where $F$ is the forward price of the underlying at the FVA date for expiry at the option expiry date, $K$ is the
+option strike (defaults to $F$ if not specified), $\sigma$ is the agreed implied volatility strike, and $\tau$ is the
+time from the FVA date to option expiry.
+
+The floating payoff received at the settlement date is:
+
+$$
+\text{floatingPayoff} = |K - S(T)|
+$$
+
+where $S(T)$ is the spot price of the underlying at option expiry $T$.
+
+The Straddle NPV from the perspective of the long party is:
+
+\begin{equation}
+\begin{split}
+\text{FVA NPV}
+= \text{LongShort} \cdot \text{Quantity} \cdot \Big(
+&\text{PAY}(\text{floatingPayoff},\, T,\, T_{\text{settle}},\, \text{PayCcy}) \\
+&{}- \text{PAY}(\text{fixedPremium},\, T_{\text{FVA}},\, T_{\text{premium}},\, \text{PayCcy})
+\Big)
+\end{split}
+\end{equation}
+
+\textbf{Put payoff.} The long party pays a fixed premium equal to the Black-Scholes value of a put option at the
+FVA date, computed using the spot price of the underlying at the FVA date, and in return receives the intrinsic
+put payoff at option expiry.
+
+The fixed premium paid at the premium date is the Black-Scholes put price:
+
+$$
+\text{fixedPremium} = K \cdot e^{-r\tau} N(-d_2) - S_0 \cdot e^{-q\tau} N(-d_1)
+$$
+
+where $S_0 = S(T_{\text{FVA}})$ is the spot at the FVA date, $K$ is the option strike, $r$ is the fixed (risk-free)
+rate, $q$ is the dividend yield, and
+
+$$
+d_1 = \frac{\ln(S_0/K) + (r - q + \frac{1}{2}\sigma^2)\tau}{\sigma\sqrt{\tau}}, \qquad
+d_2 = \frac{\ln(S_0/K) + (r - q - \frac{1}{2}\sigma^2)\tau}{\sigma\sqrt{\tau}}
+$$
+
+The floating payoff received at the settlement date is:
+
+$$
+\text{Payoff} = \max(K - S(T),\, 0)
+$$
+
+The Put NPV from the perspective of the long party is:
+
+\begin{equation}
+\begin{split}
+\text{FVA NPV}
+= \text{LongShort} \cdot \text{Quantity} \cdot \Big(
+&\text{PAY}(\text{Payoff},\, T,\, T_{\text{settle}},\, \text{PayCcy}) \\
+&{}- \text{PAY}(\text{fixedPremium},\, T_{\text{FVA}},\, T_{\text{premium}},\, \text{PayCcy})
+\Big)
+\end{split}
+\end{equation}
+
+{\bf Input}}\fi
+
+A Forward Volatility Agreement is set up using trade type \emph{ForwardVolatilityAgreement} and an associated
+\lstinline!ForwardVolatilityAgreementData! node, as shown in Listing \ref{lst:fva_data}. The node elements have the
+following meaning:
+
+\begin{itemize}
+\item FvaDate: The date on which the forward option strike is fixed and the fixed premium is observed. This is also
+  the start of the forward period.
+
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item OptionExpiry: The expiry date of the forward-starting option. The floating payoff is determined by the spot
+  price of the underlying on this date.
+
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}. Must be strictly after \lstinline!FvaDate!.
+
+\item PremiumDate: The date on which the fixed premium is paid. Must be on or after \lstinline!FvaDate!.
+
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item Underlying: The underlying asset definition. The ordering of FX currency pairs defines the observed value, i.e.
+  for \lstinline!ECB-GBP-USD! the domestic currency is USD (the value is expressed in USD per GBP).
+
+  Allowable values: See \ref{ss:underlying}.
+
+\item LongShort: Whether the party is long or short the forward volatility agreement.
+
+  Allowable values: \emph{Long}, \emph{Short}.
+
+\item UnderlyingStrike [Optional]: The strike of the forward-starting option, typically agreed at the at-the-money
+  forward level on trade date. If omitted, the strike defaults at valuation time to the forward price of the underlying
+  at the FVA date for option expiry (i.e.\ it is set to the at-the-money forward level consistent with the model).
+
+  Allowable values: Any positive real number.
+
+\item ImpliedVolStrike: The pre-agreed annualised implied volatility used to compute the fixed premium. Expressed in
+  absolute (decimal) terms, e.g. \lstinline!0.09675! for 9.675\%.
+
+  Allowable values: Any positive real number.
+
+\item Quantity: The notional quantity of the agreement.
+
+  Allowable values: Any non-negative real number.
+
+\item PayCcy: The currency in which the fixed premium and the floating payoff are settled.
+
+  Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+
+\item SettlementDate: The date on which the floating payoff is settled. Must be on or after \lstinline!OptionExpiry!.
+
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item PayoffType [Optional]: The payoff type of the FVA. Defaults to \emph{Straddle} if omitted.
+
+  \begin{itemize}
+  \item \emph{Straddle}: The fixed premium is the sum of a call and a put (Black formula), and the floating payoff
+    is $|K - S(T)|$.
+  \item \emph{Put}: The fixed premium is the Black-Scholes put price computed using the spot at the FVA date, and
+    the floating payoff is $\max(K - S(T), 0)$. \lstinline!UnderlyingStrike!, \lstinline!DayCountFraction!,
+    \lstinline!DividendYield!, and \lstinline!FixedRate! are all required when this type is selected.
+  \end{itemize}
+
+  Allowable values: \emph{Straddle}, \emph{Put}.
+
+\item DayCountFraction [Optional]: The day count convention used to compute the time fraction $\tau$ from
+  \lstinline!FvaDate! to \lstinline!OptionExpiry! in the Black-Scholes premium calculation. Required when
+  \lstinline!PayoffType! is \emph{Put}.
+
+  Allowable values: See Table \ref{tab:daycount} Day Count Fraction.
+
+\item DividendYield [Optional]: The continuous dividend yield $q$ used in the Black-Scholes premium calculation.
+  Required when \lstinline!PayoffType! is \emph{Put}. Expressed in decimal form, e.g.\ \lstinline!0.02! for 2\%.
+
+  Allowable values: Any real number.
+
+\item FixedRate [Optional]: The continuous risk-free rate $r$ used in the Black-Scholes premium calculation.
+  Required when \lstinline!PayoffType! is \emph{Put}. Expressed in decimal form, e.g.\ \lstinline!0.05! for 5\%.
+
+  Allowable values: Any real number.
+\end{itemize}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Trade id="FX_ForwardVolatilityAgreement">
+  <TradeType>ForwardVolatilityAgreement</TradeType>
+  <Envelope>
+    <CounterParty>CPTY_A</CounterParty>
+    <NettingSetId>CPTY_A</NettingSetId>
+    <AdditionalFields/>
+  </Envelope>
+  <ForwardVolatilityAgreementData>
+    <FvaDate>2019-07-25</FvaDate>
+    <OptionExpiry>2020-01-27</OptionExpiry>
+    <PremiumDate>2019-07-29</PremiumDate>
+    <Underlying>
+      <Type>FX</Type>
+      <Name>ECB-GBP-USD</Name>
+    </Underlying>
+    <LongShort>Long</LongShort>
+    <UnderlyingStrike>1.29844</UnderlyingStrike>
+    <ImpliedVolStrike>0.09675</ImpliedVolStrike>
+    <Quantity>89000000</Quantity>
+    <PayCcy>USD</PayCcy>
+    <SettlementDate>2020-01-29</SettlementDate>
+  </ForwardVolatilityAgreementData>
+</Trade>
+\end{minted}
+\caption{Forward Volatility Agreement data (Straddle payoff)}
+\label{lst:fva_data}
+\end{listing}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Trade id="FX_ForwardVolatilityAgreement_Put">
+  <TradeType>ForwardVolatilityAgreement</TradeType>
+  <Envelope>
+    <CounterParty>CPTY_A</CounterParty>
+    <NettingSetId>CPTY_A</NettingSetId>
+    <AdditionalFields/>
+  </Envelope>
+  <ForwardVolatilityAgreementData>
+    <FvaDate>2019-07-25</FvaDate>
+    <OptionExpiry>2020-01-27</OptionExpiry>
+    <PremiumDate>2019-07-29</PremiumDate>
+    <Underlying>
+      <Type>FX</Type>
+      <Name>ECB-GBP-USD</Name>
+    </Underlying>
+    <LongShort>Long</LongShort>
+    <UnderlyingStrike>1.29844</UnderlyingStrike>
+    <ImpliedVolStrike>0.09675</ImpliedVolStrike>
+    <Quantity>89000000</Quantity>
+    <PayCcy>USD</PayCcy>
+    <SettlementDate>2020-01-29</SettlementDate>
+    <PayoffType>Put</PayoffType>
+    <DayCountFraction>ACT/365</DayCountFraction>
+    <DividendYield>0.0</DividendYield>
+    <FixedRate>0.02</FixedRate>
+  </ForwardVolatilityAgreementData>
+</Trade>
+\end{minted}
+\caption{Forward Volatility Agreement data (Put payoff)}
+\label{lst:fva_put_data}
+\end{listing}

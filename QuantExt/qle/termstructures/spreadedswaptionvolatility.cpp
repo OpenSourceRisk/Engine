@@ -22,8 +22,7 @@
 
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/math/interpolations/flatextrapolation2d.hpp>
-
-#include <iostream>
+#include <ql/termstructures/volatility/swaption/swaptionvolcube.hpp>
 
 namespace QuantExt {
 
@@ -34,12 +33,14 @@ SpreadedSwaptionVolatility::SpreadedSwaptionVolatility(
     const QuantLib::ext::shared_ptr<SwapIndex>& baseSwapIndexBase,
     const QuantLib::ext::shared_ptr<SwapIndex>& baseShortSwapIndexBase,
     const QuantLib::ext::shared_ptr<SwapIndex>& simulatedSwapIndexBase,
-    const QuantLib::ext::shared_ptr<SwapIndex>& simulatedShortSwapIndexBase, const bool stickyAbsMoney)
+    const QuantLib::ext::shared_ptr<SwapIndex>& simulatedShortSwapIndexBase, const bool stickyAbsMoney,
+    const ReactionToTimeDecay decayMode, const YieldCurveRollDown simulatedIndexBaseRollDown)
     : SwaptionVolatilityDiscrete(optionTenors, swapTenors, 0, base->calendar(), base->businessDayConvention(),
                                  base->dayCounter()),
       base_(base), strikeSpreads_(strikeSpreads), volSpreads_(volSpreads), baseSwapIndexBase_(baseSwapIndexBase),
       baseShortSwapIndexBase_(baseShortSwapIndexBase), simulatedSwapIndexBase_(simulatedSwapIndexBase),
-      simulatedShortSwapIndexBase_(simulatedShortSwapIndexBase), stickyAbsMoney_(stickyAbsMoney) {
+      simulatedShortSwapIndexBase_(simulatedShortSwapIndexBase), stickyAbsMoney_(stickyAbsMoney), decayMode_(decayMode),
+      simulatedIndexBaseRollDown_(simulatedIndexBaseRollDown) {
 
     QL_REQUIRE(!strikeSpreads_.empty(), "SpreadedSwaptionVolatility: empty strike spreads");
     QL_REQUIRE(!optionTenors_.empty(), "SpreadedSwaptionVolatility: empty option tenors");
@@ -80,12 +81,7 @@ SpreadedSwaptionVolatility::SpreadedSwaptionVolatility(
     volSpreadInterpolation_ = std::vector<Interpolation2D>(strikeSpreads_.size());
 }
 
-DayCounter SpreadedSwaptionVolatility::dayCounter() const { return base_->dayCounter(); }
 Date SpreadedSwaptionVolatility::maxDate() const { return base_->maxDate(); }
-Time SpreadedSwaptionVolatility::maxTime() const { return base_->maxTime(); }
-const Date& SpreadedSwaptionVolatility::referenceDate() const { return base_->referenceDate(); }
-Calendar SpreadedSwaptionVolatility::calendar() const { return base_->calendar(); }
-Natural SpreadedSwaptionVolatility::settlementDays() const { return base_->settlementDays(); }
 Rate SpreadedSwaptionVolatility::minStrike() const { return base_->minStrike(); }
 Rate SpreadedSwaptionVolatility::maxStrike() const { return base_->maxStrike(); }
 const Period& SpreadedSwaptionVolatility::maxSwapTenor() const { return base_->maxSwapTenor(); }
@@ -115,31 +111,81 @@ Real SpreadedSwaptionVolatility::getAtmLevel(const Real optionTime, const Real s
 QuantLib::ext::shared_ptr<SmileSection> SpreadedSwaptionVolatility::smileSectionImpl(Time optionTime,
                                                                                      Time swapLength) const {
     calculate();
-    auto baseSection = base_->smileSection(optionTime, swapLength);
-    Real baseAtmLevel = Null<Real>();
-    Real simulatedAtmLevel = Null<Real>();
-    if (baseSection->atmLevel() == Null<Real>() && baseSwapIndexBase_) {
-        baseAtmLevel = getAtmLevel(optionTime, swapLength, baseSwapIndexBase_, baseShortSwapIndexBase_);
+
+    QuantLib::ext::shared_ptr<SmileSection> baseSection;
+    QuantLib::ext::shared_ptr<SmileSection> anchorBaseSection;
+
+    if (originalRefDate_ == actualRefDate_ || decayMode_ == ReactionToTimeDecay::ConstantVariance) {
+        baseSection = base_->smileSection(optionTime, swapLength);
+    } else {
+        baseSection = base_->smileSection(optionTime + t0_, swapLength);
+        anchorBaseSection = base_->smileSection(t0_, swapLength);
     }
+
+    Real baseAtmLevel = Null<Real>();
+    if(originalRefDate_ == actualRefDate_ || simulatedIndexBaseRollDown_ == YieldCurveRollDown::ConstantDiscounts)
+        baseAtmLevel = base_->smileSection(optionTime, swapLength)->atmLevel();
+    else
+        baseAtmLevel = base_->smileSection(optionTime + t0_, swapLength)->atmLevel();
+
+    Real simulatedAtmLevel = Null<Real>();
     if (simulatedSwapIndexBase_ != nullptr) {
         simulatedAtmLevel = getAtmLevel(optionTime, swapLength, simulatedSwapIndexBase_, simulatedShortSwapIndexBase_);
     }
-    // interpolate vol spreads
+
+    Real anchorBaseAtmLevel = Null<Real>();
+    Real anchorSimulatedAtmLevel = Null<Real>();
+    if (decayMode_ == ReactionToTimeDecay::ForwardForwardVariance) {
+        if (simulatedIndexBaseRollDown_ == YieldCurveRollDown::ConstantDiscounts) {
+            Rounding rounder(0);
+            Period swapTenor(static_cast<Integer>(rounder(swapLength * 12.0)), Months);
+            QuantLib::SavedSettings s;
+            QuantLib::Settings::instance().evaluationDate() = base_->referenceDate();
+            if (swapTenor > baseShortSwapIndexBase_->tenor()) {
+                anchorBaseAtmLevel = baseSwapIndexBase_->clone(swapTenor)->fixing(
+                    baseSwapIndexBase_->fixingCalendar().adjust(base_->referenceDate()));
+            } else {
+                anchorBaseAtmLevel = baseShortSwapIndexBase_->clone(swapTenor)->fixing(
+                    baseShortSwapIndexBase_->fixingCalendar().adjust(base_->referenceDate()));
+            }
+        } else {
+            anchorBaseAtmLevel = base_->smileSection(t0_, swapLength)->atmLevel();
+        }
+        if (simulatedSwapIndexBase_ != nullptr) {
+            anchorSimulatedAtmLevel =
+                getAtmLevel(t0_, swapLength, simulatedSwapIndexBase_, simulatedShortSwapIndexBase_);
+        }
+    }
+
     std::vector<Real> volSpreads(strikeSpreads_.size());
     for (Size k = 0; k < volSpreads.size(); ++k) {
         volSpreads[k] = volSpreadInterpolation_[k](swapLength, optionTime);
     }
-    // create smile section
-    return QuantLib::ext::make_shared<SpreadedSmileSection2>(baseSection, volSpreads, strikeSpreads_, true,
-                                                             baseAtmLevel, simulatedAtmLevel, stickyAbsMoney_);
+
+    if (originalRefDate_ == actualRefDate_ || decayMode_ == ReactionToTimeDecay::ConstantVariance) {
+        return QuantLib::ext::make_shared<SpreadedSmileSection2>(baseSection, volSpreads, strikeSpreads_, true,
+                                                                 baseAtmLevel, simulatedAtmLevel, stickyAbsMoney_);
+
+    } else {
+        return QuantLib::ext::make_shared<SpreadedSmileSection2>(
+            baseSection, anchorBaseSection, volSpreads, strikeSpreads_, true, baseAtmLevel, anchorBaseAtmLevel,
+            simulatedAtmLevel, anchorSimulatedAtmLevel, stickyAbsMoney_);
+    }
 }
 
 Volatility SpreadedSwaptionVolatility::volatilityImpl(Time optionTime, Time swapLength, Rate strike) const {
     if (baseSwapIndexBase_ == nullptr) {
         // if swap index base is not given, we assume base and this svts are atm only
         calculate();
-        return std::max(0.0, base_->volatility(optionTime, swapLength, Null<Real>()) +
-                                 volSpreadInterpolation_.front().operator()(swapLength, optionTime));
+        if (originalRefDate_ == actualRefDate_ || decayMode_ == ReactionToTimeDecay::ConstantVariance) {
+            return std::max(0.0, base_->volatility(optionTime, swapLength, Null<Real>()) +
+                                     volSpreadInterpolation_.front().operator()(swapLength, optionTime));
+        } else {
+            return std::max(0.0, std::sqrt((base_->blackVariance(optionTime + t0_, swapLength, Null<Real>()) -
+                                            base_->blackVariance(t0_, swapLength, Null<Real>())) /
+                                           optionTime) +
+                                     volSpreadInterpolation_.front().operator()(swapLength, optionTime));
+        }
     }
     return smileSectionImpl(optionTime, swapLength)->volatility(strike);
 }
@@ -153,6 +199,9 @@ Real SpreadedSwaptionVolatility::shiftImpl(Time optionTime, Time swapLength) con
 }
 
 void SpreadedSwaptionVolatility::performCalculations() const {
+    originalRefDate_ = base_->referenceDate();
+    actualRefDate_ = referenceDate();
+    t0_ = base_->timeFromReference(actualRefDate_);
     SwaptionVolatilityDiscrete::performCalculations();
     for (Size k = 0; k < strikeSpreads_.size(); ++k) {
         for (Size i = 0; i < optionTenors_.size(); ++i) {

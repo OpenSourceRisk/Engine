@@ -49,6 +49,8 @@ public:
         const bool allowChangingFallbacksUnderScenarios = false, const bool allowModelFallbacks = false,
         const bool dontCalibrate = false);
 
+    QuantLib::Handle<QuantExt::HwModel> modelAsHw() const;
+
 private:
     void initParametrization() const override;
     void calibrate() const override;
@@ -59,7 +61,8 @@ private:
     HwModel::Discretization discretization_;
     bool evaluateBankAccount_;
 
-    mutable bool parametrizationInitialized_ = false;
+    mutable Date parametrizationInitializedOnAnchorDate_;
+    mutable QuantLib::RelinkableHandle<QuantExt::HwModel> modelHw_;
 };
 
 } // namespace data

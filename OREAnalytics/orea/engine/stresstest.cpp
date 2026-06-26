@@ -104,8 +104,8 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
     LOG("Run Stress Test");
 
     QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
-        market, simMarketData, marketConfiguration, curveConfigs, todaysMarketParams, continueOnError,
-        true, false, false, iborFallbackConfig, true);
+        market, simMarketData, marketConfiguration, curveConfigs, todaysMarketParams, continueOnError, true, false,
+        false, iborFallbackConfig, true);
 
     QuantLib::ext::shared_ptr<Scenario> baseScenario = simMarket->baseScenarioAbsolute();
     QuantLib::ext::shared_ptr<ShiftScenarioGenerator> scenarioGenerator =
@@ -186,8 +186,6 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
             return calcs;
         };
 
-        //auto curveConfigsPtr = QuantLib::ext::make_shared<CurveConfigurations>(curveConfigs);
-        //auto todaysMarketParamsPtr = QuantLib::ext::make_shared<TodaysMarketParameters>(todaysMarketParams);
         auto curveConfigsPtr = QuantLib::ext::shared_ptr<CurveConfigurations>(
             const_cast<CurveConfigurations*>(&curveConfigs), QuantLib::null_deleter());
         auto todaysMarketParamsPtr = QuantLib::ext::shared_ptr<TodaysMarketParameters>(
@@ -197,7 +195,8 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
             nThreads, asof, dg, nSamples, loader, scenarioGenerator, ed, curveConfigsPtr, todaysMarketParamsPtr,
             marketConfiguration, simMarketData, useSpreadedTermStructures, false,
             QuantLib::ext::make_shared<ScenarioFilter>(), referenceData, iborFallbackConfig, true, true, true, {}, {},
-            {}, "stress analysis", nullptr, true, useAtParCouponsTrades);
+            {}, QuantLib::ext::make_shared<FixingManager>(simMarket->asofDate(), FixingManager::Mode::Projected), true,
+            "stress analysis", nullptr, true, useAtParCouponsTrades);
 
         engine.registerProgressIndicator(
             QuantLib::ext::make_shared<ProgressLog>("stress scenarios", 100, oreSeverity::notice));
@@ -253,7 +252,9 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
             calculators.push_back(
                 QuantLib::ext::make_shared<CashflowReportCalculator>(baseCcy, includePastCashflows, cfCube));
         }
-        ValuationEngine engine(asof, dg, simMarket, factory->modelBuilders());
+        ValuationEngine engine(
+            asof, dg, simMarket, factory->modelBuilders(), true,
+            QuantLib::ext::make_shared<FixingManager>(simMarket->asofDate(), FixingManager::Mode::Projected), true);
 
         engine.registerProgressIndicator(
             QuantLib::ext::make_shared<ProgressLog>("stress scenarios", 100, oreSeverity::notice));

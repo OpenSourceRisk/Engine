@@ -24,6 +24,7 @@
 #include <orea/engine/filteredsensitivitystream.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/sensitivityreportstream.hpp>
+#include <orea/simulation/fixingmanager.hpp>
 #include <orea/scenario/simplescenario.hpp>
 #include <orea/scenario/scenariowriter.hpp>
 #include <orea/scenario/scenarioutilities.hpp>
@@ -119,6 +120,8 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     std::string effectiveResultCurrency =
         inputs_->resultCurrency().empty() ? inputs_->baseCurrency() : inputs_->resultCurrency();
 
+    auto fixingManager = QuantLib::ext::make_shared<FixingManager>(inputs_->asof(), FixingManager::Mode::Projected);
+
     /*******************************
      *
      * 0. Build market and portfolio
@@ -138,7 +141,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     // Build a simMarket on the asof date
     QL_REQUIRE(analytic()->configurations().simMarketParams, "scenario sim market parameters not set");
     QL_REQUIRE(analytic()->configurations().todaysMarketParams, "today's market parameters not set");
-    
+
     t0SimMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), analytic()->configurations().simMarketParams, marketConfig,
         *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
@@ -238,6 +241,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
     // Now update simMarket on asof date t0, with the t0 shift scenario
     sgen->setScenario(t0Scenario);
+    fixingManager->update(t0SimMarket_->asofDate());
     t0SimMarket_->update(t0SimMarket_->asofDate());
     analytic()->setMarket(t0SimMarket_);
 
@@ -280,6 +284,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     analytic()->setMarket(simMarket1);
     sgen1->setScenario(t1Scenario);
     simMarket1->scenarioGenerator() = sgen1;
+    fixingManager->update(d1);
     simMarket1->update(d1);
     analytic()->buildPortfolio();
 
@@ -310,6 +315,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         
     sgen1->setScenario(sai->scenarioSimMarket()->baseScenario());
     simMarket1->scenarioGenerator() = sgen1;
+    fixingManager->update(d1);
     simMarket1->update(d1);
 
     analytic()->buildPortfolio();

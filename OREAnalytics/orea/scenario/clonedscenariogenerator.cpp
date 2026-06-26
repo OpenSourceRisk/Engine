@@ -25,6 +25,7 @@ namespace analytics {
 
 ClonedScenarioGenerator::ClonedScenarioGenerator(const QuantLib::ext::shared_ptr<ScenarioGenerator>& scenarioGenerator,
                                                  const std::vector<Date>& dates, const Size nSamples) {
+    QL_REQUIRE(!dates.empty(), "ClonedScenarioGenerator: at least one date must be given.");
     DLOG("Build cloned scenario generator for " << dates.size() << " dates and " << nSamples << " samples.");
     for (size_t i = 0; i < dates.size(); ++i) {
         dates_[dates[i]] = i;
@@ -40,12 +41,17 @@ ClonedScenarioGenerator::ClonedScenarioGenerator(const QuantLib::ext::shared_ptr
 }
 
 QuantLib::ext::shared_ptr<Scenario> ClonedScenarioGenerator::next(const Date& d) {
-    if (d == firstDate_) { // new path
+    QL_REQUIRE(dates_.size() == 1 || d != Date(), "ClonedScenarioGenerator::next(): if more than one date is given ("
+                                                      << dates_.size() << "), a non-null date must be given.");
+    if (d == Date() || d == firstDate_) {
         ++nSim_;
     }
-    auto stepIdx = dates_.find(d);
-    QL_REQUIRE(stepIdx != dates_.end(), "ClonedScenarioGenerator::next(" << d << "): invalid date " << d);
-    size_t timePos = stepIdx->second;
+    size_t timePos = 0;
+    if (dates_.size() > 1) {
+        auto stepIdx = dates_.find(d);
+        QL_REQUIRE(stepIdx != dates_.end(), "ClonedScenarioGenerator::next(" << d << "): invalid date " << d);
+        timePos = stepIdx->second;
+    }
     size_t currentStep = (nSim_ - 1) * dates_.size() + timePos;
     QL_REQUIRE(currentStep < scenarios_.size(),
                "ClonedScenarioGenerator::next(" << d << "): no more scenarios stored.");

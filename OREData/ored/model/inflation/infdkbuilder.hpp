@@ -78,6 +78,7 @@ private:
     void performCalculations() const override;
     Real optionStrikeValue(const Size j) const;
     Date optionMaturityDate(const Size j) const;
+    void initParametrization() const;
     void buildCapFloorBasket() const;
 
     // checks whether inf vols have changed compared to cache and updates the cache if requested
@@ -90,7 +91,7 @@ private:
     const std::string referenceCalibrationGrid_;
 
     // computed
-    QuantLib::ext::shared_ptr<QuantExt::InfDkParametrization> parametrization_;
+    mutable QuantLib::ext::shared_ptr<QuantExt::InfDkParametrization> parametrization_;
 
     // which option in data->optionExpries() are actually in the basket?
     mutable std::vector<bool> optionActive_;
@@ -107,6 +108,9 @@ private:
 
     // helper flag to process forRecalculate()
     bool forceCalibration_ = false;
+
+    mutable Date referenceDate_;
+    mutable Date parametrizationInitializedOnAnchorDate_;
 
     // helper flag for process the DependencyMarket 
     bool dontCalibrate_ = false;

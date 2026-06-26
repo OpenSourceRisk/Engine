@@ -25,7 +25,7 @@
 
 namespace QuantExt {
 
-AnalyticLgmCdsOptionEngine::AnalyticLgmCdsOptionEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
+AnalyticLgmCdsOptionEngine::AnalyticLgmCdsOptionEngine(const QuantLib::Handle<CrossAssetModel>& model,
                                                        const Size index, const Size ccy, const Real recoveryRate,
                                                        const Handle<YieldTermStructure>& termStructure)
     : QuantExt::CdsOption::engine(), model_(model), index_(index), ccy_(ccy), recoveryRate_(recoveryRate),

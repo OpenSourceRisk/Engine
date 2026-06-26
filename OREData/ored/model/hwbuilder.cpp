@@ -50,9 +50,14 @@ HwBuilder::HwBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market,
       setCalibrationInfo_(setCalibrationInfo), measure_(measure), discretization_(discretization),
       evaluateBankAccount_(evaluateBankAccount) {}
 
+QuantLib::Handle<QuantExt::HwModel> HwBuilder::modelAsHw() const {
+    calculate();
+    return modelHw_;
+}
+
 void HwBuilder::initParametrization() const {
 
-    if (parametrizationInitialized_)
+    if (parametrizationInitializedOnAnchorDate_ == referenceDate_)
         return;
 
     auto hwData = QuantLib::ext::dynamic_pointer_cast<HwModelData>(data_);
@@ -116,18 +121,21 @@ void HwBuilder::initParametrization() const {
                                                                                               times, sigma, kappa);
     }
 
-    model_ = QuantLib::ext::make_shared<QuantExt::HwModel>(
+    auto m = QuantLib::ext::make_shared<QuantExt::HwModel>(
         QuantLib::ext::dynamic_pointer_cast<IrHwParametrization>(parametrization_), measure_, discretization_,
         evaluateBankAccount_);
-    params_ = model_->params();
-    parametrizationInitialized_ = true;
+    model_.linkTo(m);
+    modelHw_.linkTo(m);
+
+    params_[referenceDate_] = model_->params();
+
+    parametrizationInitializedOnAnchorDate_ = referenceDate_;
 
 } // initiParametrization()
 
 void HwBuilder::calibrate() const {
 
     auto hwData = QuantLib::ext::dynamic_pointer_cast<HwModelData>(data_);
-    auto hwModel = QuantLib::ext::dynamic_pointer_cast<HwModel>(model_);
     auto hwParametrization = QuantLib::ext::dynamic_pointer_cast<IrHwParametrization>(parametrization_);
 
     // call into the actual calibration routines
@@ -143,7 +151,7 @@ void HwBuilder::calibrate() const {
 
             boost::timer::cpu_timer timer;
 
-            hwModel->calibrateVolatilitiesIterativeStatisticalWithRiskNeutralVolatility(
+            modelHw_->calibrateVolatilitiesIterativeStatisticalWithRiskNeutralVolatility(
                 swaptionBasket_, *optimizationMethod_, endCriteria_);
 
             DLOG("HwBuilder: Calibration for qualifier " << hwData->qualifier() << " done in "
@@ -205,13 +213,12 @@ void HwBuilder::calibrate() const {
         }
     }
 
-    hwModel->setCalibrationInfo(calibrationInfo);
+    modelHw_->setCalibrationInfo(calibrationInfo);
 
 } // calibrate()
 
 QuantLib::ext::shared_ptr<PricingEngine> HwBuilder::getPricingEngine() const {
-    auto hwModel = QuantLib::ext::dynamic_pointer_cast<HwModel>(model_);
-    auto engine = QuantLib::ext::make_shared<QuantExt::AnalyticHwSwaptionEngine>(hwModel, calibrationDiscountCurve_);
+    auto engine = QuantLib::ext::make_shared<QuantExt::AnalyticHwSwaptionEngine>(modelHw_, calibrationDiscountCurve_);
     return engine;
 }
 

@@ -43,9 +43,6 @@ public:
     //@}
 
     Date maxDate() const override;
-    const Date& referenceDate() const override;
-    Calendar calendar() const override;
-    Natural settlementDays() const override;
     Time minTime() const override;
     void update() override;
 

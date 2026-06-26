@@ -48,9 +48,9 @@ using namespace ore::data;
 namespace {
 
 Handle<CrossAssetModel> convertToCam(const SwaptionModel& model) {
-    if (std::holds_alternative<ext::shared_ptr<QuantExt::LGM>>(model)) {
+    if (std::holds_alternative<QuantLib::Handle<QuantExt::LGM>>(model)) {
         return Handle<CrossAssetModel>(QuantLib::ext::make_shared<CrossAssetModel>(
-            std::vector<QuantLib::ext::shared_ptr<IrModel>>(1, std::get<ext::shared_ptr<QuantExt::LGM>>(model)),
+            std::vector<QuantLib::ext::shared_ptr<IrModel>>(1, *std::get<QuantLib::Handle<QuantExt::LGM>>(model)),
             std::vector<QuantLib::ext::shared_ptr<FxBsParametrization>>()));
     } else if (std::holds_alternative<Handle<CrossAssetModel>>(model)) {
         return std::get<Handle<CrossAssetModel>>(model);
@@ -418,7 +418,7 @@ SwaptionModel SwaptionEngineBuilder::model(const string& id, const std::vector<s
             BlackCalibrationHelper::RelativePriceError, allowChangingFallbacks, allowModelFallbacks, dontCalibrate);
 
         engineFactory()->modelBuilders().insert(std::make_pair(id, calib));
-        return ext::dynamic_pointer_cast<LGM>(calib->model());
+        return calib->modelAsLgm();
 
     } else {
 
@@ -489,8 +489,8 @@ QuantLib::ext::shared_ptr<PricingEngine> LGMGridSwaptionEngineBuilder::engineImp
     QL_REQUIRE(keys.size() == 1, "LGMGridSwaptionEngineBuilder::engingImpl(): multiple ccys are not supported.");
 
     auto lgm = std::holds_alternative<std::monostate>(modelOverwrite)
-                   ? std::get<ext::shared_ptr<LGM>>(model(id, keys, dates, maturities, strikes, {}, isAmerican))
-                   : std::get<ext::shared_ptr<LGM>>(modelOverwrite);
+                   ? std::get<Handle<LGM>>(model(id, keys, dates, maturities, strikes, {}, isAmerican))
+                   : std::get<Handle<LGM>>(modelOverwrite);
 
     DLOG("Get engine data");
     Real sy = parseReal(engineParameter("sy"));
@@ -526,8 +526,8 @@ QuantLib::ext::shared_ptr<PricingEngine> LGMFDSwaptionEngineBuilder::engineImpl(
     QL_REQUIRE(keys.size() == 1, "LGMFDSwaptionEngineBuilder::engingImpl(): multiple ccys are not supported.");
 
     auto lgm = std::holds_alternative<std::monostate>(modelOverwrite)
-                   ? std::get<ext::shared_ptr<LGM>>(model(id, keys, dates, maturities, strikes, {}, isAmerican))
-                   : std::get<ext::shared_ptr<LGM>>(modelOverwrite);
+                   ? std::get<Handle<LGM>>(model(id, keys, dates, maturities, strikes, {}, isAmerican))
+                   : std::get<Handle<LGM>>(modelOverwrite);
 
     QuantLib::FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
     Size stateGridPoints = parseInteger(engineParameter("StateGridPoints"));

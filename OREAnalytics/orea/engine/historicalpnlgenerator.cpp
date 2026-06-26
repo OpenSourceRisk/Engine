@@ -55,13 +55,14 @@ namespace analytics {
 HistoricalPnlGenerator::HistoricalPnlGenerator(
     const string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
     const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket,
-    const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen, const QuantLib::ext::shared_ptr<NPVCube>& cube,
+    const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
+    const QuantLib::ext::shared_ptr<NPVCube>& cube,
     const set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>>& modelBuilders, bool dryRun)
     : useSingleThreadedEngine_(true), portfolio_(portfolio), simMarket_(simMarket), hisScenGen_(hisScenGen),
       cube_(cube), dryRun_(dryRun),
       npvCalculator_([&baseCurrency](const Size, const QuantLib::ext::shared_ptr<ore::data::Portfolio>&)
                          -> std::vector<QuantLib::ext::shared_ptr<ValuationCalculator>> {
-          return {QuantLib::ext::make_shared<NPVCalculator>(baseCurrency)};
+          return {QuantLib::ext::make_shared<NPVCalculator>(baseCurrency, 0, false, true)};
       }) {
 
     // Check the cube's dimensions
@@ -83,27 +84,31 @@ HistoricalPnlGenerator::HistoricalPnlGenerator(
 
     simMarket_->scenarioGenerator() = hisScenGen_;
 
+    // we do not reset after each path to enable the inclusion of theta across all historical scenarios
     auto grid = QuantLib::ext::make_shared<DateGrid>();
-    valuationEngine_ = QuantLib::ext::make_shared<ValuationEngine>(simMarket_->asofDate(), grid, simMarket_, modelBuilders);
+    valuationEngine_ = QuantLib::ext::make_shared<ValuationEngine>(
+        simMarket_->asofDate(), grid, simMarket_, modelBuilders, true,
+        QuantLib::ext::make_shared<FixingManager>(simMarket->asofDate(), FixingManager::Mode::Projected), false);
 }
 
 HistoricalPnlGenerator::HistoricalPnlGenerator(
     const string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
-    const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen, const QuantLib::ext::shared_ptr<EngineData>& engineData,
-    const Size nThreads, const Date& today, const QuantLib::ext::shared_ptr<ore::data::Loader>& loader,
+    const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
+    const QuantLib::ext::shared_ptr<EngineData>& engineData, const Size nThreads, const Date& today,
+    const QuantLib::ext::shared_ptr<ore::data::Loader>& loader,
     const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
-    const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams, const std::string& configuration,
+    const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
+    const std::string& configuration,
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
     const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
-    bool dryRun, const std::string& context)
+    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, bool dryRun, const std::string& context)
     : useSingleThreadedEngine_(false), portfolio_(portfolio), hisScenGen_(hisScenGen), engineData_(engineData),
       nThreads_(nThreads), today_(today), loader_(loader), curveConfigs_(curveConfigs),
       todaysMarketParams_(todaysMarketParams), configuration_(configuration), simMarketData_(simMarketData),
       referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig), dryRun_(dryRun), context_(context),
       npvCalculator_([&baseCurrency](const Size, const QuantLib::ext::shared_ptr<ore::data::Portfolio>&)
                          -> std::vector<QuantLib::ext::shared_ptr<ValuationCalculator>> {
-          return {QuantLib::ext::make_shared<NPVCalculator>(baseCurrency)};
+          return {QuantLib::ext::make_shared<NPVCalculator>(baseCurrency, 0, false, true)};
       }) {}
 
 void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<ScenarioFilter>& filter, const bool runRiskFactorBreakdown) {
@@ -153,9 +158,10 @@ void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<Scenar
                                     nullptr, nullptr, {}, dryRun_);
     } else {
         MultiThreadedValuationEngine engine(
-            nThreads_, today_, QuantLib::ext::make_shared<ore::analytics::DateGrid>(), hisScenGen_->numScenarios(), loader_,
-            hisScenGen_, engineData_, curveConfigs_, todaysMarketParams_, configuration_, simMarketData_, false, false,
-            filter, referenceData_, iborFallbackConfig_, true, true, true, {}, {}, {}, context_);
+            nThreads_, today_, QuantLib::ext::make_shared<ore::analytics::DateGrid>(), hisScenGen_->numScenarios(),
+            loader_, hisScenGen_, engineData_, curveConfigs_, todaysMarketParams_, configuration_, simMarketData_,
+            false, false, filter, referenceData_, iborFallbackConfig_, true, true, true, {}, {}, {},
+            QuantLib::ext::make_shared<FixingManager>(today_, FixingManager::Mode::Projected), false, context_);
         for (auto const& i : this->progressIndicators()) {
             i->reset();
             engine.registerProgressIndicator(i);
@@ -248,9 +254,8 @@ void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<Scenar
 
                             // Build ScenarioSimMarket (once per thread)
                             auto simMkt = QuantLib::ext::make_shared<ScenarioSimMarket>(
-                                initMarket, simMarketData_, configuration_, *curveConfigs_,
-                                *todaysMarketParams_, true, false, false, false,
-                                iborFallbackConfig_, true);
+                                initMarket, simMarketData_, configuration_, *curveConfigs_, *todaysMarketParams_, true,
+                                false, false, false, iborFallbackConfig_, true);
 
                             // Link scenario generator and set filter
                             simMkt->scenarioGenerator() = localHisScenGen;
@@ -272,7 +277,8 @@ void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<Scenar
                             // Create ValuationEngine (once per thread)
                             auto grid = QuantLib::ext::make_shared<ore::data::DateGrid>();
                             auto valEngine = QuantLib::ext::make_shared<ValuationEngine>(
-                                simMkt->asofDate(), grid, simMkt, engFactory->modelBuilders());
+                                simMkt->asofDate(), grid, simMkt, engFactory->modelBuilders(), true,
+                                QuantLib::ext::make_shared<FixingManager>(today_, FixingManager::Mode::Projected));
 
                             // Process assigned risk factor keys
                             for (auto const& key : threadKeys[id]) {

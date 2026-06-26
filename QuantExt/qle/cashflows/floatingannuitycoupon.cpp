@@ -43,6 +43,7 @@ FloatingAnnuityCoupon::FloatingAnnuityCoupon(Real annuity, bool underflow,
 }
 
 void FloatingAnnuityCoupon::performCalculations() const {
+    CashFlow::performCalculations();
     // If the previous coupon was a FloatingAnnuityCoupon we need to cast here in order to get its mutable nominal.
     // Using the Coupon interface previousCoupon_->nominal() would return zero.
     QuantLib::ext::shared_ptr<FloatingAnnuityCoupon> c = QuantLib::ext::dynamic_pointer_cast<FloatingAnnuityCoupon>(previousCoupon_);
@@ -63,8 +64,7 @@ void FloatingAnnuityCoupon::performCalculations() const {
 Rate FloatingAnnuityCoupon::previousNominal() const { return previousCoupon_->nominal(); }
 
 Rate FloatingAnnuityCoupon::nominal() const {
-    calculate(); // lazy
-    // performCalculations(); // not lazy
+    calculate();
     return this->nominal_;
 }
 

@@ -43,7 +43,7 @@
     <Analytic type="sensitivityStress">
       <Parameter name="active">Y</Parameter>
       <Parameter name="marketConfigFile">sensitivitystressmarket.xml</Parameter>
-      <Parameter name="stressConfigFile">stresstest.xml</Parameter>
+      <Parameter name="stressConfigFile">stresstest_sensi.xml</Parameter>
       <Parameter name="sensitivityConfigFile">sensitivitystress.xml</Parameter>
       <Parameter name="calcBaseScenario">N</Parameter>
     </Analytic>

@@ -139,16 +139,16 @@ struct TestData : ore::test::OreaTopLevelFixture {
 
         // build CAM and marginal LGM models
         CrossAssetModelBuilder modelBuilder(market, config);
-        ccLgm = *modelBuilder.model();
-        lgm_eur = QuantLib::ext::make_shared<QuantExt::LGM>(ccLgm->irlgm1f(0));
-        lgm_usd = QuantLib::ext::make_shared<QuantExt::LGM>(ccLgm->irlgm1f(1));
+        ccLgm = modelBuilder.model();
+        lgm_eur = QuantLib::Handle<QuantExt::LGM>(QuantLib::ext::make_shared<QuantExt::LGM>(ccLgm->irlgm1f(0)));
+        lgm_usd = QuantLib::Handle<QuantExt::LGM>(QuantLib::ext::make_shared<QuantExt::LGM>(ccLgm->irlgm1f(1)));
     }
 
     Date referenceDate;
     QuantLib::ext::shared_ptr<ore::data::Conventions> conventions_;
     QuantLib::ext::shared_ptr<CrossAssetModelData> config;
-    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> ccLgm;
-    QuantLib::ext::shared_ptr<QuantExt::LGM> lgm_eur, lgm_usd;
+    QuantLib::Handle<QuantExt::CrossAssetModel> ccLgm;
+    QuantLib::Handle<QuantExt::LGM> lgm_eur, lgm_usd;
     QuantLib::ext::shared_ptr<ore::data::Market> market;
 };
 
@@ -409,7 +409,7 @@ BOOST_DATA_TEST_CASE(testBermudanSwaptionExposure, boost::unit_test::data::make(
         BOOST_TEST_MESSAGE(QuantLib::io::iso_date(grid->dates()[i]) << " " << grid->timeGrid()[i + 1]);
 
     // Model
-    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model = ccLgm;
+    QuantLib::Handle<QuantExt::CrossAssetModel> model(ccLgm);
 
     // Simulation market parameters, we just need the yield curve structure here
     QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketConfig(new ScenarioSimMarketParameters);
@@ -597,8 +597,7 @@ BOOST_DATA_TEST_CASE(testBermudanSwaptionExposure, boost::unit_test::data::make(
     else
         param = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
             USDCurrency(), simMarket->discountCurve("USD"), emptyTimes, alphaUsd, emptyTimes, kappaUsd);
-    QuantLib::ext::shared_ptr<LinearGaussMarkovModel> bermmodel =
-        QuantLib::ext::make_shared<LinearGaussMarkovModel>(param);
+    auto bermmodel = Handle<LGM>(QuantLib::ext::make_shared<LinearGaussMarkovModel>(param));
 
     // apply horizon shift
     // for grid engine
@@ -660,7 +659,7 @@ BOOST_DATA_TEST_CASE(testBermudanSwaptionExposure, boost::unit_test::data::make(
         }
         void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override {}
     };
-    AMCValuationEngine amcValEngine(model, sgd, QuantLib::ext::shared_ptr<Market>(), std::vector<string>(),
+    AMCValuationEngine amcValEngine(*model, sgd, QuantLib::ext::shared_ptr<Market>(), std::vector<string>(),
                                     std::vector<string>(), 0, std::string(), std::string(), false, false);
     auto trade = QuantLib::ext::make_shared<TestTrade>("BermudanSwaption", testCase.inBaseCcy ? "EUR" : "USD",
                                                        QuantLib::ext::make_shared<VanillaInstrument>(swaption));

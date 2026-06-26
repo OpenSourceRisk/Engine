@@ -67,6 +67,7 @@ public:
         const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(
             const QuantLib::Date&, const std::set<std::string>&, const std::vector<QuantLib::Date>&,
             const QuantLib::Size)>& cptyCubeFactory = {},
+        const QuantLib::ext::shared_ptr<FixingManager>& fixingManager = nullptr, const bool resetAfterEachPath = true,
         const std::string& context = "unspecified",
         const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& offSetScenario = nullptr,
         const bool useAtParCouponsCurves = true, const bool useAtParCouponsTrades = true);
@@ -127,6 +128,8 @@ private:
     std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
                                                              const std::vector<QuantLib::Date>&, const QuantLib::Size)>
         cptyCubeFactory_;
+    QuantLib::ext::shared_ptr<FixingManager> fixingManager_;
+    bool resetAfterEachPath_;
     std::string context_;
     QuantLib::ext::shared_ptr<ore::analytics::Scenario> offsetScenario_;
     bool useAtParCouponsCurves_ = true;

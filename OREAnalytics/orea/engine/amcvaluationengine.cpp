@@ -287,7 +287,7 @@ void populateAsd(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& mod
         }
         Size ccyIndex = model->ccyIndex(tmp->currency());
         asdIndexCurve.push_back(QuantLib::ext::make_shared<LgmImpliedYtsFwdFwdCorrected>(
-            model->lgm(ccyIndex), tmp->forwardingTermStructure()));
+            Handle<LGM>(model->lgm(ccyIndex)), tmp->forwardingTermStructure()));
         asdIndex.push_back(tmp->clone(Handle<YieldTermStructure>(asdIndexCurve.back())));
         asdIndexIndex.push_back(ccyIndex);
         asdIndexName.push_back(i);
@@ -951,9 +951,8 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
             bool continueOnError = true;
             std::string configuration = configurationFinalModel_;
             market = QuantLib::ext::make_shared<ScenarioSimMarket>(
-                initMarket, simMarketParams_, QuantLib::ext::make_shared<FixingManager>(today_), configuration,
-                *curveConfigs_, *todaysMarketParams_, continueOnError, true, true, false, iborFallbackConfig_, false,
-                offsetScenario_);
+                initMarket, simMarketParams_, configuration, *curveConfigs_, *todaysMarketParams_, continueOnError,
+                true, true, false, iborFallbackConfig_, false, offsetScenario_);
         }
         ore::data::CrossAssetModelBuilder modelBuilder(
             market, crossAssetModelData_, configurationLgmCalibration_, configurationFxCalibration_,

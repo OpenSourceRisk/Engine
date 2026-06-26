@@ -39,6 +39,13 @@ public:
                           const std::vector<Real>& strikes, const bool strikesRelativeToAtm = false,
                           const Real baseAtmLevel = Null<Real>(), const Real simulatedAtmLevel = Null<Real>(),
                           const bool stickyAbsMoney = false);
+    //! for forward-forward smile section construction
+    SpreadedSmileSection2(const QuantLib::ext::shared_ptr<SmileSection>& base,
+                          const QuantLib::ext::shared_ptr<SmileSection>& anchor, const std::vector<Real>& volSpreads,
+                          const std::vector<Real>& strikes, const bool strikesRelativeToAtm = false,
+                          const Real baseAtmLevel = Null<Real>(), const Real anchorBaseAtmLevel = Null<Real>(),
+                          const Real simulatedAtmLevel = Null<Real>(),
+                          const Real anchorSimulatedAtmLevel = Null<Real>(), const bool stickyAbsMoney = false);
     Rate minStrike() const override;
     Rate maxStrike() const override;
     Rate atmLevel() const override;
@@ -49,7 +56,10 @@ protected:
 private:
     Rate getSafeAtmLevel() const;
     Rate getSafeBaseAtmLevel() const;
+    Rate getSafeAnchorAtmLevel() const;
+    Rate getSafeAnchorBaseAtmLevel() const;
 
+    bool fwdfwd_ = false;
     QuantLib::ext::shared_ptr<SmileSection> base_;
     std::vector<Real> volSpreads_;
     std::vector<Real> strikes_;
@@ -57,6 +67,11 @@ private:
     Real baseAtmLevel_;
     Real simulatedAtmLevel_;
     bool stickyAbsMoney_;
+
+    QuantLib::ext::shared_ptr<SmileSection> anchor_;
+    Real anchorBaseAtmLevel_;
+    Real anchorSimulatedAtmLevel_;
+
     Interpolation volSpreadInterpolation_;
 };
 

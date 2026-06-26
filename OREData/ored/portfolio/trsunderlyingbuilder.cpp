@@ -463,6 +463,8 @@ void DerivativeTrsUnderlyingBuilder::build(
             builder->build(parentId, underlying, valuationDates, paymentDates, fundingCurrency, engineFactory,
                 underlyingIndex, underlyingMultiplier, indexQuantities, fxIndices, initialPrice, assetCurrency,
                 creditRiskCurrency, creditQualifierMapping, getFxIndex, underlyingDerivativeId, fixings, returnLegs);
+            if (!bondFuture->isLong())
+                underlyingMultiplier *= -1.0;
         }
         return;
     }

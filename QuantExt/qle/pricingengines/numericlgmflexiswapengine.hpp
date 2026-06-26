@@ -56,7 +56,7 @@ namespace QuantExt {
 class NumericLgmFlexiSwapEngineBase : public LgmConvolutionSolver {
 public:
     enum class Method { SwaptionArray, SingleSwaptions, Automatic };
-    NumericLgmFlexiSwapEngineBase(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny,
+    NumericLgmFlexiSwapEngineBase(const QuantLib::Handle<LinearGaussMarkovModel>& model, const Real sy, const Size ny,
                                   const Real sx, const Size nx,
                                   const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
                                   const Method method = Method::Automatic, const Real singleSwaptionThreshold = 20.0);
@@ -98,7 +98,7 @@ protected:
 class NumericLgmFlexiSwapEngine : public GenericEngine<FlexiSwap::arguments, FlexiSwap::results>,
                                   public NumericLgmFlexiSwapEngineBase {
 public:
-    NumericLgmFlexiSwapEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny,
+    NumericLgmFlexiSwapEngine(const QuantLib::Handle<LinearGaussMarkovModel>& model, const Real sy, const Size ny,
                               const Real sx, const Size nx,
                               const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
                               const Method method = Method::Automatic, const Real singleSwaptionThreshold = 20.0);

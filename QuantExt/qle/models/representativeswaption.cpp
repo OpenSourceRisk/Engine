@@ -63,9 +63,10 @@ RepresentativeSwaptionMatcher::RepresentativeSwaptionMatcher(
                                                                   << discountCurve_->referenceDate() << ")");
 
     // set up model
-    model_ = QuantLib::ext::make_shared<LGM>(QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
-        swapIndexBase_->currency(), flatCurve.empty() ? discountCurve_ : flatCurve, Array(), Array(1, volatility_),
-        Array(), Array(1, reversion_)));
+    model_ = QuantLib::Handle<LGM>(
+        QuantLib::ext::make_shared<LGM>(QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
+            swapIndexBase_->currency(), flatCurve.empty() ? discountCurve_ : flatCurve, Array(), Array(1, volatility_),
+            Array(), Array(1, reversion_))));
 
     // build underlying leg with its ibor / ois coupons linked to model forward curves
     QuantLib::ext::shared_ptr<IborIndex> modelIborIndexToUse, iborIndexToUse;
