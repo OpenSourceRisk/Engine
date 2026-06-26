@@ -1,0 +1,155 @@
+\documentclass[12pt, a4paper]{article}
+
+\input{../UserGuide/settings}
+
+% Resolve cross references into the User Guide and Product Catalogue (allowable
+% value tables, leg data, curve algebra) when their aux files are available.
+\usepackage{xr}
+\externaldocument{../UserGuide/products}
+\externaldocument{../UserGuide/userguide}
+
+\begin{document}
+
+\title{ORE Intraday Power Curves and Derivatives}
+\date{30 April 2026}
+\maketitle
+
+\newpage
+
+\section*{Document History}
+
+\begin{center}
+\begin{supertabular}{|l|l|p{9cm}|}
+\hline
+Date & Author & Comment \\
+\hline
+April 2026 & LSEG & initial version\\
+\hline
+\end{supertabular}
+\end{center}
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+%-------------------------------------------------------------------------------
+\section{Introduction}
+%-------------------------------------------------------------------------------
+
+Commodity curves in ORE return a single price per delivery date. This is sufficient for products that settle against a
+daily price, but power markets trade at a finer granularity. Intraday products reference prices for specific parts of
+the day, e.g.\ the 09:00--10:00 hour on a weekday.
+
+The earlier approach modelled this with dedicated load curves, e.g.\ peak and off-peak curves built from the
+respective futures. A separate curve was needed for every delivery pattern. This was cumbersome to configure, made
+historical fixings hard to manage, and offered no support for intraday fixings within the delivery day.
+
+The intraday power framework replaces these dedicated curves with a single curve per underlying that carries an
+intraday shape, combined with a trade-specific load profile. This supports flexible and overlapping delivery windows
+without a new curve per pattern. The scope of this first version is limited to intraday power forwards and swaps;
+exposure simulation of these products is not yet covered.
+
+A day-level price comes from a commodity price curve. Intraday shape factors, provided as market data, scale this
+price across the buckets of the day. A trade specifies which buckets it delivers into through its load profile. The
+pricing of overlapping intervals and the treatment of daylight saving are described in Section
+\ref{ss:intraday_power_pricing}.
+
+This is the first version of intraday power support in ORE. Some configuration and parameterisation details may change
+as the feature set grows.
+
+%-------------------------------------------------------------------------------
+\section{Pricing}
+%-------------------------------------------------------------------------------
+
+\input{../UserGuide/pricing/intradaypower}
+
+%-------------------------------------------------------------------------------
+\section{Curve Configuration and Market Data}
+%-------------------------------------------------------------------------------
+
+An intraday power curve has two components. A commodity price curve provides the day-level price, and a
+set of intraday shape factors distributes this price across the buckets of the day. The shape factors are market data
+and are loaded through the curve configuration.
+
+\subsection{Curve Configuration}
+
+\input{../UserGuide/curve_configurations/intradaypowercurves}
+
+\input{../UserGuide/marketdata_intradaypower}
+
+The shape resolution is flexible. A single curve can mix buckets of different lengths, e.g.\ 15 minute buckets for the
+next day, hourly buckets further out and daily buckets beyond that. Alternatively, separate curves can be set up per
+granularity for the same underlying, e.g.\ a 15 minute curve and an hourly curve. Separate curves are reported on
+different risk factor keys, so their stress and sensitivity results needs to be aggregated or simulated through curve algebra (Section
+\ref{sec:sim_curve_algebra}).
+
+%-------------------------------------------------------------------------------
+\section{Reusable Load Profiles}
+%-------------------------------------------------------------------------------
+
+A load profile defines intraday time buckets a trade delivers into and the load in each bucket. We can specify the load profile on a trade level 
+or reuse a profile defined in the conventions.
+
+\input{../UserGuide/parameterisation/conventions_intradaypowercurves}
+
+%-------------------------------------------------------------------------------
+\section{Historical Fixings}
+%-------------------------------------------------------------------------------
+
+The load profile of a trade determines the granularity of the historical fixings. An hourly profile expects hourly
+fixings, a 15 minute profile expects 15 minute fixings.
+
+Fixing names are derived from the underlying name, the delivery date and the delivery window. The day-level name has
+the form \lstinline!POWER-<UnderlyingName>-<DeliveryDate>!, where the delivery date is an ISO date, e.g.\
+\lstinline!POWER-PJM_WH_RT_PK-2021-06-01!. For an intraday bucket the start and end of the window in seconds from
+midnight are appended, e.g.\ \lstinline!POWER-PJM_WH_RT_PK-2021-06-01-32400-36000! for the 09:00--10:00 hour
+($9 \times 3600 = 32400$, $10 \times 3600 = 36000$). The extra hour created when clocks move back at the end of
+daylight saving carries an additional \lstinline!-DST! suffix. A bucket that covers the full day (0 to 86400 seconds)
+uses the plain day-level name.
+
+For a trade with a load profile, one fixing is expected per bucket with positive load. The index fixing for the
+delivery date is the load-weighted average of the bucket fixings. Without a load profile, a single full-day fixing
+under the day-level name is used.
+
+Intraday fixings on the delivery date itself are supported. On the evaluation date, buckets whose fixing has already
+been published are taken from the history, and buckets without a published fixing are forecast from the curve. For an
+hourly profile delivering from 09:00 to 13:00, observed at 11:00 with fixings published for the 09:00 and 10:00
+buckets, those two fixings are used and the 11:00 and 12:00 buckets are forecast. For dates strictly before the
+evaluation date all expected bucket fixings must be present.
+
+%-------------------------------------------------------------------------------
+\section{Supported Trades}
+%-------------------------------------------------------------------------------
+
+The intraday power framework currently supports forwards and swaps.
+
+\subsection{Forwards}
+
+\input{../UserGuide/tradedata/intradaypowerforward}
+
+\subsection{Swaps}
+
+Intraday power legs are used within the general commodity swap, see the commodity swap description in the ORE Product
+Catalogue. The leg uses an intraday power floating leg in place of a standard commodity floating leg.
+
+\input{../UserGuide/tradecomponents/intradaypowerfloatingleg}
+
+%-------------------------------------------------------------------------------
+\section{Parameterisation}
+%-------------------------------------------------------------------------------
+
+\subsection{Simulation Market}
+
+\input{../UserGuide/parameterisation/simulation_intradaypowercurves}
+
+\subsection{Sensitivity}
+
+\input{../UserGuide/parameterisation/sensitivity_intradaypowercurves}
+
+\subsection{Stress Testing}
+
+\input{../UserGuide/parameterisation/stressconfig_intradaypowercurves}
+
+\end{document}

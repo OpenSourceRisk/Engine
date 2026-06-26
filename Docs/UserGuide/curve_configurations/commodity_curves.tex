@@ -69,46 +69,7 @@ If the element is omitted or left blank, then it defaults to \emph{Linear}.
 the element is omitted or left blank, then it defaults to \emph{True}.
 \end{itemize}
 
-\subsubsection{Intraday Power Curves}
-
-An intraday power curve augments a daily-average commodity price curve with intraday shape factors. The daily-average
-curve provides the day-level price and the shape factors distribute this price across intraday buckets.
-
-Note: if the underlying commodity curve uses \lstinline!BackwardFlat! interpolation and the market quotes are monthly
-averages (rather than daily quotes), the intraday shape factors can also be used to model seasonality within the month.
-
-Listing \ref{lst:intraday_power_curve_configuration} shows an example configuration.
-
-\begin{longlisting}
-\begin{minted}[fontsize=\footnotesize]{xml}
-<IntradayPowerCurves>
-  <IntradayPowerCurve>
-    <CurveId>PJM_WH_RT_PK_HOURLY</CurveId>
-    <CurveDescription>PJM Western Hub Real Time Hourly</CurveDescription>
-    <Currency>USD</Currency>
-    <DailyAveragePriceCurve>Commodity/USD/PJM_WH_RT_PK</DailyAveragePriceCurve>
-    <ShapeQuoteName>PJM_WH_RT_PK_HOURLY</ShapeQuoteName>
-    <Convention>PJM_WH_RT_PK</Convention>
-  </IntradayPowerCurve>
-</IntradayPowerCurves>
-\end{minted}
-\caption{Intraday power curve configuration}
-\label{lst:intraday_power_curve_configuration}
-\end{longlisting}
-
-The meaning of the elements is:
-\begin{itemize}
-\item \lstinline!CurveId!: Unique identifier of the intraday power curve.
-\item \lstinline!CurveDescription! [Optional]: Free text description.
-\item \lstinline!Currency!: Curve currency.
-\item \lstinline!DailyAveragePriceCurve!: Full curve spec of the underlying daily-average commodity curve, e.g. \lstinline!Commodity/USD/PJM_WH_RT_PK!.
-\item \lstinline!ShapeQuoteName!: Prefix used to load intraday shape factor quotes. The quote pattern is \lstinline!SHAPE_PROFILE/SHAPE_FACTOR/<ShapeQuoteName>/*! where the wildcard expands to the shape key, e.g. \lstinline!<ProfileDate>/<TimeUnitsFromStartOfDay>/<Unit>/<DST_FLAG>!. See Section \ref{md:intraday_power_shape_factor} for the full market datum format.
-\item \lstinline!Convention!: Commodity future convention id used determine the region for daylight-saving handling in the intraday shape term structure.
-\end{itemize}
-
-Shape profiles are applied with flat forward fill on the delivery date axis. If shape quotes are present for Monday and then next on Saturday of the same week, Monday's shape is used for Monday to Friday and Saturday's shape is used from Saturday onward.
-
-This allows sparse shape schedules. If the shape is constant, one profile date is enough. If the shape is constant within each month, profiles can be provided only at month start dates. If the shape changes by weekday block, profiles can be provided on representative days, e.g. Monday and Saturday.
+\input{curve_configurations/intradaypowercurves}
 
 Alternatively commodity curves can be set up as a commodity curve times the ratio of two yield curves as shown in listing
 \ref{lst:commodity_curve_configuration_3}. This can be used to setup commodity curves in different currencies, for example Gold in EUR (XAUEUR) can be built from a Gold in USD curve and then the ratio of the EUR and USD discount factors at each pillar. This is akin to crossing FX forward points to get FX forward prices for any pair.
