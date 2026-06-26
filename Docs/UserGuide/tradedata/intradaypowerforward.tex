@@ -1,0 +1,126 @@
+\subsubsection{Intraday Power Forward}
+
+An Intraday Power Forward contract is an agreement between two counterparties to buy/sell
+power for a specified intraday delivery window, at a predetermined price (the strike).
+An intraday power forward does not involve any upfront payment.
+
+The \lstinline!IntradayPowerForwardData! node is the trade data container for the
+\lstinline!IntradayPowerForward! trade type. The structure of example
+\lstinline!IntradayPowerForwardData! nodes is shown in Listings \ref{lst:intraday_power_forward_data}
+and \ref{lst:intraday_power_forward_data_profile}.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<IntradayPowerForwardData>
+  <Position>Short</Position>
+  <Maturity>2021-05-27</Maturity>
+  <Name>PJM_WH_RT_PK</Name>
+  <Currency>USD</Currency>
+  <Strike>32.9</Strike>
+  <Quantity>1</Quantity>
+  <DeliveryDate>2021-06-01</DeliveryDate>
+  <DeliveryStart>900</DeliveryStart>
+  <DeliveryEnd>1800</DeliveryEnd>
+  <IsDstHour>false</IsDstHour>
+  <PhysicallySettled>false</PhysicallySettled>
+  <PaymentDate>2021-06-03</PaymentDate>
+</IntradayPowerForwardData>
+\end{minted}
+\caption{Intraday power forward data with explicit delivery window}
+\label{lst:intraday_power_forward_data}
+\end{listing}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<IntradayPowerForwardData>
+  <Position>Long</Position>
+  <Maturity>2026-06-30</Maturity>
+  <Name>PJM_WH_RT_PK</Name>
+  <Currency>USD</Currency>
+  <Strike>40.25</Strike>
+  <Quantity>2</Quantity>
+  <DeliveryDate>2026-07-01</DeliveryDate>
+  <PowerLoadProfileData>
+    <BusinessDayRules>
+      <LoadProfileBusinessDayRule>
+        <Date>2026-01-01</Date>
+        <Calendar>US-NERC</Calendar>
+        <BusinessDayLoadFactors>
+          <LoadFactor from="8" to="20" unit="HOUR">1.0</LoadFactor>
+        </BusinessDayLoadFactors>
+      </LoadProfileBusinessDayRule>
+    </BusinessDayRules>
+  </PowerLoadProfileData>
+</IntradayPowerForwardData>
+\end{minted}
+\caption{\lstinline!IntradayPowerForwardData! with \lstinline!PowerLoadProfileData!}
+\label{lst:intraday_power_forward_data_profile}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!IntradayPowerForwardData! node follow below.
+
+\begin{itemize}
+\item Position: Defines whether the underlying power will be bought (long) or sold (short). \\
+Allowable values: \emph{Long, Short}
+
+\item Maturity: The maturity date of the forward contract. \\
+Allowable values: Any date string, see \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item Name: The name of the underlying intraday power index or curve. \\
+Allowable values: See \lstinline!Name! for commodity trades in Table \ref{tab:commodity_data}.
+
+\item Currency: The currency the underlying power is quoted in. The strike and forward price are both considered to be in this currency. \\
+Allowable values: See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
+
+\item Strike: The agreed buy/sell price of the intraday power forward. \\
+Allowable values: Any real number.
+
+\item Quantity: The number of units of the underlying to be bought/sold. \\
+Allowable values: Any real number.
+
+\item DeliveryDate: Delivery date for the intraday power forward. \\
+Allowable values: Any date string, see \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item \lstinline!DeliveryStart! [Optional]: Start of delivery window, expressed in seconds from start of day on \lstinline!DeliveryDate!. Must be provided together with \lstinline!DeliveryEnd! when \lstinline!PowerLoadProfileData! is not provided. \\
+Allowable values: Any integer.
+
+\item \lstinline!DeliveryEnd! [Optional]: End of delivery window, expressed in seconds from start of day on \lstinline!DeliveryDate!. Must be provided together with \lstinline!DeliveryStart! when \lstinline!PowerLoadProfileData! is not provided. \\
+Allowable values: Any integer.
+
+\item \lstinline!IsDstHour! [Optional]: Flag to mark the  repeated hour on backward-shift dates when using explicit delivery window representation. If omitted, it defaults to \lstinline!false!. \\
+Allowable values: Any string that evaluates to true or false as outlined in Table \ref{tab:boolean_allowable}.
+
+\item \lstinline!PowerLoadProfileData! [Optional]: Alternative to \lstinline!DeliveryStart! and \lstinline!DeliveryEnd!. This defines delivery load by profile. One must provide either both \lstinline!DeliveryStart! and \lstinline!DeliveryEnd!, or \lstinline!PowerLoadProfileData!. \\
+Allowable values: See Section \ref{sss:intraday_power_load_conventions}.
+
+\item \lstinline!PhysicallySettled! [Optional]: A value of \lstinline!true! indicates physical settlement. A value of \lstinline!false! indicates cash settlement. If omitted, it defaults to \emph{true}. \\
+Allowable values: Any string that evaluates to true or false as outlined in Table \ref{tab:boolean_allowable}.
+
+\item \lstinline!PaymentDate! [Optional]: If \lstinline!PhysicallySettled! is set to \emph{false}, this gives the cash settlement date. It must be greater than or equal to the \lstinline!Maturity! date. If omitted and the forward is cash settled, the \lstinline!Maturity! date is used. \\
+Allowable values: Any date string, see \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item \lstinline!SettlementData! [Optional]: This node is used to specify the settlement of the cash flows for cash settled forwards, and the payment flow for physically settled ones.
+\end{itemize}
+
+A \lstinline!SettlementData! node is shown in Listing \ref{lst:intraday_power_forward_settlement_data_node}, and the meanings and allowable values of its elements follow below.
+
+\begin{itemize}
+\item \lstinline!PayCurrency!: The settlement currency for the payment cashflow. \\
+Allowable values: See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
+\item \lstinline!FXIndex!: The FX reference index for determining the FX fixing at the value date. The forward price is observed at maturity and the NPV is converted to \lstinline!PayCurrency! with the \lstinline!FXIndex! using an FX fixing on \lstinline!FixingDate! (settlement date), discounted from \lstinline!PaymentDate!. \\
+Allowable values: The format of the \lstinline!FXIndex! is ``FX-FixingSource-CCY1-CCY2'' as described in Table \ref{tab:fxindex_data}.
+\item \lstinline!FixingDate!: The date on which the \lstinline!FXIndex! is observed. \\
+Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+\end{itemize}
+
+\begin{listing}[H]
+  \begin{minted}[fontsize=\footnotesize]{xml}
+    <SettlementData>
+      <PayCurrency>EUR</PayCurrency>
+      <FXIndex>FX-ECB-EUR-USD</FXIndex>
+      <FixingDate>2026-07-02</FixingDate>
+    </SettlementData>
+  \end{minted}
+  \caption{Example \lstinline!SettlementData! node}
+  \label{lst:intraday_power_forward_settlement_data_node}
+\end{listing}
