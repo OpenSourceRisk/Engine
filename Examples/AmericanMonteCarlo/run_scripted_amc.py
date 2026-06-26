@@ -21,7 +21,7 @@ print("+----------------------------------------------------------------------+"
 #   KnockOutSwap                              Pattern 2 – quarterly USD SOFR swap, KO
 
 oreex.print_headline("Run ORE AMC exposure for scripted trade types")
-oreex.run("Input/ore_scripted_trades.xml")
+oreex.run("Input/ore_scripted.xml")
 
 oreex.print_headline("Plot: EuropeanOptionBarrier (European style) exposure (AMC)")
 oreex.setup_plot("EOB_EUR_FX")
