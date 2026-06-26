@@ -28,8 +28,6 @@
 
 #include <vector>
 
-#include <boost/timer/timer.hpp>
-
 namespace ore {
 namespace data {
 
@@ -97,7 +95,7 @@ public:
     //@}
 
     //! Get cumulative timing spent on pricing
-    boost::timer::nanosecond_type getCumulativePricingTime() const;
+    unsigned long long getCumulativePricingTime() const;
 
     //! Get number of pricings
     std::size_t getNumberOfPricings() const;
@@ -115,7 +113,7 @@ protected:
     Real getTimedNPV(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& instr) const;
 
     mutable std::size_t numberOfPricings_ = 0;
-    mutable boost::timer::nanosecond_type cumulativePricingTime_ = 0;
+    mutable unsigned long long cumulativePricingTime_ = 0;
 };
 
 //! Vanilla Instrument Wrapper
