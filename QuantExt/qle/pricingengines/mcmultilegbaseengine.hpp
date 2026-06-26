@@ -154,15 +154,17 @@ public:
         MultiLegBaseAmcCalculator(const std::vector<Size>& externalModelIndices, const Settlement::Type settlement,
                                   const std::vector<Real>& cashSettlementTimes,
                                   const std::set<Real>& exerciseXvaRpaTimes, const std::set<Real>& exerciseTimes,
-                                  const std::set<Real>& xvaTimes,
+                                  const std::set<Real>& xvaTimes, const std::set<Real>& rpaTimes,
                                   const std::array<std::vector<McRegressionModel>, 2>& regModelUndDirty,
                                   const std::array<std::vector<McRegressionModel>, 2>& regModelUndExInto,
                                   const std::array<std::vector<McRegressionModel>, 2>& regModelRebate,
                                   const std::array<std::vector<McRegressionModel>, 2>& regModelContinuationValue,
                                   const std::array<std::vector<McRegressionModel>, 2>& regModelOption,
+                                  const std::array<std::vector<McRegressionModel>, 2>& regModelRpaUndDirty,
+                                  const std::array<std::vector<McRegressionModel>, 2>& regModelRpaOption,
                                   const Real resultValue, const Array& initialState, const Currency& baseCurrency,
                                   const bool reevaluateExerciseInStickyRun, const bool includeTodaysCashflows,
-                                  const bool includeReferenceDateEvents);
+                                  const bool includeReferenceDateEvents, const bool isRpa);
 
         Currency npvCurrency() override { return baseCurrency_; }
         std::vector<QuantExt::RandomVariable>
@@ -178,11 +180,14 @@ public:
         std::set<Real> exerciseXvaRpaTimes_;
         std::set<Real> exerciseTimes_;
         std::set<Real> xvaTimes_;
+        std::set<Real> rpaTimes_;
         std::array<std::vector<McRegressionModel>, 2> regModelUndDirty_;
         std::array<std::vector<McRegressionModel>, 2> regModelUndExInto_;
         std::array<std::vector<McRegressionModel>, 2> regModelRebate_;
         std::array<std::vector<McRegressionModel>, 2> regModelContinuationValue_;
         std::array<std::vector<McRegressionModel>, 2> regModelOption_;
+        std::array<std::vector<McRegressionModel>, 2> regModelRpaUndDirty_;
+        std::array<std::vector<McRegressionModel>, 2> regModelRpaOption_;
         Real resultValue_;
         Array initialState_;
         Currency baseCurrency_;
@@ -191,6 +196,9 @@ public:
         // set from global settings via base engine
         bool includeTodaysCashflows_;
         bool includeReferenceDateEvents_;
+
+        bool isRpa_;
+        std::vector<Real> rpaWeights_;
 
         std::vector<Filter> exercised_;
 
@@ -204,17 +212,16 @@ public:
                             std::vector<std::vector<RandomVariable>>& pathValues) const;
 
     // the model training logic
-    void calculateModels(const std::set<Real>& simulationTimes, const std::set<Real>& exerciseXvaRpaTimes,
-                         const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
-                         const std::set<Real>& rpaTimes, const std::vector<McCashflowInfo>& cashflowInfo,
-                         const std::vector<std::vector<RandomVariable>>& pathValues,
-                         const std::vector<std::vector<const RandomVariable*>>& pathValuesRef,
-                         std::vector<McRegressionModel>& regModelUndDirty,
-                         std::vector<McRegressionModel>& regModelUndExInto,
-                         std::vector<McRegressionModel>& regModelRebate,
-                         std::vector<McRegressionModel>& regModelContinuationValue,
-                         std::vector<McRegressionModel>& regModelOption, RandomVariable& pathValueUndDirty,
-                         RandomVariable& pathValueUndExInto, RandomVariable& pathValueOption) const;
+    void calculateModels(
+        const std::set<Real>& simulationTimes, const std::set<Real>& exerciseXvaRpaTimes,
+        const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes, const std::set<Real>& rpaTimes,
+        const std::vector<McCashflowInfo>& cashflowInfo, const std::vector<std::vector<RandomVariable>>& pathValues,
+        const std::vector<std::vector<const RandomVariable*>>& pathValuesRef,
+        std::vector<McRegressionModel>& regModelUndDirty, std::vector<McRegressionModel>& regModelUndExInto,
+        std::vector<McRegressionModel>& regModelRebate, std::vector<McRegressionModel>& regModelContinuationValue,
+        std::vector<McRegressionModel>& regModelOption, std::vector<McRegressionModel>& regModelRpaUndDirty,
+        std::vector<McRegressionModel>& regModelRpaOption, RandomVariable& pathValueUndDirty,
+        RandomVariable& pathValueUndExInto, RandomVariable& pathValueOption) const;
 
     // convert a date to a time w.r.t. the valuation date
     Real time(const Date& d) const;
