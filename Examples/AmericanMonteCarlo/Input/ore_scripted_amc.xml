@@ -3,7 +3,7 @@
   <Setup>
     <Parameter name="asofDate">2022-01-31</Parameter>
     <Parameter name="inputPath">Input</Parameter>
-    <Parameter name="outputPath">Output/scripted_amc</Parameter>
+    <Parameter name="outputPath">Output/scripted_trades</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
     <Parameter name="logMask">31</Parameter>
     <Parameter name="marketDataFile">market.txt</Parameter>
