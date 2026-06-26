@@ -29,6 +29,8 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 
+#include <qle/pricingengines/mccamrpaengine.hpp>
+
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
 
@@ -389,6 +391,89 @@ RiskParticipationAgreementTLockLGMGridEngineBuilder::engineImpl(const std::strin
     return QuantLib::ext::make_shared<NumericLgmRiskParticipationAgreementEngineTLock>(
         rpa->npvCurrency(), getDiscountCurves(rpa), getFxSpots(rpa), lgm, sy, ny, sx, nx, treasuryCurve, creditCurve,
         recoveryRate, timeStepsPerYear);
+}
+
+namespace {
+
+struct CcyComp {
+    bool operator()(const Currency& c1, const Currency& c2) const { return c1.code() < c2.code(); }
+};
+
+QuantLib::ext::shared_ptr<PricingEngine>
+CamAmcSwapEngineBuilder::buildMcEngine(const QuantLib::Handle<CrossAssetModel>& model, const std::set<Currency>& ccys,
+                                       const Handle<DefaultProbabilityTermStrucutre>& creditCurve,
+                                       const Handle<Quote>& recoveryRate,
+                                       const std::vector<Size>& externalModelIndices) {
+    Size maxDiscretisationPoints = parseInteger(engineParameter("MaxDiscretisationPoints"));
+    if (maxDiscretisationPoints == 0)
+        maxDiscretisationPoints = Null<Size>();
+    return QuantLib::ext::make_shared<QuantExt::McCamRpaEngine>(
+        model, ccys, creditCurve, recoveryRate, parseInteger(engineParameter("MaxGapDays")), maxDiscretisationPoints,
+        parseSequenceType(engineParameter("Training.Sequence")), parseSequenceType(engineParameter("Pricing.Sequence")),
+        parseInteger(engineParameter("Training.Samples")), parseInteger(engineParameter("Pricing.Samples")),
+        parseInteger(engineParameter("Training.Seed")), parseInteger(engineParameter("Pricing.Seed")),
+        parseInteger(engineParameter("Training.BasisFunctionOrder")),
+        parsePolynomType(engineParameter("Training.BasisFunction")),
+        parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering")),
+        parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")), discountCurve, simulationDates_,
+        stickyCloseOutDates_, externalModelIndices, parseBool(engineParameter("MinObsDate")),
+        parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
+        parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
+        parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
+        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")),
+        parseInteger(engineParameter("CashflowGeneration.OnCpnMaxSimTimes", {}, false, "1")),
+        parsePeriod(engineParameter("CashflowGeneration.OnCpnAddSimTimesCutoff", {}, false, "0D")),
+        parseInteger(engineParameter("Regression.MaxSimTimesIR", {}, false, "0")),
+        parseInteger(engineParameter("Regression.MaxSimTimesFX", {}, false, "0")),
+        parseInteger(engineParameter("Regression.MaxSimTimesEQ", {}, false, "0")),
+        parseVarGroupMode(engineParameter("Regression.VarGroupMode", {}, false, "Global")));
+}
+
+} // namespace
+
+QuantLib::ext::shared_ptr<PricingEngine>
+CamAmcRiskParticipationAgreementEngineBuilder::engineImpl(const std::string& id, RiskParticipationAgreement* rpa) {
+    DLOG("Building AMC engine for rpa " << id << " (from externally given CAM)");
+
+    QL_REQUIRE(cam_ != nullptr, "CamAmcRiskParticipationAgreementEngineBuilder::engineImpl: cam is null");
+
+    // collect currencies
+
+    std::set<Currency, CcyComp> allCurrencies;
+    std::for_each(rpa->underlyingCcys().begin(), rpa->underlyingCcys().end(),
+                  [&allCurrencies](const std::string& c) { allCurrencies.push_back(parseCurrency(c)); });
+    std::for_each(rpa->protectionFeeCcys().begin(), rpa->protectionFeeCcys().end(),
+                  [&allCurrencies](const std::string& c) { allCurrencies.push_back(parseCurrency(c)); });
+
+    // get projected model
+
+    bool needBaseCcy = allCurrencies.size() > 1;
+
+    std::set<std::pair<CrossAssetModel::AssetType, Size>> selectedComponents;
+    if(needBaseCcy) {
+        selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, 0));
+    }
+    for (auto const& c : allCurrencies) {
+        Size ccyIdx = cam_->ccyIndex(c);
+        if (ccyIdx != 0 || !needBaseCcy)
+            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, ccyIdx));
+        if (needBaseCcy && ccyIdx > 0)
+            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::FX, ccyIdx - 1));
+    }
+    for (auto const& eq : eqNames) {
+        selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::EQ, cam_->eqIndex(eq)));
+    }
+    std::vector<Size> externalModelIndices;
+    Handle<CrossAssetModel> model(getProjectedCrossAssetModel(cam_, selectedComponents, externalModelIndices));
+
+    /* build engine; we pass the credit curve and recovery rate separately, i.e. do not assume they are part
+       of the dynamic model */
+
+    Handle<DefaultProbabilityTermStructure> creditCurve =
+        market_->defaultCurve(rpa->creditCurveId(), configuration(MarketContext::pricing))->curve();
+    Handle<Quote> recoveryRate = market_->recoveryRate(rpa->creditCurveId(), configuration(MarketContext::pricing));
+
+    return buildMcEngine(model, allCurrencies, creditCurve, recoveryCurve, externalModelIndices);
 }
 
 } // namespace data

@@ -628,7 +628,7 @@ void McMultiLegBaseEngine::calculate() const {
                                  .apply(model_->stateProcess()->initialValues(), pathValuesRef, simulationTimes)))
                     .at(0);
             Real pd = defaultCurve_->defaultProbability(prev_t, t);
-            resultValue_ += pd * (1.0 - recoveryRate_) * optionPv;
+            resultValue_ += pd * (1.0 - recoveryRate_->value()) * optionPv;
         }
     }
 

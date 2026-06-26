@@ -96,7 +96,7 @@ public:
     // optional input data for rpa pricing engine
     mutable std::vector<QuantLib::Date> rpaDiscretizationDates_;
     mutable QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure> defaultCurve_;
-    mutable double recoveryRate_;
+    mutable QuantLib::Handle<QuantLib::Quote> recoveryRate_;
 
     // data members
     Handle<CrossAssetModel> model_;

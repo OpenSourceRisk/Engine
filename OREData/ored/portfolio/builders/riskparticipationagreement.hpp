@@ -104,5 +104,29 @@ protected:
                                                           RiskParticipationAgreement* rpa) override;
 };
 
+//! RPA AMC engine builder (all underlyings except t-lock)
+class CamAmcRiskParticipationAgreementEngineBuilder : public RiskParticipationAgreementEngineBuilderBase {
+public:
+    CamAmcRiskParticipationAgreementEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
+                                                  const std::vector<Date>& simulationDates,
+                                                  const std::vector<Date>& stickyCloseOutDates)
+        : RiskParticipationAgreementEngineBuilderBase("CrossAssetModel", "AMC",
+                                                      {"RiskParticipationAgreement_Vanilla",
+                                                       "RiskParticipationAgreement_Vanilla_XCcy",
+                                                       "RiskParticipationAgreement_Structured"}) {}
+
+protected:
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id,
+                                                                  RiskParticipationAgreement* rpa) override;
+
+private:
+    QuantLib::ext::shared_ptr<PricingEngine> buildMcEngine(const QuantLib::Handle<QuantExt::CrossAssetModel>& lgm,
+                                                           const Handle<YieldTermStructure>& discountCurve,
+                                                           const std::vector<Size>& externalModelIndices);
+    const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
+    const std::vector<Date> simulationDates_;
+    const std::vector<Date> stickyCloseOutDates_;
+};
+
 } // namespace data
 } // namespace ore
