@@ -1240,7 +1240,8 @@ Real TRSWrapperAccrualEngine::fundingLegValueForIndex(vector<CashFlowResults>& c
                 Real fx = getFxConversionRate(valSched[valIdx], a.initialPriceCurrency_, a.fundingCurrency_, false);
                 addRes["fundingLegNotional" + suffix] = effNtl;
                 addRes["fundingLegFxRate" + suffix] = fx;
-                cpnValue = cpn->accruedAmount(today) * effNtl * fx;
+                fundingNtl = effNtl * fx;
+                cpnValue = cpn->accruedAmount(today) * fundingNtl;
             } else if (ntlType == FNT::DailyReset) {
                 if (auto specificCpn = ext::dynamic_pointer_cast<FixedRateCoupon>(cpn)) {
                     cpnValue = dailyResetCpnVal(specificCpn, today, fundingNtl);

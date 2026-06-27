@@ -109,7 +109,7 @@ public:
 
     //! Reset accumulated timings to given values
     void resetPricingStats(const std::size_t numberOfPricings = 0,
-                           const boost::timer::nanosecond_type cumulativePricingTime = 0) {
+                           const unsigned long long cumulativePricingTime = 0) {
         savedNumberOfPricings_ = numberOfPricings;
         savedCumulativePricingTime_ = cumulativePricingTime;
         if (instrument_ != nullptr)
@@ -198,7 +198,7 @@ public:
     void validate() const;
 
     //! Get cumulative timing spent on pricing
-    boost::timer::nanosecond_type getCumulativePricingTime() const {
+    unsigned long long getCumulativePricingTime() const {
         return savedCumulativePricingTime_ + (instrument_ != nullptr ? instrument_->getCumulativePricingTime() : 0);
     }
 
@@ -250,7 +250,7 @@ protected:
     Date lastRelevantDate_ = Null<Date>();
 
     std::size_t savedNumberOfPricings_ = 0;
-    boost::timer::nanosecond_type savedCumulativePricingTime_ = 0;
+    unsigned long long savedCumulativePricingTime_ = 0;
     bool isSubTrade_ = false;
     // Utility to add premiums such that they are taken into account in pricing and cash flow projection.
     // For example, an option premium flow is not covered by the underlying option instrument in
