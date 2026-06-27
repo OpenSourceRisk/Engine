@@ -79,8 +79,7 @@ public:
                                   const bool breakdown = false, const bool includeExpectedShortfall = false,
                                   const bool tradePnl = false, const bool riskFactorBreakdown = false,
                                   const bool useAtParCouponsCurves = true, const bool useAtParCouponsTrades = true,
-                                  const bool riskClassBreakdown = true,
-                                  const bool includeTheta = false);
+                                  const bool riskClassBreakdown = true);
     HistoricalSimulationVarReport(const std::string& baseCurrency,
                                   const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
                                   const std::string& portfolioFilter, const vector<Real>& p,
@@ -129,7 +128,6 @@ private:
     bool includeExpectedShortfall_ = false;
     bool tradePnl_ = false;
     bool riskFactorBreakdown_ = false;
-    bool includeTheta_ = false;
     int countRF_ = 0;
 };
 
