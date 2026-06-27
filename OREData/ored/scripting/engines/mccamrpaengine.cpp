@@ -21,6 +21,8 @@
 
 #include <ored/utilities/parsers.hpp>
 
+#include <ql/currency.hpp>
+
 namespace ore::data {
 
 using namespace QuantLib;
