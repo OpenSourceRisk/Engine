@@ -52,7 +52,7 @@ public:
                    const bool minimalObsDate = true,
                    const QuantExt::McRegressionModel::RegressorModel regressorModel =
                        QuantExt::McRegressionModel::RegressorModel::Simple,
-                   const QuantLib::Real regressionVarianceCutoff = Null<Real>(),
+                   const QuantLib::Real regressionVarianceCutoff = QuantLib::Null<QuantLib::Real>(),
                    const bool recalibrateOnStickyCloseOutDates = false,
                    const bool reevaluateExerciseInStickyRun = false, const QuantLib::Size cfOnCpnMaxSimTimes = 1,
                    const QuantLib::Period& cfOnCpnAddSimTimesCutoff = QuantLib::Period(),
