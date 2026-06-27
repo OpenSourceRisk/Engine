@@ -32,16 +32,16 @@ namespace ore::data {
 
 class McCamRpaEngine : public QuantExt::McMultiLegBaseEngine, public QuantExt::RiskParticipationAgreement::engine {
 public:
-    McCamRpaEngine(const Handle<QuantExt::CrossAssetModel>& model, const std::vector<Currency>& currencies,
-                   const Currency& npvCcy,
+    McCamRpaEngine(const QuantLib::Handle<QuantExt::CrossAssetModel>& model,
+                   const std::vector<QuantLib::Currency>& currencies, const QuantLib::Currency& npvCcy,
                    const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve,
-                   const QuantLib::Handle<QuantLib::Quote>& recoveryRate, const Size maxGapDays,
-                   const Size maxDiscretisationPoints, const QuantExt::SequenceType calibrationPathGenerator,
+                   const QuantLib::Handle<QuantLib::Quote>& recoveryRate, const QuantLib::Size maxGapDays,
+                   const QuantLib::Size maxDiscretisationPoints, const QuantExt::SequenceType calibrationPathGenerator,
                    const QuantExt::SequenceType pricingPathGenerator, const QuantLib::Size calibrationSamples,
                    const QuantLib::Size pricingSamples, const QuantLib::Size calibrationSeed,
                    const QuantLib::Size pricingSeed, const QuantLib::Size polynomOrder,
                    const QuantLib::LsmBasisSystem::PolynomialType polynomType,
-                   const QuantLib::SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
+                   const QuantLib::SobolBrownianGenerator::Ordering ordering = QuantLib::SobolBrownianGenerator::Steps,
                    const QuantLib::SobolRsg::DirectionIntegers directionIntegers = QuantLib::SobolRsg::JoeKuoD7,
                    const std::vector<QuantLib::Handle<QuantLib::YieldTermStructure>>& discountCurves = {},
                    const std::vector<QuantLib::Date>& simulationDates = std::vector<QuantLib::Date>(),
