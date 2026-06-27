@@ -63,8 +63,8 @@ public:
     const QuantLib::Handle<QuantExt::CrossAssetModel>& model() const { return model_; }
 
 private:
-    std::vector<Currency> currencies_;
-    Currency npvCcy_;
+    std::vector<QuantLib::Currency> currencies_;
+    QuantLib::Currency npvCcy_;
     QuantLib::Size maxGapDays_;
     QuantLib::Size maxDiscretisationPoints_;
 };
