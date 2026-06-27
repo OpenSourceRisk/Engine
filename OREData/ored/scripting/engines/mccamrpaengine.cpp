@@ -23,10 +23,10 @@
 
 #include <ql/currency.hpp>
 
-namespace ore::data {
-
 using namespace QuantLib;
 using namespace QuantExt;
+
+namespace ore::data {
 
 McCamRpaEngine::McCamRpaEngine(
     const Handle<CrossAssetModel>& model, const std::vector<Currency>& currencies, const Currency& npvCcy,
