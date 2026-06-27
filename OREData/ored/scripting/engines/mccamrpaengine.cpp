@@ -21,8 +21,6 @@
 
 #include <ored/utilities/parsers.hpp>
 
-#include <ql/currency.hpp>
-
 using namespace QuantLib;
 using namespace QuantExt;
 

@@ -28,6 +28,8 @@
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/crossassetmodel.hpp>
 
+#include <ql/currency.hpp>
+
 namespace ore::data {
 
 class McCamRpaEngine : public QuantExt::McMultiLegBaseEngine, public QuantExt::RiskParticipationAgreement::engine {
