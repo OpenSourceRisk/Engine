@@ -278,10 +278,13 @@ void McMultiLegBaseEngine::calculateModels(
                                                      exerciseValue > RandomVariable(calibrationSamples_, 0.0));
             auto continuationValue = regModelContinuationValue[counter].apply(model_->stateProcess()->initialValues(),
                                                                               pathValuesRef, simulationTimes);
-            exercised[exerciseCounter--] =
+            exercised[exerciseCounter] =
                 exerciseValue > continuationValue && exerciseValue > RandomVariable(calibrationSamples_, 0.0);
 
-            pathValueOption = conditionalResult(exercised[counter], pathValueUndExInto + rebate, pathValueOption);
+            pathValueOption =
+                conditionalResult(exercised[exerciseCounter], pathValueUndExInto + rebate, pathValueOption);
+
+            --exerciseCounter;
         }
 
         if (isXvaTime || isRpaTime) {
@@ -472,7 +475,7 @@ void McMultiLegBaseEngine::calculate() const {
     /* build rpa discretization times */
 
     std::set<Real> rpaTimes;
-    Real firstRpaTime;
+    Real firstRpaTime = Null<Real>();
     for (auto const& d : rpaDiscretizationDates_) {
         if (d < today_)
             continue;
