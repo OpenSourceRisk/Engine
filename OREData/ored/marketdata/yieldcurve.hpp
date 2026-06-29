@@ -201,6 +201,7 @@ private:
     bool preserveQuoteLinkage_;
     bool buildCalibrationInfo_;
     const Market* market_;
+    std::string marketConfiguration_;
     bool useAtParCoupons_;
 
     map<string, QuantLib::RelinkableHandle<YieldTermStructure>> requiredYieldCurveHandles_;

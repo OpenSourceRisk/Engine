@@ -421,6 +421,7 @@ CrifRecordData CrifRecordGenerator::discountCurveImpl(const ore::analytics::Sens
 CrifRecordData CrifRecordGenerator::yieldCurveImpl(const ore::analytics::SensitivityRecord& sr,
                                                    const std::vector<std::string>& rfTokens) {
     CrifRecordData data;
+    bool cmbQualifier = false;
     // 1: rfKey of form "YieldCurve/CCY1-IN-CCY2/#" => qualifier = "CCY1", tenor defaults to 1D
     // 2: rfKey of form "YieldCurve/CURVENAME-CCY-TENOR/#" => qualifier = "CCY", tenor = TENOR
     //    rfKey of form "YieldCurve/CURVENAME-CCY-MUN/#" => qualifier = "CCY", tenor = Municipal
@@ -433,6 +434,7 @@ CrifRecordData CrifRecordGenerator::yieldCurveImpl(const ore::analytics::Sensiti
     std::string originalQualifier = crifQualifier(sr.key_1.name);
     boost::split(tokens, originalQualifier, boost::is_any_of("-"));
     if (tokens.size() >= 3 && tokens[0] == "CMB") {
+        cmbQualifier = true;
         // Case 4: CMB-A-B-....-TENOR or CMB-A-B-....-MUN
         // Try looking up the yield curve config to determine the currency
         if (curveConfigs_->hasYieldCurveConfig(originalQualifier)) {
@@ -495,7 +497,20 @@ CrifRecordData CrifRecordGenerator::yieldCurveImpl(const ore::analytics::Sensiti
         if (period != "MUN") {
             try {
                 p = parsePeriod(period);
-                data.label2 = label2(p);
+                // For CMB qualifiers, a trailing bond tenor (e.g. 10Y in CMB-US-TIPS-10Y)
+                // is part of the curve identifier, not a SIMM sub-curve tenor.
+                if (cmbQualifier) {
+                    try {
+                        data.label2 = label2(p);
+                    } catch (...) {
+                        WLOG("CRIF: YieldCurve risk factor '" << originalQualifier
+                                                               << "' has CMB structural tenor '" << period
+                                                               << "', map Label2 to OIS.");
+                        data.label2 = "OIS";
+                    }
+                } else {
+                    data.label2 = label2(p);
+                }
             } catch (...) {
                 QL_FAIL("CRIF: YieldCurve risk factor '"
                         << originalQualifier << "' contains illegal tenor '" << period

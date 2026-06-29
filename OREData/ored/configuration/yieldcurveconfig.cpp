@@ -148,6 +148,8 @@ void SegmentIDGetter::visit(DiscountRatioYieldCurveSegment& s) {
 void SegmentIDGetter::visit(FittedBondYieldCurveSegment& s) {
     for (auto const& c : s.iborIndexCurves())
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(c.second);
+    for (auto const& c : s.inflationIndexCurves())
+        requiredCurveIds_[CurveSpec::CurveType::Inflation].insert(c.second);
 }
 
 void SegmentIDGetter::visit(BondYieldShiftedYieldCurveSegment& s) {
@@ -700,8 +702,10 @@ void DiscountRatioYieldCurveSegment::accept(AcyclicVisitor& v) {
 
 FittedBondYieldCurveSegment::FittedBondYieldCurveSegment(const string& typeID, const vector<string>& quotes,
                                                          const map<string, string>& iborIndexCurves,
-                                                         const bool extrapolateFlat)
-    : YieldCurveSegment(typeID, "", quotes), iborIndexCurves_(iborIndexCurves), extrapolateFlat_(extrapolateFlat) {}
+                                                         const bool extrapolateFlat,
+                                                         const map<string, string>& inflationIndexCurves)
+    : YieldCurveSegment(typeID, "", quotes), iborIndexCurves_(iborIndexCurves),
+      inflationIndexCurves_(inflationIndexCurves), extrapolateFlat_(extrapolateFlat) {}
 
 void FittedBondYieldCurveSegment::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "FittedBond");
@@ -712,6 +716,13 @@ void FittedBondYieldCurveSegment::fromXML(XMLNode* node) {
         node, "IborIndexCurves", "IborIndexCurve", "iborIndex", iborIndexNames, false);
     for (Size i = 0; i < iborIndexNames.size(); ++i) {
         iborIndexCurves_[iborIndexNames[i]] = iborIndexCurves[i];
+    }
+
+    vector<string> inflationIndexNames;
+    vector<string> inflationIndexCurves = XMLUtils::getChildrenValuesWithAttributes(
+        node, "InflationIndexCurves", "InflationIndexCurve", "inflationIndex", inflationIndexNames, false);
+    for (Size i = 0; i < inflationIndexNames.size(); ++i) {
+        inflationIndexCurves_[inflationIndexNames[i]] = inflationIndexCurves[i];
     }
 
     if (auto n = XMLUtils::getChildNode(node, "ExtrapolateFlat")) {
@@ -733,6 +744,15 @@ XMLNode* FittedBondYieldCurveSegment::toXML(XMLDocument& doc) const {
     }
     XMLUtils::addChildrenWithAttributes(doc, node, "IborIndexCurves", "IborIndexCurve", iborIndexCurves, "iborIndex",
                                         iborIndexNames);
+
+    vector<string> inflationIndexNames;
+    vector<string> inflationIndexCurves;
+    for (auto const& c : inflationIndexCurves_) {
+        inflationIndexNames.push_back(c.first);
+        inflationIndexCurves.push_back(c.second);
+    }
+    XMLUtils::addChildrenWithAttributes(doc, node, "InflationIndexCurves", "InflationIndexCurve", inflationIndexCurves,
+                                        "inflationIndex", inflationIndexNames);
 
     XMLUtils::addChild(doc, node, "ExtrapolateFlat", extrapolateFlat_);
     return node;

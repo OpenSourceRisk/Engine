@@ -1915,8 +1915,14 @@ void YieldCurve::buildFittedBondCurve(const std::size_t index) {
         iborCurveMapping[c.first] = y->second;
     }
 
+    std::map<std::string, Handle<ZeroInflationIndex>> inflationIndexMapping;
+    for (auto const& c : curveSegment->inflationIndexCurves()) {
+        QL_REQUIRE(market_ != nullptr, "market required to resolve inflation index '" << c.first << "' for fitted bond curve");
+        inflationIndexMapping[c.first] = market_->zeroInflationIndex(c.first);
+    }
+
     auto engineFactory = QuantLib::ext::make_shared<EngineFactory>(
-        engineData, QuantLib::ext::make_shared<FittedBondCurveHelperMarket>(iborCurveMapping),
+        engineData, QuantLib::ext::make_shared<FittedBondCurveHelperMarket>(iborCurveMapping, inflationIndexMapping),
         std::map<MarketContext, string>(), referenceData_, iborFallbackConfig_);
 
     for (Size i = 0; i < quoteIDs.size(); ++i) {
