@@ -395,8 +395,11 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
                                 covarianceMatrix_(k1 - deltaKeys.begin(), k2 - deltaKeys.begin()) = c.second;
                                 if (k1 == k2)
                                     sensiKeyHasNonZeroVariance[k1 - deltaKeys.begin()] = true;
-                            } else
+                                else
+                                    covarianceMatrix_(k2 - deltaKeys.begin(), k1 - deltaKeys.begin()) = c.second;
+                            } else {
                                 ++unusedCovariance;
+                            }
                         }
                         DLOG("Found " << sensiArgs_->covarianceInput_.size() << " covariance matrix entries, "
                                       << unusedCovariance
