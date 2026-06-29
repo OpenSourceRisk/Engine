@@ -38,7 +38,7 @@ namespace data {
 /*! The curve is built from:
     - the daily average commodity price curve referenced in the configuration (taken from the
       already built commodity curves the curve depends on), and
-    - an intraday shape term structure built from all SHAPE_PROFILE/SHAPE_FACTOR/<ShapeQuoteName>/
+    - an intraday shape term structure built from all SHAPE_PROFILE/SHAPE_FACTOR/ShapeQuoteName/
       quotes found in the loader.
 
     \ingroup curves
