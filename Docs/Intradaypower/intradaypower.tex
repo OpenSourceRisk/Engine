@@ -2,12 +2,6 @@
 
 \input{../UserGuide/settings}
 
-% Resolve cross references into the User Guide and Product Catalogue (allowable
-% value tables, leg data, curve algebra) when their aux files are available.
-\usepackage{xr}
-\externaldocument{../UserGuide/products}
-\externaldocument{../UserGuide/userguide}
-
 \begin{document}
 
 \title{ORE Intraday Power Curves and Derivatives}
@@ -82,8 +76,7 @@ and are loaded through the curve configuration.
 The shape resolution is flexible. A single curve can mix buckets of different lengths, e.g.\ 15 minute buckets for the
 next day, hourly buckets further out and daily buckets beyond that. Alternatively, separate curves can be set up per
 granularity for the same underlying, e.g.\ a 15 minute curve and an hourly curve. Separate curves are reported on
-different risk factor keys, so their stress and sensitivity results needs to be aggregated or simulated through curve algebra (Section
-\ref{sec:sim_curve_algebra}).
+different risk factor keys, so their stress and sensitivity results needs to be aggregated or simulated through curve algebra (see the curve algebra section of the User Guide).
 
 %-------------------------------------------------------------------------------
 \section{Reusable Load Profiles}
