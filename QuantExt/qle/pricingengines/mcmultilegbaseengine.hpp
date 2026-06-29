@@ -90,13 +90,21 @@ public:
     mutable std::vector<Currency> currency_;
     mutable std::vector<bool> payer_;
     mutable QuantLib::ext::shared_ptr<Exercise> exercise_; // may be empty, if underlying is the actual trade
+    mutable bool nakedOption_ = true;                      // if false, exercise represents call or put right
+    mutable bool exerciseIsLong_ = true;
+    mutable std::vector<QuantLib::ext::shared_ptr<CashFlow>> optionPremium_; // unconditional option premia
     mutable Settlement::Type optionSettlement_ = Settlement::Physical;
     mutable std::vector<QuantLib::Date> cashSettlementDates_;
     mutable bool exerciseIntoIncludeSameDayFlows_ = false;
-    // optional input data for rpa pricing engine
+    // optional input data for rpa pricing
     mutable std::vector<QuantLib::Date> rpaDiscretizationDates_;
-    mutable QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure> defaultCurve_;
-    mutable QuantLib::Handle<QuantLib::Quote> recoveryRate_;
+    mutable QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure> rpaCreditCurve_;
+    mutable QuantLib::Handle<QuantLib::Quote> rpaRecoveryRate_;
+    mutable std::vector<Leg> rpaProtectionFee_;
+    mutable std::vector<Currency> rpaProtectionFeeCurrency_;
+    mutable Real rpaParticipationRate_ = 1.0;
+    mutable bool rpaSettlesAccrual_ = true;
+    mutable bool rpaProtectionFeePayer_ = true;
 
     // data members
     Handle<CrossAssetModel> model_;

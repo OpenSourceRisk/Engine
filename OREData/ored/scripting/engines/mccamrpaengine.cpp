@@ -47,37 +47,45 @@ McCamRpaEngine::McCamRpaEngine(
           stickyCloseOutDates, externalModelIndices, minimalObsDate, regressorModel, regressionVarianceCutoff,
           recalibrateOnStickyCloseOutDates, reevaluateExerciseInStickyRun, cfOnCpnMaxSimTimes, cfOnCpnAddSimTimesCutoff,
           regressionMaxSimTimesIr, regressionMaxSimTimesFx, regressionMaxSimTimesEq, regressionVarGroupMode),
+      currencies_(currencies), npvCcy_(npvCcy), creditCurve_(creditCurve), recoveryRate_(recoveryRate),
       maxGapDays_(maxGapDays), maxDiscretisationPoints_(maxDiscretisationPoints) {
-
-    defaultCurve_ = creditCurve;
-    recoveryRate_ = recoveryRate;
-
     registerWith(model_);
-    registerWith(defaultCurve_);
+    registerWith(creditCurve_);
     registerWith(recoveryRate_);
 }
 
 void McCamRpaEngine::calculate() const {
 
-    std::vector<Currency> underlyingCcys;
+    currency_.clear();
+    rpaProtectionFeeCurrency_.clear();
+
     std::for_each(arguments_.underlyingCcys.begin(), arguments_.underlyingCcys.end(),
-                  [&underlyingCcys](auto const& c) { underlyingCcys.push_back(ore::data::parseCurrency(c)); });
+                  [this](auto const& c) { currency_.push_back(ore::data::parseCurrency(c)); });
+    std::for_each(arguments_.protectionFeeCcys.begin(), arguments_.protectionFeeCcys.end(),
+                  [this](auto const& c) { rpaProtectionFeeCurrency_.push_back(ore::data::parseCurrency(c)); });
 
     leg_ = arguments_.underlying;
-    currency_ = underlyingCcys;
     payer_ = arguments_.underlyingPayer;
     exercise_ = arguments_.exercise;
+    nakedOption_ = arguments_.nakedOption;
+    exerciseIsLong_ = arguments_.exerciseIsLong;
+    optionPremium_ = arguments_.premium;
+
+    rpaProtectionFee_ = arguments_.protectionFee;
+    rpaParticipationRate_ = arguments_.participationRate;
+    rpaSettlesAccrual_ = arguments_.settlesAccrual;
+    rpaProtectionFeePayer_ = arguments_.protectionFeePayer;
+
+    rpaCreditCurve_ = creditCurve_;
+    rpaRecoveryRate_ = arguments_.fixedRecoveryRate == Null<Real>()
+                           ? recoveryRate_
+                           : Handle<Quote>(ext::make_shared<SimpleQuote>(arguments_.fixedRecoveryRate));
 
     Date today = Settings::instance().evaluationDate();
 
     rpaDiscretizationDates_ = RiskParticipationAgreementBaseEngine::buildDiscretisationGrid(
         today, arguments_.protectionStart, arguments_.protectionEnd, arguments_.underlying, maxGapDays_,
         maxDiscretisationPoints_);
-
-    // base engine extensions:
-    // - nakedOption = true/false flag
-    // - option premium leg
-    // - fee leg
 
     McMultiLegBaseEngine::calculate();
 
@@ -87,7 +95,10 @@ void McCamRpaEngine::calculate() const {
     if (npvCcyIndex > 0)
         fxSpot = model_->fxModel(npvCcyIndex - 1)->fxSpotToday()->value();
     results_.value = resultValue_ / fxSpot;
+
+    // set amc calculator
     results_.additionalResults["amcCalculator"] = amcCalculator();
+
 } // calculate
 
 } // namespace ore::data

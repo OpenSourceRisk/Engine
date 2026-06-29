@@ -67,6 +67,8 @@ public:
 private:
     std::vector<QuantLib::Currency> currencies_;
     QuantLib::Currency npvCcy_;
+    QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure> creditCurve_;
+    QuantLib::Handle<QuantLib::Quote> recoveryRate_;
     QuantLib::Size maxGapDays_;
     QuantLib::Size maxDiscretisationPoints_;
 };
