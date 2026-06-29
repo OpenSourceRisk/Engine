@@ -656,6 +656,7 @@ instruments/averageois.hpp
 instruments/balanceguaranteedswap.hpp
 instruments/bondbasket.hpp
 instruments/bondfuture.hpp
+instruments/bondfutureoption.hpp
 instruments/bondoption.hpp
 instruments/bondrepo.hpp
 instruments/bondtotalreturnswap.hpp

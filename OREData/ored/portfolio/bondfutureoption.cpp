@@ -20,7 +20,7 @@
 #include <ored/portfolio/bondfuture.hpp>
 #include <ored/portfolio/bondutils.hpp>
 #include <ored/portfolio/builders/bondfutureoption.hpp>
-#include <ql/instruments/vanillaoption.hpp>
+#include <qle/instruments/bondfutureoption.hpp>
 #include <regex>
 
 namespace ore {
@@ -135,7 +135,7 @@ void BondFutureOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     auto [type, payoff] = payoffDetails();
 
     // Create the main instrument.
-    ext::shared_ptr<Instrument> option = ext::make_shared<QuantLib::VanillaOption>(payoff, exercise);
+    ext::shared_ptr<Instrument> option = ext::make_shared<QuantExt::BondFutureOption>(payoff, exercise);
 
     // Get the pricing engine builder for bond future option (depends on exercise type, from above).
     ext::shared_ptr<EngineBuilder> engineBuilder = engineFactory->builder(builderTradeType);
