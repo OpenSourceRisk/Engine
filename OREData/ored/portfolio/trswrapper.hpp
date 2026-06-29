@@ -225,15 +225,19 @@ private:
     QuantLib::Real basketValue(const QuantLib::Date& fixingDate, const QuantLib::Date& fxDate,
         bool enforceProjection) const;
 
-    // Helpers for funding leg calculations with daily resetting notionals when the underlying is a basket index and 
-    // price per unit is specified. The `outNtl` parameter is set to the appropriate funding leg notional in funding 
-    // leg currency during the calculation.
+    // Helpers for funding leg coupon calculations when the underlying is a basket index and price per unit is 
+    // specified. The `outNtl` parameter is set to the appropriate funding leg notional in funding leg currency during 
+    // the calculation.
+    QuantLib::Real fixedNtlCpnVal(const QuantLib::ext::shared_ptr<QuantLib::Coupon>& cpn,
+        const QuantLib::Date& today, const std::string& cpnSuffix, QuantLib::Real& outNtl) const;
+    QuantLib::Real periodResetCpnVal(const QuantLib::ext::shared_ptr<QuantLib::Coupon>& cpn,
+        const QuantLib::Date& today, const std::string& cpnSuffix, QuantLib::Size valIdx, QuantLib::Real& outNtl) const;
     QuantLib::Real dailyResetCpnVal(const QuantLib::ext::shared_ptr<QuantLib::FixedRateCoupon>& cpn,
-        const QuantLib::Date& today, QuantLib::Real& outNtl) const;
+        const QuantLib::Date& today, const std::string& cpnSuffix, QuantLib::Real& outNtl) const;
     QuantLib::Real dailyResetCpnVal(const QuantLib::ext::shared_ptr<QuantLib::IborCoupon>& cpn,
-        const QuantLib::Date& today, QuantLib::Real& outNtl) const;
+        const QuantLib::Date& today, const std::string& cpnSuffix, QuantLib::Real& outNtl) const;
     QuantLib::Real dailyResetCpnVal(const QuantLib::ext::shared_ptr<QuantExt::OvernightIndexedCouponBase>& cpn,
-        const QuantLib::Date& today, QuantLib::Real& outNtl) const;
+        const QuantLib::Date& today, const std::string& cpnSuffix, QuantLib::Real& outNtl) const;
 
     // Last available fixing used in daily reset coupon valuation for a bespoke basket index where price is per unit.
     // This allows some flexibility in the dates on which we require basket fixings to be available.
