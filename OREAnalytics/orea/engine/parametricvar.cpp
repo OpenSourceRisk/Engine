@@ -105,27 +105,27 @@ Real ParametricVarCalculator::var(Real confidence, const bool isCall, const set<
     }
 
     if (parametricVarParams_.method == ParametricVarCalculator::ParametricVarParams::Method::Delta)
-        return QuantExt::deltaVar(omega_, delta, confidence, *covarianceSalvage_);
+        return QuantExt::deltaVar(omega_, delta, confidence, covarianceSalvage_);
     else if (parametricVarParams_.method == ParametricVarCalculator::ParametricVarParams::Method::DeltaGammaNormal)
-        return QuantExt::deltaGammaVarNormal(omega_, delta, gamma, confidence, *covarianceSalvage_);
+        return QuantExt::deltaGammaVarNormal(omega_, delta, gamma, confidence, covarianceSalvage_);
     else if (parametricVarParams_.method == ParametricVarCalculator::ParametricVarParams::Method::MonteCarlo) {
         QL_REQUIRE(parametricVarParams_.samples != Null<Size>(),
                    "ParametricVarCalculator::computeVar(): method MonteCarlo requires mcSamples");
         QL_REQUIRE(parametricVarParams_.seed != Null<Size>(),
                    "ParametricVarCalculator::computeVar(): method MonteCarlo requires mcSamples");
         return QuantExt::deltaGammaVarMc<PseudoRandom>(omega_, delta, gamma, confidence, parametricVarParams_.samples,
-                                                       parametricVarParams_.seed, *covarianceSalvage_);
+                                                       parametricVarParams_.seed, covarianceSalvage_);
     } else if (parametricVarParams_.method == ParametricVarCalculator::ParametricVarParams::Method::CornishFisher)
-        return QuantExt::deltaGammaVarCornishFisher(omega_, delta, gamma, confidence, *covarianceSalvage_);
+        return QuantExt::deltaGammaVarCornishFisher(omega_, delta, gamma, confidence, covarianceSalvage_);
     else if (parametricVarParams_.method == ParametricVarCalculator::ParametricVarParams::Method::Saddlepoint) {
         Real res;
         try {
-            res = QuantExt::deltaGammaVarSaddlepoint(omega_, delta, gamma, confidence, *covarianceSalvage_);
+            res = QuantExt::deltaGammaVarSaddlepoint(omega_, delta, gamma, confidence, covarianceSalvage_);
         } catch (const std::exception& e) {
             ALOG("Saddlepoint VaR computation exited with an error: " << e.what() << ", falling back on Monte-Carlo");
             res =
                 QuantExt::deltaGammaVarMc<PseudoRandom>(omega_, delta, gamma, confidence, parametricVarParams_.samples,
-                                                        parametricVarParams_.seed, *covarianceSalvage_);
+                                                        parametricVarParams_.seed, covarianceSalvage_);
         }
         return res;
     } else
@@ -161,8 +161,9 @@ ParametricVarReport::ParametricVarReport(const std::string& baseCurrency, const 
 }
 
 void ParametricVarReport::createVarCalculator() {
-    varCalculator_ = QuantLib::ext::make_shared<ParametricVarCalculator>(
-        parametricVarParams_, covarianceMatrix_, deltas_, gammas_, salvage_, includeGammaMargin_, includeDeltaMargin_);
+    varCalculator_ = QuantLib::ext::make_shared<ParametricVarCalculator>(parametricVarParams_, covarianceMatrix_,
+                                                                         deltas_, gammas_, varSalvagingAlgorithm_,
+                                                                         includeGammaMargin_, includeDeltaMargin_);
 }
 
 void ParametricVarReport::writeHeader(const ext::shared_ptr<Report>& report) const {
