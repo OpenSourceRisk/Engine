@@ -1185,6 +1185,21 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
+      <xs:element name="InflationIndexCurves" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="InflationIndexCurve" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="inflationIndex" type="xs:string"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
       <xs:element type="xs:boolean" name="ExtrapolateFlat" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
