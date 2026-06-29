@@ -720,7 +720,6 @@ math/bucketeddistribution.hpp
 math/compiledformula.hpp
 math/computeenvironment.hpp
 math/constantinterpolation.hpp
-math/covariancesalvage.hpp
 math/cudaenvironment.hpp
 math/deltagammavar.hpp
 math/differentialevolution_mt.hpp

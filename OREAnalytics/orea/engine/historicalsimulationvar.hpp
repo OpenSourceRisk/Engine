@@ -35,8 +35,6 @@
 #include <ored/report/report.hpp>
 #include <ored/utilities/timeperiod.hpp>
 
-#include <qle/math/covariancesalvage.hpp>
-
 #include <ql/math/array.hpp>
 #include <ql/math/matrix.hpp>
 
