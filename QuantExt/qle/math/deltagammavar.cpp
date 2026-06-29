@@ -300,25 +300,39 @@ Real F(const Array& lambda, const Array& delta, const Real x) {
 
 } // F
 
+std::pair<Matrix, Matrix> salvageMatrix(const Matrix& A, const SalvagingAlgorithm::Type sal) {
+    if (sal == SalvagingAlgorithm::None)
+        return std::make_pair(A, Matrix());
+    else {
+        auto L = pseudoSqrt(A, sal);
+        return std::make_pair(L * transpose(L), L);
+    }
+}
+
 } // namespace
 
-Real deltaVar(const Matrix& omega, const Array& delta, const Real p, const CovarianceSalvage& sal) {
+Real deltaVar(const Matrix& omega, const Array& delta, const Real p, const SalvagingAlgorithm::Type sal) {
     detail::check(p);
     detail::check(omega, delta);
+    if (delta.size() == 0)
+        return 0.0;
     Real num = detail::absMax(delta);
     if (close_enough(num, 0.0))
         return 0.0;
     Array tmpDelta = delta / num;
-    return std::sqrt(DotProduct(tmpDelta, sal.salvage(omega).first * tmpDelta)) *
-           QuantLib::InverseCumulativeNormal()(p) * num;
+    auto [m, l] = salvageMatrix(omega, sal);
+    return std::sqrt(DotProduct(tmpDelta, m * tmpDelta)) * QuantLib::InverseCumulativeNormal()(p) * num;
 } // deltaVar
 
 Real deltaGammaVarNormal(const Matrix& omega, const Array& delta, const Matrix& gamma, const Real p,
-                         const CovarianceSalvage& sal) {
+                         const SalvagingAlgorithm::Type sal) {
     detail::check(p);
+    if (delta.size() == 0)
+        return 0.0;
     Real s = QuantLib::InverseCumulativeNormal()(p);
     Real num = 0.0, mu = 0.0, variance = 0.0;
-    moments(sal.salvage(omega).first, delta, gamma, num, mu, variance);
+    auto [m, l] = salvageMatrix(omega, sal);
+    moments(m, delta, gamma, num, mu, variance);
     if (close_enough(num, 0.0) || close_enough(variance, 0.0))
         return 0.0;
     return (std::sqrt(variance) * s + mu) * num;
@@ -326,11 +340,14 @@ Real deltaGammaVarNormal(const Matrix& omega, const Array& delta, const Matrix& 
 } // deltaGammaVarNormal
 
 Real deltaGammaVarCornishFisher(const Matrix& omega, const Array& delta, const Matrix& gamma, const Real p,
-                                const CovarianceSalvage& sal) {
+                                const SalvagingAlgorithm::Type sal) {
     detail::check(p);
+    if (delta.size() == 0)
+        return 0.0;
     Real s = QuantLib::InverseCumulativeNormal()(p);
     Real num = 0.0, mu = 0.0, variance = 0.0, tau = 0.0, kappa = 0.0;
-    moments(sal.salvage(omega).first, delta, gamma, num, mu, variance, tau, kappa);
+    auto [m, l] = salvageMatrix(omega, sal);
+    moments(m, delta, gamma, num, mu, variance, tau, kappa);
     if (close_enough(num, 0.0) || close_enough(variance, 0.0))
         return 0.0;
 
@@ -340,7 +357,7 @@ Real deltaGammaVarCornishFisher(const Matrix& omega, const Array& delta, const M
 } // deltaGammaVarCornishFisher
 
 Real deltaGammaVarSaddlepoint(const Matrix& omega, const Array& delta, const Matrix& gamma, const Real p,
-                              const CovarianceSalvage& sal) {
+                              const SalvagingAlgorithm::Type sal) {
 
     /* References:
 
@@ -354,13 +371,15 @@ Real deltaGammaVarSaddlepoint(const Matrix& omega, const Array& delta, const Mat
     detail::check(p);
     detail::check(omega, delta, gamma);
 
-    auto S = sal.salvage(omega);
-    Matrix L = S.second;
-    if (L.rows() == 0) {
-        L = CholeskyDecomposition(omega, true);
+    if (delta.size() == 0)
+        return 0.0;
+
+    auto [m, l] = salvageMatrix(omega, sal);
+    if (l.rows() == 0) {
+        l = CholeskyDecomposition(omega, true);
     }
 
-    Matrix hLGL = 0.5 * transpose(L) * gamma * L;
+    Matrix hLGL = 0.5 * transpose(l) * gamma * l;
     SymmetricSchurDecomposition schur(hLGL);
     Array lambda = schur.eigenvalues();
 
@@ -389,7 +408,7 @@ Real deltaGammaVarSaddlepoint(const Matrix& omega, const Array& delta, const Mat
     }
 
     // compute quantile
-    Array deltaBar = transpose(schur.eigenvectors()) * transpose(L) * tmpDelta;
+    Array deltaBar = transpose(schur.eigenvectors()) * transpose(l) * tmpDelta;
 
     // At this point, the delta-gamma PL can be written as scaling * ( deltaBar^T z + z^T GammaBar z ), where GammaBar
     // is a diagonal matrix with the lambdas on the diagonal and z a vector of independent standard normal variates.
@@ -402,7 +421,7 @@ Real deltaGammaVarSaddlepoint(const Matrix& omega, const Array& delta, const Mat
         normGammaBar += lambda[i] * lambda[i];
     }
     if (normGammaBar / normDeltaBar < 1E-10)
-        return QuantExt::deltaVar(S.first, delta, p);
+        return QuantExt::deltaVar(m, delta, p);
 
     // continue with the saddlepoint approach
     auto FMinusP = [&lambda, &deltaBar, &p](const Real x) { return F(lambda, deltaBar, x) - p; };

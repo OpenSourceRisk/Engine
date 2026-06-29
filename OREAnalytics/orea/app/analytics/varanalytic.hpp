@@ -81,7 +81,7 @@ public:
 struct ParametricVarVariables : public VarVariables {
     void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
 
-    SalvagingAlgorithm::Type varSalvagingAlgorithm_ = SalvagingAlgorithm::None;
+    SalvagingAlgorithm::Type varSalvagingAlgorithm_ = SalvagingAlgorithm::Spectral;
     // Delta, DeltaGammaNormal, MonteCarlo, Cornish-Fisher, Saddlepoint
     std::string varMethod_ = "DeltaGammaNormal";
     Size mcVarSamples_ = 1000000;

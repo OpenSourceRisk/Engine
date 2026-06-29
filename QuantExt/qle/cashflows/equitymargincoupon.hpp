@@ -147,6 +147,10 @@ inline void EquityMarginCoupon::accept(AcyclicVisitor& v) {
         Coupon::accept(v);
 }
 
+inline QuantLib::ext::shared_ptr<EquityMarginCouponPricer> EquityMarginCoupon::pricer() const {
+    return pricer_;
+}
+
 //! helper class building a sequence of equity margin coupons
 /*! \ingroup cashflows
  */

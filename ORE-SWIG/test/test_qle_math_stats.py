@@ -10,25 +10,6 @@ import unittest
 class TestQleMathStats(unittest.TestCase):
     """Coverage for QuantExt statistical utilities in qle_math.i."""
 
-    def test_covariance_salvage_and_psd_fix(self):
-        """Check no-op salvage and spectral salvage outputs."""
-        corr = [[1.0, 0.25], [0.25, 1.0]]
-        no_salvage = NoCovarianceSalvage()
-        p_no = no_salvage.salvageMatrix(corr)
-        s_no = no_salvage.salvageSqrt(corr)
-        self.assertAlmostEqual(p_no[0][0], 1.0, places=10)
-        self.assertAlmostEqual(p_no[0][1], 0.25, places=10)
-        self.assertEqual(s_no.rows(), 0)
-
-        near_psd = [[1.0, 1.2], [1.2, 1.0]]
-        spectral = SpectralCovarianceSalvage()
-        p_spec = spectral.salvageMatrix(near_psd)
-        l_spec = spectral.salvageSqrt(near_psd)
-        self.assertGreaterEqual(p_spec[0][0], 0.0)
-        self.assertGreaterEqual(p_spec[1][1], 0.0)
-        self.assertAlmostEqual(p_spec[0][1], p_spec[1][0], places=10)
-        self.assertEqual(l_spec.rows(), 2)
-
     def test_logm_expm_and_trace(self):
         """Verify support flags and basic matrix functions."""
         self.assertIsInstance(supports_Logm(), bool)
