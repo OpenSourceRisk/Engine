@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/indexes/commodityintradaypowerindex.hpp
-    \brief commodity power index class, with intraday load profile adjustment
+/*! \file qle/indexes/intradaypowerindex.hpp
+    \brief intraday power index class, with intraday load profile adjustment
 
     \ingroup indexes
 */
@@ -31,7 +31,7 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-//! Commodity Intraday PowerIndex
+//! Intraday PowerIndex
 /*! This index can represent intraday power prices
 
 
