@@ -311,8 +311,8 @@ Real deltaVar(const Matrix& omega, const Array& delta, const Real p, const Salva
     if (close_enough(num, 0.0))
         return 0.0;
     Array tmpDelta = delta / num;
-    return std::sqrt(DotProduct(tmpDelta, pseudoSqrt(omega, sal) * tmpDelta)) * QuantLib::InverseCumulativeNormal()(p) *
-           num;
+    auto L = pseudoSqrt(omega, sal);
+    return std::sqrt(DotProduct(tmpDelta, L * transpose(L) * tmpDelta)) * QuantLib::InverseCumulativeNormal()(p) * num;
 } // deltaVar
 
 Real deltaGammaVarNormal(const Matrix& omega, const Array& delta, const Matrix& gamma, const Real p,
@@ -322,7 +322,8 @@ Real deltaGammaVarNormal(const Matrix& omega, const Array& delta, const Matrix& 
         return 0.0;
     Real s = QuantLib::InverseCumulativeNormal()(p);
     Real num = 0.0, mu = 0.0, variance = 0.0;
-    moments(pseudoSqrt(omega, sal), delta, gamma, num, mu, variance);
+    auto L = pseudoSqrt(omega, sal);
+    moments(L * transpose(L), delta, gamma, num, mu, variance);
     if (close_enough(num, 0.0) || close_enough(variance, 0.0))
         return 0.0;
     return (std::sqrt(variance) * s + mu) * num;
@@ -336,7 +337,8 @@ Real deltaGammaVarCornishFisher(const Matrix& omega, const Array& delta, const M
         return 0.0;
     Real s = QuantLib::InverseCumulativeNormal()(p);
     Real num = 0.0, mu = 0.0, variance = 0.0, tau = 0.0, kappa = 0.0;
-    moments(pseudoSqrt(omega, sal), delta, gamma, num, mu, variance, tau, kappa);
+    auto L = pseudoSqrt(omega, sal);
+    moments(L * transpose(L), delta, gamma, num, mu, variance, tau, kappa);
     if (close_enough(num, 0.0) || close_enough(variance, 0.0))
         return 0.0;
 
