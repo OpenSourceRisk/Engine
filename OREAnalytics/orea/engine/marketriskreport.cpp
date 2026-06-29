@@ -283,7 +283,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
     bool runRiskFactorBreakdown = true;
     while (ext::shared_ptr<MarketRiskGroupBase> riskGroup = riskGroups_->next()) {
         LOG("[progress] Processing RiskGroup " << ++currentRiskGroup << " out of " << riskGroups_->size()
-                                                  << ") = " << riskGroup);
+                                               << ") = " << riskGroup);
 
         ext::shared_ptr<ScenarioFilter> filter = createScenarioFilter(riskGroup);
 
@@ -327,10 +327,9 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
             writePnl_ = tradeGroup->allLevel() && riskGroup->allLevel();
             tradeIdIdxPairs_ = tradeIdGroups_.at(tradeGroupKey(tradeGroup));
             if (tradeIdIdxPairs_.size() == 0) {
-                StructuredAnalyticsErrorMessage(
-                    "Market Risk Backtest", "No trades for tradeGroup",
-                    "No trades to process for RiskGroup: " + riskGroup->to_string() + ", TradeGroup: "
-                        + tradeGroup->to_string())
+                StructuredAnalyticsErrorMessage("Market Risk Backtest", "No trades for tradeGroup",
+                                                "No trades to process for RiskGroup: " + riskGroup->to_string() +
+                                                    ", TradeGroup: " + tradeGroup->to_string())
                     .log();
                 continue;
             }
@@ -400,8 +399,8 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
                                 ++unusedCovariance;
                         }
                         DLOG("Found " << sensiArgs_->covarianceInput_.size() << " covariance matrix entries, "
-                                        << unusedCovariance
-                                        << " do not match a portfolio sensitivity and will not be used.");
+                                      << unusedCovariance
+                                      << " do not match a portfolio sensitivity and will not be used.");
                         for (Size i = 0; i < sensiKeyHasNonZeroVariance.size(); ++i) {
                             if (!sensiKeyHasNonZeroVariance[i])
                                 WLOG("Zero variance assigned to sensitivity key " << deltaKeys[i]);
@@ -413,11 +412,10 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
                             DLOG("Covariance matrix is not salvaged, check for positive semi-definiteness");
                             SymmetricSchurDecomposition ssd(covarianceMatrix_);
                             Real evMin = ssd.eigenvalues().back();
-                            QL_REQUIRE(
-                                evMin > 0.0 || close_enough(evMin, 0.0),
-                                "ParametricVar: input covariance matrix is not positive semi-definite, smallest "
-                                "eigenvalue is "
-                                    << evMin);
+                            QL_REQUIRE(evMin > 0.0 || close_enough(evMin, 0.0),
+                                       "ParametricVar: input covariance matrix is not positive semi-definite, smallest "
+                                       "eigenvalue is "
+                                           << evMin);
                             DLOG("Smallest eigenvalue is " << evMin);
                             salvage_ = QuantLib::ext::make_shared<QuantExt::NoCovarianceSalvage>();
                         }
@@ -430,8 +428,8 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
 
                     if (covCalculator || pnlCalculators_.size() > 0) {
                         sensiPnlCalculator_->calculateSensiPnl(srs, deltaKeys, scube->second, pnlCalculators_,
-                                                                covCalculator, tradeIds_, includeGammaMargin_,
-                                                                includeDeltaMargin_, runDetailTrd, runDetailRF);
+                                                               covCalculator, tradeIds_, includeGammaMargin_,
+                                                               includeDeltaMargin_, runDetailTrd, runDetailRF);
 
                         covarianceMatrix_ = covCalculator->covariance();
                     }
