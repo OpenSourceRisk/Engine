@@ -424,6 +424,30 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
 
                         covarianceMatrix_ = covCalculator->covariance();
                     }
+
+                    if (Log::instance().mask() & ORE_DATA) {
+                        TLOG("Covariance Matrix Keys for RiskGroup = " << riskGroup->to_string() << ", TradeGroup = "
+                                                                       << tradeGroup->to_string() << ":");
+                        for (Size i = 0; i < deltaKeys.size(); ++i) {
+                            TLOG(i << "," << deltaKeys[i]);
+                        }
+
+                        TLOG("Covariance Matrix Entries for Riskgroup = " << riskGroup->to_string()
+                                                                          << ", TradGroup = " << tradeGroup->to_string()
+                                                                          << " (only non-zero entries are listed):");
+                        if (riskGroup->allLevel() && tradeGroup->allLevel()) {
+                            for (Size i = 0; i < covarianceMatrix_.rows(); ++i) {
+                                for (Size j = 0; j <= i; ++j) {
+                                    if (QuantLib::close_enough(covarianceMatrix_(i, j), 0.0))
+                                        continue;
+                                    TLOG(i << "," << j << "," << std::setprecision(16) << covarianceMatrix_(i, j));
+                                }
+                            }
+                        } else {
+                            TLOG("See the matrix keys and entries looged under RiskGroup = All, TradeGroup = All.");
+                        }
+                    }
+
                     handleSensiResults(reports, riskGroup, tradeGroup);
                 }
             }
