@@ -298,7 +298,8 @@ void McMultiLegBaseEngine::calculateModels(
         }
 
         if(isRpaTime) {
-            double rpaWeight = rpaCreditCurve_->defaultProbability(prevRpaTime, *t);
+            double rpaWeight = rpaParticiationRate_ * rpaCreditCurve_->defaultProbability(prevRpaTime, *t) *
+                               (1.0 - recoveryRate_->value());
             rpaContributionUndDirty += max(0.0, regModelUndDirty[counter].apply(model_->stateProcess()->initialValues(),
                                                                                 pathValuesRef, simulationTimes)) *
                                        rpaWeight;
@@ -627,8 +628,8 @@ void McMultiLegBaseEngine::calculate() const {
                     max(0.0, (exercise_ == nullptr ? regModelUndDirty[index] : regModelOption[index])
                                  .apply(model_->stateProcess()->initialValues(), pathValuesRef, simulationTimes)))
                     .at(0);
-            Real pd = rpaCreditCurve_->defaultProbability(prev_t, t);
-            resultValue_ += pd * (1.0 - rpaRecoveryRate_->value()) * optionPv;
+            resultValue_ += rpaParticipationRate_ * rpaCreditCurve_->defaultProbability(prev_t, t) * pd *
+                            (1.0 - rpaRecoveryRate_->value()) * optionPv;
         }
     }
 
