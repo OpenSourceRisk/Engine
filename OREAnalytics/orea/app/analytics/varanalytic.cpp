@@ -308,10 +308,9 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
 
         varReport_ = ext::make_shared<HistoricalSimulationVarReport>(
             inputs_->baseCurrency(), analytic()->portfolio(), varVars->portfolioFilter_, varVars->varQuantiles_,
-            benchmarkVarPeriod, scenarios, std::move(fullRevalArgs), std::move(multiThreadsArgs), varVars->varBreakDown_,
-            varVars->includeExpectedShortfall_, varVars->tradePnL_, riskFactorBreakdown_,
-            inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades(), riskClassBreakdown_,
-            varVars->includeTheta_);
+            benchmarkVarPeriod, scenarios, std::move(fullRevalArgs), std::move(multiThreadsArgs),
+            varVars->varBreakDown_, varVars->includeExpectedShortfall_, varVars->tradePnL_, riskFactorBreakdown_,
+            inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades(), riskClassBreakdown_);
     }
 }
 

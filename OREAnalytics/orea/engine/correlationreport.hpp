@@ -24,7 +24,6 @@
 #pragma once
 
 #include <ored/report/report.hpp>
-#include <qle/math/covariancesalvage.hpp>
 #include <orea/engine/historicalsensipnlcalculator.hpp>
 #include <orea/engine/historicalpnlgenerator.hpp>
 #include <ored/model/crossassetmodeldata.hpp>

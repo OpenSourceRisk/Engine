@@ -33,8 +33,6 @@
 #include <ored/report/report.hpp>
 #include <ored/utilities/timeperiod.hpp>
 
-#include <qle/math/covariancesalvage.hpp>
-
 #include <ql/math/array.hpp>
 #include <ql/math/matrix.hpp>
 
@@ -71,8 +69,8 @@ public:
     ParametricVarCalculator(const ParametricVarParams& parametricVarParams, const QuantLib::Matrix& omega,
                             const std::map<RiskFactorKey, QuantLib::Real>& deltas,
                             const std::map<CrossPair, Real>& gammas,
-                            const QuantLib::ext::shared_ptr<QuantExt::CovarianceSalvage>& covarianceSalvage,
-                            const bool& includeGammaMargin, const bool& includeDeltaMargin)
+                            const QuantLib::SalvagingAlgorithm::Type covarianceSalvage, const bool& includeGammaMargin,
+                            const bool& includeDeltaMargin)
         : parametricVarParams_(parametricVarParams), omega_(omega), deltas_(deltas), gammas_(gammas),
           covarianceSalvage_(covarianceSalvage), includeGammaMargin_(includeGammaMargin),
           includeDeltaMargin_(includeDeltaMargin) {}
@@ -85,7 +83,7 @@ private:
     const QuantLib::Matrix& omega_;
     const std::map<RiskFactorKey, QuantLib::Real>& deltas_;
     const std::map<CrossPair, QuantLib::Real>& gammas_;
-    const QuantLib::ext::shared_ptr<QuantExt::CovarianceSalvage>& covarianceSalvage_;
+    const QuantLib::SalvagingAlgorithm::Type covarianceSalvage_;
     const bool& includeGammaMargin_;
     const bool& includeDeltaMargin_;
 };
