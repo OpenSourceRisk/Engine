@@ -247,7 +247,7 @@ void MarketRiskReport::initSimMarket() {
 
     fullRevalArgs_->simMarket_ = QuantLib::ext::make_shared<ore::analytics::ScenarioSimMarket>(
         initMarket, multiThreadArgs_->simMarketData_, multiThreadArgs_->configuration_,
-        *multiThreadArgs_->curveConfigs_, *multiThreadArgs_->todaysMarketParams_, true, false, false, false, true,
+        *multiThreadArgs_->curveConfigs_, *multiThreadArgs_->todaysMarketParams_, true, false, false, false,
         fullRevalArgs_->iborFallbackConfig_);
 }
 

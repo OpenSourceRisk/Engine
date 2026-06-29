@@ -86,7 +86,7 @@ struct TestData : qle::test::TopLevelFixture {
         lgmParam = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
             EURCurrency(), yts, stepTimes, Array(sigmas.begin(), sigmas.end()), stepTimes,
             Array(sigmas.size(), reversion));
-        lgm = QuantLib::ext::make_shared<LinearGaussMarkovModel>(lgmParam);
+        lgm = QuantLib::Handle<LinearGaussMarkovModel>(QuantLib::ext::make_shared<LinearGaussMarkovModel>(lgmParam));
         dscSwapEngine = QuantLib::ext::make_shared<DiscountingSwapEngine>(yts);
         vanillaSwap->setPricingEngine(dscSwapEngine);
     }
@@ -103,7 +103,7 @@ struct TestData : qle::test::TopLevelFixture {
     Array stepTimes, sigmas;
     Real reversion;
     QuantLib::ext::shared_ptr<IrLgm1fParametrization> lgmParam;
-    QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm;
+    QuantLib::Handle<LinearGaussMarkovModel> lgm;
     QuantLib::ext::shared_ptr<DiscountingSwapEngine> dscSwapEngine;
 };
 

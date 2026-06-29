@@ -107,6 +107,13 @@ public:
                const bool midCouponExercise = false, const std::string& cashSettlementCurrency = std::string(),
                const std::string& cashSettlementFxIndex = std::string(),
                const std::string& cashSettlementFixingDate = std::string());
+    const std::string& longShort() const;
+    const std::string& callPut() const;
+    const std::string& style() const;
+    bool payoffAtExpiry() const;
+    const std::vector<std::string>& exerciseDates() const;
+    const std::string& settlement() const;
+    const std::string& settlementMethod() const;
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };

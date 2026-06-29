@@ -43,7 +43,7 @@ public:
     /*! Constructor taking the cross asset model, \p model, and the index of the relevant inflation component within 
         the model, \p index.
     */
-    YoYInflationModelTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, QuantLib::Size index,
+    YoYInflationModelTermStructure(const QuantLib::Handle<CrossAssetModel>& model, QuantLib::Size index,
                                    const std::optional<QuantLib::DayCounter>& simulationDayCounter = std::nullopt);
 
     //! \name Observer interface
@@ -105,7 +105,7 @@ protected:
                                 const QuantLib::Size irIndex,
                                 const QuantLib::ext::shared_ptr<ZeroInflationIndex>& infIndex) const;
 
-    QuantLib::ext::shared_ptr<CrossAssetModel> model_;
+    QuantLib::Handle<CrossAssetModel> model_;
     QuantLib::Size index_;
     std::optional<QuantLib::DayCounter> simulationDayCounter_;
     // Hides referenceDate_ in TermStructure.
@@ -125,12 +125,12 @@ protected:
     virtual void checkState() const {}
 
     QuantLib::Time simulationLag() const {
-        auto its = inflationTermStructure(model_, index_);
+        auto its = inflationTermStructure(*model_, index_);
         return simulationDayCounter_.value_or(dayCounter()).yearFraction(its->baseDate(), its->referenceDate());
     }
 
     QuantLib::Size simulationLagDays() const {
-        auto its = inflationTermStructure(model_, index_);
+        auto its = inflationTermStructure(*model_, index_);
         return its->referenceDate() - its->baseDate();
     }
 

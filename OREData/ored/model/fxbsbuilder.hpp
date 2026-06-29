@@ -83,8 +83,8 @@ private:
     void performCalculations() const override;
     Real optionStrike(const Size j) const;
     Date optionExpiry(const Size j) const;
+    void initParametrization() const;
     void buildOptionBasket() const;
-    // checks whether fx vols have changed compared to cache and updates the cache if requested
     bool volSurfaceChanged(const bool updateCache) const;
 
     // input data
@@ -96,7 +96,7 @@ private:
 
     // computed
     mutable Real error_;
-    QuantLib::ext::shared_ptr<QuantExt::FxBsParametrization> parametrization_;
+    mutable QuantLib::ext::shared_ptr<QuantExt::FxBsParametrization> parametrization_;
 
     // which options in data->optionExpiries() are actually in the basket?
     mutable std::vector<bool> optionActive_;
@@ -106,13 +106,16 @@ private:
     // relevant market data
     Handle<Quote> fxSpot_;
     Handle<YieldTermStructure> ytsDom_, ytsFor_;
-    Handle<BlackVolTermStructure> fxVol_;
+    mutable Handle<BlackVolTermStructure> fxVol_;
 
     // Cache the fx volatilities
     mutable std::vector<QuantLib::Real> fxVolCache_;
 
-    // helper flag to process forRecalculate()
+    // helper flag to process forceRecalculate()
     bool forceCalibration_ = false;
+
+    mutable Date referenceDate_;
+    mutable Date parametrizationInitializedOnAnchorDate_;
 
     // market observer
     QuantLib::ext::shared_ptr<QuantExt::MarketObserver> marketObserver_;

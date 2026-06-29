@@ -37,7 +37,7 @@ using std::vector;
 namespace QuantExt {
 
 JyImpliedYoYInflationTermStructure::JyImpliedYoYInflationTermStructure(
-    const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index,
+    const QuantLib::Handle<CrossAssetModel>& model, Size index,
     const std::optional<QuantLib::DayCounter>& simulationDayCounter)
     : YoYInflationModelTermStructure(model, index, simulationDayCounter) {}
 
@@ -96,7 +96,7 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
             // if obsLag very short it could be that the first coupon is in the future
             if (fixingDateStart <= baseDate()) {
                 // The first YoY swaplet is a zero coupon swaplet because I_{start} is known.
-                auto growth = inflationGrowth(model_, index_, relativeTime_, T_fixing, state_[2], state_[0],
+                auto growth = inflationGrowth(*model_, index_, relativeTime_, T_fixing, state_[2], state_[0],
                                               simulationDayCounter_);
                 auto pastGrowth = fixingDateStart < baseDate() ?
                     infIndex->fixing(fixingDateStart) / infIndex->fixing(baseDate()) : 1.0;
@@ -166,8 +166,8 @@ Real JyImpliedYoYInflationTermStructure::yoySwaplet(Time S, Time T) const {
         auto zeta_r_S = rrParam->zeta(S);
 
         c = H_r_S * (zeta_r_S - zeta_r_t);
-        c -= H_n_S * integral(*model_, P(rzy(irIdx, index_, 0), az(irIdx), ay(index_)), relativeTime_, S);
-        c += integral(*model_,
+        c -= H_n_S * integral(**model_, P(rzy(irIdx, index_, 0), az(irIdx), ay(index_)), relativeTime_, S);
+        c += integral(**model_,
                       LC(0.0, -1.0, P(ay(index_), ay(index_), Hy(index_)), 1.0,
                          P(rzy(irIdx, index_, 0), az(irIdx), ay(index_), Hz(irIdx)), -1.0,
                          P(ryy(index_, index_, 0, 1), ay(index_), sy(index_))),

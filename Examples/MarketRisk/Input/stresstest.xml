@@ -2,6 +2,10 @@
 
   <UseSpreadedTermStructures>true</UseSpreadedTermStructures>
 
+    <StressTest id="theta">
+      <Date>1D</Date>
+    </StressTest>
+
   <StressTest id="parallel_rates">
     
     <DiscountCurves>

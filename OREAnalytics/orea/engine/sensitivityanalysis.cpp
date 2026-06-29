@@ -172,7 +172,7 @@ void SensitivityAnalysis::generateSensitivities() {
 
     QuantLib::ext::shared_ptr<FixingManager> fixingManager;
     if (sensitivityData_->thetaPeriod() != Period()) {
-        fixingManager = QuantLib::ext::make_shared<FixingManager>(asof_);
+        fixingManager = QuantLib::ext::make_shared<FixingManager>(asof_, FixingManager::Mode::Projected);
     }
 
     if (useSingleThreadedEngine_) {
@@ -188,15 +188,15 @@ void SensitivityAnalysis::generateSensitivities() {
                 market_, simMarketData_, marketConfiguration_,
                 curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
                 todaysMarketParams_ ? *todaysMarketParams_ : ore::data::TodaysMarketParameters(), continueOnError_,
-                sensitivityData_->useSpreadedTermStructures(), continueOnError_, overrideTenors_, true,
-                iborFallbackConfig_, true);
+                sensitivityData_->useSpreadedTermStructures(), continueOnError_, overrideTenors_, iborFallbackConfig_,
+                true);
         } else {
             simMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
                 market_, offsetSimMarketParams_ == nullptr ? simMarketData_ : offsetSimMarketParams_,
                 marketConfiguration_, curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
                 todaysMarketParams_ ? *todaysMarketParams_ : ore::data::TodaysMarketParameters(), continueOnError_,
-                sensitivityData_->useSpreadedTermStructures(), continueOnError_, overrideTenors_, true,
-                iborFallbackConfig_, true, offsetScenario_);
+                sensitivityData_->useSpreadedTermStructures(), continueOnError_, overrideTenors_, iborFallbackConfig_,
+                true, offsetScenario_);
         }
 
         std::vector<QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>> scenarioGenerators(sensiTemplateIds.size());
@@ -264,13 +264,13 @@ void SensitivityAnalysis::generateSensitivities() {
                 market_, simMarketData_, marketConfiguration_,
                 curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
                 todaysMarketParams_ ? *todaysMarketParams_ : ore::data::TodaysMarketParameters(), continueOnError_,
-                sensitivityData_->useSpreadedTermStructures(), false, false, true, iborFallbackConfig_);
+                sensitivityData_->useSpreadedTermStructures(), false, false, iborFallbackConfig_);
         } else {
             simMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
                 market_, offsetSimMarketParams_ == nullptr ? simMarketData_ : offsetSimMarketParams_,
                 marketConfiguration_, curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
                 todaysMarketParams_ ? *todaysMarketParams_ : ore::data::TodaysMarketParameters(), continueOnError_,
-                sensitivityData_->useSpreadedTermStructures(), false, false, true, iborFallbackConfig_, true,
+                sensitivityData_->useSpreadedTermStructures(), false, false, iborFallbackConfig_, true,
                 offsetScenario_);
         }
 
@@ -303,7 +303,7 @@ void SensitivityAnalysis::generateSensitivities() {
                    const QuantLib::Size samples) {
                     return QuantLib::ext::make_shared<ore::analytics::DoublePrecisionSensiCube>(ids, asof, samples);
                 },
-                {}, {}, fixingManager, context_, offsetScenario_, useAtParCouponsCurves_, useAtParCouponsTrades_);
+                {}, {}, fixingManager, true, context_, offsetScenario_, useAtParCouponsCurves_, useAtParCouponsTrades_);
             for (auto const& i : this->progressIndicators())
                 engine.registerProgressIndicator(i);
 

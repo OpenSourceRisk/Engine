@@ -109,7 +109,7 @@ BOOST_FIXTURE_TEST_CASE(testBermudanSwaption, BermudanTestData) {
 
     auto xasset = Handle<CrossAssetModel>(
         QuantLib::ext::make_shared<CrossAssetModel>(std::vector<QuantLib::ext::shared_ptr<Parametrization>>{lgm_p}));
-    auto lgm = QuantLib::ext::make_shared<LinearGaussMarkovModel>(lgm_p);
+    auto lgm = QuantLib::Handle<LinearGaussMarkovModel>(QuantLib::ext::make_shared<LinearGaussMarkovModel>(lgm_p));
 
     auto swaptionEngineLgm = QuantLib::ext::make_shared<NumericLgmSwaptionEngine>(lgm, 7.0, 16, 7.0, 32);
     auto swapEngine = QuantLib::ext::make_shared<DiscountingSwapEngine>(yts);
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(testFxOption) {
         QuantLib::ext::make_shared<MultiLegOption>(std::vector<Leg>{eurFlow, usdFlow}, std::vector<bool>{false, false},
                                            std::vector<Currency>{EURCurrency(), USDCurrency()}, exercise);
 
-    auto analyticFxOptionEngine = QuantLib::ext::make_shared<AnalyticCcLgmFxOptionEngine>(*xasset, 0);
+    auto analyticFxOptionEngine = QuantLib::ext::make_shared<AnalyticCcLgmFxOptionEngine>(xasset, 0);
     fxOption->setPricingEngine(analyticFxOptionEngine);
     Real npv0 = fxOption->NPV();
     BOOST_TEST_MESSAGE("npv (analytic cclgm fx option engine): " << npv0);

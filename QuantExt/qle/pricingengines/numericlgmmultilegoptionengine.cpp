@@ -693,7 +693,7 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
 } // NumericLgmMultiLegOptionEngineBase::calculate()
 
 NumericLgmMultiLegOptionEngine::NumericLgmMultiLegOptionEngine(
-    const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny, const Real sx,
+    const QuantLib::Handle<LinearGaussMarkovModel>& model, const Real sy, const Size ny, const Real sx,
     const Size nx, const Handle<YieldTermStructure>& discountCurve, const Size americanExerciseTimeStepsPerYear,
     const bool generateAdditionalResults)
     : NumericLgmMultiLegOptionEngineBase(QuantLib::ext::make_shared<LgmConvolutionSolver2>(model, sy, ny, sx, nx),
@@ -703,7 +703,7 @@ NumericLgmMultiLegOptionEngine::NumericLgmMultiLegOptionEngine(
 }
 
 NumericLgmMultiLegOptionEngine::NumericLgmMultiLegOptionEngine(
-    const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime,
+    const QuantLib::Handle<LinearGaussMarkovModel>& model, const Real maxTime,
     const QuantLib::FdmSchemeDesc scheme, const Size stateGridPoints, const Size timeStepsPerYear,
     const Real mesherEpsilon, const Handle<YieldTermStructure>& discountCurve,
     const Size americanExerciseTimeStepsPerYear, const bool generateAdditionalResults)
@@ -736,7 +736,7 @@ void NumericLgmMultiLegOptionEngine::calculate() const {
     }
 } // NumericLgmSwaptionEngine::calculate
 
-NumericLgmSwaptionEngine::NumericLgmSwaptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
+NumericLgmSwaptionEngine::NumericLgmSwaptionEngine(const QuantLib::Handle<LinearGaussMarkovModel>& model,
                                                    const Real sy, const Size ny, const Real sx, const Size nx,
                                                    const Handle<YieldTermStructure>& discountCurve,
                                                    const Size americanExerciseTimeStepsPerYear,
@@ -747,7 +747,7 @@ NumericLgmSwaptionEngine::NumericLgmSwaptionEngine(const QuantLib::ext::shared_p
     registerWith(discountCurve_);
 }
 
-NumericLgmSwaptionEngine::NumericLgmSwaptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
+NumericLgmSwaptionEngine::NumericLgmSwaptionEngine(const QuantLib::Handle<LinearGaussMarkovModel>& model,
                                                    const Real maxTime, const QuantLib::FdmSchemeDesc scheme,
                                                    const Size stateGridPoints, const Size timeStepsPerYear,
                                                    const Real mesherEpsilon,
@@ -786,7 +786,7 @@ void NumericLgmSwaptionEngine::calculate() const {
 } // NumericLgmSwaptionEngine::calculate
 
 NumericLgmNonstandardSwaptionEngine::NumericLgmNonstandardSwaptionEngine(
-    const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny, const Real sx,
+    const QuantLib::Handle<LinearGaussMarkovModel>& model, const Real sy, const Size ny, const Real sx,
     const Size nx, const Handle<YieldTermStructure>& discountCurve, const Size americanExerciseTimeStepsPerYear,
     const bool generateAdditionalResults)
     : NumericLgmMultiLegOptionEngineBase(QuantLib::ext::make_shared<LgmConvolutionSolver2>(model, sy, ny, sx, nx),
@@ -796,7 +796,7 @@ NumericLgmNonstandardSwaptionEngine::NumericLgmNonstandardSwaptionEngine(
 }
 
 NumericLgmNonstandardSwaptionEngine::NumericLgmNonstandardSwaptionEngine(
-    const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime,
+    const QuantLib::Handle<LinearGaussMarkovModel>& model, const Real maxTime,
     const QuantLib::FdmSchemeDesc scheme, const Size stateGridPoints, const Size timeStepsPerYear,
     const Real mesherEpsilon, const Handle<YieldTermStructure>& discountCurve,
     const Size americanExerciseTimeStepsPerYear, const bool generateAdditionalResults)

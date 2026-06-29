@@ -406,13 +406,12 @@ ScenarioSimMarket::ScenarioSimMarket(
     const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& parameters, const std::string& configuration,
     const ore::data::CurveConfigurations& curveConfigs, const ore::data::TodaysMarketParameters& todaysMarketParams,
     const bool continueOnError, const bool useSpreadedTermStructures, const bool cacheSimData,
-    const bool allowPartialScenarios, const bool allowDateUpdateFromScenario,
-    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const bool handlePseudoCurrencies,
-    const QuantLib::ext::shared_ptr<Scenario>& offSetScenario)
+    const bool allowPartialScenarios, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
+    const bool handlePseudoCurrencies, const QuantLib::ext::shared_ptr<Scenario>& offSetScenario)
     : SimMarket(handlePseudoCurrencies), parameters_(parameters), filter_(QuantLib::ext::make_shared<ScenarioFilter>()),
       useSpreadedTermStructures_(useSpreadedTermStructures), cacheSimData_(cacheSimData),
-      allowPartialScenarios_(allowPartialScenarios), allowDateUpdateFromScenario_(allowDateUpdateFromScenario),
-      iborFallbackConfig_(iborFallbackConfig), offsetScenario_(offSetScenario) {
+      allowPartialScenarios_(allowPartialScenarios), iborFallbackConfig_(iborFallbackConfig),
+      offsetScenario_(offSetScenario) {
 
     LOG("building ScenarioSimMarket...");
     asof_ = initMarket->asofDate();
@@ -3640,10 +3639,10 @@ void ScenarioSimMarket::applyScenario(const QuantLib::ext::shared_ptr<QuantExt::
     auto scenario = s;
     if (useSpreadedTermStructures_ && scenario->isAbsolute())
         scenario = absoluteToSpreadedScenario(s, baseScenarioAbsolute_, parameters_);
-    
+
     currentScenario_ = scenario;
 
-    if (ScenarioInformation::instance().isEnabled()){
+    if (ScenarioInformation::instance().isEnabled()) {
         QuantLib::ext::shared_ptr<QuantExt::Scenario> currentScenarioAbsolute = currentScenario_;
         if (!currentScenario_->isAbsolute())
             currentScenarioAbsolute =
@@ -3652,117 +3651,121 @@ void ScenarioSimMarket::applyScenario(const QuantLib::ext::shared_ptr<QuantExt::
         scenarioInformationSetter_->setChildScenario(currentScenarioAbsolute);
     }
 
-    // 1 handle delta scenario
+    if (auto deltaScenario = QuantLib::ext::dynamic_pointer_cast<DeltaScenario>(scenario)) {
 
-    auto deltaScenario = QuantLib::ext::dynamic_pointer_cast<DeltaScenario>(scenario);
+        // 1 handle delta scenario
 
-    /*! our assumption is that either all or none of the scenarios we apply are 
-        delta scenarios or the base scenario */
+        /* our assumption is that either all or none of the scenarios we apply are
+           delta scenarios or the base scenario */
 
-    if (deltaScenario != nullptr) {
-        for (auto const& key : diffToBaseKeys_) {
-            auto it = simData_.find(key);
-            if (it != simData_.end()) {
-                it->second->setValue(baseScenario_->get(key));
+        if (deltaScenario != nullptr) {
+            for (auto const& key : diffToBaseKeys_) {
+                auto it = simData_.find(key);
+                if (it != simData_.end()) {
+                    it->second->setValue(baseScenario_->get(key));
+                }
+            }
+            diffToBaseKeys_.clear();
+            auto delta = deltaScenario->delta();
+            bool missingPoint = false;
+            for (auto const& key : delta->keys()) {
+                auto it = simData_.find(key);
+                if (it == simData_.end()) {
+                    ALOG("simulation data point missing for key " << key);
+                    missingPoint = true;
+                } else {
+                    if (filter_->allow(key)) {
+                        it->second->setValue(delta->get(key));
+                        diffToBaseKeys_.insert(key);
+                    }
+                }
+            }
+            QL_REQUIRE(!missingPoint, "simulation data points missing from scenario, exit.");
+        }
+
+    } else if (auto s = QuantLib::ext::dynamic_pointer_cast<SimpleScenario>(scenario); s && cacheSimData_) {
+
+        // 2 handle cached sim data with simple scenario
+
+        /*  apply scenario based on cached indices for simData_ for a SimpleScenario
+            the scenario's keysHash() is used to make sure consistent keys are used
+            if keysHash() is zero, this check is not effective (for backwards compatibility) */
+
+        // fill cache
+
+        if (cachedSimData_.empty() || s->keysHash() != cachedSimDataKeysHash_) {
+            cachedSimData_.clear();
+            cachedSimDataKeysHash_ = s->keysHash();
+            Size count = 0;
+            for (auto const& key : s->keys()) {
+                auto it = simData_.find(key);
+                if (it == simData_.end()) {
+                    WLOG("simulation data point missing for key " << key);
+                    cachedSimData_.push_back(QuantLib::ext::shared_ptr<SimpleQuote>());
+                    cachedSimDataActive_.push_back(false);
+                } else {
+                    ++count;
+                    cachedSimData_.push_back(it->second);
+                    cachedSimDataActive_.push_back(filter_->allow(key));
+                }
+            }
+            if (count != simData_.size() && !allowPartialScenarios_) {
+                ALOG("mismatch between scenario and sim data size, " << count << " vs " << simData_.size());
+                for (auto it : simData_) {
+                    if (!scenario->has(it.first))
+                        WLOG("Key " << it.first << " missing in scenario");
+                }
+                QL_FAIL("mismatch between scenario and sim data size, exit.");
             }
         }
-        diffToBaseKeys_.clear();
-        auto delta = deltaScenario->delta();
-        bool missingPoint = false;
-        for (auto const& key : delta->keys()) {
+
+        // apply scenario data according to cached indices
+
+        Size i = 0;
+        for (auto const& q : s->data()) {
+            if (cachedSimDataActive_[i])
+                cachedSimData_[i]->setValue(q);
+            ++i;
+        }
+
+    } else {
+
+        // 3 all other cases
+
+        const vector<RiskFactorKey>& keys = scenario->keys();
+
+        Size count = 0;
+        for (const auto& key : keys) {
+            // Loop through the scenario keys and check which keys are present in simData_,
+            // adding to the count when a match is identified
+            // Then check that the count=simData_.size - this ensures that simData_ is a valid
+            // subset of the scenario - fails is a member of simData is not present in the
+            // scenario
             auto it = simData_.find(key);
             if (it == simData_.end()) {
-                ALOG("simulation data point missing for key " << key);
-                missingPoint = true;
+                WLOG("simulation data point missing for key " << key);
             } else {
                 if (filter_->allow(key)) {
-                    it->second->setValue(delta->get(key));
-                    diffToBaseKeys_.insert(key);
+                    it->second->setValue(scenario->get(key));
                 }
+                count++;
             }
         }
-        QL_REQUIRE(!missingPoint, "simulation data points missing from scenario, exit.");
 
-        return;
-    }
-
-    // 2 apply scenario based on cached indices for simData_ for a SimpleScenario
-    //   the scenario's keysHash() is used to make sure consistent keys are used
-    //   if keysHash() is zero, this check is not effective (for backwards compatibility)
-    if (cacheSimData_) {
-        if (auto s = QuantLib::ext::dynamic_pointer_cast<SimpleScenario>(scenario)) {
-
-            // fill cache
-
-            if (cachedSimData_.empty() || s->keysHash() != cachedSimDataKeysHash_) {
-                cachedSimData_.clear();
-                cachedSimDataKeysHash_ = s->keysHash();
-                Size count = 0;
-                for (auto const& key : s->keys()) {
-                    auto it = simData_.find(key);
-                    if (it == simData_.end()) {
-                        WLOG("simulation data point missing for key " << key);
-                        cachedSimData_.push_back(QuantLib::ext::shared_ptr<SimpleQuote>());
-                        cachedSimDataActive_.push_back(false);
-                    } else {
-                        ++count;
-                        cachedSimData_.push_back(it->second);
-                        cachedSimDataActive_.push_back(filter_->allow(key));
-                    }
-                }
-                if (count != simData_.size() && !allowPartialScenarios_) {
-                    ALOG("mismatch between scenario and sim data size, " << count << " vs " << simData_.size());
-                    for (auto it : simData_) {
-                        if (!scenario->has(it.first))
-                            WLOG("Key " << it.first << " missing in scenario");
-                    }
-                    QL_FAIL("mismatch between scenario and sim data size, exit.");
-                }
+        if (count != simData_.size() && !allowPartialScenarios_) {
+            ALOG("mismatch between scenario and sim data size, " << count << " vs " << simData_.size());
+            for (auto it : simData_) {
+                if (!scenario->has(it.first))
+                    ALOG("Key " << it.first << " missing in scenario");
             }
-
-            // apply scenario data according to cached indices
-
-            Size i = 0;
-            for (auto const& q : s->data()) {
-                if (cachedSimDataActive_[i])
-                    cachedSimData_[i]->setValue(q);
-                ++i;
-            }
-
-            return;
+            QL_FAIL("mismatch between scenario and sim data size, exit.");
         }
     }
 
-    // 3 all other cases
+    // set numeraire, label and update date from scenario
 
-    const vector<RiskFactorKey>& keys = scenario->keys();
-
-    Size count = 0;
-    for (const auto& key : keys) {
-        // Loop through the scenario keys and check which keys are present in simData_,
-        // adding to the count when a match is identified
-        // Then check that the count=simData_.size - this ensures that simData_ is a valid
-        // subset of the scenario - fails is a member of simData is not present in the
-        // scenario
-        auto it = simData_.find(key);
-        if (it == simData_.end()) {
-            WLOG("simulation data point missing for key " << key);
-        } else {
-            if (filter_->allow(key)) {
-                it->second->setValue(scenario->get(key));
-            }
-            count++;
-        }
-    }
-
-    if (count != simData_.size() && !allowPartialScenarios_) {
-        ALOG("mismatch between scenario and sim data size, " << count << " vs " << simData_.size());
-        for (auto it : simData_) {
-            if (!scenario->has(it.first))
-                ALOG("Key " << it.first << " missing in scenario");
-        }
-        QL_FAIL("mismatch between scenario and sim data size, exit.");
-    }
+    numeraire_ = scenario->getNumeraire();
+    label_ = scenario->label();
 }
 
 void ScenarioSimMarket::preUpdate() {
@@ -3774,6 +3777,8 @@ void ScenarioSimMarket::preUpdate() {
 }
 
 void ScenarioSimMarket::updateDate(const Date& d) {
+    if(d == Null<Date>())
+        return;
     ObservationMode::Mode om = ObservationMode::instance().mode();
     if (d != Settings::instance().evaluationDate())
         Settings::instance().evaluationDate() = d;
@@ -3789,20 +3794,17 @@ void ScenarioSimMarket::updateDate(const Date& d) {
     }
 }
 
-Date ScenarioSimMarket::updateScenario(const Date& d) {
+Date ScenarioSimMarket::loadNextScenario(const Date& d) {
     QL_REQUIRE(scenarioGenerator_ != nullptr, "ScenarioSimMarket::update: no scenario generator set");
-    auto scenario = scenarioGenerator_->next(d);
-    QL_REQUIRE(allowDateUpdateFromScenario_ || scenario->asof() == d,
-               "Invalid Scenario date " << scenario->asof() << ", expected " << d);
-    if(scenario->asof() != d)
-        updateDate(scenario->asof());
-    numeraire_ = scenario->getNumeraire();
-    label_ = scenario->label();
-    applyScenario(scenario);
-    return scenario->asof();
+    loadedScenario_ = scenarioGenerator_->next(d);
+    return loadedScenario_->asof();
 }
 
-void ScenarioSimMarket::postUpdate(const Date& d) {
+void ScenarioSimMarket::applyLoadedScenario() {
+    applyScenario(loadedScenario_);
+}
+
+void ScenarioSimMarket::postUpdate() {
     ObservationMode::Mode om = ObservationMode::instance().mode();
     // Observation Mode - key to update these before fixings are set
     if (om == ObservationMode::Mode::Disable) {
@@ -3835,9 +3837,11 @@ void ScenarioSimMarket::setAsd(Size cacheCounter) {
     asd_->set(numeraire_, AggregationScenarioDataType::Numeraire);
 }
 
-void ScenarioSimMarket::updateAsd(const Date& d) {
+void ScenarioSimMarket::updateAsd() {
 
     if (asd_) {
+
+        Date d = Settings::instance().evaluationDate();
 
         if (cachingAsd_) {
 

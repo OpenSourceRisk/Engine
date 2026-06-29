@@ -28,11 +28,14 @@ namespace ore {
 namespace analytics {
 class FixingManager {
 public:
-    explicit FixingManager(Date today);
+    enum class Mode { BackwardFlat, Projected };
+    explicit FixingManager(Date today, Mode mode = Mode::BackwardFlat);
     void initialise(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
                     const QuantLib::ext::shared_ptr<ore::data::Market>& market,
                     const std::string& configuration = ore::data::Market::defaultConfiguration);
-    void update(Date d);
+    Mode mode() const;
+    const Date& fixingsEnd() const;
+    void update(const Date& d);
     void reset();
 };
 

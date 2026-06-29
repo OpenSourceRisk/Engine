@@ -51,9 +51,14 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
                      dontCalibrate, "LGM", id),
       setCalibrationInfo_(setCalibrationInfo) {}
 
+QuantLib::Handle<QuantExt::LGM> LgmBuilder::modelAsLgm() const {
+    calculate();
+    return modelLgm_;
+}
+
 void LgmBuilder::initParametrization() const {
 
-    if (parametrizationInitializedOnAnchorDate_ == Settings::instance().evaluationDate())
+    if (parametrizationInitializedOnAnchorDate_ == referenceDate_)
         return;
 
     auto lgmData = QuantLib::ext::dynamic_pointer_cast<LgmData>(data_);
@@ -149,23 +154,24 @@ void LgmBuilder::initParametrization() const {
         lgmParametrization->scaling() = lgmData->scaling();
     }
 
-    model_ = QuantLib::ext::make_shared<QuantExt::LGM>(lgmParametrization);
-    params_ = model_->params();
+    auto m = QuantLib::ext::make_shared<QuantExt::LGM>(lgmParametrization);
+    model_.linkTo(m);
+    modelLgm_.linkTo(m);
+    params_[referenceDate_] = model_->params();
 
-    parametrizationInitializedOnAnchorDate_ = Settings::instance().evaluationDate();
+    parametrizationInitializedOnAnchorDate_ = referenceDate_;
 } // initiParametrization()
 
 void LgmBuilder::calibrate() const {
 
     auto lgmData = QuantLib::ext::dynamic_pointer_cast<LgmData>(data_);
-    auto lgmModel = QuantLib::ext::dynamic_pointer_cast<LGM>(model_);
     auto lgmParametrization = QuantLib::ext::dynamic_pointer_cast<IrLgm1fParametrization>(parametrization_);
 
     // precheck if initial vol values are high enough to produce a signal for the optimizer
     if (lgmData->calibrateA() && lgmData->calibrationType() == CalibrationType::Bootstrap) {
         DLOG("running precheck whether initial modelVol values are high enough to produce a signal for the "
              "optimizer.");
-        Array tunedParams(params_);
+        Array tunedParams(params_[referenceDate_]);
         for (Size j = 0; j < swaptionBasket_.size(); ++j) {
             constexpr double minRatio = 1E-4;
             constexpr Size maxAttempts = 10;
@@ -174,7 +180,7 @@ void LgmBuilder::calibrate() const {
                 DLOG("swaption #" << j << ": modelValue (" << swaptionBasket_[j]->modelValue() << ") < " << minRatio
                                   << " x marketValue (" << swaptionBasket_[j]->marketValue()
                                   << "). Trying to increase modelVol.");
-                auto fixedParams = lgmModel->MoveVolatility(j);
+                auto fixedParams = modelLgm_->MoveVolatility(j);
                 auto it = std::find(fixedParams.begin(), fixedParams.end(), false);
                 if (it != fixedParams.end()) {
                     Size idx = std::distance(fixedParams.begin(), it);
@@ -183,16 +189,16 @@ void LgmBuilder::calibrate() const {
                          swaptionBasket_[j]->modelValue() / swaptionBasket_[j]->marketValue() < minRatio;
                          ++attempts) {
                         tunedParams[idx] *= growFactor;
-                        lgmModel->setParams(tunedParams);
-                        lgmModel->generateArguments();
+                        modelLgm_->setParams(tunedParams);
+                        modelLgm_->generateArguments();
                     }
                     if (swaptionBasket_[j]->modelValue() / swaptionBasket_[j]->marketValue() < minRatio) {
                         DLOG("swaption #" << j << ": increasing modelVol did not bring modelValue / marketValue below "
                                           << minRatio << ". Continue with original modelVol");
-                        tunedParams[idx] = params_[idx];
-                        lgmModel->setParams(tunedParams);
+                        tunedParams[idx] = params_[referenceDate_][idx];
+                        modelLgm_->setParams(tunedParams);
                     }
-                    DLOG("swaption #" << j << ": change modelVol " << params_[idx] << " -> " << tunedParams[idx]
+                    DLOG("swaption #" << j << ": change modelVol " << params_[referenceDate_][idx] << " -> " << tunedParams[idx]
                                       << ": new modelValue = " << swaptionBasket_[j]->modelValue()
                                       << ", new ratio to marketValue = "
                                       << swaptionBasket_[j]->modelValue() / swaptionBasket_[j]->marketValue());
@@ -211,24 +217,24 @@ void LgmBuilder::calibrate() const {
         if (lgmData->calibrateA() && !lgmData->calibrateH() &&
             lgmData->calibrationType() == CalibrationType::Bootstrap) {
             DLOG("call calibrateVolatilitiesIterative for volatility calibration (bootstrap)");
-            lgmModel->calibrateVolatilitiesIterative(swaptionBasket_, *optimizationMethod_, endCriteria_);
+            modelLgm_->calibrateVolatilitiesIterative(swaptionBasket_, *optimizationMethod_, endCriteria_);
         } else if (lgmData->calibrateH() && !lgmData->calibrateA() &&
                    lgmData->calibrationType() == CalibrationType::Bootstrap) {
             DLOG("call calibrateReversionsIterative for reversion calibration (bootstrap)");
-            lgmModel->calibrateVolatilitiesIterative(swaptionBasket_, *optimizationMethod_, endCriteria_);
+            modelLgm_->calibrateVolatilitiesIterative(swaptionBasket_, *optimizationMethod_, endCriteria_);
         } else {
             QL_REQUIRE(lgmData->calibrationType() != CalibrationType::Bootstrap,
                        "LgmBuidler: Calibration type Bootstrap can be used with volatilities and reversions calibrated "
                        "simultaneously. Either choose BestFit oder fix one of these parameters.");
             if (lgmData->calibrateA() && !lgmData->calibrateH()) {
                 DLOG("call calibrateVolatilities for (global) volatility calibration")
-                lgmModel->calibrateVolatilities(swaptionBasket_, *optimizationMethod_, endCriteria_);
+                modelLgm_->calibrateVolatilities(swaptionBasket_, *optimizationMethod_, endCriteria_);
             } else if (lgmData->calibrateH() && !lgmData->calibrateA()) {
                 DLOG("call calibrateReversions for (global) reversion calibration")
-                lgmModel->calibrateReversions(swaptionBasket_, *optimizationMethod_, endCriteria_);
+                modelLgm_->calibrateReversions(swaptionBasket_, *optimizationMethod_, endCriteria_);
             } else {
                 DLOG("call calibrate for global volatility and reversion calibration");
-                lgmModel->calibrate(swaptionBasket_, *optimizationMethod_, endCriteria_);
+                modelLgm_->calibrate(swaptionBasket_, *optimizationMethod_, endCriteria_);
             }
         }
         DLOG("LGM " << lgmData->qualifier() << " calibration errors:");
@@ -288,14 +294,13 @@ void LgmBuilder::calibrate() const {
             QL_FAIL(exceptionMessage);
         }
     }
-    lgmModel->setCalibrationInfo(calibrationInfo);
+    modelLgm_->setCalibrationInfo(calibrationInfo);
 
 } // calibrate()
 
 QuantLib::ext::shared_ptr<PricingEngine> LgmBuilder::getPricingEngine() const {
     auto lgmData = QuantLib::ext::dynamic_pointer_cast<LgmData>(data_);
-    auto lgmModel = QuantLib::ext::dynamic_pointer_cast<LGM>(model_);
-    auto engine = QuantLib::ext::make_shared<QuantExt::AnalyticLgmSwaptionEngine>(lgmModel, calibrationDiscountCurve_,
+    auto engine = QuantLib::ext::make_shared<QuantExt::AnalyticLgmSwaptionEngine>(modelLgm_, calibrationDiscountCurve_,
                                                                                   lgmData->floatSpreadMapping());
     engine->enableCache(!lgmData->calibrateH(), !lgmData->calibrateA());
     return engine;

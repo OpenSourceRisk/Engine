@@ -20,6 +20,8 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
+#include <algorithm>
+
 using namespace QuantLib;
 
 namespace ore {
@@ -119,12 +121,21 @@ XMLNode* EngineData::toXML(XMLDocument& doc) const {
 }
 
 // we assume all the maps have the same keys
-bool EngineData::hasProduct(const std::string& productName) { return (model_.find(productName) != model_.end()); }
+bool EngineData::hasProduct(const std::string& productName) const {
+    return (engineDataOverride_ && engineDataOverride_->hasProduct(productName)) ||
+           (model_.find(productName) != model_.end());
+}
 
 vector<string> EngineData::products() const {
     vector<string> res;
     for (auto it : model_)
         res.push_back(it.first);
+    if (engineDataOverride_) {
+        for (auto const& p : engineDataOverride_->products()) {
+            if (std::find(res.begin(), res.end(), p) == res.end())
+                res.push_back(p);
+        }
+    }
     return res;
 }
 

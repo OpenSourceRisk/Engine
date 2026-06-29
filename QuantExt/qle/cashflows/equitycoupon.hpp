@@ -33,6 +33,8 @@
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
 
+#include <ql/any.hpp>
+
 namespace QuantExt {
 using namespace QuantLib;
 
@@ -61,6 +63,10 @@ public:
                  const QuantLib::ext::shared_ptr<FxIndex>& fxIndex = nullptr, const bool initialPriceIsInTargetCcy = false,
 		 Real legInitialNotional = Null<Real>(), const Date& legFixingDate = Date());
 
+    //! \name LazyObject interface
+    //@{
+    void performCalculations() const override;
+    //@}
     //! \name CashFlow interface
     //@{
     Real amount() const override { return rate() * nominal(); }
@@ -149,6 +155,7 @@ protected:
     QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
     Real legInitialNotional_;
     Date legFixingDate_;
+    mutable Real rate_;
 };
 
 // inline definitions

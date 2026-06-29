@@ -109,6 +109,7 @@ public:
 
     struct StressTestData {
         string label;
+        boost::variant<boost::blank, QuantLib::Date, QuantLib::Period> date;
         map<string, QuantLib::ext::shared_ptr<CurveShiftData>> discountCurveShifts;       // by currency code
         map<string, QuantLib::ext::shared_ptr<CurveShiftData>> indexCurveShifts;    // by index name
         map<string, QuantLib::ext::shared_ptr<CurveShiftData>> yieldCurveShifts;          // by yield curve name
