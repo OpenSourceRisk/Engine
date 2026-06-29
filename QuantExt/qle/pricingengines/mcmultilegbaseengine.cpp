@@ -124,7 +124,8 @@ RandomVariable McMultiLegBaseEngine::cashflowPathValue(const McCashflowInfo& cf,
 void McMultiLegBaseEngine::calculateModels(
     const std::set<Real>& simulationTimes, const std::set<Real>& exerciseXvaRpaTimes,
     const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes, const std::set<Real>& rpaTimes,
-    const std::vector<McCashflowInfo>& cashflowInfo, const std::vector<std::vector<RandomVariable>>& pathValues,
+    const Real firstRpaTime, const std::vector<McCashflowInfo>& cashflowInfo,
+    const std::vector<std::vector<RandomVariable>>& pathValues,
     const std::vector<std::vector<const RandomVariable*>>& pathValuesRef,
     std::vector<McRegressionModel>& regModelUndDirty, std::vector<McRegressionModel>& regModelUndExInto,
     std::vector<McRegressionModel>& regModelRebate, std::vector<McRegressionModel>& regModelContinuationValue,
@@ -140,15 +141,20 @@ void McMultiLegBaseEngine::calculateModels(
     std::vector<RandomVariable> amountCache(cashflowInfo.size());
 
     Size counter = exerciseXvaRpaTimes.size() - 1;
+    Size exerciseCounter = exerciseTimes.size();
     auto previousExerciseTime = exerciseTimes.rbegin();
-    Real prevRpaTime = 0.0;
 
     RandomVariable pathValueRebate;
     RandomVariable rpaContributionUndDirty(calibrationSamples_, 0.0);
     RandomVariable rpaContributionOption(calibrationSamples_, 0.0);
+    Real prevRpaTime = Null<Real>();
 
     auto rebatedExercise = QuantLib::ext::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_);
     Size rebateIndex = rebatedExercise ? rebatedExercise->rebates().size() - 1 : Null<Size>();
+
+    std::vector<Filter> exercised(exerciseTimes.size() + 1, Filter(calibrationSamples_, false));
+
+    bool haveNakedOption = QuantLib::close_enough(nakedOption_, 1.0);
 
     for (auto t = exerciseXvaRpaTimes.rbegin(); t != exerciseXvaRpaTimes.rend(); ++t) {
 
@@ -256,11 +262,12 @@ void McMultiLegBaseEngine::calculateModels(
                                                        simulationTimes);
             }
 
-            auto exerciseValue = regModelUndExInto[counter].apply(model_->stateProcess()->initialValues(),
-                                                                  pathValuesRef, simulationTimes) +
+            auto exerciseValue = nakedOption_ * exerciseLong_ *
+                                     regModelUndExInto[counter].apply(model_->stateProcess()->initialValues(),
+                                                                      pathValuesRef, simulationTimes) +
                                  rebate;
 
-            // calculate continuation value, take exercise decition and update option path value
+            // calculate continuation value, take exercise decision and update option path value
 
             regModelContinuationValue[counter] = McRegressionModel(
                 *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
@@ -271,9 +278,10 @@ void McMultiLegBaseEngine::calculateModels(
                                                      exerciseValue > RandomVariable(calibrationSamples_, 0.0));
             auto continuationValue = regModelContinuationValue[counter].apply(model_->stateProcess()->initialValues(),
                                                                               pathValuesRef, simulationTimes);
-            pathValueOption = conditionalResult(exerciseValue > continuationValue &&
-                                                    exerciseValue > RandomVariable(calibrationSamples_, 0.0),
-                                                pathValueUndExInto + rebate, pathValueOption);
+            exercised[exerciseCounter--] =
+                exerciseValue > continuationValue && exerciseValue > RandomVariable(calibrationSamples_, 0.0);
+
+            pathValueOption = conditionalResult(exercised[counter], pathValueUndExInto + rebate, pathValueOption);
         }
 
         if (isXvaTime || isRpaTime) {
@@ -297,19 +305,26 @@ void McMultiLegBaseEngine::calculateModels(
             regModelOption[counter].train(polynomOrder_, polynomType_, pathValueOption, pathValuesRef, simulationTimes);
         }
 
-        if(isRpaTime) {
-            double rpaWeight = rpaParticiationRate_ * rpaCreditCurve_->defaultProbability(prevRpaTime, *t) *
-                               (1.0 - recoveryRate_->value());
-            rpaContributionUndDirty += max(0.0, regModelUndDirty[counter].apply(model_->stateProcess()->initialValues(),
-                                                                                pathValuesRef, simulationTimes)) *
-                                       rpaWeight;
-            rpaContributionOption += max(0.0, regModelOption[counter].apply(model_->stateProcess()->initialValues(),
-                                                                            pathValuesRef, simulationTimes)) *
-                                     rpaWeight;
+        if (isRpaTime) {
+            double rpaWeight = rpaParticipationRate_ * rpaCreditCurve_->defaultProbability(prevRpaTime, *t) *
+                               (1.0 - rpaRecoveryRate_->value());
+            auto undPv = regModelUndDirty[counter].apply(model_->stateProcess()->initialValues(), pathValuesRef,
+                                                         simulationTimes);
+            rpaContributionUndDirty += max(0.0, undPv) * rpaWeight;
+            if (exercise_ != nullptr) {
+                auto optionPv = regModelOption[counter].apply(model_->stateProcess()->initialValues(), pathValuesRef,
+                                                              simulationTimes);
+                if (!haveNakedOption) {
+                    optionPv = exerciseLong_ * optionPv + undPv;
+                } else {
+                    optionPv = exerciseLong_ * optionPv;
+                }
+                rpaContributionOption += max(0.0, optionPv) * rpaWeight;
+            }
             prevRpaTime = *t;
         }
 
-        if(!rpaDiscretizationDates_.empty() && isXvaTime) {
+        if (!rpaDiscretizationDates_.empty() && isXvaTime) {
             regModelRpaUndDirty[counter] = McRegressionModel(
                 *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] != CfStatus::open; }, **model_,
                 regressorModel_, regressionVarianceCutoff_, regressionMaxSimTimesIr_, regressionMaxSimTimesFx_,
@@ -457,8 +472,12 @@ void McMultiLegBaseEngine::calculate() const {
     /* build rpa discretization times */
 
     std::set<Real> rpaTimes;
+    Real firstRpaTime;
     for (auto const& d : rpaDiscretizationDates_) {
         if (d < today_)
+            continue;
+        firstRpaTime = time(d);
+        if (d == today_)
             continue;
         rpaTimes.insert(time(d));
     }
@@ -567,22 +586,46 @@ void McMultiLegBaseEngine::calculate() const {
 
     // setup the models
 
-    std::vector<McRegressionModel> regModelUndDirty(exerciseXvaRpaTimes.size());  // available on xva, rpa times
-    std::vector<McRegressionModel> regModelUndExInto(exerciseXvaRpaTimes.size()); // available on xva, rpa, ex times
-    std::vector<McRegressionModel> regModelRebate(exerciseXvaRpaTimes.size());    // available on xva and ex times
-    std::vector<McRegressionModel> regModelContinuationValue(exerciseXvaRpaTimes.size()); // available on ex times
-    std::vector<McRegressionModel> regModelOption(exerciseXvaRpaTimes.size());      // available on xva, ex, rpa times
-    std::vector<McRegressionModel> regModelRpaUndDirty(exerciseXvaRpaTimes.size()); // available on xva times
-    std::vector<McRegressionModel> regModelRpaOption(exerciseXvaRpaTimes.size());   // available on xva times
+    /* Interpretation of the reg models:
+
+       nakedOption_ == true:
+
+       UndDirty           :  underlying dirty value              (as seen from us)
+       UndExInto          :  underlying exercise-into value      (as seen from us)
+       Rebate             :  rebate value                        (assume option long + as seen from us)
+       ContinuationValue  :  continuation value, always positive (assume option long + as seen from us)
+       Option             :  future option value                 (assume option long + as seen from us)
+       RpaUndDirty        :  rpa value on underlying dirty
+       RpaOption          :  rpa value on option                 (option including long / short)
+
+       nakedOption_ == false:
+
+       UndDirty           :  as above
+       UndExInto          :  as above
+       Rebate             :  as above
+       ContinuationValue  :  as above
+       Option             :  as above
+       RpaUndDirty        :  as above
+       RpaOption          :  rpa value on underlying + option    (option including long / short) */
+
+    /* The models are available on different times, as indicated */
+
+    std::vector<McRegressionModel> regModelUndDirty(exerciseXvaRpaTimes.size());          // xva, rpa times
+    std::vector<McRegressionModel> regModelUndExInto(exerciseXvaRpaTimes.size());         // xva, rpa, ex times
+    std::vector<McRegressionModel> regModelRebate(exerciseXvaRpaTimes.size());            // xva and ex times
+    std::vector<McRegressionModel> regModelContinuationValue(exerciseXvaRpaTimes.size()); // ex times
+    std::vector<McRegressionModel> regModelOption(exerciseXvaRpaTimes.size());            // xva, ex, rpa times
+    std::vector<McRegressionModel> regModelRpaUndDirty(exerciseXvaRpaTimes.size());       // xva times
+    std::vector<McRegressionModel> regModelRpaOption(exerciseXvaRpaTimes.size());         // xva times
 
     RandomVariable pathValueUndDirty(calibrationSamples_);
     RandomVariable pathValueUndExInto(calibrationSamples_);
     RandomVariable pathValueOption(calibrationSamples_);
 
-    calculateModels(simulationTimes, exerciseXvaRpaTimes, exerciseTimes, xvaTimes, rpaTimes, cashflowInfo, pathValues,
-                    pathValuesRef, regModelUndDirty, regModelUndExInto, regModelRebate, regModelContinuationValue,
-                    regModelOption, regModelRpaUndDirty, regModelRpaOption, pathValueUndDirty, pathValueUndExInto,
-                    pathValueOption);
+    calculateModels(simulationTimes, exerciseXvaRpaTimes, exerciseTimes, xvaTimes, rpaTimes, firstRpaTime, cashflowInfo,
+                    pathValues, pathValuesRef, regModelUndDirty, regModelUndExInto, regModelRebate,
+                    regModelContinuationValue, regModelOption, regModelRpaUndDirty, regModelRpaOption,
+                    pathValueUndDirty, pathValueUndExInto, pathValueOption);
 
     // setup the models on close-out grid if required or else copy them from valuation-grid
 
@@ -599,11 +642,11 @@ void McMultiLegBaseEngine::calculate() const {
         RandomVariable pathValueUndExIntoCloseOut(calibrationSamples_);
         RandomVariable pathValueOptionCloseOut(calibrationSamples_);
         // everything stays the same, we just use the lagged path values
-        calculateModels(simulationTimes, exerciseXvaRpaTimes, exerciseTimes, xvaTimes, rpaTimes, cashflowInfo,
-                        closeOutPathValues, closeOutPathValuesRef, regModelUndDirtyCloseOut, regModelUndExIntoCloseOut,
-                        regModelRebateCloseOut, regModelContinuationValueCloseOut, regModelOptionCloseOut,
-                        regModelRpaUndDirtyCloseOut, regModelRpaOptionCloseOut, pathValueUndDirtyCloseOut,
-                        pathValueUndExIntoCloseOut, pathValueOptionCloseOut);
+        calculateModels(simulationTimes, exerciseXvaRpaTimes, exerciseTimes, xvaTimes, rpaTimes, firstRpaTime,
+                        cashflowInfo, closeOutPathValues, closeOutPathValuesRef, regModelUndDirtyCloseOut,
+                        regModelUndExIntoCloseOut, regModelRebateCloseOut, regModelContinuationValueCloseOut,
+                        regModelOptionCloseOut, regModelRpaUndDirtyCloseOut, regModelRpaOptionCloseOut,
+                        pathValueUndDirtyCloseOut, pathValueUndExIntoCloseOut, pathValueOptionCloseOut);
     }
 
     // set the result value (= underlying value if no exercise is given, otherwise option value)
@@ -618,7 +661,7 @@ void McMultiLegBaseEngine::calculate() const {
         // set rpa results for t0
 
         resultValue_ = 0.0;
-        double prev_t = 0.0;
+        double prev_t = firstRpaTime;
         for (auto const& t : rpaTimes) {
             auto index = std::distance(exerciseXvaRpaTimes.begin(), exerciseXvaRpaTimes.find(t));
             QL_REQUIRE(index < exerciseXvaRpaTimes.size(), "McMultiLegBaseEngine::calculate(): did not find rpa time ("
@@ -628,8 +671,9 @@ void McMultiLegBaseEngine::calculate() const {
                     max(0.0, (exercise_ == nullptr ? regModelUndDirty[index] : regModelOption[index])
                                  .apply(model_->stateProcess()->initialValues(), pathValuesRef, simulationTimes)))
                     .at(0);
-            resultValue_ += rpaParticipationRate_ * rpaCreditCurve_->defaultProbability(prev_t, t) * pd *
+            resultValue_ += rpaParticipationRate_ * rpaCreditCurve_->defaultProbability(prev_t, t) *
                             (1.0 - rpaRecoveryRate_->value()) * optionPv;
+            prev_t = t;
         }
     }
 
@@ -639,7 +683,8 @@ void McMultiLegBaseEngine::calculate() const {
 
     amcCalculator_ = QuantLib::ext::make_shared<MultiLegBaseAmcCalculator>(
         externalModelIndices_, optionSettlement_, cashSettlementTimes, exerciseXvaRpaTimes, exerciseTimes, xvaTimes,
-        rpaTimes, std::array<std::vector<McRegressionModel>, 2>{regModelUndDirty, regModelUndDirtyCloseOut},
+        rpaTimes, QuantLib::close_enough(nakedOption_, 1.0), exerciseLong_,
+        std::array<std::vector<McRegressionModel>, 2>{regModelUndDirty, regModelUndDirtyCloseOut},
         std::array<std::vector<McRegressionModel>, 2>{regModelUndExInto, regModelUndExIntoCloseOut},
         std::array<std::vector<McRegressionModel>, 2>{regModelRebate, regModelRebateCloseOut},
         std::array<std::vector<McRegressionModel>, 2>{regModelContinuationValue, regModelContinuationValueCloseOut},
@@ -656,6 +701,7 @@ McMultiLegBaseEngine::MultiLegBaseAmcCalculator::MultiLegBaseAmcCalculator(
     const std::vector<Size>& externalModelIndices, const Settlement::Type settlement,
     const std::vector<Time>& cashSettlementTimes, const std::set<Real>& exerciseXvaRpaTimes,
     const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes, const std::set<Real>& rpaTimes,
+    const bool haveNakedOption, const Real exerciseLong,
     const std::array<std::vector<McRegressionModel>, 2>& regModelUndDirty,
     const std::array<std::vector<McRegressionModel>, 2>& regModelUndExInto,
     const std::array<std::vector<McRegressionModel>, 2>& regModelRebate,
@@ -667,6 +713,7 @@ McMultiLegBaseEngine::MultiLegBaseAmcCalculator::MultiLegBaseAmcCalculator(
     const bool includeTodaysCashflows, const bool includeReferenceDateEvents, const bool isRpa)
     : externalModelIndices_(externalModelIndices), settlement_(settlement), cashSettlementTimes_(cashSettlementTimes),
       exerciseXvaRpaTimes_(exerciseXvaRpaTimes), exerciseTimes_(exerciseTimes), xvaTimes_(xvaTimes),
+      rpaTimes_(rpaTimes), haveNakedOption_(haveNakedOption), exerciseLong_(exerciseLong),
       regModelUndDirty_(regModelUndDirty), regModelUndExInto_(regModelUndExInto), regModelRebate_(regModelRebate),
       regModelContinuationValue_(regModelContinuationValue), regModelOption_(regModelOption),
       regModelRpaUndDirty_(regModelRpaUndDirty), regModelRpaOption_(regModelRpaOption), resultValue_(resultValue),
@@ -816,69 +863,87 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
 
         if (xvaTimes_.find(t) != xvaTimes_.end()) {
 
-            // there is no continuation value on the last exercise date
+            // we distinguish four cases: {haveNakedOption_, !haveNakedOption_} x {isRpa_, !isRpa}
 
-            RandomVariable futureOptionValue =
-                exerciseCounter == exerciseTimes_.size()
-                    ? RandomVariable(samples, 0.0)
-                    : max(RandomVariable(samples, 0.0),
-                          regModelOption_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_));
+            if (!haveNakedOption_) {
 
-            /* Physical Settlement:
+                if (!isRpa_) {
+                    result[xvaCounter + 1] =
+                        (regModelUndDirty_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_) +
+                         max(0.0, regModelOption_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_)));
+                } else {
+                    result[xvaCounter + 1] =
+                        regModelRpaOption_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_);
+                }
 
-               Exercise value is "undExInto" if we are in the period between the date on which the exercise happend
-               and the next exercise date after that, otherwise it is the full dirty npv. This assumes that two
-               exercise dates d1, d2 are not so close together that a coupon
+                result[xvaCounter + 1] = applyInverseFilter(result[xvaCounter + 1], wasExercised);
 
-               - pays after d1, d2
-               - but does not belong to the exercise-into underlying for both d1 and d2
-
-               This assumption seems reasonable, since we would never exercise on d1 but wait until d2 since the
-               underlying which we exercise into is the same in both cases.
-               We don't introduce a hard check for this, but we rather assume that the exercise dates are set up
-               appropriately adjusted to the coupon periods. The worst that can happen is that the exercised value
-               uses the full dirty npv at a too early time.
-
-               Cash Settlement:
-
-               We use the cashSettlements map constructed on each exercise date.
-
-            */
-
-            RandomVariable exercisedValue(samples, 0.0);
-
-            if (settlement_ == Settlement::Type::Physical) {
-                exercisedValue = conditionalResult(
-                    exercised_[exerciseCounter],
-                    regModelUndExInto_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_),
-                    regModelUndDirty_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_));
             } else {
-                for (auto it = cashSettlements.begin(); it != cashSettlements.end();) {
-                    if (t < it->first + (includeTodaysCashflows_ ? tinyTime : -tinyTime)) {
-                        exercisedValue += it->second;
-                        ++it;
-                    } else {
-                        it = cashSettlements.erase(it);
+
+                // there is no continuation value on the last exercise date
+
+                RandomVariable futureOptionValue =
+                    exerciseCounter == exerciseTimes_.size()
+                        ? RandomVariable(samples, 0.0)
+                        : max(0.0, regModelOption_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_));
+
+                /* Physical Settlement:
+
+                   Exercise value is "undExInto" if we are in the period between the date on which the exercise happend
+                   and the next exercise date after that, otherwise it is the full dirty npv. This assumes that two
+                   exercise dates d1, d2 are not so close together that a coupon
+
+                   - pays after d1, d2
+                   - but does not belong to the exercise-into underlying for both d1 and d2
+
+                   This assumption seems reasonable, since we would never exercise on d1 but wait until d2 since the
+                   underlying which we exercise into is the same in both cases.
+                   We don't introduce a hard check for this, but we rather assume that the exercise dates are set up
+                   appropriately adjusted to the coupon periods. The worst that can happen is that the exercised value
+                   uses the full dirty npv at a too early time.
+
+                   Cash Settlement:
+
+                   We use the cashSettlements map constructed on each exercise date.
+
+                */
+
+                RandomVariable exercisedValue(samples, 0.0);
+
+                if (settlement_ == Settlement::Type::Physical) {
+                    exercisedValue = conditionalResult(
+                        exercised_[exerciseCounter],
+                        regModelUndExInto_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_),
+                        regModelUndDirty_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_));
+                } else {
+                    for (auto it = cashSettlements.begin(); it != cashSettlements.end();) {
+                        if (t < it->first + (includeTodaysCashflows_ ? tinyTime : -tinyTime)) {
+                            exercisedValue += it->second;
+                            ++it;
+                        } else {
+                            it = cashSettlements.erase(it);
+                        }
                     }
                 }
-            }
 
-            // update for rebate payments
+                // update for rebate payments
 
-            if (regModelRebate_[regModelIndex][counter].isTrained()) {
-                RandomVariable rebate =
-                    regModelRebate_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_);
-                rebate = applyFilter(rebate, exercised_[exerciseCounter]);
-                exercisedValue += rebate;
-            }
+                if (regModelRebate_[regModelIndex][counter].isTrained()) {
+                    RandomVariable rebate =
+                        regModelRebate_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_);
+                    rebate = applyFilter(rebate, exercised_[exerciseCounter]);
+                    exercisedValue += rebate;
+                }
 
-            if (!isRpa_) {
-                result[xvaCounter + 1] = conditionalResult(wasExercised, exercisedValue, futureOptionValue);
-            } else {
-                result[xvaCounter + 1] = conditionalResult(
-                    wasExercised,
-                    regModelRpaUndDirty_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_),
-                    regModelRpaOption_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_));
+                if (!isRpa_) {
+                    result[xvaCounter + 1] =
+                        conditionalResult(wasExercised, exercisedValue, exerciseLong_ * futureOptionValue);
+                } else {
+                    result[xvaCounter + 1] = conditionalResult(
+                        wasExercised,
+                        regModelRpaUndDirty_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_),
+                        regModelRpaOption_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_));
+                }
             }
 
             ++xvaCounter;
@@ -903,6 +968,8 @@ void McMultiLegBaseEngine::MultiLegBaseAmcCalculator::serialize(Archive& ar, con
     ar & exerciseTimes_;
     ar & xvaTimes_;
     ar & rpaTimes_;
+    ar & haveNakedOption_;
+    ar & exerciseLong_;
 
     ar & regModelUndDirty_;
     ar & regModelUndExInto_;

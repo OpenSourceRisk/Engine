@@ -90,8 +90,8 @@ public:
     mutable std::vector<Currency> currency_;
     mutable std::vector<bool> payer_;
     mutable QuantLib::ext::shared_ptr<Exercise> exercise_; // may be empty, if underlying is the actual trade
-    mutable bool nakedOption_ = true;                      // if false, exercise represents call or put right
-    mutable bool exerciseIsLong_ = true;
+    mutable Real nakedOption_ = 1.0;
+    mutable Real exerciseLong_ = 1.0;
     mutable std::vector<QuantLib::ext::shared_ptr<CashFlow>> optionPremium_; // unconditional option premia
     mutable Settlement::Type optionSettlement_ = Settlement::Physical;
     mutable std::vector<QuantLib::Date> cashSettlementDates_;
@@ -163,6 +163,7 @@ public:
                                   const std::vector<Real>& cashSettlementTimes,
                                   const std::set<Real>& exerciseXvaRpaTimes, const std::set<Real>& exerciseTimes,
                                   const std::set<Real>& xvaTimes, const std::set<Real>& rpaTimes,
+                                  const bool haveNakedOption, const Real exerciseLong,
                                   const std::array<std::vector<McRegressionModel>, 2>& regModelUndDirty,
                                   const std::array<std::vector<McRegressionModel>, 2>& regModelUndExInto,
                                   const std::array<std::vector<McRegressionModel>, 2>& regModelRebate,
@@ -189,6 +190,8 @@ public:
         std::set<Real> exerciseTimes_;
         std::set<Real> xvaTimes_;
         std::set<Real> rpaTimes_;
+        bool haveNakedOption_;
+        Real exerciseLong_;
         std::array<std::vector<McRegressionModel>, 2> regModelUndDirty_;
         std::array<std::vector<McRegressionModel>, 2> regModelUndExInto_;
         std::array<std::vector<McRegressionModel>, 2> regModelRebate_;
@@ -219,16 +222,18 @@ public:
                             std::vector<std::vector<RandomVariable>>& pathValues) const;
 
     // the model training logic
-    void calculateModels(
-        const std::set<Real>& simulationTimes, const std::set<Real>& exerciseXvaRpaTimes,
-        const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes, const std::set<Real>& rpaTimes,
-        const std::vector<McCashflowInfo>& cashflowInfo, const std::vector<std::vector<RandomVariable>>& pathValues,
-        const std::vector<std::vector<const RandomVariable*>>& pathValuesRef,
-        std::vector<McRegressionModel>& regModelUndDirty, std::vector<McRegressionModel>& regModelUndExInto,
-        std::vector<McRegressionModel>& regModelRebate, std::vector<McRegressionModel>& regModelContinuationValue,
-        std::vector<McRegressionModel>& regModelOption, std::vector<McRegressionModel>& regModelRpaUndDirty,
-        std::vector<McRegressionModel>& regModelRpaOption, RandomVariable& pathValueUndDirty,
-        RandomVariable& pathValueUndExInto, RandomVariable& pathValueOption) const;
+    void
+    calculateModels(const std::set<Real>& simulationTimes, const std::set<Real>& exerciseXvaRpaTimes,
+                    const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes, const std::set<Real>& rpaTimes,
+                    const Real firstRpaTime, const std::vector<McCashflowInfo>& cashflowInfo,
+                    const std::vector<std::vector<RandomVariable>>& pathValues,
+                    const std::vector<std::vector<const RandomVariable*>>& pathValuesRef,
+                    std::vector<McRegressionModel>& regModelUndDirty, std::vector<McRegressionModel>& regModelUndExInto,
+                    std::vector<McRegressionModel>& regModelRebate,
+                    std::vector<McRegressionModel>& regModelContinuationValue,
+                    std::vector<McRegressionModel>& regModelOption, std::vector<McRegressionModel>& regModelRpaUndDirty,
+                    std::vector<McRegressionModel>& regModelRpaOption, RandomVariable& pathValueUndDirty,
+                    RandomVariable& pathValueUndExInto, RandomVariable& pathValueOption) const;
 
     // convert a date to a time w.r.t. the valuation date
     Real time(const Date& d) const;
