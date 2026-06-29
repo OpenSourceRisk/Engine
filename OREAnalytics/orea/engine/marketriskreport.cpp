@@ -406,19 +406,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
                                 WLOG("Zero variance assigned to sensitivity key " << deltaKeys[i]);
                         }
 
-                        // make covariance matrix positive semi-definite
                         DLOG("Covariance matrix has dimension " << deltaKeys.size() << " x " << deltaKeys.size());
-                        if (salvage_ && !covarianceMatrix_.empty()) {
-                            DLOG("Covariance matrix is not salvaged, check for positive semi-definiteness");
-                            SymmetricSchurDecomposition ssd(covarianceMatrix_);
-                            Real evMin = ssd.eigenvalues().back();
-                            QL_REQUIRE(evMin > 0.0 || close_enough(evMin, 0.0),
-                                       "ParametricVar: input covariance matrix is not positive semi-definite, smallest "
-                                       "eigenvalue is "
-                                           << evMin);
-                            DLOG("Smallest eigenvalue is " << evMin);
-                            salvage_ = QuantLib::ext::make_shared<QuantExt::NoCovarianceSalvage>();
-                        }
                     } else
                         covCalculator = ext::make_shared<CovarianceCalculator>(covariancePeriod());
 
