@@ -113,7 +113,8 @@ public:
         : RiskParticipationAgreementEngineBuilderBase("CrossAssetModel", "AMC",
                                                       {"RiskParticipationAgreement_Vanilla",
                                                        "RiskParticipationAgreement_Vanilla_XCcy",
-                                                       "RiskParticipationAgreement_Structured"}) {}
+                                                       "RiskParticipationAgreement_Structured"}),
+          cam_(cam), simulationDates_(simulationDates), stickyCloseOutDates_(stickyCloseOutDates) {}
 
 protected:
     QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id,
