@@ -87,6 +87,11 @@ public:
     bool isExpired() const override;
     void setupArguments(QuantLib::PricingEngine::arguments*) const override;
     void fetchResults(const QuantLib::PricingEngine::results*) const override;
+    // The reason for overriding this method is that the underlyings, i.e. either trades or index constituents, may 
+    // be a bond future option. We then hit the issue outlined in https://github.com/lballabio/QuantLib/issues/2340. 
+    // The solution here is the same as that taken in commit 8dfdce7cde for bond option, bond TRS and bond forward.
+    // See `qle/instruments/bondfutureoption.hpp` for an explanation.
+    void calculate() const override;
     //@}
 
 private:
