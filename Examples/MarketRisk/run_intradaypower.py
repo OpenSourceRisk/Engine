@@ -16,7 +16,4 @@ oreex.run("Input/ore_intradaypower.xml")
 oreex.print_headline("Run ORE for NPV, Sensitivity and Stresstest with curve algebra")
 oreex.run("Input/ore_intradaypower_curvealgebra.xml")
 
-oreex.print_headline("Run ORE for hist sim var with curve algebra")
-oreex.run("Input/ore_intradaypower_histsimvar.xml")
-
 
