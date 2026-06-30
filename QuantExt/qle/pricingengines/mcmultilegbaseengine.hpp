@@ -171,9 +171,11 @@ public:
                                   const std::array<std::vector<McRegressionModel>, 2>& regModelOption,
                                   const std::array<std::vector<McRegressionModel>, 2>& regModelRpaUndDirty,
                                   const std::array<std::vector<McRegressionModel>, 2>& regModelRpaOption,
+                                  const std::array<std::vector<McRegressionModel>, 2>& regModelRpaFee,
                                   const Real resultValue, const Array& initialState, const Currency& baseCurrency,
                                   const bool reevaluateExerciseInStickyRun, const bool includeTodaysCashflows,
-                                  const bool includeReferenceDateEvents, const bool isRpa);
+                                  const bool includeReferenceDateEvents, const bool isRpa,
+                                  const bool rpaProtectionFeePayer, const Real rpaParticiationRate);
 
         Currency npvCurrency() override { return baseCurrency_; }
         std::vector<QuantExt::RandomVariable>
@@ -200,6 +202,7 @@ public:
         std::array<std::vector<McRegressionModel>, 2> regModelOption_;
         std::array<std::vector<McRegressionModel>, 2> regModelRpaUndDirty_;
         std::array<std::vector<McRegressionModel>, 2> regModelRpaOption_;
+        std::array<std::vector<McRegressionModel>, 2> regModelRpaFee_;
         Real resultValue_;
         Array initialState_;
         Currency baseCurrency_;
@@ -210,6 +213,8 @@ public:
         bool includeReferenceDateEvents_;
 
         bool isRpa_;
+        bool rpaProtectionFeePayer_;
+        Real rpaParticipationRate_;
 
         std::vector<Filter> exercised_;
 
@@ -217,6 +222,11 @@ public:
         friend class boost::serialization::access;
         template <class Archive> void serialize(Archive& ar, const unsigned int version);
     };
+
+    // generate the cashflow info
+    std::vector<McCashflowInfo> generateCashflowInfo(const std::vector<Leg>& legs,
+                                                     const std::vector<Currency>& currencies,
+                                                     const std::vector<bool>& payers) const;
 
     // generate the mc path values of the model process
     void generatePathValues(const std::vector<Real>& simulationTimes,
@@ -227,14 +237,17 @@ public:
     calculateModels(const std::set<Real>& simulationTimes, const std::set<Real>& exerciseXvaRpaTimes,
                     const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes, const std::set<Real>& rpaTimes,
                     const Real firstRpaTime, const std::vector<McCashflowInfo>& cashflowInfo,
+                    const std::vector<McCashflowInfo>& rpaFeeCashflowInfo,
                     const std::vector<std::vector<RandomVariable>>& pathValues,
                     const std::vector<std::vector<const RandomVariable*>>& pathValuesRef,
                     std::vector<McRegressionModel>& regModelUndDirty, std::vector<McRegressionModel>& regModelUndExInto,
                     std::vector<McRegressionModel>& regModelRebate,
                     std::vector<McRegressionModel>& regModelContinuationValue,
                     std::vector<McRegressionModel>& regModelOption, std::vector<McRegressionModel>& regModelRpaUndDirty,
-                    std::vector<McRegressionModel>& regModelRpaOption, RandomVariable& pathValueUndDirty,
-                    RandomVariable& pathValueUndExInto, RandomVariable& pathValueOption) const;
+                    std::vector<McRegressionModel>& regModelRpaOption, std::vector<McRegressionModel>& regModelRpaFee,
+                    RandomVariable& pathValueUndDirty, RandomVariable& pathValueUndExInto,
+                    RandomVariable& pathValueOption, RandomVariable& pathValueRpaUndDirty,
+                    RandomVariable& pathValueRpaOption, RandomVariable& pathValueRpaFee) const;
 
     // convert a date to a time w.r.t. the valuation date
     Real time(const Date& d) const;
