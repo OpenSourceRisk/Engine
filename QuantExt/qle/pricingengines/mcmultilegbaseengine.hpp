@@ -90,8 +90,8 @@ public:
     mutable std::vector<Currency> currency_;
     mutable std::vector<bool> payer_;
     mutable QuantLib::ext::shared_ptr<Exercise> exercise_; // may be empty, if underlying is the actual trade
-    mutable Real nakedOption_ = 1.0;
-    mutable Real exerciseLong_ = 1.0;
+    mutable bool nakedOption_ = true;
+    mutable bool exerciseLong_ = true;
     mutable std::vector<QuantLib::ext::shared_ptr<CashFlow>> optionPremium_; // unconditional option premia
     mutable Settlement::Type optionSettlement_ = Settlement::Physical;
     mutable std::vector<QuantLib::Date> cashSettlementDates_;
@@ -163,7 +163,7 @@ public:
                                   const std::vector<Real>& cashSettlementTimes,
                                   const std::set<Real>& exerciseXvaRpaTimes, const std::set<Real>& exerciseTimes,
                                   const std::set<Real>& xvaTimes, const std::set<Real>& rpaTimes,
-                                  const bool haveNakedOption, const Real exerciseLong,
+                                  const bool haveExercise, const bool nakedOption, const bool exerciseLong,
                                   const std::array<std::vector<McRegressionModel>, 2>& regModelUndDirty,
                                   const std::array<std::vector<McRegressionModel>, 2>& regModelUndExInto,
                                   const std::array<std::vector<McRegressionModel>, 2>& regModelRebate,
@@ -190,8 +190,9 @@ public:
         std::set<Real> exerciseTimes_;
         std::set<Real> xvaTimes_;
         std::set<Real> rpaTimes_;
-        bool haveNakedOption_;
-        Real exerciseLong_;
+        bool haveExercise_;
+        bool nakedOption_;
+        bool exerciseLong_;
         std::array<std::vector<McRegressionModel>, 2> regModelUndDirty_;
         std::array<std::vector<McRegressionModel>, 2> regModelUndExInto_;
         std::array<std::vector<McRegressionModel>, 2> regModelRebate_;

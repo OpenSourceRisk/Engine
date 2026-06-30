@@ -67,8 +67,8 @@ void McCamRpaEngine::calculate() const {
     leg_ = arguments_.underlying;
     payer_ = arguments_.underlyingPayer;
     exercise_ = arguments_.exercise;
-    nakedOption_ = arguments_.nakedOption ? 1.0 : -1.0;
-    exerciseLong_ = arguments_.exerciseIsLong ? 1.0 : -1.0;
+    nakedOption_ = arguments_.nakedOption;
+    exerciseLong_ = arguments_.exerciseIsLong;
     optionPremium_ = arguments_.premium;
 
     rpaProtectionFee_ = arguments_.protectionFee;

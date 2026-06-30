@@ -154,8 +154,6 @@ void McMultiLegBaseEngine::calculateModels(
 
     std::vector<Filter> exercised(exerciseTimes.size() + 1, Filter(calibrationSamples_, false));
 
-    bool haveNakedOption = QuantLib::close_enough(nakedOption_, 1.0);
-
     for (auto t = exerciseXvaRpaTimes.rbegin(); t != exerciseXvaRpaTimes.rend(); ++t) {
 
         bool isExerciseTime = exerciseTimes.find(*t) != exerciseTimes.end();
@@ -262,7 +260,7 @@ void McMultiLegBaseEngine::calculateModels(
                                                        simulationTimes);
             }
 
-            auto exerciseValue = nakedOption_ * exerciseLong_ *
+            auto exerciseValue = (nakedOption_ ? 1.0 : (exerciseLong_ ? -1.0 : 1.0)) *
                                      regModelUndExInto[counter].apply(model_->stateProcess()->initialValues(),
                                                                       pathValuesRef, simulationTimes) +
                                  rebate;
@@ -317,10 +315,10 @@ void McMultiLegBaseEngine::calculateModels(
             if (exercise_ != nullptr) {
                 auto optionPv = regModelOption[counter].apply(model_->stateProcess()->initialValues(), pathValuesRef,
                                                               simulationTimes);
-                if (!haveNakedOption) {
-                    optionPv = exerciseLong_ * optionPv + undPv;
-                } else {
+                if (nakedOption_) {
                     optionPv = exerciseLong_ * optionPv;
+                } else {
+                    optionPv = exerciseLong_ * optionPv + undPv;
                 }
                 rpaContributionOption += max(0.0, optionPv) * rpaWeight;
             }
@@ -686,7 +684,7 @@ void McMultiLegBaseEngine::calculate() const {
 
     amcCalculator_ = QuantLib::ext::make_shared<MultiLegBaseAmcCalculator>(
         externalModelIndices_, optionSettlement_, cashSettlementTimes, exerciseXvaRpaTimes, exerciseTimes, xvaTimes,
-        rpaTimes, QuantLib::close_enough(nakedOption_, 1.0), exerciseLong_,
+        rpaTimes, exercise_ != nullptr, nakedOption_, exerciseLong_,
         std::array<std::vector<McRegressionModel>, 2>{regModelUndDirty, regModelUndDirtyCloseOut},
         std::array<std::vector<McRegressionModel>, 2>{regModelUndExInto, regModelUndExIntoCloseOut},
         std::array<std::vector<McRegressionModel>, 2>{regModelRebate, regModelRebateCloseOut},
@@ -704,7 +702,7 @@ McMultiLegBaseEngine::MultiLegBaseAmcCalculator::MultiLegBaseAmcCalculator(
     const std::vector<Size>& externalModelIndices, const Settlement::Type settlement,
     const std::vector<Time>& cashSettlementTimes, const std::set<Real>& exerciseXvaRpaTimes,
     const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes, const std::set<Real>& rpaTimes,
-    const bool haveNakedOption, const Real exerciseLong,
+    const bool haveExercise, const bool nakedOption, const bool exerciseLong,
     const std::array<std::vector<McRegressionModel>, 2>& regModelUndDirty,
     const std::array<std::vector<McRegressionModel>, 2>& regModelUndExInto,
     const std::array<std::vector<McRegressionModel>, 2>& regModelRebate,
@@ -716,7 +714,7 @@ McMultiLegBaseEngine::MultiLegBaseAmcCalculator::MultiLegBaseAmcCalculator(
     const bool includeTodaysCashflows, const bool includeReferenceDateEvents, const bool isRpa)
     : externalModelIndices_(externalModelIndices), settlement_(settlement), cashSettlementTimes_(cashSettlementTimes),
       exerciseXvaRpaTimes_(exerciseXvaRpaTimes), exerciseTimes_(exerciseTimes), xvaTimes_(xvaTimes),
-      rpaTimes_(rpaTimes), haveNakedOption_(haveNakedOption), exerciseLong_(exerciseLong),
+      rpaTimes_(rpaTimes), haveExercise_(haveExercise), nakedOption_(nakedOption), exerciseLong_(exerciseLong),
       regModelUndDirty_(regModelUndDirty), regModelUndExInto_(regModelUndExInto), regModelRebate_(regModelRebate),
       regModelContinuationValue_(regModelContinuationValue), regModelOption_(regModelOption),
       regModelRpaUndDirty_(regModelRpaUndDirty), regModelRpaOption_(regModelRpaOption), resultValue_(resultValue),
@@ -780,7 +778,7 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
 
     // if we don't have an exercise, we return the dirty npv of the underlying at all times
 
-    if (exerciseTimes_.empty()) {
+    if (!haveExercise_) {
         Size counter = 0;
         for (auto t : xvaTimes_) {
             Size ind = std::distance(exerciseXvaRpaTimes_.begin(), exerciseXvaRpaTimes_.find(t));
@@ -868,12 +866,13 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
 
             // we distinguish four cases: {haveNakedOption_, !haveNakedOption_} x {isRpa_, !isRpa}
 
-            if (!haveNakedOption_) {
+            if (!nakedOption_) {
 
                 if (!isRpa_) {
                     result[xvaCounter + 1] =
                         (regModelUndDirty_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_) +
-                         max(0.0, regModelOption_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_)));
+                         (exerciseLong_ ? 1.0 : -1.0) * max(0.0, regModelOption_[regModelIndex][counter].apply(
+                                                                     initialState_, effPaths, xvaTimes_)));
                 } else {
                     result[xvaCounter + 1] =
                         regModelRpaOption_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_);
@@ -940,6 +939,7 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
 
                 if (!isRpa_) {
                     result[xvaCounter + 1] =
+                        (exerciseLong_ ? 1.0 : -1.0) *
                         conditionalResult(wasExercised, exercisedValue, exerciseLong_ * futureOptionValue);
                 } else {
                     result[xvaCounter + 1] = conditionalResult(
@@ -971,7 +971,8 @@ void McMultiLegBaseEngine::MultiLegBaseAmcCalculator::serialize(Archive& ar, con
     ar & exerciseTimes_;
     ar & xvaTimes_;
     ar & rpaTimes_;
-    ar & haveNakedOption_;
+    ar & haveExercise_;
+    ar & nakedOption_;
     ar & exerciseLong_;
 
     ar & regModelUndDirty_;
