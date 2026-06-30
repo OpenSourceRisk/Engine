@@ -14,7 +14,9 @@ cases = [
     "run_overlapping.py",         # 60
     "run_scenariostatistics.py",  # 75
     "run_fx_options.py",
-    "run_fx_localvol.py"
+    "run_fx_localvol.py",
+    "run_scripted_amc.py",        # scripted trade types AMC
+    "run_fx_baskets.py"           # FX basket trades AMC (requires market data)
 ]
 
 sys.exit(run_scripts(cases))
