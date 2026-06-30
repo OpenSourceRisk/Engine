@@ -42,6 +42,8 @@ void IntradayPowerCurveConfig::fromXML(XMLNode* node) {
     dailyAveragePriceCurve_ = XMLUtils::getChildValue(node, "DailyAveragePriceCurve", true);
     shapeQuoteName_ = XMLUtils::getChildValue(node, "ShapeQuoteName", true);
     conventionsId_ = XMLUtils::getChildValue(node, "Convention", true);
+
+    quotes_.push_back("SHAPE_PROFILE/SHAPE_FACTOR/" + shapeQuoteName_ + "/*");
 }
 
 XMLNode* IntradayPowerCurveConfig::toXML(XMLDocument& doc) const {
