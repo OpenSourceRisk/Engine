@@ -131,7 +131,7 @@ void McRegressionModel::train(const Size polynomOrder,
 
     // check if the model is in the correct state
 
-    QL_REQUIRE(!isTrained_, "RegressionModeltrain(): internal error: model is already trained, "
+    QL_REQUIRE(!isTrained_, "RegressionModel::train(): internal error: model is already trained, "
                             "train() should not be called twice on the same model instance.");
 
     /* build the regressor - if the regressand is identically zero we leave it empty which optimizes
