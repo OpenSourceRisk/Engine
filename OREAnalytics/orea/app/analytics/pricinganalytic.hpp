@@ -38,6 +38,8 @@ class InputParameters;
     std::string curvesMarketConfig_ = Market::defaultConfiguration;
     std::string curvesGrid_ = "240,1M";
     std::string curvesCalendar_ = "TARGET";
+    bool computeTheta_ = false;
+    QuantLib::Period thetaPeriod_ = 1 * QuantLib::Days;
 };
 
 /*! Pricing-type analytics
