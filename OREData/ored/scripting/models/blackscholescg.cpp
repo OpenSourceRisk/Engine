@@ -363,6 +363,7 @@ void BlackScholesCG::performCalculations() const {
         return;
 
     // init underlying path where we map a date to a randomvariable representing the path values
+
     for (auto const& d : effectiveSimulationDates_) {
         underlyingPaths_[d] =
             std::vector<std::size_t>(model_->generalizedBlackScholesProcesses().size(), ComputationGraph::nan);
@@ -370,7 +371,6 @@ void BlackScholesCG::performCalculations() const {
 
     std::vector<std::size_t> logState(indices_.size());
     for (Size j = 0; j < indices_.size(); ++j) {
-        std::cout<<"here"<<std::endl;
         auto p = model_->generalizedBlackScholesProcesses().at(j);
         logState[j] =
             addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::logX0, {}, {}, {}, {}, {}, j),
