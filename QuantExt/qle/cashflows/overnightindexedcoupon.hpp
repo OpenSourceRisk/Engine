@@ -220,7 +220,7 @@ public:
     OvernightLeg& withPaymentDayCounter(const DayCounter&);
     OvernightLeg& withPaymentAdjustment(BusinessDayConvention);
     OvernightLeg& withPaymentCalendar(const Calendar&);
-    OvernightLeg& withPaymentLag(Natural lag);
+    OvernightLeg& withPaymentLag(Integer lag);
     OvernightLeg& withGearings(Real gearing);
     OvernightLeg& withGearings(const std::vector<Real>& gearings);
     OvernightLeg& withSpreads(Spread spread);
@@ -255,7 +255,7 @@ private:
     DayCounter paymentDayCounter_;
     Calendar paymentCalendar_;
     BusinessDayConvention paymentAdjustment_;
-    Natural paymentLag_;
+    Integer paymentLag_;
     std::vector<Real> gearings_;
     std::vector<Spread> spreads_;
     bool telescopicValueDates_;
