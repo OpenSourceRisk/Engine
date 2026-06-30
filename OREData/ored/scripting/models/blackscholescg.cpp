@@ -362,16 +362,26 @@ void BlackScholesCG::performCalculations() const {
     if (indices_.empty() || !underlyingPaths_.empty())
         return;
 
-    // exit if there are no future simulation dates (i.e. only the reference date)
-
-    if (effectiveSimulationDates_.size() == 1)
-        return;
-
     // init underlying path where we map a date to a randomvariable representing the path values
-
     for (auto const& d : effectiveSimulationDates_) {
         underlyingPaths_[d] =
             std::vector<std::size_t>(model_->generalizedBlackScholesProcesses().size(), ComputationGraph::nan);
+    }
+
+    std::vector<std::size_t> logState(indices_.size());
+    for (Size j = 0; j < indices_.size(); ++j) {
+        std::cout<<"here"<<std::endl;
+        auto p = model_->generalizedBlackScholesProcesses().at(j);
+        logState[j] =
+            addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::logX0, {}, {}, {}, {}, {}, j),
+                              [p] { return std::log(p->x0()); });
+        underlyingPaths_[*effectiveSimulationDates_.begin()][j] = cg_exp(*g_, logState[j]);
+    }
+
+    // exit if there are no future simulation dates (i.e. only the reference date)
+
+    if (effectiveSimulationDates_.size() == 1) {
+        return;
     }
 
     // determine calibration strikes
@@ -477,15 +487,6 @@ void BlackScholesCG::performCalculations() const {
     }
 
     // evolve the process using correlated normal variates and set the underlying path values
-
-    std::vector<std::size_t> logState(indices_.size());
-    for (Size j = 0; j < indices_.size(); ++j) {
-        auto p = model_->generalizedBlackScholesProcesses().at(j);
-        logState[j] =
-            addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::logX0, {}, {}, {}, {}, {}, j),
-                              [p] { return std::log(p->x0()); });
-        underlyingPaths_[*effectiveSimulationDates_.begin()][j] = cg_exp(*g_, logState[j]);
-    }
 
     date = effectiveSimulationDates_.begin();
     for (Size i = 0; i < effectiveSimulationDates_.size() - 1; ++i) {

@@ -522,7 +522,7 @@ std::size_t ModelCGImpl::barrierProbability(const std::string& index, const Date
         ++d;
     }
 
-    if (obsdate2 <= referenceDate()) {
+    if (obsdate2 < referenceDate()) {
         return barrierHit;
     }
 
