@@ -106,18 +106,41 @@ void DoubleDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
     underlying2Str = underlying4_ ? "(Underlying2(Expiry) - Underlying4(Expiry))" : "Underlying2(Expiry)";
 
     // clang-format off
+    std::string pvScript =
+        "NUMBER ExerciseProbability;\n"
+        "IF " + underlying1Str + " >= LowerBound1 AND " + underlying1Str + " <= UpperBound1 AND\n"
+        "   " + underlying2Str + " >= LowerBound2 AND " + underlying2Str + " <= UpperBound2 THEN\n"
+        "     Option = LongShort * LOGPAY( BinaryPayout, Expiry, Settlement, PayCcy);\n"
+        "     ExerciseProbability = 1;\n"
+        "END;\n";
+
+    std::string amcScript =
+        "NUMBER ExerciseProbability;\n"
+        "NUMBER i, _AMC_NPV[SIZE(_AMC_SimDates)];\n"
+        "IF " + underlying1Str + " >= LowerBound1 AND " + underlying1Str + " <= UpperBound1 AND\n"
+        "   " + underlying2Str + " >= LowerBound2 AND " + underlying2Str + " <= UpperBound2 THEN\n"
+        "     Option = LongShort * LOGPAY( BinaryPayout, Expiry, Settlement, PayCcy);\n"
+        "     ExerciseProbability = 1;\n"
+        "END;\n"
+        "FOR i IN (1, SIZE(_AMC_SimDates), 1) DO\n"
+        "  IF _AMC_SimDates[i] < Settlement THEN\n"
+        "    _AMC_NPV[i] = NPVMEM(Option, _AMC_SimDates[i], i);\n"
+        "  END;\n"
+        "END;\n";
+
     script_ = {
-        {"", ScriptedTradeScriptData("NUMBER ExerciseProbability;\n"
-                                     "IF " + underlying1Str + " >= LowerBound1 AND " + underlying1Str + " <= UpperBound1 AND\n"
-                                     "   " + underlying2Str + " >= LowerBound2 AND " + underlying2Str + " <= UpperBound2 THEN\n"
-                                     "     Option = LongShort * LOGPAY( BinaryPayout, Expiry, Settlement, PayCcy);\n"
-                                     "     ExerciseProbability = 1;\n"
-                                     "END;\n",
-                                     "Option",
-                                     {{"ExerciseProbability", "ExerciseProbability"},
-                                      {"currentNotional", "BinaryPayout"},
-                                      {"notionalCurrency", "PayCcy"}},
-                                     {})}};
+        {"",    ScriptedTradeScriptData(pvScript,
+                                        "Option",
+                                        {{"ExerciseProbability", "ExerciseProbability"},
+                                         {"currentNotional", "BinaryPayout"},
+                                         {"notionalCurrency", "PayCcy"}},
+                                        {})},
+        {"AMC", ScriptedTradeScriptData(amcScript,
+                                        "Option",
+                                        {{"ExerciseProbability", "ExerciseProbability"},
+                                         {"currentNotional", "BinaryPayout"},
+                                         {"notionalCurrency", "PayCcy"}},
+                                        {})}};
     // clang-format on
 
     // build trade

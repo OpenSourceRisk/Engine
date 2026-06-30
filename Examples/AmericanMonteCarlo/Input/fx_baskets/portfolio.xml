@@ -1,0 +1,141 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Portfolio>
+     <!-- FX BasketVarianceSwap: long vol on an ECB-EUR-USD / ECB-EUR-GBP basket.
+      50/50 weighted, vol-swap payoff (SquaredPayoff=false), 2-year daily tenor.
+      accruedVariance[i] passed as regressor R1. EUR-GBP is the new currency pair. -->
+ <Trade id="SCRIPTED_BVS_FX">
+     <TradeType>FxBasketVarianceSwap</TradeType>
+     <Envelope>
+         <CounterParty>CPTY_A</CounterParty>
+         <NettingSetId>CPTY_A</NettingSetId>
+         <AdditionalFields/>
+     </Envelope>
+     <FxBasketVarianceSwapData>
+         <LongShort>Short</LongShort>
+         <Currency>EUR</Currency>
+         <Notional>1000</Notional>
+         <Strike>0.07</Strike>
+         <Underlyings>
+             <Underlying>
+                 <Type>FX</Type>
+                 <Name>ECB-EUR-USD</Name>
+                 <Weight>0.5</Weight>
+             </Underlying>
+             <Underlying>
+                 <Type>FX</Type>
+                 <Name>ECB-EUR-GBP</Name>
+                 <Weight>0.5</Weight>
+             </Underlying>
+         </Underlyings>
+         <SquaredPayoff>false</SquaredPayoff>
+         <ValuationSchedule>
+             <Rules>
+                 <StartDate>2022-01-31</StartDate>
+                 <EndDate>2024-01-31</EndDate>
+                 <Tenor>1D</Tenor>
+                 <Calendar>EUR,GBP</Calendar>
+                 <Convention>F</Convention>
+                 <TermConvention>F</TermConvention>
+                 <Rule>Forward</Rule>
+             </Rules>
+         </ValuationSchedule>
+         <SettlementDate>2024-02-02</SettlementDate>
+     </FxBasketVarianceSwapData>
+ </Trade>
+
+ <!-- FX WorstOfBasketSwap: long worst-of on ECB-EUR-USD / ECB-EUR-GBP basket.
+      EUR-EURIBOR-3M floating leg; 5% fixed coupon when both FX ≥ 75% of initial.
+      KO when both FX at or above initial level. Terminal Fx-amount payoff if KI fires.
+      InitialPrices are spot ECB fixings as of 2022-01-31. -->
+    <Trade id="SCRIPTED_WOBS_FX">
+        <TradeType>FxWorstOfBasketSwap</TradeType>
+        <Envelope>
+            <CounterParty>CPTY_A</CounterParty>
+            <NettingSetId>CPTY_A</NettingSetId>
+            <AdditionalFields/>
+        </Envelope>
+        <FxWorstOfBasketSwapData>
+            <LongShort>Long</LongShort>
+            <Currency>EUR</Currency>
+            <Quantity>1000000</Quantity>
+            <InitialFixedRate>0.02</InitialFixedRate>
+            <Underlyings>
+                <Underlying>
+                    <Type>FX</Type>
+                    <Name>ECB-EUR-USD</Name>
+                </Underlying>
+                <Underlying>
+                    <Type>FX</Type>
+                    <Name>ECB-EUR-GBP</Name>
+                </Underlying>
+            </Underlyings>
+            <InitialPrices>
+                <InitialPrice>1.1150</InitialPrice>
+                <InitialPrice>0.8350</InitialPrice>
+            </InitialPrices>
+            <FloatingPeriodSchedule>
+                <Dates>
+                    <Dates>
+                        <Date>2022-01-31</Date>
+                        <Date>2022-07-29</Date>
+                        <Date>2023-01-31</Date>
+                        <Date>2023-07-31</Date>
+                        <Date>2024-01-31</Date>
+                        <Date>2024-07-31</Date>
+                        <Date>2025-01-31</Date>
+                    </Dates>
+                    <Calendar>TARGET</Calendar>
+                    <Convention>MF</Convention>
+                </Dates>
+            </FloatingPeriodSchedule>
+            <FloatingPayDates>
+                <Dates>
+                    <Dates>
+                        <Date>2022-08-02</Date>
+                        <Date>2023-02-02</Date>
+                        <Date>2023-08-02</Date>
+                        <Date>2024-02-02</Date>
+                        <Date>2024-08-02</Date>
+                        <Date>2025-02-04</Date>
+                    </Dates>
+                    <Calendar>TARGET</Calendar>
+                    <Convention>MF</Convention>
+                </Dates>
+            </FloatingPayDates>
+            <FloatingIndex>EUR-EURIBOR-3M</FloatingIndex>
+            <FloatingSpread>0.0</FloatingSpread>
+            <FloatingDayCountFraction>Actual/360</FloatingDayCountFraction>
+            <FloatingFixingSchedule>
+                <DerivedSchedule>
+                    <BaseSchedule>FloatingPeriodSchedule</BaseSchedule>
+                    <Shift>-2D</Shift>
+                    <Calendar>TARGET</Calendar>
+                    <Convention>P</Convention>
+                </DerivedSchedule>
+            </FloatingFixingSchedule>
+            <KnockOutLevels>
+                <KnockOutLevel>1.0</KnockOutLevel>
+                <KnockOutLevel>1.0</KnockOutLevel>
+                <KnockOutLevel>1.0</KnockOutLevel>
+                <KnockOutLevel>1.0</KnockOutLevel>
+                <KnockOutLevel>1.0</KnockOutLevel>
+                <KnockOutLevel>1.0</KnockOutLevel>
+            </KnockOutLevels>
+            <FixedTriggerLevels>
+                <FixedTriggerLevel>0.75</FixedTriggerLevel>
+                <FixedTriggerLevel>0.75</FixedTriggerLevel>
+                <FixedTriggerLevel>0.75</FixedTriggerLevel>
+                <FixedTriggerLevel>0.75</FixedTriggerLevel>
+                <FixedTriggerLevel>0.75</FixedTriggerLevel>
+                <FixedTriggerLevel>0.75</FixedTriggerLevel>
+            </FixedTriggerLevels>
+            <FixedRate>0.05</FixedRate>
+            <BermudanKnockIn>false</BermudanKnockIn>
+            <KnockInLevel>0.75</KnockInLevel>
+            <AccumulatingFixedCoupons>false</AccumulatingFixedCoupons>
+            <AccruingFixedCoupons>false</AccruingFixedCoupons>
+            <Strike>1.0</Strike>
+        </FxWorstOfBasketSwapData>
+    </Trade>
+
+</Portfolio>

@@ -67,6 +67,66 @@ void BestEntryOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& fact
         "\n"
         "Option = PAY(payoff, ExpiryDate, SettlementDate, Currency) - PAY(Premium, PremiumDate, PremiumDate, Currency);\n";
 
+    // AMC variant: separate NPVMEM slots for untriggered (slot i) and triggered (slot SIZE+i)
+    // branches; R1 = running minimum spot for triggered paths captures the reset state.
+    static const std::string amc_script =
+        "NUMBER payoff, initialIndex, triggerEvent, strikeIndexObs, strikeIndexLevel, d, resetMinValue;\n"
+        "NUMBER simDateIdx, s, i;\n"
+        "NUMBER triggerAtSim[SIZE(_AMC_SimDates)];\n"
+        "NUMBER strikeObsAtSim[SIZE(_AMC_SimDates)];\n"
+        "NUMBER _AMC_NPV[SIZE(_AMC_SimDates)];\n"
+        "\n"
+        "triggerEvent = 0;\n"
+        "\n"
+        "strikeIndexLevel = Underlying(StrikeDate);\n"
+        "\n"
+        "resetMinValue = strikeIndexLevel * ResetMinimum;\n"
+        "\n"
+        "strikeIndexObs = Underlying(StrikeObservationDates[1]);\n"
+        "\n"
+        "simDateIdx = 1;\n"
+        "FOR s IN (1, SIZE(ObsAndSimDates), 1) DO\n"
+        "  IF simDateIdx <= SIZE(_AMC_SimDates) THEN\n"
+        "    IF ObsAndSimDates[s] == _AMC_SimDates[simDateIdx] THEN\n"
+        "      triggerAtSim[simDateIdx] = triggerEvent;\n"
+        "      strikeObsAtSim[simDateIdx] = strikeIndexObs;\n"
+        "      simDateIdx = simDateIdx + 1;\n"
+        "    END;\n"
+        "  END;\n"
+        "  d = DATEINDEX(ObsAndSimDates[s], StrikeObservationDates, EQ);\n"
+        "  IF d > 0 THEN\n"
+        "    IF Underlying(StrikeObservationDates[d]) < TriggerLevel * strikeIndexLevel THEN\n"
+        "      triggerEvent = 1;\n"
+        "      strikeIndexObs = min(strikeIndexObs, Underlying(StrikeObservationDates[d]));\n"
+        "    END;\n"
+        "  END;\n"
+        "END;\n"
+        "\n"
+        "IF triggerEvent == 1 THEN\n"
+        "  initialIndex = max(ResetMinimum * strikeIndexLevel, strikeIndexObs);\n"
+        "ELSE\n"
+        "  initialIndex = strikeIndexLevel;\n"
+        "END;\n"
+        "\n"
+        "IF Underlying(ExpiryDate) > Strike * initialIndex THEN\n"
+        "  payoff = LongShort * Notional * Multiplier * min(Cap, max(0, (Underlying(ExpiryDate) - initialIndex)/initialIndex));\n"
+        "ELSE\n"
+        "  payoff = -1* LongShort * Notional * (Strike * initialIndex - Underlying(ExpiryDate))/initialIndex;\n"
+        "END;\n"
+        "\n"
+        "Option = PAY(payoff, ExpiryDate, SettlementDate, Currency) - PAY(Premium, PremiumDate, PremiumDate, Currency);\n"
+        "\n"
+        "FOR i IN (1, SIZE(_AMC_SimDates), 1) DO\n"
+        "  IF _AMC_SimDates[i] < SettlementDate THEN\n"
+        "    IF triggerAtSim[i] == 0 THEN\n"
+        "      _AMC_NPV[i] = NPVMEM(Option, _AMC_SimDates[i], i, triggerAtSim[i] == 0);\n"
+        "    ELSE\n"
+        "      _AMC_NPV[i] = NPVMEM(Option, _AMC_SimDates[i], SIZE(_AMC_SimDates) + i,\n"
+        "                           triggerAtSim[i] == 1, strikeObsAtSim[i]);\n"
+        "    END;\n"
+        "  END;\n"
+        "END;\n";
+
     // clang-format on
 
     numbers_.emplace_back("Number", "Notional", notional_);
@@ -109,6 +169,19 @@ void BestEntryOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& fact
                                            {"Cap", "Cap"},
                                            {"TriggerEvent", "triggerEvent"}}, 
         {});
+
+    script_["AMC"] = ScriptedTradeScriptData(amc_script, "Option",
+        {{"initialIndex", "initialIndex"}, {"strikeIndexLevel", "strikeIndexLevel"},
+         {"payoffAmount", "payoff"}, {"resetMinimumValue", "resetMinValue"},
+         {"lowestStrikeObs", "strikeIndexObs"},
+         {"Cap", "Cap"},
+         {"TriggerEvent", "triggerEvent"}},
+        {},
+        {ScriptedTradeScriptData::NewScheduleData("ObsAndSimDates", "Join",
+                                                  {"_AMC_SimDates", "StrikeObservationDates"})},
+        {},
+        {"triggerEvent"},
+        {"Asset"});
 
     // build trade
 
