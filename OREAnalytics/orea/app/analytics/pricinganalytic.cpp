@@ -44,7 +44,9 @@ namespace analytics {
     inputs->loadParameter<string>(curvesGrid_, "curves", "grid", false);
     inputs->loadParameter<string>(curvesMarketConfig_, "curves", "configuration", false);
     inputs->loadParameter<string>(curvesCalendar_, "curves", "calendar", false);
- }
+    inputs->loadParameter<bool>(computeTheta_, "sensitivity", "computeTheta", false, parseBool);
+    inputs->loadParameter<Period>(thetaPeriod_, "sensitivity", "thetaPeriod", false, parsePeriod);
+}
 
 void PricingAnalyticImpl::overwriteResultCurrency(const std::string& ccy) { overwriteResultCurrency_ = ccy; }
 
