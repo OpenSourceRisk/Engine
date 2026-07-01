@@ -1,0 +1,143 @@
+<Simulation>
+	<Market>
+		<BaseCurrency>USD</BaseCurrency>
+		<Currencies>
+			<Currency>EUR</Currency>
+			<Currency>GBP</Currency>
+			<Currency>USD</Currency>
+		</Currencies>
+		<YieldCurves>
+			<Configuration curve="">
+				<Tenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</Tenors>
+				<Interpolation>LogLinear</Interpolation>
+				<Extrapolation>FlatZero</Extrapolation>
+			</Configuration>
+		</YieldCurves>
+		<FxRates>
+			<CurrencyPairs>
+				<CurrencyPair>EURUSD</CurrencyPair>
+				<CurrencyPair>GBPUSD</CurrencyPair>
+			</CurrencyPairs>
+		</FxRates>
+		<Indices>
+			<Index>EUR-ESTER</Index>
+			<Index>EUR-EURIBOR-3M</Index>
+			<Index>EUR-EURIBOR-6M</Index>
+			<Index>GBP-LIBOR-3M</Index>
+			<Index>GBP-LIBOR-6M</Index>
+			<Index>GBP-SONIA</Index>
+			<Index>USD-LIBOR-3M</Index>
+			<Index>USD-SOFR</Index>
+		</Indices>
+		<SwapIndices>
+			<SwapIndex>
+				<Name>EUR-CMS-1Y</Name>
+				<DiscountingIndex>EUR-ESTER</DiscountingIndex>
+			</SwapIndex>
+			<SwapIndex>
+				<Name>EUR-CMS-30Y</Name>
+				<DiscountingIndex>EUR-ESTER</DiscountingIndex>
+			</SwapIndex>
+			<SwapIndex>
+				<Name>GBP-CMS-1Y</Name>
+				<DiscountingIndex>GBP-SONIA</DiscountingIndex>
+			</SwapIndex>
+			<SwapIndex>
+				<Name>GBP-CMS-30Y</Name>
+				<DiscountingIndex>GBP-SONIA</DiscountingIndex>
+			</SwapIndex>
+			<SwapIndex>
+				<Name>USD-CMS-1Y</Name>
+				<DiscountingIndex>USD-SOFR</DiscountingIndex>
+			</SwapIndex>
+			<SwapIndex>
+				<Name>USD-CMS-30Y</Name>
+				<DiscountingIndex>USD-SOFR</DiscountingIndex>
+			</SwapIndex>
+		</SwapIndices>
+		<DefaultCurves>
+			<Names>
+				<Name>CPTY_A</Name>
+			</Names>
+			<Tenors>1Y, 2Y, 3Y, 5Y, 10Y</Tenors>
+			<SimulateSurvivalProbabilities>false</SimulateSurvivalProbabilities>
+			<SimulateRecoveryRates>false</SimulateRecoveryRates>
+			<Calendars>
+				<Calendar name="">TARGET</Calendar>
+			</Calendars>
+			<Extrapolation>FlatZero</Extrapolation>
+		</DefaultCurves>
+		<SwaptionVolatilities>
+			<Simulate>false</Simulate>
+			<ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+			<Keys>
+				<Key>EUR</Key>
+				<Key>GBP</Key>
+				<Key>USD</Key>
+			</Keys>
+			<Expiries>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</Expiries>
+			<Terms>1Y, 2Y, 3Y, 4Y, 5Y, 7Y, 10Y, 15Y, 20Y, 30Y</Terms>
+			<SimulateATMOnly>true</SimulateATMOnly>
+			<SmileDynamics key="">StickyStrike</SmileDynamics>
+			<SmileDynamics key="EUR">StickyStrike</SmileDynamics>
+			<SmileDynamics key="GBP">StickyStrike</SmileDynamics>
+			<SmileDynamics key="USD">StickyStrike</SmileDynamics>
+		</SwaptionVolatilities>
+		<FxVolatilities>
+			<Simulate>false</Simulate>
+			<ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+			<CurrencyPairs>
+				<CurrencyPair>EURUSD</CurrencyPair>
+				<CurrencyPair>GBPUSD</CurrencyPair>
+			</CurrencyPairs>
+			<Expiries ccyPair="EURUSD">2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</Expiries>
+			<Expiries ccyPair="GBPUSD">2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</Expiries>
+			<Surface>
+				<StandardDeviations ccyPair="EURUSD">-7, -6, -5, -4, -3, -2, -1, -0.5, -0.25, -0.10000000000000001, -0.050000000000000003, 0.0000000000000000, 0.050000000000000003, 0.10000000000000001, 0.25, 0.5, 1, 2, 3, 4, 5, 6, 7</StandardDeviations>
+				<StandardDeviations ccyPair="GBPUSD">-7, -6, -5, -4, -3, -2, -1, -0.5, -0.25, -0.10000000000000001, -0.050000000000000003, 0.0000000000000000, 0.050000000000000003, 0.10000000000000001, 0.25, 0.5, 1, 2, 3, 4, 5, 6, 7</StandardDeviations>
+			</Surface>
+			<SmileDynamics key="">StickyStrike</SmileDynamics>
+			<SmileDynamics key="EURUSD">StickyStrike</SmileDynamics>
+			<SmileDynamics key="GBPUSD">StickyStrike</SmileDynamics>
+		</FxVolatilities>
+		<BenchmarkCurves>
+			<BenchmarkCurve>
+				<Currency>EUR</Currency>
+				<Name>EUR-IN-USD</Name>
+			</BenchmarkCurve>
+			<BenchmarkCurve>
+				<Currency>GBP</Currency>
+				<Name>GBP-IN-USD</Name>
+			</BenchmarkCurve>
+		</BenchmarkCurves>
+		<AggregationScenarioDataCurrencies>
+			<Currency>EUR</Currency>
+			<Currency>GBP</Currency>
+			<Currency>USD</Currency>
+		</AggregationScenarioDataCurrencies>
+		<AggregationScenarioDataIndices>
+			<Index>EUR-ESTER</Index>
+			<Index>EUR-EURIBOR-3M</Index>
+			<Index>EUR-EURIBOR-6M</Index>
+			<Index>GBP-LIBOR-3M</Index>
+			<Index>GBP-LIBOR-6M</Index>
+			<Index>GBP-SONIA</Index>
+			<Index>USD-LIBOR-3M</Index>
+			<Index>USD-SOFR</Index>
+		</AggregationScenarioDataIndices>
+		<CreditStates>
+			<NumberOfFactors>0</NumberOfFactors>
+		</CreditStates>
+		<AggregationScenarioDataCreditStates>
+			<NumberOfFactors>0</NumberOfFactors>
+		</AggregationScenarioDataCreditStates>
+		<Correlations>
+			<Simulate>false</Simulate>
+			<Pairs>
+				<Pair>FX-GENERIC-GBP-USD&amp;FX-GENERIC-EUR-USD</Pair>
+			</Pairs>
+			<Expiries>1Y</Expiries>
+		</Correlations>
+	</Market>
+</Simulation>
+

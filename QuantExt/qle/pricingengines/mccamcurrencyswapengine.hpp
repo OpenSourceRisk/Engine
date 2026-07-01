@@ -57,8 +57,8 @@ public:
     const Handle<CrossAssetModel>& model() const { return model_; }
 
 private:
-    const std::vector<Currency> currencies_;
-    const Currency npvCcy_;
+    std::vector<Currency> currencies_;
+    Currency npvCcy_;
 };
 
 } // namespace QuantExt

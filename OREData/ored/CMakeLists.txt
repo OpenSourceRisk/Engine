@@ -161,7 +161,6 @@ portfolio/builders/commodityapomodelbuilder.cpp
 portfolio/builders/commodityasianoption.cpp
 portfolio/builders/commodityforward.cpp
 portfolio/builders/commodityoption.cpp
-portfolio/builders/rangeaccrualleg.cpp
 portfolio/builders/commodityspreadoption.cpp
 portfolio/builders/commodityswap.cpp
 portfolio/builders/commodityswaption.cpp
@@ -175,13 +174,12 @@ portfolio/builders/deltagammaengines.cpp
 portfolio/builders/durationadjustedcms.cpp
 portfolio/builders/equity.cpp
 portfolio/builders/equityasianoption.cpp
+portfolio/builders/equityautodeltahedgeoption.cpp
 portfolio/builders/equitybarrieroption.cpp
 portfolio/builders/equitycompositeoption.cpp
 portfolio/builders/equitydigitaloption.cpp
-portfolio/builders/ratedigitaloption.cpp
 portfolio/builders/equitydoublebarrieroption.cpp
 portfolio/builders/equitydoubletouchoption.cpp
-portfolio/builders/equityautodeltahedgeoption.cpp
 portfolio/builders/equityforward.cpp
 portfolio/builders/equityfuturesoption.cpp
 portfolio/builders/equityoption.cpp
@@ -204,6 +202,8 @@ portfolio/builders/indexcreditdefaultswap.cpp
 portfolio/builders/indexcreditdefaultswapoption.cpp
 portfolio/builders/pairwisevarianceswap.cpp
 portfolio/builders/quantoequityoption.cpp
+portfolio/builders/rangeaccrualleg.cpp
+portfolio/builders/ratedigitaloption.cpp
 portfolio/builders/riskparticipationagreement.cpp
 portfolio/builders/scriptedtrade.cpp
 portfolio/builders/swap.cpp
@@ -252,10 +252,9 @@ portfolio/durationadjustedcmslegdata.cpp
 portfolio/enginedata.cpp
 portfolio/enginefactory.cpp
 portfolio/envelope.cpp
+portfolio/equityautodeltahedgeoption.cpp
 portfolio/equitybarrieroption.cpp
 portfolio/equitydigitaloption.cpp
-portfolio/ratedigitaloption.cpp
-portfolio/equityautodeltahedgeoption.cpp
 portfolio/equitydoublebarrieroption.cpp
 portfolio/equitydoubletouchoption.cpp
 portfolio/equityeuropeanbarrieroption.cpp
@@ -277,8 +276,8 @@ portfolio/formulabasedindexbuilder.cpp
 portfolio/formulabasedlegbuilder.cpp
 portfolio/formulabasedlegdata.cpp
 portfolio/forwardbond.cpp
-portfolio/forwardvolatilityagreement.cpp
 portfolio/forwardrateagreement.cpp
+portfolio/forwardvolatilityagreement.cpp
 portfolio/fxaverageforward.cpp
 portfolio/fxbarrieroption.cpp
 portfolio/fxdigitalbarrieroption.cpp
@@ -316,6 +315,7 @@ portfolio/portfolio.cpp
 portfolio/premiumdata.cpp
 portfolio/rainbowoption.cpp
 portfolio/rangebound.cpp
+portfolio/ratedigitaloption.cpp
 portfolio/referencedata.cpp
 portfolio/referencedatafactory.cpp
 portfolio/riskparticipationagreement.cpp
@@ -364,6 +364,7 @@ scripting/engines/amccgswapengine.cpp
 scripting/engines/analyticblackriskparticipationagreementengine.cpp
 scripting/engines/analyticxccyblackriskparticipationagreementengine.cpp
 scripting/engines/cliquetoptionmcscriptengine.cpp
+scripting/engines/mccamrpaengine.cpp
 scripting/engines/numericlgmriskparticipationagreementengine.cpp
 scripting/engines/numericlgmriskparticipationagreementengine_tlock.cpp
 scripting/engines/riskparticipationagreementbaseengine.cpp
@@ -598,7 +599,6 @@ portfolio/builders/commodityapomodelbuilder.hpp
 portfolio/builders/commodityasianoption.hpp
 portfolio/builders/commodityforward.hpp
 portfolio/builders/commodityoption.hpp
-portfolio/builders/rangeaccrualleg.hpp
 portfolio/builders/commodityspreadoption.hpp
 portfolio/builders/commodityswap.hpp
 portfolio/builders/commodityswaption.hpp
@@ -612,13 +612,12 @@ portfolio/builders/deltagammaengines.hpp
 portfolio/builders/durationadjustedcms.hpp
 portfolio/builders/equity.hpp
 portfolio/builders/equityasianoption.hpp
+portfolio/builders/equityautodeltahedgeoption.hpp
 portfolio/builders/equitybarrieroption.hpp
 portfolio/builders/equitycompositeoption.hpp
 portfolio/builders/equitydigitaloption.hpp
-portfolio/builders/ratedigitaloption.hpp
 portfolio/builders/equitydoublebarrieroption.hpp
 portfolio/builders/equitydoubletouchoption.hpp
-portfolio/builders/equityautodeltahedgeoption.hpp
 portfolio/builders/equityforward.hpp
 portfolio/builders/equityfuturesoption.hpp
 portfolio/builders/equityoption.hpp
@@ -642,6 +641,8 @@ portfolio/builders/indexcreditdefaultswapoption.hpp
 portfolio/builders/pairwisevarianceswap.hpp
 portfolio/builders/quantoequityoption.hpp
 portfolio/builders/quantovanillaoption.hpp
+portfolio/builders/rangeaccrualleg.hpp
+portfolio/builders/ratedigitaloption.hpp
 portfolio/builders/riskparticipationagreement.hpp
 portfolio/builders/scriptedtrade.hpp
 portfolio/builders/swap.hpp
@@ -691,11 +692,10 @@ portfolio/durationadjustedcmslegdata.hpp
 portfolio/enginedata.hpp
 portfolio/enginefactory.hpp
 portfolio/envelope.hpp
+portfolio/equityautodeltahedgeoption.hpp
 portfolio/equitybarrieroption.hpp
 portfolio/equityderivative.hpp
 portfolio/equitydigitaloption.hpp
-portfolio/ratedigitaloption.hpp
-portfolio/equityautodeltahedgeoption.hpp
 portfolio/equitydoublebarrieroption.hpp
 portfolio/equitydoubletouchoption.hpp
 portfolio/equityeuropeanbarrieroption.hpp
@@ -717,8 +717,8 @@ portfolio/formulabasedindexbuilder.hpp
 portfolio/formulabasedlegbuilder.hpp
 portfolio/formulabasedlegdata.hpp
 portfolio/forwardbond.hpp
-portfolio/forwardvolatilityagreement.hpp
 portfolio/forwardrateagreement.hpp
+portfolio/forwardvolatilityagreement.hpp
 portfolio/fxaverageforward.hpp
 portfolio/fxbarrieroption.hpp
 portfolio/fxderivative.hpp
@@ -757,6 +757,7 @@ portfolio/portfolio.hpp
 portfolio/premiumdata.hpp
 portfolio/rainbowoption.hpp
 portfolio/rangebound.hpp
+portfolio/ratedigitaloption.hpp
 portfolio/referencedata.hpp
 portfolio/referencedatafactory.hpp
 portfolio/riskparticipationagreement.hpp
@@ -812,6 +813,7 @@ scripting/engines/amccgswapengine.hpp
 scripting/engines/analyticblackriskparticipationagreementengine.hpp
 scripting/engines/analyticxccyblackriskparticipationagreementengine.hpp
 scripting/engines/cliquetoptionmcscriptengine.hpp
+scripting/engines/mccamrpaengine.hpp
 scripting/engines/numericlgmriskparticipationagreementengine.hpp
 scripting/engines/numericlgmriskparticipationagreementengine_tlock.hpp
 scripting/engines/riskparticipationagreementbaseengine.hpp
@@ -872,8 +874,8 @@ utilities/simmcurrencies.hpp
 utilities/strike.hpp
 utilities/timeperiod.hpp
 utilities/timer.hpp
-utilities/toplevelfixture.hpp
 utilities/to_string.hpp
+utilities/toplevelfixture.hpp
 utilities/vectorutils.hpp
 utilities/wildcard.hpp
 utilities/xmlutils.hpp

@@ -392,6 +392,7 @@
 #include <ored/scripting/engines/analyticblackriskparticipationagreementengine.hpp>
 #include <ored/scripting/engines/analyticxccyblackriskparticipationagreementengine.hpp>
 #include <ored/scripting/engines/cliquetoptionmcscriptengine.hpp>
+#include <ored/scripting/engines/mccamrpaengine.hpp>
 #include <ored/scripting/engines/numericlgmriskparticipationagreementengine.hpp>
 #include <ored/scripting/engines/numericlgmriskparticipationagreementengine_tlock.hpp>
 #include <ored/scripting/engines/riskparticipationagreementbaseengine.hpp>

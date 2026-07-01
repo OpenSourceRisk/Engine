@@ -179,6 +179,7 @@
 #include <qle/instruments/balanceguaranteedswap.hpp>
 #include <qle/instruments/bondbasket.hpp>
 #include <qle/instruments/bondfuture.hpp>
+#include <qle/instruments/bondfutureoption.hpp>
 #include <qle/instruments/bondoption.hpp>
 #include <qle/instruments/bondrepo.hpp>
 #include <qle/instruments/bondtotalreturnswap.hpp>
@@ -252,6 +253,7 @@
 #include <qle/math/flatextrapolation.hpp>
 #include <qle/math/flatextrapolation2d.hpp>
 #include <qle/math/gpucodegenerator.hpp>
+#include <qle/math/gpuqrsolve.hpp>
 #include <qle/math/kendallrankcorrelation.hpp>
 #include <qle/math/logquadraticinterpolation.hpp>
 #include <qle/math/matrixfunctions.hpp>

@@ -23,13 +23,30 @@
 
 namespace QuantExt {
 
+namespace {
+using namespace QuantLib;
+
+ext::shared_ptr<ForwardEnabledBondEngine> forwardEngine(const ext::shared_ptr<Instrument>& instrument) {
+    const auto& engine = instrument->pricingEngine();
+    if (!instrument->isCalculated()) {
+        instrument->recalculate();
+    } else {
+        // Make sure the forward engine has the correct arguments.
+        instrument->setupArguments(engine->getArguments());
+    }
+    auto fwdEngine = ext::dynamic_pointer_cast<ForwardEnabledBondEngine>(engine);
+    QL_REQUIRE(fwdEngine, "forwardEngine(): engine cannot be cast to ForwardEnabledBondEngine");
+    return fwdEngine;
+}
+
+}
+
+
 std::pair<QuantLib::Real, QuantLib::Real>
 forwardPrice(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& instrument, const QuantLib::Date& forwardDate,
              const QuantLib::Date& settlementDate, const bool conditionalOnSurvival,
              std::vector<CashFlowResults>* cfResults, QuantLib::Leg* const expectedCashflows) {
-    instrument->recalculate();
-    auto fwdEngine = QuantLib::ext::dynamic_pointer_cast<ForwardEnabledBondEngine>(instrument->pricingEngine());
-    QL_REQUIRE(fwdEngine, "QuantExt::forwardPrice(): engine can not be cast to ForwardEnabledBondEngine");
+    auto fwdEngine = forwardEngine(instrument);
     return fwdEngine->forwardPrice(forwardDate, settlementDate, conditionalOnSurvival, cfResults, expectedCashflows);
 }
 
@@ -39,9 +56,7 @@ QuantLib::Real yield(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& inst
                      QuantLib::Real accuracy, QuantLib::Size maxIterations, QuantLib::Rate guess,
                      QuantLib::Bond::Price::Type priceType) {
 
-    instrument->recalculate();
-    auto fwdEngine = QuantLib::ext::dynamic_pointer_cast<ForwardEnabledBondEngine>(instrument->pricingEngine());
-    QL_REQUIRE(fwdEngine, "forwardPrice(): engine can not be cast to ForwardEnabledBondEngine");
+    auto fwdEngine = forwardEngine(instrument);
 
     auto bond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(instrument);
     QL_REQUIRE(bond, "QuantExt::yield(): instrument can not be cast to Bond");
@@ -78,9 +93,7 @@ QuantLib::Real duration(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& i
                         QuantLib::Frequency frequency, QuantLib::Duration::Type type, QuantLib::Date forwardDate,
                         QuantLib::Date settlementDate) {
 
-    instrument->recalculate();
-    auto fwdEngine = QuantLib::ext::dynamic_pointer_cast<ForwardEnabledBondEngine>(instrument->pricingEngine());
-    QL_REQUIRE(fwdEngine, "forwardPrice(): engine can not be cast to ForwardEnabledBondEngine");
+    auto fwdEngine = forwardEngine(instrument);
 
     auto bond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(instrument);
     QL_REQUIRE(bond, "QuantExt::yield(): instrument can not be cast to Bond");

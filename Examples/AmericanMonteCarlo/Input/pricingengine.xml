@@ -301,6 +301,55 @@
     <Engine>CPIBlackCapFloorEngine</Engine>
     <EngineParameters/>
   </Product>
+  <Product type="RiskParticipationAgreement_Vanilla">
+    <Model>Black</Model>
+    <ModelParameters>
+      <Parameter name="Reversion">0.0</Parameter>
+      <Parameter name="MatchUnderlyingTenor">true</Parameter>
+    </ModelParameters>
+    <Engine>Analytic</Engine>
+    <EngineParameters>
+      <Parameter name="AlwaysRecomputeOptionRepresentation">false</Parameter>
+      <Parameter name="MaxGapDays">400</Parameter>
+      <Parameter name="MaxDiscretisationPoints">20</Parameter>
+      <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="RiskParticipationAgreement_Vanilla_XCcy">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>Analytic</Engine>
+    <EngineParameters>
+      <Parameter name="AlwaysRecomputeOptionRepresentation">false</Parameter>
+      <Parameter name="MaxGapDays">400</Parameter>
+      <Parameter name="MaxDiscretisationPoints">20</Parameter>
+      <Parameter name="SensitivityTemplate">FX_Semianalytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="RiskParticipationAgreement_Structured">
+    <Model>LGM</Model>
+    <ModelParameters>
+      <Parameter name="Calibration">Bootstrap</Parameter>
+      <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
+      <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+      <Parameter name="Reversion">0.0</Parameter>
+      <Parameter name="ReversionType">HullWhite</Parameter>
+      <Parameter name="Volatility">0.01</Parameter>
+      <Parameter name="VolatilityType">Hagan</Parameter>
+      <Parameter name="ShiftHorizon">0.5</Parameter>
+      <Parameter name="Tolerance">0.02</Parameter>
+    </ModelParameters>
+    <Engine>Grid</Engine>
+    <EngineParameters>
+      <Parameter name="sy">5.0</Parameter>
+      <Parameter name="ny">30</Parameter>
+      <Parameter name="sx">5.0</Parameter>
+      <Parameter name="nx">30</Parameter>
+      <Parameter name="MaxGapDays">400</Parameter>
+      <Parameter name="MaxDiscretisationPoints">20</Parameter>
+      <Parameter name="SensitivityTemplate">IR_FD</Parameter>
+    </EngineParameters>
+  </Product>
   <GlobalParameters>
     <Parameter name="ContinueOnCalibrationError">true</Parameter>
   </GlobalParameters>

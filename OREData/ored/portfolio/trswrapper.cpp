@@ -204,6 +204,11 @@ void TRSWrapper::arguments::validate() const {
 
 void TRSWrapper::fetchResults(const PricingEngine::results* r) const { Instrument::fetchResults(r); }
 
+void TRSWrapper::calculate() const {
+    Instrument::calculate();
+    setCalculated(true);
+}
+
 bool TRSWrapperAccrualEngine::computeStartValue(std::vector<Real>& underlyingStartValue,
                                                 std::vector<Real>& fxConversionFactor, QuantLib::Date& startDate,
                                                 QuantLib::Date& endDate, bool& usingInitialPrice,

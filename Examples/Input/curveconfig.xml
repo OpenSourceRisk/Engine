@@ -355,8 +355,45 @@
 			</Quotes>
 			<Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
 		</DefaultCurve>
-	</DefaultCurves>
-	<YieldCurves>
+                <DefaultCurve>
+                  <CurveId>ISIN:GB0004893086</CurveId>
+                  <CurveDescription/>
+                  <Currency>USD</Currency>
+                  <Configurations>
+                    <Configuration priority="0">
+                      <Type>SpreadCDS</Type>
+                      <DiscountCurve>Yield/USD/USD1D</DiscountCurve>
+                      <DayCounter>Actual/365 (Fixed)</DayCounter>
+                      <RecoveryRate>RECOVERY_RATE/RATE/GBGVUSAC/SR/USD</RecoveryRate>
+                      <Quotes>
+                        <Quote optional="true">CDS/CREDIT_SPREAD/GBGVUSAC/SR/USD/6M</Quote>
+                        <Quote optional="true">CDS/CREDIT_SPREAD/GBGVUSAC/SR/USD/1Y</Quote>
+                        <Quote optional="true">CDS/CREDIT_SPREAD/GBGVUSAC/SR/USD/2Y</Quote>
+                        <Quote optional="true">CDS/CREDIT_SPREAD/GBGVUSAC/SR/USD/3Y</Quote>
+                        <Quote optional="true">CDS/CREDIT_SPREAD/GBGVUSAC/SR/USD/4Y</Quote>
+                        <Quote optional="true">CDS/CREDIT_SPREAD/GBGVUSAC/SR/USD/5Y</Quote>
+                        <Quote optional="true">CDS/CREDIT_SPREAD/GBGVUSAC/SR/USD/7Y</Quote>
+                        <Quote optional="true">CDS/CREDIT_SPREAD/GBGVUSAC/SR/USD/10Y</Quote>
+                        <Quote optional="true">CDS/CREDIT_SPREAD/GBGVUSAC/SR/USD/20Y</Quote>
+                        <Quote optional="true">CDS/CREDIT_SPREAD/GBGVUSAC/SR/USD/30Y</Quote>
+                      </Quotes>
+                      <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+                      <Extrapolation>true</Extrapolation>
+                      <BootstrapConfig>
+                        <Accuracy>0.0000000000010000</Accuracy>
+                        <GlobalAccuracy>0.0000000000010000</GlobalAccuracy>
+                        <DontThrow>false</DontThrow>
+                        <MaxAttempts>5</MaxAttempts>
+                        <MaxFactor>2</MaxFactor>
+                        <MinFactor>2</MinFactor>
+                        <DontThrowSteps>10</DontThrowSteps>
+                      </BootstrapConfig>
+                      <AllowNegativeRates>false</AllowNegativeRates>
+                    </Configuration>
+                  </Configurations>
+                </DefaultCurve>
+              </DefaultCurves>
+	      <YieldCurves>
 		<YieldCurve>
 			<CurveId>USD1M</CurveId>
 			<CurveDescription/>
