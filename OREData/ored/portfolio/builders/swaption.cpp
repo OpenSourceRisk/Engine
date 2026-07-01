@@ -284,7 +284,7 @@ SwaptionModel SwaptionEngineBuilder::model(const string& id, const std::vector<s
             effStrikes = strikes[i];
         } else {
             effStrikes.resize(effExpiries.size(), Null<Real>());
-            if (effStrikes.size() == 2) {
+            if (strikes[i].size() == 2) {
                 if (strikes[i][0] != Null<Real>() && strikes[i][1] != Null<Real>()) {
                     Real t0 = Actual365Fixed().yearFraction(today, expiries[0]);
                     Real t1 = Actual365Fixed().yearFraction(today, expiries[1]);
