@@ -44,8 +44,7 @@ FittedBondCurveHelperMarket::FittedBondCurveHelperMarket(
     // populate the zero inflation indices
     for (auto const& c : zeroInflationIndices)
         zeroInflationIndices_[std::make_pair(Market::defaultConfiguration, c.first)] =
-            Handle<ZeroInflationIndex>(parseZeroInflationIndex(
-                c.first, c.second.empty() ? Handle<ZeroInflationTermStructure>() : c.second->zeroInflationTermStructure()));
+            Handle<ZeroInflationIndex>(parseZeroInflationIndex(c.first, c.second->zeroInflationTermStructure()));
 }
 
 Handle<YieldTermStructure> FittedBondCurveHelperMarket::discountCurveImpl(const string& ccy,
