@@ -20,7 +20,6 @@
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/exercise.hpp>
 #include <ql/instruments/compositeinstrument.hpp>
-#include <ql/instruments/swaption.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
@@ -560,7 +559,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
     // 9.1  determine qualifiers, calibration strikes, ir, fx (if applicable, ATMF), exercise dates, maturities
 
-    const auto& dates = exerciseBuilder_->noticeDates();
+    auto dates = exerciseBuilder_->noticeDates();
     std::vector<Date> maturities(dates.size(), underlying_->maturity());
 
     std::vector<std::string> qualifiers;
@@ -582,13 +581,15 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     if (calibrationStrategy == CalibrationStrategy::DeltaGammaAdjusted) {
         QL_REQUIRE(!isXccy, "Swaption::build(): calibration strategy DeltaGammaAdjusted not applicable to xccy "
                             "swaptions. Update your pricing engine config.");
-        auto underlyingMatched = buildRepresentativeSwaps(engineFactory, qualifiers.front());
+        auto underlyingMatched = buildRepresentativeSwaptions(engineFactory, qualifiers.front());
+        dates.clear();
         maturities.clear();
         strikes.clear();
         strikes.push_back({});
-        for (const auto& swap : underlyingMatched) {
-            maturities.push_back(swap->maturityDate());
-            strikes.back().push_back(swap->fixedRate());
+        for (const auto& swaption : underlyingMatched) {
+            dates.push_back(swaption->exercise()->dates().front());
+            maturities.push_back(swaption->underlying()->maturityDate());
+            strikes.back().push_back(swaption->underlying()->fixedRate());
         }
     }
 
@@ -632,9 +633,9 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     DLOG("Building Swaption done");
 }
 
-std::vector<QuantLib::ext::shared_ptr<FixedVsFloatingSwap>>
-Swaption::buildRepresentativeSwaps(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                                   const std::string& qualifier) {
+std::vector<QuantLib::ext::shared_ptr<QuantLib::Swaption>>
+Swaption::buildRepresentativeSwaptions(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                                       const std::string& qualifier) {
     DLOG("build representative swaps.")
     auto market = QuantLib::ext::dynamic_pointer_cast<Market>(engineFactory->market());
     auto configuration = engineFactory->configuration(MarketContext::irCalibration);
@@ -642,19 +643,14 @@ Swaption::buildRepresentativeSwaps(const QuantLib::ext::shared_ptr<EngineFactory
     Handle<SwapIndex> swapIndex = market->swapIndex(market->swapIndexBase(qualifier, configuration), configuration);
     QuantExt::RepresentativeSwaptionMatcher matcher(underlying_->legs(), underlying_->legPayers(), *swapIndex, true,
                                                     discountCurve, 0.0);
-    std::vector<QuantLib::ext::shared_ptr<FixedVsFloatingSwap>> swaps;
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::Swaption>> swaptions;
     for (Size i = 0; i < exerciseBuilder_->noticeDates().size(); ++i) {
         Date ed = exerciseBuilder_->noticeDates()[i];
-        swaps.push_back(
-            matcher
-                .representativeSwaption(
-                    ed, QuantExt::RepresentativeSwaptionMatcher::InclusionCriterion::AccrualStartGeqExercise)
-                ->underlying());
-        DLOG("representative swap for exercise date " << ed << ": fixed rate = " << swaps.back()->fixedRate()
-                                                      << ", maturity = " << swaps.back()->maturityDate()
-                                                      << ", notional = " << swaps.back()->nominal());
+        if (auto tmp = matcher.representativeSwaption(
+                ed, QuantExt::RepresentativeSwaptionMatcher::InclusionCriterion::AccrualStartGeqExercise))
+            swaptions.push_back(tmp);
     }
-    return swaps;
+    return swaptions;
 }
 
 std::vector<QuantLib::ext::shared_ptr<Instrument>>
