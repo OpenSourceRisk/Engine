@@ -53,6 +53,7 @@ public:
         : CachingEngineBuilder(model, engine, tradeTypes), idBasedKey_(idBasedKey) {}
 
     virtual bool instrumentIsHandled(QuantExt::MultiLegOption& s, std::vector<std::string>& messages) const;
+    virtual QuantExt::CrossAssetModel::Discretization discretization() const;
 
 private:
     string keyImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
@@ -170,6 +171,7 @@ private:
 class CamMCCgSwaptionEngineBuilder final : public CamSwaptionEngineBuilder {
 public:
     CamMCCgSwaptionEngineBuilder() : CamSwaptionEngineBuilder("MCCG") {}
+    QuantExt::CrossAssetModel::Discretization discretization() const override;
 
 private:
     QuantLib::ext::shared_ptr<PricingEngine>
@@ -187,6 +189,7 @@ public:
         : CamSwaptionEngineBuilder("AMCCG", false), modelCg_(modelCg), simulationDates_(simulationDates) {
         cachingEnabled_ = false;
     }
+    QuantExt::CrossAssetModel::Discretization discretization() const override;
 
 private:
     QuantLib::ext::shared_ptr<PricingEngine>

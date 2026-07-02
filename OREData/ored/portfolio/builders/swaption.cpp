@@ -140,6 +140,10 @@ bool SwaptionEngineBuilder::instrumentIsHandled(QuantExt::MultiLegOption& s, std
     return true;
 }
 
+QuantExt::CrossAssetModel::Discretization SwaptionEngineBuilder::discretization() const {
+    return QuantExt::CrossAssetModel::Discretization::Exact;
+}
+
 string SwaptionEngineBuilder::keyImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
                                       const std::vector<Date>& maturities,
                                       const std::vector<std::vector<Real>>& strikes,
@@ -186,7 +190,8 @@ QuantLib::ext::shared_ptr<PricingEngine> LGMGridSwaptionEngineBuilder::engineImp
     QL_REQUIRE(keys.size() == 1, "LGMGridSwaptionEngineBuilder::engingImpl(): multiple ccys are not supported.");
 
     auto lgm = std::holds_alternative<std::monostate>(modelOverwrite)
-                   ? std::get<Handle<LGM>>(::model(this, id, keys, dates, maturities, strikes, {}, isAmerican))
+                   ? std::get<Handle<LGM>>(
+                         ::model(this, id, keys, dates, maturities, strikes, {}, isAmerican, discretization()))
                    : std::get<Handle<LGM>>(modelOverwrite);
 
     DLOG("Get engine data");
@@ -223,7 +228,8 @@ QuantLib::ext::shared_ptr<PricingEngine> LGMFDSwaptionEngineBuilder::engineImpl(
     QL_REQUIRE(keys.size() == 1, "LGMFDSwaptionEngineBuilder::engingImpl(): multiple ccys are not supported.");
 
     auto lgm = std::holds_alternative<std::monostate>(modelOverwrite)
-                   ? std::get<Handle<LGM>>(::model(this, id, keys, dates, maturities, strikes, {}, isAmerican))
+                   ? std::get<Handle<LGM>>(
+                         ::model(this, id, keys, dates, maturities, strikes, {}, isAmerican, discretization()))
                    : std::get<Handle<LGM>>(modelOverwrite);
 
     QuantLib::FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
@@ -272,10 +278,11 @@ QuantLib::ext::shared_ptr<PricingEngine> CamMCSwaptionEngineBuilder::engineImpl(
         discountCurves.push_back(yts);
     }
 
-    return buildMcEngine(std::holds_alternative<std::monostate>(modelOverwrite)
-                             ? ::model(this, id, keys, dates, maturities, strikes, fxStrikes, isAmerican)
-                             : modelOverwrite,
-                         discountCurves, std::vector<Size>(), {}, {}, this, generateAdditionalResults());
+    return buildMcEngine(
+        std::holds_alternative<std::monostate>(modelOverwrite)
+            ? ::model(this, id, keys, dates, maturities, strikes, fxStrikes, isAmerican, discretization())
+            : modelOverwrite,
+        discountCurves, std::vector<Size>(), {}, {}, this, generateAdditionalResults());
 }
 
 QuantLib::ext::shared_ptr<PricingEngine>
@@ -311,6 +318,10 @@ AmcSwaptionEngineBuilder::engineImpl(const string& id, const std::vector<string>
 
     return buildMcEngine(model, {}, externalModelIndices, simulationDates_, stickyCloseOutDates_, this,
                          generateAdditionalResults());
+}
+
+QuantExt::CrossAssetModel::Discretization CamMCCgSwaptionEngineBuilder::discretization() const {
+    return QuantExt::CrossAssetModel::Discretization::Euler;
 }
 
 QuantLib::ext::shared_ptr<PricingEngine> CamMCCgSwaptionEngineBuilder::engineImpl(
@@ -362,13 +373,17 @@ QuantLib::ext::shared_ptr<PricingEngine> CamMCCgSwaptionEngineBuilder::engineImp
         simulationDates.insert(d);
     } while (d < maxDate);
 
-    return buildMcCgEngine(id,
-                           std::holds_alternative<std::monostate>(modelOverwrite)
-                               ? ::model(this, id, keys, dates, maturities, strikes, fxStrikes, isAmerican,
-                                         QuantExt::CrossAssetModel::Discretization::Euler)
-                               : modelOverwrite,
-                           currencies, discountCurves, fxSpots, irIndices, indices, indexCurrencies, simulationDates,
-                           this, generateAdditionalResults());
+    return buildMcCgEngine(
+        id,
+        std::holds_alternative<std::monostate>(modelOverwrite)
+            ? ::model(this, id, keys, dates, maturities, strikes, fxStrikes, isAmerican, discretization())
+            : modelOverwrite,
+        currencies, discountCurves, fxSpots, irIndices, indices, indexCurrencies, simulationDates, this,
+        generateAdditionalResults());
+}
+
+QuantExt::CrossAssetModel::Discretization AmcCgSwaptionEngineBuilder::discretization() const {
+    return QuantExt::CrossAssetModel::Discretization::Euler;
 }
 
 QuantLib::ext::shared_ptr<PricingEngine> AmcCgSwaptionEngineBuilder::engineImpl(
