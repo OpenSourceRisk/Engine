@@ -235,8 +235,7 @@ RepresentativeSwaptionMatcher::representativeSwaption(Date exerciseDate, const I
 
     constexpr static Real h = 1.0E-4;
 
-    // Might need this when dealing with the ON coupons below.
-    Date adjExDate = swapIndexBase_->fixingCalendar().adjust(exerciseDate);
+    exerciseDate = swapIndexBase_->fixingCalendar().adjust(exerciseDate);
 
     // build leg containing all coupons with pay date > exerciseDate
 
@@ -325,11 +324,11 @@ RepresentativeSwaptionMatcher::representativeSwaption(Date exerciseDate, const I
                 }
 
                 // Only way that we can add something here and not fail in the overnight coupon pricers is that we
-                // have no underlying overnight period value dates \in [today, adjExDate) because the reference date of
-                // the yield curves is set to adjExDate below for some reason and we will ask the yield curve for a
+                // have no underlying overnight period value dates \in [today, exerciseDate) because the reference date of
+                // the yield curves is set to exerciseDate below for some reason and we will ask the yield curve for a
                 // discount factor at the value date for projection. This in turn gives a negative time error from the
                 // yield curve.
-                if (o->valueDates().back() > adjExDate) {
+                if (o->valueDates().back() > exerciseDate) {
                     const auto& fixDates = o->fixingDates();
                     const auto& valDates = o->valueDates();
                     const auto& intDates = o->interestDates();
@@ -337,10 +336,10 @@ RepresentativeSwaptionMatcher::representativeSwaption(Date exerciseDate, const I
                     // The interest date associated with the first fixing date >= today.
                     auto ffgtIdx = distance(fixDates.begin(), lower_bound(fixDates.begin(), fixDates.end(), today));
                     Date ffgtIntDate = intDates[ffgtIdx];
-                    // Interest date associated with the first value date >= adjExDate, where adjExDate is the
+                    // Interest date associated with the first value date >= exerciseDate, where exerciseDate is the
                     // reference date of yield curve below that will be used in the pricer. This will be the start date
                     // of the coupon.
-                    auto fvgeIdx = distance(valDates.begin(), lower_bound(valDates.begin(), valDates.end(), adjExDate));
+                    auto fvgeIdx = distance(valDates.begin(), lower_bound(valDates.begin(), valDates.end(), exerciseDate));
                     Date startDate = intDates[fvgeIdx];
                     // Construct coupon and scaling factor.
                     Date lastIntDate = intDates.back();
@@ -373,9 +372,6 @@ RepresentativeSwaptionMatcher::representativeSwaption(Date exerciseDate, const I
 
     if (effectiveLeg.empty())
         return QuantLib::ext::shared_ptr<Swaption>();
-
-    // adjust exercise date to a valid fixing date, otherwise MakeVanillaSwap below may fail
-    exerciseDate = adjExDate;
 
     // compute exercise time (the dc of the discount curve defines the date => time mapping by convention)
     Real t_ex = discountCurve_->timeFromReference(exerciseDate);
