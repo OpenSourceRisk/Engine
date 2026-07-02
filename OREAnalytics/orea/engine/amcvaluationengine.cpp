@@ -1127,7 +1127,10 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
     // LOG("Stop thread pool");
     // threadPool.stop(true);
 
-    LOG("Finished multi-threaded AMCValuationEngine run.");
+    LOG("Finished multi-threaded AMCValuationEngine run, timings: "
+        << static_cast<double>(timer.elapsed().wall) / 1.0E9 << "s Wall, "
+        << static_cast<double>(timer.elapsed().user) / 1.0E9 << "s User, "
+        << static_cast<double>(timer.elapsed().system) / 1.0E9 << "s System.");
 }
 
 } // namespace analytics
