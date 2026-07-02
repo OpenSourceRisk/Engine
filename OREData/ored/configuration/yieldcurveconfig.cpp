@@ -155,6 +155,8 @@ void SegmentIDGetter::visit(FittedBondYieldCurveSegment& s) {
 void SegmentIDGetter::visit(BondYieldShiftedYieldCurveSegment& s) {
     for (auto const& c : s.iborIndexCurves())
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(c.second);
+    for (auto const& c : s.inflationIndexCurves())
+        requiredCurveIds_[CurveSpec::CurveType::Inflation].insert(c.second);
     requiredCurveIds_[CurveSpec::CurveType::Yield].insert(s.referenceCurveID());
 }
 
@@ -872,9 +874,10 @@ void IborFallbackCurveSegment::accept(AcyclicVisitor& v) {
 }
 
 BondYieldShiftedYieldCurveSegment::BondYieldShiftedYieldCurveSegment(const string& typeID, const string& referenceCurveID, const vector<string>& quotes,
-                                                                     const map<string, string>& iborIndexCurves, const bool extrapolateFlat)
+                                                                     const map<string, string>& iborIndexCurves, const bool extrapolateFlat,
+                                                                     const map<string, string>& inflationIndexCurves)
     : YieldCurveSegment(typeID, "", quotes), referenceCurveID_(referenceCurveID), iborIndexCurves_(iborIndexCurves),
-      extrapolateFlat_(extrapolateFlat) {}
+      inflationIndexCurves_(inflationIndexCurves), extrapolateFlat_(extrapolateFlat) {}
 
 void BondYieldShiftedYieldCurveSegment::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "BondYieldShifted");
@@ -889,6 +892,13 @@ void BondYieldShiftedYieldCurveSegment::fromXML(XMLNode* node) {
         iborIndexCurves_[iborIndexNames[i]] = iborIndexCurves[i];
     }
 
+    vector<string> inflationIndexNames;
+    vector<string> inflationIndexCurves = XMLUtils::getChildrenValuesWithAttributes(
+        node, "InflationIndexCurves", "InflationIndexCurve", "inflationIndex", inflationIndexNames, false);
+    for (Size i = 0; i < inflationIndexNames.size(); ++i) {
+        inflationIndexCurves_[inflationIndexNames[i]] = inflationIndexCurves[i];
+    }
+
 	if (auto n = XMLUtils::getChildNode(node, "ExtrapolateFlat")) {
         extrapolateFlat_ = parseBool(XMLUtils::getNodeValue(n));
     } else {
@@ -900,6 +910,16 @@ XMLNode* BondYieldShiftedYieldCurveSegment::toXML(XMLDocument& doc) const {
     XMLNode* node = YieldCurveSegment::toXML(doc);
     XMLUtils::setNodeName(doc, node, "BondYieldShifted");
     XMLUtils::addChild(doc, node, "ReferenceCurve", referenceCurveID_);
+
+    vector<string> inflationIndexNames;
+    vector<string> inflationIndexCurves;
+    for (auto const& c : inflationIndexCurves_) {
+        inflationIndexNames.push_back(c.first);
+        inflationIndexCurves.push_back(c.second);
+    }
+    XMLUtils::addChildrenWithAttributes(doc, node, "InflationIndexCurves", "InflationIndexCurve", inflationIndexCurves,
+                                        "inflationIndex", inflationIndexNames);
+
     return node;
 }
 

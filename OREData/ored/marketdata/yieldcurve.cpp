@@ -2147,8 +2147,16 @@ void YieldCurve::buildBondYieldShiftedCurve(const std::size_t index) {
         iborCurveMapping[c.first] = y->second;
     }
 
+    //  needed to project the cpi legs in case bond is inflation-linked (e.g. TIPS)
+    std::map<std::string, Handle<ZeroInflationIndex>> inflationIndexMapping;
+    for (auto const& c : segment->inflationIndexCurves()) {
+        QL_REQUIRE(market_ != nullptr,
+                   "market required to resolve inflation index '" << c.first << "' for bond yield shifted curve");
+        inflationIndexMapping[c.first] = market_->zeroInflationIndex(c.first);
+    }
+
     auto engineFactory = QuantLib::ext::make_shared<EngineFactory>(
-        engineData, QuantLib::ext::make_shared<FittedBondCurveHelperMarket>(iborCurveMapping),
+        engineData, QuantLib::ext::make_shared<FittedBondCurveHelperMarket>(iborCurveMapping, inflationIndexMapping),
         std::map<MarketContext, string>(), referenceData_, iborFallbackConfig_);
 
     QL_REQUIRE(quoteIDs.size() > 0, "at least one bond for shifting of the reference curve required.");
