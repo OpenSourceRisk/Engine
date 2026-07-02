@@ -203,11 +203,11 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
     // build global model if required
 
     bool useGlobalModel = parseBool(flexiSwapBuilder->modelParameter("GlobalModel", {}, true));
-    SwaptionModel globalModel;
+    CamOrLgmModel globalModel;
 
     if (useGlobalModel) {
-        globalModel = builder->model(
-            id() + "_0", qualifiers, dates, maturities, strikes,
+        globalModel = model(
+            builder.get(), id() + "_0", qualifiers, dates, maturities, strikes,
             std::vector<std::vector<Real>>(differentCcys.size() - 1, std::vector<Real>(dates.size(), Null<Real>())),
             false);
     }
