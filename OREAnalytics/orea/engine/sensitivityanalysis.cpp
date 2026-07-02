@@ -667,8 +667,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         QL_REQUIRE(it != sensiParams.intradayPowerCurveShiftData().end(), "shiftData not found for " << keylabel);
         shiftSize = it->second->shiftSize;
         if (it->second->shiftType == ShiftType::Relative) {
-            auto p = convertSensitivityCurvePillarToPeriod(asof, it->second->shiftTenors[key.index], key, false,
-                                                           sensiParams.parConversion());
+            auto p = it->second->shiftTenors[key.index];
             auto priceCurve = simMarket->intradayPowerPriceCurve(keylabel, marketConfiguration);
             Time t = priceCurve->dayCounter().yearFraction(asof, asof + p);
             shiftMult = priceCurve->averageDayPriceCurve()->price(t);

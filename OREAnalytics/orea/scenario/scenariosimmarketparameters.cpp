@@ -1690,20 +1690,13 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         set<string> names = params_.find(RiskFactorKey::KeyType::IntradayPowerCurve)->second.second;
         QL_REQUIRE(names.size() > 0, "Intraday power curves need at least one name");
 
-        // Get the configured tenors. They are of the form:
-        // - <Tenors name="NAME">t_1,...,t_n</Tenors> for commodity name specific tenors
-        // - <Tenors>t_1,...,t_n</Tenors> or <Tenors name="">t_1,...,t_n</Tenors> for a default set of tenors
-        // Only need a default tenor set if every commodity name has not been given a tenor set explicitly
         vector<XMLNode*> tenorNodes = XMLUtils::getChildrenNodes(nodeChild, "Tenors");
         QL_REQUIRE(tenorNodes.size() > 0, "Commodities needs at least one Tenors node");
         set<string> namesCheck = names;
         bool defaultProvided = false;
         for (XMLNode* tenorNode : tenorNodes) {
-            // If there is no "name" attribute, getAttribute returns "" which is what we want in any case
             string name = XMLUtils::getAttribute(tenorNode, "name");
 
-            // An empty tenor list here means that the scenario simulation market should be set up on the
-            // same pillars as the initial t_0 market from which it is sampling its values
             vector<Period> tenors;
             string strTenorList = XMLUtils::getNodeValue(tenorNode);
             if (!strTenorList.empty()) {
