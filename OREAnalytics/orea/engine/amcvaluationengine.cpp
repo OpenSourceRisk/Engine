@@ -1013,7 +1013,7 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
 
                 portfolio->build(engineFactory, "amc-val-engine", true, useAtParCouponsTrades_);
 
-                // run core engine code (asd is written for thread id 0 only)
+                // run core engine code
 
                 runCoreEngine(portfolio, model, market, scenarioGeneratorData_, miniCubes_[id], progressIndicator,
                               pathData, amcIndividualTrainingInput_, amcIndividualTrainingOutput_);

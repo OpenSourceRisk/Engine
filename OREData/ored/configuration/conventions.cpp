@@ -95,9 +95,14 @@ const QuantLib::ext::shared_ptr<ore::data::Conventions>& InstrumentConventions::
 }
 
 void InstrumentConventions::setConventions(
-    const QuantLib::ext::shared_ptr<ore::data::Conventions>& conventions, QuantLib::Date d) {
+    const QuantLib::ext::shared_ptr<ore::data::Conventions>& conventions, QuantLib::Date d) const {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
     conventions_[d] = conventions;
+}
+
+void InstrumentConventions::clear() const {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    conventions_[Date()] = QuantLib::ext::make_shared<ore::data::Conventions>();
 }
 
 ZeroRateConvention::ZeroRateConvention(const string& id, const string& dayCounter, const string& compounding,

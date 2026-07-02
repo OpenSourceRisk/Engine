@@ -45,6 +45,21 @@ void addMinimalCurves(const char* nodeName, const map<string, QuantLib::ext::sha
     }
 }
 
+CurveConfigurations::CurveConfigurations(const CurveConfigurations& configs) {
+    refDataManager_ = configs.refDataManager_;
+    iborFallbackConfig_ = configs.iborFallbackConfig_;
+    curveConfigOverride_ = configs.curveConfigOverride_;
+    reportConfigEqVols_ = configs.reportConfigEqVols_;
+    reportConfigFxVols_ = configs.reportConfigFxVols_;
+    reportConfigCommVols_ = configs.reportConfigCommVols_;
+    reportConfigIrCapFloorVols_ = configs.reportConfigIrCapFloorVols_;
+    reportConfigIrSwaptionVols_ = configs.reportConfigIrSwaptionVols_;
+    reportConfigYieldCurves_ = configs.reportConfigYieldCurves_;
+    reportConfigInflationCapFloorVols_ = configs.reportConfigInflationCapFloorVols_;
+    reportConfigBondFutureVols_ = configs.reportConfigBondFutureVols_;
+    reportConfigDefaultCurves_ = configs.reportConfigDefaultCurves_;
+}
+
 void CurveConfigurations::addNodes(XMLDocument& doc, XMLNode* parent, const char* nodeName) const {
     const auto& ct = parseCurveConfigurationType(nodeName);
 
@@ -174,28 +189,35 @@ bool CurveConfigurations::has(const CurveSpec::CurveType& type, const string& cu
 
 const QuantLib::ext::shared_ptr<CurveConfig>& CurveConfigurations::get(const CurveSpec::CurveType& type,
                                                                        const string& curveId) const {
+    {
+        boost::shared_lock<boost::shared_mutex> lock(mutex_);
 
-    const auto& it = configs_.find(type);
-    if (it != configs_.end()) {
-        const auto& itc = it->second.find(curveId);
-        if (itc != it->second.end()) {
-            return itc->second;
+        const auto& it = configs_.find(type);
+        if (it != configs_.end()) {
+            const auto& itc = it->second.find(curveId);
+            if (itc != it->second.end()) {
+                return itc->second;
+            }
+        }
+
+        // check if is in the overrides first, and then add to configs_ if so
+        if (curveConfigOverride_ && curveConfigOverride_->has(type, curveId)) {
+            auto cc = curveConfigOverride_->get(type, curveId);
+            configs_[type][curveId] = cc;
+            return configs_.at(type).at(curveId);
         }
     }
 
-    // check if is in the overrides first, and then add to configs_ if so
-    if (curveConfigOverride_ && curveConfigOverride_->has(type, curveId)) {
-        auto cc = curveConfigOverride_->get(type, curveId);
-        configs_[type][curveId] = cc;
+    {
+        // next check the unparsed configs
+        boost::unique_lock<boost::shared_mutex> lock(mutex_);
+        parseNode(type, curveId);
         return configs_.at(type).at(curveId);
     }
-
-    // next check the unparsed configs
-    parseNode(type, curveId);
-    return configs_.at(type).at(curveId);
 }
 
 void CurveConfigurations::parseAll() {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     for (const auto& u : unparsed_) {
         for (auto it = u.second.cbegin(), nit = it; it != u.second.cend(); it = nit) {
             nit++;
@@ -211,7 +233,10 @@ void CurveConfigurations::getNode(XMLNode* node, const char* parentName, const c
         for (XMLNode* child = XMLUtils::getChildNode(parentNode, childName); child;
              child = XMLUtils::getNextSibling(child, childName)) {
             const auto& id = XMLUtils::getChildValue(child, "CurveId", true);
-            unparsed_[type][id] = XMLUtils::toString(child);
+            {
+                boost::unique_lock<boost::shared_mutex> lock(mutex_);
+                unparsed_[type][id] = XMLUtils::toString(child);
+            }
         }
     }
 }

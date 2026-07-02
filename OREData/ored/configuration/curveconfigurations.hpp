@@ -61,11 +61,12 @@ using ore::data::XMLSerializable;
 */
 class CurveConfigurations : public XMLSerializable {
 public:
-    //! Default constructor
     CurveConfigurations(const QuantLib::ext::shared_ptr<ReferenceDataManager>& refDataManager = nullptr,
                         const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig = nullptr,
                         const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigOverride = nullptr)
         : refDataManager_(refDataManager), iborFallbackConfig_(iborFallbackConfig), curveConfigOverride_(curveConfigOverride) {}
+
+    CurveConfigurations(const CurveConfigurations& configs);
 
     //! \name Setters and Getters
     //@{
@@ -189,32 +190,34 @@ public:
     //@}
 
  private:
-    QuantLib::ext::shared_ptr<ReferenceDataManager> refDataManager_;
-    QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
-    QuantLib::ext::shared_ptr<CurveConfigurations> curveConfigOverride_;
+     mutable boost::shared_mutex mutex_;
 
-    ReportConfig reportConfigEqVols_;
-    ReportConfig reportConfigFxVols_;
-    ReportConfig reportConfigCommVols_;
-    ReportConfig reportConfigIrCapFloorVols_;
-    ReportConfig reportConfigIrSwaptionVols_;
-    ReportConfig reportConfigYieldCurves_;
-    ReportConfig reportConfigInflationCapFloorVols_;
-    ReportConfig reportConfigBondFutureVols_;
-    ReportConfig reportConfigDefaultCurves_;
+     QuantLib::ext::shared_ptr<ReferenceDataManager> refDataManager_;
+     QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
+     QuantLib::ext::shared_ptr<CurveConfigurations> curveConfigOverride_;
 
-    mutable std::map<CurveSpec::CurveType, std::map<std::string, QuantLib::ext::shared_ptr<CurveConfig>>> configs_;
-    mutable std::map<CurveSpec::CurveType, std::map<std::string, std::string>> unparsed_;
+     ReportConfig reportConfigEqVols_;
+     ReportConfig reportConfigFxVols_;
+     ReportConfig reportConfigCommVols_;
+     ReportConfig reportConfigIrCapFloorVols_;
+     ReportConfig reportConfigIrSwaptionVols_;
+     ReportConfig reportConfigYieldCurves_;
+     ReportConfig reportConfigInflationCapFloorVols_;
+     ReportConfig reportConfigBondFutureVols_;
+     ReportConfig reportConfigDefaultCurves_;
 
-    // utility function for parsing a node of name "parentName" and storing the result in the map
-    void parseNode(const CurveSpec::CurveType& type, const string& curveId) const;
-    
-    // utility function for getting a child curve config node
-    void getNode(XMLNode* node, const char* parentName, const char* childName);
+     mutable std::map<CurveSpec::CurveType, std::map<std::string, QuantLib::ext::shared_ptr<CurveConfig>>> configs_;
+     mutable std::map<CurveSpec::CurveType, std::map<std::string, std::string>> unparsed_;
 
-    // add to XML doc
-    void addNodes(XMLDocument& doc, XMLNode* parent, const char* nodeName) const;
-    void addReportConfigurationNode(XMLDocument& doc, XMLNode* parent) const;
+     // utility function for parsing a node of name "parentName" and storing the result in the map
+     void parseNode(const CurveSpec::CurveType& type, const string& curveId) const;
+
+     // utility function for getting a child curve config node
+     void getNode(XMLNode* node, const char* parentName, const char* childName);
+
+     // add to XML doc
+     void addNodes(XMLDocument& doc, XMLNode* parent, const char* nodeName) const;
+     void addReportConfigurationNode(XMLDocument& doc, XMLNode* parent) const;
 };
 
 class CurveConfigurationsManager {
