@@ -25,7 +25,7 @@
     <Analytic type="historicalSimulationVar">
       <Parameter name="active">Y</Parameter>
       <Parameter name="historicalScenarioFile">scenario.csv</Parameter>
-      <Parameter name="simulationConfigFile">simulation_curvealgebra.xml</Parameter>
+      <Parameter name="simulationConfigFile">simulation_curveAlgebra.xml</Parameter>
       <Parameter name="historicalPeriod">2020-05-12,2020-05-22</Parameter>
       <Parameter name="mporDays">10</Parameter>
       <Parameter name="mporCalendar">USD</Parameter>
