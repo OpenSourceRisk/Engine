@@ -8,7 +8,7 @@
       <xs:element type="xs:string" name="ParSensiRemoveFixing" minOccurs="0"/>
       <xs:element type="parConversionMatrixRegularisation" name="ParConversionMatrixRegularisation" minOccurs="0"/>
       <xs:element type="xs:boolean" name="ParConversion" minOccurs="0"/>
-      <xs:element type="discountcurves" name="DiscountCurves"/>
+      <xs:element type="discountcurves" name="DiscountCurves" minOccurs="0"/>
       <xs:element type="indexcurves" name="IndexCurves" minOccurs="0"/>
       <xs:element type="yieldcurves" name="YieldCurves" minOccurs="0"/>
       <xs:element type="fxspots" name="FxSpots" minOccurs="0"/>
