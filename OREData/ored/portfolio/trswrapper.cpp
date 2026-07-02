@@ -204,6 +204,11 @@ void TRSWrapper::arguments::validate() const {
 
 void TRSWrapper::fetchResults(const PricingEngine::results* r) const { Instrument::fetchResults(r); }
 
+void TRSWrapper::calculate() const {
+    Instrument::calculate();
+    setCalculated(true);
+}
+
 bool TRSWrapperAccrualEngine::computeStartValue(std::vector<Real>& underlyingStartValue,
                                                 std::vector<Real>& fxConversionFactor, QuantLib::Date& startDate,
                                                 QuantLib::Date& endDate, bool& usingInitialPrice,
@@ -1221,34 +1226,21 @@ Real TRSWrapperAccrualEngine::fundingLegValueForIndex(vector<CashFlowResults>& c
 
             // Suffix values used in additional results to distinguish between multiple funding legs and coupons.
             // Keep it simple and use the leg number and coupon number, e.g. "_1_2" for funding leg #1, coupon #2.
-            string suffix = legSuffix + "_" + std::to_string(cpnNo + 1);
-
-            // Try to add the coupon rate to additional results. Not sure how useful it is but keep it.
-            try {
-                addRes["fundingCouponRate" + suffix] = cpn->rate();
-            } catch (...) {
-            }
+            string cpnSuffix = legSuffix + "_" + std::to_string(cpnNo + 1);
 
             // Process the different notional types and coupons to calculate the accrual value of the current coupon.
             Real cpnValue = 0.0;
             if (ntlType == FNT::Fixed) {
-                cpnValue = cpn->accruedAmount(today);
-                fundingNtl = cpn->nominal();
+                cpnValue = fixedNtlCpnVal(cpn, today, cpnSuffix, fundingNtl);
             } else if (ntlType == FNT::PeriodReset) {
-                Real effNtl = valIdx == 0 && a.initialPrice_ != Null<Real>() ? a.initialPrice_ * a.indexQuantity_
-                    : basketValue(valSched[valIdx], valSched[valIdx], false);
-                Real fx = getFxConversionRate(valSched[valIdx], a.initialPriceCurrency_, a.fundingCurrency_, false);
-                addRes["fundingLegNotional" + suffix] = effNtl;
-                addRes["fundingLegFxRate" + suffix] = fx;
-                fundingNtl = effNtl * fx;
-                cpnValue = cpn->accruedAmount(today) * fundingNtl;
+                cpnValue = periodResetCpnVal(cpn, today, cpnSuffix, valIdx, fundingNtl);
             } else if (ntlType == FNT::DailyReset) {
                 if (auto specificCpn = ext::dynamic_pointer_cast<FixedRateCoupon>(cpn)) {
-                    cpnValue = dailyResetCpnVal(specificCpn, today, fundingNtl);
+                    cpnValue = dailyResetCpnVal(specificCpn, today, cpnSuffix, fundingNtl);
                 } else if (auto specificCpn = ext::dynamic_pointer_cast<IborCoupon>(cpn)) {
-                    cpnValue = dailyResetCpnVal(specificCpn, today, fundingNtl);
+                    cpnValue = dailyResetCpnVal(specificCpn, today, cpnSuffix, fundingNtl);
                 } else if (auto specificCpn = ext::dynamic_pointer_cast<OvernightIndexedCouponBase>(cpn)) {
-                    cpnValue = dailyResetCpnVal(specificCpn, today, fundingNtl);
+                    cpnValue = dailyResetCpnVal(specificCpn, today, cpnSuffix, fundingNtl);
                 } else {
                     // I have intentionally left out ZeroFixedCoupon here, because I don't understand the existing 
                     // code for it in the presence of `subtractNotional`.
@@ -1361,8 +1353,46 @@ Real TRSWrapperAccrualEngine::basketValue(const Date& fixingDate, const Date& fx
     return result;
 }
 
+Real TRSWrapperAccrualEngine::fixedNtlCpnVal(const ext::shared_ptr<Coupon>& cpn, const Date& today,
+    const string& cpnSuffix, Real& outNtl) const {
+
+    auto& addRes = results_.additionalResults;
+
+    Real result = cpn->accruedAmount(today);
+    outNtl = cpn->nominal();
+    addRes["fundingLegNotional" + cpnSuffix] = outNtl;
+    Time accruedDcf = cpn->accruedPeriod(today);
+    addRes["fundingLegDCF" + cpnSuffix] = accruedDcf;
+    if (!close(accruedDcf, 0.0) && !close(outNtl, 0.0))
+        addRes["fundingCouponRate" + cpnSuffix] = result / (outNtl * accruedDcf);
+
+    return result;
+}
+
+Real TRSWrapperAccrualEngine::periodResetCpnVal(const ext::shared_ptr<Coupon>& cpn, const Date& today,
+    const string& cpnSuffix, Size valIdx, Real& outNtl) const {
+
+    auto& a = arguments_;
+    auto& addRes = results_.additionalResults;
+    const auto& valSched = a.valuationSchedule_;
+
+    Real effNtl = valIdx == 0 && a.initialPrice_ != Null<Real>() ? a.initialPrice_ * a.indexQuantity_
+        : basketValue(valSched[valIdx], valSched[valIdx], false);
+    Real fx = getFxConversionRate(valSched[valIdx], a.initialPriceCurrency_, a.fundingCurrency_, false);
+    addRes["fundingLegNotional" + cpnSuffix] = effNtl;
+    addRes["fundingLegFxRate" + cpnSuffix] = fx;
+    Time accruedDcf = cpn->accruedPeriod(today);
+    addRes["fundingLegDCF" + cpnSuffix] = accruedDcf;
+    outNtl = effNtl * fx;
+    Real accruedPerUnitNtl = cpn->accruedAmount(today);
+    if (!close(accruedDcf, 0.0) && !close(outNtl, 0.0))
+        addRes["fundingCouponRate" + cpnSuffix] = accruedPerUnitNtl / accruedDcf;
+
+    return accruedPerUnitNtl * outNtl;
+}
+
 Real TRSWrapperAccrualEngine::dailyResetCpnVal(const ext::shared_ptr<FixedRateCoupon>& cpn, const Date& today,
-    Real& outNtl) const {
+    const string& cpnSuffix, Real& outNtl) const {
 
     auto& a = arguments_;
     auto& addRes = results_.additionalResults;
@@ -1374,6 +1404,7 @@ Real TRSWrapperAccrualEngine::dailyResetCpnVal(const ext::shared_ptr<FixedRateCo
     Real result = 0;
     const auto& dc = cpn->dayCounter();
     Rate fixedRate = cpn->rate();
+    addRes["fundingCouponRate" + cpnSuffix] = fixedRate;
     Real fundingNtl = 0;
 
     // We step on week days only. Can't see a situation where we are getting basket fixings on weekends.
@@ -1386,9 +1417,10 @@ Real TRSWrapperAccrualEngine::dailyResetCpnVal(const ext::shared_ptr<FixedRateCo
         lastFixing = lastAvailableFixing(d, lastFixing.second);
         Real effNtl = lastFixing.first * a.indexQuantity_;
         Real fx = getFxConversionRate(lastFixing.second, a.initialPriceCurrency_, a.fundingCurrency_, false);
-        string extSuffix = ore::data::to_string(d);
+        string extSuffix = cpnSuffix + "_" + ore::data::to_string(d);
         addRes["fundingLegNotional" + extSuffix] = effNtl;
         addRes["fundingLegFxRate" + extSuffix] = fx;
+        addRes["fundingLegDCF" + extSuffix] = dt;
         fundingNtl = effNtl * fx;
         result += fundingNtl * fixedRate * dt;
     }
@@ -1398,7 +1430,7 @@ Real TRSWrapperAccrualEngine::dailyResetCpnVal(const ext::shared_ptr<FixedRateCo
 }
 
 Real TRSWrapperAccrualEngine::dailyResetCpnVal(const ext::shared_ptr<IborCoupon>& cpn, const Date& today,
-    Real& outNtl) const {
+    const string& cpnSuffix, Real& outNtl) const {
 
     // Note, this method is very like the fixed rate function above but I am not sure it is exactly what will be 
     // expected for Ibor coupons with daily reset. It may be expected that you step on the Ibor index fixing dates and 
@@ -1415,6 +1447,7 @@ Real TRSWrapperAccrualEngine::dailyResetCpnVal(const ext::shared_ptr<IborCoupon>
     Real result = 0;
     const auto& dc = cpn->dayCounter();
     Rate fltRate = cpn->rate();
+    addRes["fundingCouponRate" + cpnSuffix] = fltRate;
     Real fundingNtl = 0;
 
     // We step on week days only. Can't see a situation where we are getting basket fixings on weekends.
@@ -1427,9 +1460,10 @@ Real TRSWrapperAccrualEngine::dailyResetCpnVal(const ext::shared_ptr<IborCoupon>
         lastFixing = lastAvailableFixing(d, lastFixing.second);
         Real effNtl = lastFixing.first * a.indexQuantity_;
         Real fx = getFxConversionRate(lastFixing.second, a.initialPriceCurrency_, a.fundingCurrency_, false);
-        string extSuffix = ore::data::to_string(d);
+        string extSuffix = cpnSuffix + "_" + ore::data::to_string(d);
         addRes["fundingLegNotional" + extSuffix] = effNtl;
         addRes["fundingLegFxRate" + extSuffix] = fx;
+        addRes["fundingLegDCF" + extSuffix] = dt;
         fundingNtl = effNtl * fx;
         result += fundingNtl * fltRate * dt;
     }
@@ -1439,7 +1473,7 @@ Real TRSWrapperAccrualEngine::dailyResetCpnVal(const ext::shared_ptr<IborCoupon>
 }
 
 Real TRSWrapperAccrualEngine::dailyResetCpnVal(const ext::shared_ptr<OvernightIndexedCouponBase>& cpn,
-    const Date& today, Real& outNtl) const {
+    const Date& today, const string& cpnSuffix, Real& outNtl) const {
 
     auto& a = arguments_;
     auto& addRes = results_.additionalResults;
@@ -1472,7 +1506,7 @@ Real TRSWrapperAccrualEngine::dailyResetCpnVal(const ext::shared_ptr<OvernightIn
         lastBasketFixing = lastAvailableFixing(intStart, lastBasketFixing.second);
         Real effNtl = lastBasketFixing.first * a.indexQuantity_;
         Real fx = getFxConversionRate(lastBasketFixing.second, a.initialPriceCurrency_, a.fundingCurrency_, false);
-        string extSuffix = ore::data::to_string(intStart);
+        string extSuffix = cpnSuffix + "_" + ore::data::to_string(intStart);
         addRes["fundingLegNotional" + extSuffix] = effNtl;
         addRes["fundingLegFxRate" + extSuffix] = fx;
 

@@ -634,7 +634,10 @@ public:
     XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     // clear this ReferenceData manager, note that we can load multiple files
-    void clear() { data_.clear(); }
+    void clear() {
+        data_.clear();
+        usedData_.clear();
+    }
 
     bool hasData(const string& type, const string& id,
                  const QuantLib::Date& asof = QuantLib::Null<QuantLib::Date>()) override;
@@ -654,6 +657,7 @@ protected:
     map<std::pair<string, string>, std::map<QuantLib::Date, QuantLib::ext::shared_ptr<ReferenceDatum>>> data_;
     std::set<std::tuple<string, string, QuantLib::Date>> duplicates_;
     map<std::pair<string, string>, std::map<QuantLib::Date, string>> buildErrors_;
+    std::set<std::tuple<string, string, QuantLib::Date>> usedData_;
 
 private:
     QuantLib::ext::shared_ptr<ReferenceDataManager> rdmOverride_;

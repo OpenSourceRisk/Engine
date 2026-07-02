@@ -30,7 +30,6 @@
 #include <qle/math/logquadraticinterpolation.hpp>
 #include <qle/math/discretedistribution.hpp>
 #include <qle/math/bucketeddistribution.hpp>
-#include <qle/math/covariancesalvage.hpp>
 #include <qle/math/matrixfunctions.hpp>
 #include <qle/math/fillemptymatrix.hpp>
 #include <qle/math/stabilisedglls.hpp>
@@ -516,45 +515,12 @@ namespace QuantExt {
 
 // ===== Statistical Utilities =====
 
-%shared_ptr(QuantExt::CovarianceSalvage)
-%shared_ptr(QuantExt::NoCovarianceSalvage)
-%shared_ptr(QuantExt::SpectralCovarianceSalvage)
-%nodefaultctor QuantExt::CovarianceSalvage;
-
-%ignore QuantExt::CovarianceSalvage::salvage;
-%ignore QuantExt::NoCovarianceSalvage::salvage;
-%ignore QuantExt::SpectralCovarianceSalvage::salvage;
-
 namespace QuantExt {
-    class CovarianceSalvage {
-      public:
-        virtual ~CovarianceSalvage();
-    };
-
-    class NoCovarianceSalvage : public CovarianceSalvage {
-      public:
-        NoCovarianceSalvage();
-    };
-
-    class SpectralCovarianceSalvage : public CovarianceSalvage {
-      public:
-        SpectralCovarianceSalvage();
-    };
-
     bool supports_Logm();
     bool supports_Expm();
     QuantLib::Matrix Logm(const QuantLib::Matrix& m);
     QuantLib::Matrix Expm(const QuantLib::Matrix& m);
     QuantLib::Real Trace(const QuantLib::Matrix& m);
-}
-
-%extend QuantExt::CovarianceSalvage {
-    QuantLib::Matrix salvageMatrix(const QuantLib::Matrix& m) const {
-        return self->salvage(m).first;
-    }
-    QuantLib::Matrix salvageSqrt(const QuantLib::Matrix& m) const {
-        return self->salvage(m).second;
-    }
 }
 
 %inline %{

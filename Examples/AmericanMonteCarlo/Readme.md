@@ -44,5 +44,21 @@ TODO: Add description here and in the User Guide.
 
 Run with <code>python run_scenariostatistics.py</code>
 
+## Scripted Trade Types (AMC)
+
+AMC exposure for a range of path-dependent scripted trade types on a single EUR-USD underlying:
+EuropeanOptionBarrier (European and American monitoring styles), FxWindowBarrierOption,
+FxBestEntryOption, FxStrikeResettableOption, FxAccumulator (types 01 and 02), and KnockOutSwap.
+
+Run with <code>python run_scripted_amc.py</code>
+
+## FX Basket Trades (AMC)
+
+AMC exposure for two multi-asset scripted trade types requiring a richer market data set
+(FX vol surfaces and correlations for EUR-USD and EUR-GBP):
+FxBasketVarianceSwap and FxWorstOfBasketSwap.
+
+Run with <code>python run_fx_baskets.py</code>
+
 See the user guide for a discussion of each case and expected results.
 

@@ -181,6 +181,9 @@ public:
     }
     void addTimer(const std::string& key, const Timer& timer) { timer_.addTimer(key, timer); }
 
+    void setApplySimmExemptions(bool flag) { applySimmExemptions_ = flag; }
+    bool applySimmExemptions() const { return applySimmExemptions_; }
+
     void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario,
                            const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketParams);
 
@@ -215,6 +218,8 @@ protected:
     analytic_mktcubes mktCubes_;
     analytic_stresstests stressTests_;
     QuantLib::ext::shared_ptr<ParSensitivityCubeStream> parCvaSensiCubeStream_;
+
+    bool applySimmExemptions_ = false;
   
     //! Whether to write intermediate reports or not.
     //! This would typically be used when the analytic is being called by another analytic

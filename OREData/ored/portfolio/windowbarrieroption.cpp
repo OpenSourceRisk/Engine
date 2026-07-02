@@ -61,6 +61,45 @@ static const std::string window_barrier_script =
     "  saccrNotional = saccrNotional * (1 - TriggerProbability);\n"
     "END;\n";
 
+static const std::string window_barrier_amc_script =
+    "REQUIRE BarrierType == 1 OR BarrierType == 2 OR BarrierType == 3 OR BarrierType == 4;\n"
+    "\n"
+    "NUMBER Payoff, TriggerProbability, ExerciseProbability, currentNotional, forwardPrice,\n"
+    "       saccrNotional;\n"
+    "NUMBER i, _AMC_NPV[SIZE(_AMC_SimDates)];\n"
+    "\n"
+    "IF BarrierType == 1 OR BarrierType == 3 THEN\n"
+    "  TriggerProbability = BELOWPROB(Underlying, StartDate, EndDate, BarrierLevel);\n"
+    "ELSE\n"
+    "  TriggerProbability = ABOVEPROB(Underlying, StartDate, EndDate, BarrierLevel);\n"
+    "END;\n"
+    "\n"
+    "forwardPrice = Underlying(Expiry);\n"
+    "Payoff = Quantity * PutCall * (forwardPrice - Strike);\n"
+    "IF Payoff > 0.0 THEN\n"
+    "  IF BarrierType == 1 OR BarrierType == 2 THEN\n"
+    "    Option = PAY(Payoff * TriggerProbability, Expiry, Settlement, PayCcy);\n"
+    "    ExerciseProbability = TriggerProbability;\n"
+    "  ELSE\n"
+    "    Option = PAY(Payoff * (1 - TriggerProbability), Expiry, Settlement, PayCcy);\n"
+    "    ExerciseProbability = (1 - TriggerProbability);\n"
+    "  END;\n"
+    "END;\n"
+    "\n"
+    "Option = LongShort * Option;\n"
+    "currentNotional = Quantity * Strike;\n"
+    "saccrNotional = forwardPrice * Quantity;\n"
+    "IF BarrierType == 1 OR BarrierType == 2 THEN\n"
+    "  saccrNotional = saccrNotional * TriggerProbability;"
+    "ELSE\n"
+    "  saccrNotional = saccrNotional * (1 - TriggerProbability);\n"
+    "END;\n"
+    "FOR i IN (1, SIZE(_AMC_SimDates), 1) DO\n"
+    "  IF _AMC_SimDates[i] < Settlement THEN\n"
+    "    _AMC_NPV[i] = NPVMEM(Option, _AMC_SimDates[i], i);\n"
+    "  END;\n"
+    "END;\n";
+
 // clang-format on
 
 void WindowBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
@@ -130,6 +169,18 @@ void WindowBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
          {"TriggerProbability", "TriggerProbability"},
          {"ExerciseProbability", "ExerciseProbability"}},
         {}, {}, {ScriptedTradeScriptData::CalibrationData("Underlying", {"Strike", "BarrierLevel"})});
+
+    script_["AMC"] = ScriptedTradeScriptData(
+        window_barrier_amc_script, "Option",
+        {{"currentNotional", "currentNotional"},
+         {"saccrNotional", "saccrNotional"},
+         {"forwardPrice", "forwardPrice"},
+         {"notionalCurrency", "PayCcy"},
+         {"TriggerProbability", "TriggerProbability"},
+         {"ExerciseProbability", "ExerciseProbability"}},
+        {}, {}, {ScriptedTradeScriptData::CalibrationData("Underlying", {"Strike", "BarrierLevel"})},
+        {},
+        {"Asset"});
 
     // build trade
 
