@@ -56,7 +56,6 @@
 #include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/cashflows/interpolatediborcoupon.hpp>
 #include <qle/cashflows/interpolatediborcouponpricer.hpp>
-#include <qle/cashflows/intradaypowercashflow.hpp>
 #include <qle/cashflows/nonstandardcapflooredyoyinflationcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/strippedcapflooredcpicoupon.hpp>
@@ -428,7 +427,6 @@ void RangeAccrualLegData::fromXML(XMLNode* node) {
     lowerBound_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "LowerBounds", "LowerBound", "startDate", lowerBoundDates_, &parseReal,
                                                              true);
 }
-
 
 XMLNode* RangeAccrualLegData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode(legNodeName());
@@ -3621,6 +3619,7 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
         return Leg();
     }
 }
+
 namespace {
 std::string getCmbLegSecurity(const std::string& genericBond) {
     return genericBond.substr(0, genericBond.find_last_of('-'));
