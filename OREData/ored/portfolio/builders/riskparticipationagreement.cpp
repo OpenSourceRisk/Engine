@@ -17,6 +17,7 @@
 */
 
 #include <ored/portfolio/builders/riskparticipationagreement.hpp>
+#include <ored/portfolio/builders/swaption.hpp>
 
 #include <ored/scripting/engines/analyticblackriskparticipationagreementengine.hpp>
 #include <ored/scripting/engines/analyticxccyblackriskparticipationagreementengine.hpp>
@@ -126,123 +127,123 @@ RiskParticipationAgreementXCcyBlackEngineBuilder::engineImpl(const std::string& 
         parseRpaOptionExpiryPosition(engineParameter("OptionExpiryPosition", {}, false, "Mid")));
 }
 
-QuantLib::Handle<QuantExt::LGM>
-RiskParticipationAgreementLGMGridEngineBuilder::model(const string& id, const string& key,
-                                                      const std::vector<Date>& expiries, const Date& maturity,
-                                                      const std::vector<Real>& strikes) {
+// QuantLib::Handle<QuantExt::LGM>
+// RiskParticipationAgreementLGMGridEngineBuilder::model(const string& id, const string& key,
+//                                                       const std::vector<Date>& expiries, const Date& maturity,
+//                                                       const std::vector<Real>& strikes) {
 
-    // TODO this is the same as in LGMBermudanSwaptionEngineBuilder::model(), factor the model building out
+//     // TODO this is the same as in LGMBermudanSwaptionEngineBuilder::model(), factor the model building out
 
-    DLOG("Get model data");
-    auto calibration = parseCalibrationType(modelParameter("Calibration"));
-    auto calibrationStrategy = parseCalibrationStrategy(modelParameter("CalibrationStrategy"));
-    std::string referenceCalibrationGrid = modelParameter("ReferenceCalibrationGrid", {}, false, "");
-    Real lambda = parseReal(modelParameter("Reversion"));
-    vector<Real> sigma = parseListOfValues<Real>(modelParameter("Volatility"), &parseReal);
-    vector<Real> sigmaTimes = parseListOfValues<Real>(modelParameter("VolatilityTimes", {}, false), &parseReal);
-    QL_REQUIRE(sigma.size() == sigmaTimes.size() + 1, "there must be n+1 volatilities (" << sigma.size()
-                                                                                         << ") for n volatility times ("
-                                                                                         << sigmaTimes.size() << ")");
-    Real tolerance = parseReal(modelParameter("Tolerance"));
-    auto reversionType = parseReversionType(modelParameter("ReversionType"));
-    auto volatilityType = parseVolatilityType(modelParameter("VolatilityType"));
-    bool continueOnCalibrationError = globalParameters_.count("ContinueOnCalibrationError") > 0 &&
-                                      parseBool(globalParameters_.at("ContinueOnCalibrationError"));
-    bool allowModelFallbacks =
-        globalParameters_.count("AllowModelFallbacks") > 0 && parseBool(globalParameters_.at("AllowModelFallbacks"));
+//     DLOG("Get model data");
+//     auto calibration = parseCalibrationType(modelParameter("Calibration"));
+//     auto calibrationStrategy = parseCalibrationStrategy(modelParameter("CalibrationStrategy"));
+//     std::string referenceCalibrationGrid = modelParameter("ReferenceCalibrationGrid", {}, false, "");
+//     Real lambda = parseReal(modelParameter("Reversion"));
+//     vector<Real> sigma = parseListOfValues<Real>(modelParameter("Volatility"), &parseReal);
+//     vector<Real> sigmaTimes = parseListOfValues<Real>(modelParameter("VolatilityTimes", {}, false), &parseReal);
+//     QL_REQUIRE(sigma.size() == sigmaTimes.size() + 1, "there must be n+1 volatilities (" << sigma.size()
+//                                                                                          << ") for n volatility times ("
+//                                                                                          << sigmaTimes.size() << ")");
+//     Real tolerance = parseReal(modelParameter("Tolerance"));
+//     auto reversionType = parseReversionType(modelParameter("ReversionType"));
+//     auto volatilityType = parseVolatilityType(modelParameter("VolatilityType"));
+//     bool continueOnCalibrationError = globalParameters_.count("ContinueOnCalibrationError") > 0 &&
+//                                       parseBool(globalParameters_.at("ContinueOnCalibrationError"));
+//     bool allowModelFallbacks =
+//         globalParameters_.count("AllowModelFallbacks") > 0 && parseBool(globalParameters_.at("AllowModelFallbacks"));
 
-    auto data = QuantLib::ext::make_shared<IrLgmData>();
+//     auto data = QuantLib::ext::make_shared<IrLgmData>();
 
-    // check for allowed calibration / bermudan strategy settings
-    std::vector<std::pair<CalibrationType, CalibrationStrategy>> validCalPairs = {
-        {CalibrationType::None, CalibrationStrategy::None},
-        {CalibrationType::Bootstrap, CalibrationStrategy::CoterminalATM},
-        {CalibrationType::Bootstrap, CalibrationStrategy::CoterminalDealStrike},
-        {CalibrationType::BestFit, CalibrationStrategy::CoterminalATM},
-        {CalibrationType::BestFit, CalibrationStrategy::CoterminalDealStrike}};
+//     // check for allowed calibration / bermudan strategy settings
+//     std::vector<std::pair<CalibrationType, CalibrationStrategy>> validCalPairs = {
+//         {CalibrationType::None, CalibrationStrategy::None},
+//         {CalibrationType::Bootstrap, CalibrationStrategy::CoterminalATM},
+//         {CalibrationType::Bootstrap, CalibrationStrategy::CoterminalDealStrike},
+//         {CalibrationType::BestFit, CalibrationStrategy::CoterminalATM},
+//         {CalibrationType::BestFit, CalibrationStrategy::CoterminalDealStrike}};
 
-    QL_REQUIRE(std::find(validCalPairs.begin(), validCalPairs.end(),
-                         std::make_pair(calibration, calibrationStrategy)) != validCalPairs.end(),
-               "Calibration (" << calibration << ") and CalibrationStrategy (" << calibrationStrategy
-                               << ") are not allowed in this combination");
+//     QL_REQUIRE(std::find(validCalPairs.begin(), validCalPairs.end(),
+//                          std::make_pair(calibration, calibrationStrategy)) != validCalPairs.end(),
+//                "Calibration (" << calibration << ") and CalibrationStrategy (" << calibrationStrategy
+//                                << ") are not allowed in this combination");
 
-    // compute horizon shift
-    Real shiftHorizon = parseReal(modelParameter("ShiftHorizon", {}, false, "0.5"));
-    Date today = Settings::instance().evaluationDate();
-    shiftHorizon = ActualActual(ActualActual::ISDA).yearFraction(today, maturity) * shiftHorizon;
+//     // compute horizon shift
+//     Real shiftHorizon = parseReal(modelParameter("ShiftHorizon", {}, false, "0.5"));
+//     Date today = Settings::instance().evaluationDate();
+//     shiftHorizon = ActualActual(ActualActual::ISDA).yearFraction(today, maturity) * shiftHorizon;
 
-    // Default: no calibration, constant lambda and sigma from engine configuration
-    data->reset();
-    data->qualifier() = key;
-    data->calibrateH() = false;
-    data->hParamType() = ParamType::Constant;
-    data->hValues() = {lambda};
-    data->reversionType() = reversionType;
-    data->calibrateA() = false;
-    data->aParamType() = ParamType::Piecewise;
-    data->aValues() = sigma;
-    data->aTimes() = sigmaTimes;
-    data->volatilityType() = volatilityType;
-    data->calibrationType() = calibration;
-    data->shiftHorizon() = shiftHorizon;
+//     // Default: no calibration, constant lambda and sigma from engine configuration
+//     data->reset();
+//     data->qualifier() = key;
+//     data->calibrateH() = false;
+//     data->hParamType() = ParamType::Constant;
+//     data->hValues() = {lambda};
+//     data->reversionType() = reversionType;
+//     data->calibrateA() = false;
+//     data->aParamType() = ParamType::Piecewise;
+//     data->aValues() = sigma;
+//     data->aTimes() = sigmaTimes;
+//     data->volatilityType() = volatilityType;
+//     data->calibrationType() = calibration;
+//     data->shiftHorizon() = shiftHorizon;
 
-    // calibration expiries might be empty, in this case do not calibrate
-    if (!expiries.empty() && (calibrationStrategy == CalibrationStrategy::CoterminalATM ||
-                              calibrationStrategy == CalibrationStrategy::CoterminalDealStrike)) {
-        DLOG("Build LgmData for co-terminal specification");
-        vector<string> expiryDates, termDates;
-        for (Size i = 0; i < expiries.size(); ++i) {
-            expiryDates.push_back(to_string(expiries[i]));
-            termDates.push_back(to_string(maturity));
-        }
-        data->optionExpiries() = expiryDates;
-        data->optionTerms() = termDates;
-        data->optionStrikes().resize(expiryDates.size(), "ATM");
-        if (calibrationStrategy == CalibrationStrategy::CoterminalDealStrike) {
-            for (Size i = 0; i < expiryDates.size(); ++i) {
-                if (strikes[i] != Null<Real>())
-                    data->optionStrikes()[i] = std::to_string(strikes[i]);
-            }
-        }
-        if (calibration == CalibrationType::Bootstrap) {
-            DLOG("Calibrate piecewise alpha");
-            data->calibrationType() = CalibrationType::Bootstrap;
-            data->calibrateH() = false;
-            data->hParamType() = ParamType::Constant;
-            data->hValues() = {lambda};
-            data->calibrateA() = true;
-            data->aParamType() = ParamType::Piecewise;
-            data->aValues() = {sigma};
-        } else if (calibration == CalibrationType::BestFit) {
-            DLOG("Calibrate constant sigma");
-            data->calibrationType() = CalibrationType::BestFit;
-            data->calibrateH() = false;
-            data->hParamType() = ParamType::Constant;
-            data->hValues() = {lambda};
-            data->calibrateA() = true;
-            data->aParamType() = ParamType::Constant;
-            data->aValues() = {sigma};
-        } else
-            QL_FAIL("choice of calibration type invalid");
-    }
+//     // calibration expiries might be empty, in this case do not calibrate
+//     if (!expiries.empty() && (calibrationStrategy == CalibrationStrategy::CoterminalATM ||
+//                               calibrationStrategy == CalibrationStrategy::CoterminalDealStrike)) {
+//         DLOG("Build LgmData for co-terminal specification");
+//         vector<string> expiryDates, termDates;
+//         for (Size i = 0; i < expiries.size(); ++i) {
+//             expiryDates.push_back(to_string(expiries[i]));
+//             termDates.push_back(to_string(maturity));
+//         }
+//         data->optionExpiries() = expiryDates;
+//         data->optionTerms() = termDates;
+//         data->optionStrikes().resize(expiryDates.size(), "ATM");
+//         if (calibrationStrategy == CalibrationStrategy::CoterminalDealStrike) {
+//             for (Size i = 0; i < expiryDates.size(); ++i) {
+//                 if (strikes[i] != Null<Real>())
+//                     data->optionStrikes()[i] = std::to_string(strikes[i]);
+//             }
+//         }
+//         if (calibration == CalibrationType::Bootstrap) {
+//             DLOG("Calibrate piecewise alpha");
+//             data->calibrationType() = CalibrationType::Bootstrap;
+//             data->calibrateH() = false;
+//             data->hParamType() = ParamType::Constant;
+//             data->hValues() = {lambda};
+//             data->calibrateA() = true;
+//             data->aParamType() = ParamType::Piecewise;
+//             data->aValues() = {sigma};
+//         } else if (calibration == CalibrationType::BestFit) {
+//             DLOG("Calibrate constant sigma");
+//             data->calibrationType() = CalibrationType::BestFit;
+//             data->calibrateH() = false;
+//             data->hParamType() = ParamType::Constant;
+//             data->hValues() = {lambda};
+//             data->calibrateA() = true;
+//             data->aParamType() = ParamType::Constant;
+//             data->aValues() = {sigma};
+//         } else
+//             QL_FAIL("choice of calibration type invalid");
+//     }
 
-    // Build model
-    DLOG("Build LGM model");
+//     // Build model
+//     DLOG("Build LGM model");
 
-    auto rt = globalParameters_.find("RunType");
-    bool allowChangingFallbacks =
-        rt != globalParameters_.end() && rt->second != "SensitivityDelta" && rt->second != "SensitivityDeltaGamma";
+//     auto rt = globalParameters_.find("RunType");
+//     bool allowChangingFallbacks =
+//         rt != globalParameters_.end() && rt->second != "SensitivityDelta" && rt->second != "SensitivityDeltaGamma";
 
-    QuantLib::ext::shared_ptr<LgmBuilder> calib = QuantLib::ext::make_shared<LgmBuilder>(
-        market_, data, configuration(MarketContext::irCalibration), tolerance, continueOnCalibrationError,
-        referenceCalibrationGrid, generateAdditionalResults(), id, BlackCalibrationHelper::RelativePriceError,
-        allowChangingFallbacks, allowModelFallbacks,
-        globalParameters_.count("Calibrate") != 0 && !parseBool(globalParameters_.at("Calibrate")));
+//     QuantLib::ext::shared_ptr<LgmBuilder> calib = QuantLib::ext::make_shared<LgmBuilder>(
+//         market_, data, configuration(MarketContext::irCalibration), tolerance, continueOnCalibrationError,
+//         referenceCalibrationGrid, generateAdditionalResults(), id, BlackCalibrationHelper::RelativePriceError,
+//         allowChangingFallbacks, allowModelFallbacks,
+//         globalParameters_.count("Calibrate") != 0 && !parseBool(globalParameters_.at("Calibrate")));
 
-    engineFactory()->modelBuilders().insert(std::make_pair(id, calib));
+//     engineFactory()->modelBuilders().insert(std::make_pair(id, calib));
 
-    return calib->modelAsLgm();
-}
+//     return calib->modelAsLgm();
+// }
 
 QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
 RiskParticipationAgreementSwapLGMGridEngineBuilder::engineImpl(const std::string& id, RiskParticipationAgreement* rpa) {
@@ -324,8 +325,9 @@ RiskParticipationAgreementSwapLGMGridEngineBuilder::engineImpl(const std::string
 
     // build model + engine
     DLOG("Building LGM Grid RPA engine for trade " << id);
-    auto lgm = model(id, index == nullptr ? rpa->npvCurrency() : IndexNameTranslator::instance().oreName(index->name()),
-                     expiries, calibrationMaturity, strikes);
+    auto lgm = std::get<Handle<LGM>>(ore::data::model(
+        this, id, {index == nullptr ? rpa->npvCurrency() : IndexNameTranslator::instance().oreName(index->name())},
+        expiries, std::vector<Date>(expiries.size(), calibrationMaturity), {strikes}, {}, false));
     DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
     Handle<DefaultProbabilityTermStructure> creditCurve =
         market_->defaultCurve(rpa->creditCurveId(), configuration(MarketContext::pricing))->curve();
@@ -386,7 +388,9 @@ RiskParticipationAgreementTLockLGMGridEngineBuilder::engineImpl(const std::strin
     // build model + engine
 
     DLOG("Building LGM Grid RPA engine (tlock) for trade " << id);
-    auto lgm = model(id, rpa->npvCurrency(), expiries, calibrationMaturity, strikes);
+    auto lgm = std::get<Handle<LGM>>(ore::data::model(this, id, {rpa->npvCurrency()}, expiries,
+                                                      std::vector<Date>(expiries.size(), calibrationMaturity),
+                                                      {strikes}, {}, false));
     DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
     Handle<DefaultProbabilityTermStructure> creditCurve =
         market_->defaultCurve(rpa->creditCurveId(), configuration(MarketContext::pricing))->curve();

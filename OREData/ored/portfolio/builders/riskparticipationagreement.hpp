@@ -76,9 +76,9 @@ public:
     explicit RiskParticipationAgreementLGMGridEngineBuilder(const std::set<std::string>& tradeTypes)
         : RiskParticipationAgreementEngineBuilderBase("LGM", "Grid", tradeTypes) {}
 
-protected:
-    QuantLib::Handle<QuantExt::LGM> model(const string& id, const string& key, const std::vector<Date>& expiries,
-                                          const Date& maturity, const std::vector<Real>& strikes);
+// protected:
+//     QuantLib::Handle<QuantExt::LGM> model(const string& id, const string& key, const std::vector<Date>& expiries,
+//                                           const Date& maturity, const std::vector<Real>& strikes);
 };
 
 //! RPA Numeric LGM engine builder for swap underlyings
