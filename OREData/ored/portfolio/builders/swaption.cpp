@@ -213,14 +213,15 @@ SwaptionModel SwaptionEngineBuilder::model(const string& id, const std::vector<s
         effExpiries = expiries;
         effMaturities = maturities;
     } else {
-        QL_REQUIRE(expiries.size() == 2,
-                   "LGMBermudanAmericanSwaptionEngineBuilder::model(): expected 2 expiries for exercise "
+        QL_REQUIRE(expiries.size() == 1 || expiries.size() == 2,
+                   "LGMBermudanAmericanSwaptionEngineBuilder::model(): expected 1 or 2 expiries for exercise "
                    "style 'American', got "
                        << expiries.size() << " expiries");
         // keep one calibration instrument per reference grid interval
         DateGrid grid(referenceCalibrationGrid);
-        std::copy_if(grid.dates().begin(), grid.dates().end(), std::back_inserter(effExpiries),
-                     [&expiries](const Date& d) { return d >= expiries[0] && d < expiries[1]; });
+        std::copy_if(
+            grid.dates().begin(), grid.dates().end(), std::back_inserter(effExpiries),
+            [&expiries](const Date& d) { return d >= expiries[0] && (expiries.size() == 1 || d < expiries[1]); });
 
         effMaturities.resize(effExpiries.size(), maturities.back());
     }
@@ -283,13 +284,17 @@ SwaptionModel SwaptionEngineBuilder::model(const string& id, const std::vector<s
             effStrikes = strikes[i];
         } else {
             effStrikes.resize(effExpiries.size(), Null<Real>());
-            if (strikes[i][0] != Null<Real>() && strikes[i][1] != Null<Real>()) {
-                Real t0 = Actual365Fixed().yearFraction(today, expiries[0]);
-                Real t1 = Actual365Fixed().yearFraction(today, expiries[1]);
-                for (Size k = 0; k < effExpiries.size(); ++k) {
-                    Real t = Actual365Fixed().yearFraction(today, effExpiries[k]);
-                    effStrikes[k] = strikes[i][0] + (strikes[i][1] - strikes[i][0]) / (t1 - t0) * (t - t0);
+            if (strikes[i].size() == 2) {
+                if (strikes[i][0] != Null<Real>() && strikes[i][1] != Null<Real>()) {
+                    Real t0 = Actual365Fixed().yearFraction(today, expiries[0]);
+                    Real t1 = Actual365Fixed().yearFraction(today, expiries[1]);
+                    for (Size k = 0; k < effExpiries.size(); ++k) {
+                        Real t = Actual365Fixed().yearFraction(today, effExpiries[k]);
+                        effStrikes[k] = strikes[i][0] + (strikes[i][1] - strikes[i][0]) / (t1 - t0) * (t - t0);
+                    }
                 }
+            } else {
+                effStrikes[0] = strikes[i][0];
             }
         }
 

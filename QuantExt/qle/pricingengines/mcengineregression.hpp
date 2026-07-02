@@ -21,7 +21,7 @@
 #include <ql/types.hpp>
 #include <qle/math/randomvariable.hpp>
 #include <qle/models/crossassetmodel.hpp>
-#include <qle/pricingengines/mccashflowinfo.hpp>
+#include <qle/pricingengines/mcenginecashflowinfo.hpp>
 
 #include <set>
 #include <vector>
