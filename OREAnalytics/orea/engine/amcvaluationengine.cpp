@@ -965,10 +965,6 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
 
     std::vector<std::thread> jobs; // not needed if thread pool is used
 
-    // pricing stats accumulated in worker threads
-    // std::vector<std::map<std::string, std::pair<std::size_t, unsigned long long>>> workerPricingStats(
-    //     eff_nThreads);
-
     // get obs mode of main thread, so that we can set this mode in the worker threads below
 
     ore::analytics::ObservationMode::Mode obsMode = ore::analytics::ObservationMode::instance().mode();
