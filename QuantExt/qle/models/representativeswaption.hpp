@@ -48,8 +48,8 @@ using namespace QuantLib;
 
    For the methodology, see Andersen, Piterbarg, Interest Rate Modelling, ch. 19.4.
 
-   The underlying may only contain simple cahsflows, fixed coupons and standard ibor coupons (i.e. without cap/floor or
-   in arrears fixings). */
+   The underlying may only contain simple cahsflows, fixed coupons and standard ibor or overnight coupons
+   (i.e. without cap/floor or in arrears fixings). */
 
 class RepresentativeSwaptionMatcher {
 public:
