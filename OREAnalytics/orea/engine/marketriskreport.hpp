@@ -23,7 +23,6 @@
 
 #pragma once
 
-#include <qle/math/covariancesalvage.hpp>
 #include <ored/report/report.hpp>
 #include <orea/engine/historicalsensipnlcalculator.hpp>
 #include <orea/engine/historicalpnlgenerator.hpp>
@@ -300,8 +299,6 @@ protected:
     QuantLib::Matrix covarianceMatrix_;
     bool writePnl_ = false;
     std::vector<QuantLib::ext::shared_ptr<PNLCalculator>> pnlCalculators_;
-    QuantLib::ext::shared_ptr<QuantExt::CovarianceSalvage> salvage_ =
-        QuantLib::ext::make_shared<QuantExt::SpectralCovarianceSalvage>();
     bool includeDeltaMargin_ = true;
     bool includeGammaMargin_ = true;
 

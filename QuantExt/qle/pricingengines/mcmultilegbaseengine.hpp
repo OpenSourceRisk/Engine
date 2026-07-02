@@ -35,24 +35,21 @@
 #include <ql/indexes/interestrateindex.hpp>
 #include <ql/instruments/swaption.hpp>
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
+#include <ql/termstructures/defaulttermstructure.hpp>
 
-//#include <boost/archive/binary_iarchive.hpp>
-//#include <boost/archive/binary_oarchive.hpp>
-#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/array.hpp>
 #include <boost/serialization/base_object.hpp>
-#include <boost/serialization/vector.hpp>
+#include <boost/serialization/export.hpp>
+#include <boost/serialization/serialization.hpp>
 #include <boost/serialization/set.hpp>
 #include <boost/serialization/utility.hpp>
-#include <boost/serialization/array.hpp>
-#include <boost/serialization/export.hpp>
+#include <boost/serialization/vector.hpp>
 
 namespace QuantExt {
 
 class McMultiLegBaseEngine {
 public:
-    
-
-//protected:
+    // protected:
     /*! The npv is computed in the model's base currency, discounting curves are taken from the model. simulationDates
         are additional simulation dates. The cross asset model here must be consistent with the multi path that is the
         input to AmcCalculator::simulatePath().
@@ -93,9 +90,21 @@ public:
     mutable std::vector<Currency> currency_;
     mutable std::vector<bool> payer_;
     mutable QuantLib::ext::shared_ptr<Exercise> exercise_; // may be empty, if underlying is the actual trade
+    mutable bool nakedOption_ = true;
+    mutable bool exerciseLong_ = true;
+    mutable std::vector<QuantLib::ext::shared_ptr<CashFlow>> optionPremium_; // unconditional option premia
     mutable Settlement::Type optionSettlement_ = Settlement::Physical;
     mutable std::vector<QuantLib::Date> cashSettlementDates_;
     mutable bool exerciseIntoIncludeSameDayFlows_ = false;
+    // optional input data for rpa pricing
+    mutable std::vector<QuantLib::Date> rpaDiscretizationDates_;
+    mutable QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure> rpaCreditCurve_;
+    mutable QuantLib::Handle<QuantLib::Quote> rpaRecoveryRate_;
+    mutable std::vector<Leg> rpaProtectionFee_;
+    mutable std::vector<Currency> rpaProtectionFeeCurrency_;
+    mutable Real rpaParticipationRate_ = 1.0;
+    mutable bool rpaSettlesAccrual_ = true;
+    mutable bool rpaProtectionFeePayer_ = true;
 
     // data members
     Handle<CrossAssetModel> model_;
@@ -135,35 +144,38 @@ public:
     static constexpr Real tinyTime = 1E-10;
 
     // data structure storing info needed to generate the amount for a cashflow
-    
+
     // overwrite function to transform values going into regression
     // current usage in the fwd bond case
-    virtual RandomVariable overwritePathValueUndDirty(double t, const RandomVariable& pathValueUndDirty,
-                                                      const std::set<Real>& exerciseXvaTimes,
-                                                      const std::vector<std::vector<QuantExt::RandomVariable>>& paths) const {
+    virtual bool useOverwritePathValueUndDirty() const { return false; };
+    virtual RandomVariable
+    overwritePathValueUndDirty(double t, const RandomVariable& pathValueUndDirty,
+                               const std::set<Real>& exerciseXvaRpaTimes,
+                               const std::vector<std::vector<QuantExt::RandomVariable>>& paths) const {
         return pathValueUndDirty;
     };
-
-    virtual bool useOverwritePathValueUndDirty() const { return false; };
-
-    
 
     // the implementation of the amc calculator interface used by the amc valuation engine
     class MultiLegBaseAmcCalculator : public AmcCalculator {
     public:
         MultiLegBaseAmcCalculator() = default;
-        MultiLegBaseAmcCalculator(
-            const std::vector<Size>& externalModelIndices, const Settlement::Type settlement,
-            const std::vector<Real>& cashSettlementTimes, const std::set<Real>& exerciseXvaTimes,
-            const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
-            const std::array<std::vector<McRegressionModel>, 2>& regModelUndDirty,
-            const std::array<std::vector<McRegressionModel>, 2>& regModelUndExInto,
-            const std::array<std::vector<McRegressionModel>, 2>& regModelRebate,
-            const std::array<std::vector<McRegressionModel>, 2>& regModelContinuationValue,
-            const std::array<std::vector<McRegressionModel>, 2>& regModelOption,
-            const Real resultValue, const Array& initialState, const Currency& baseCurrency,
-            const bool reevaluateExerciseInStickyRun, const bool includeTodaysCashflows,
-            const bool includeReferenceDateEvents);
+        MultiLegBaseAmcCalculator(const std::vector<Size>& externalModelIndices, const Settlement::Type settlement,
+                                  const std::vector<Real>& cashSettlementTimes,
+                                  const std::set<Real>& exerciseXvaRpaTimes, const std::set<Real>& exerciseTimes,
+                                  const std::set<Real>& xvaTimes, const std::set<Real>& rpaTimes,
+                                  const bool haveExercise, const bool nakedOption, const bool exerciseLong,
+                                  const std::array<std::vector<McRegressionModel>, 2>& regModelUndDirty,
+                                  const std::array<std::vector<McRegressionModel>, 2>& regModelUndExInto,
+                                  const std::array<std::vector<McRegressionModel>, 2>& regModelRebate,
+                                  const std::array<std::vector<McRegressionModel>, 2>& regModelContinuationValue,
+                                  const std::array<std::vector<McRegressionModel>, 2>& regModelOption,
+                                  const std::array<std::vector<McRegressionModel>, 2>& regModelRpaUndDirty,
+                                  const std::array<std::vector<McRegressionModel>, 2>& regModelRpaOption,
+                                  const std::array<std::vector<McRegressionModel>, 2>& regModelRpaFee,
+                                  const Real resultValue, const Array& initialState, const Currency& baseCurrency,
+                                  const bool reevaluateExerciseInStickyRun, const bool includeTodaysCashflows,
+                                  const bool includeReferenceDateEvents, const bool isRpa,
+                                  const bool rpaProtectionFeePayer, const Real rpaParticiationRate);
 
         Currency npvCurrency() override { return baseCurrency_; }
         std::vector<QuantExt::RandomVariable>
@@ -176,14 +188,21 @@ public:
         std::vector<Size> externalModelIndices_;
         Settlement::Type settlement_;
         std::vector<Real> cashSettlementTimes_;
-        std::set<Real> exerciseXvaTimes_;
+        std::set<Real> exerciseXvaRpaTimes_;
         std::set<Real> exerciseTimes_;
         std::set<Real> xvaTimes_;
+        std::set<Real> rpaTimes_;
+        bool haveExercise_;
+        bool nakedOption_;
+        bool exerciseLong_;
         std::array<std::vector<McRegressionModel>, 2> regModelUndDirty_;
         std::array<std::vector<McRegressionModel>, 2> regModelUndExInto_;
         std::array<std::vector<McRegressionModel>, 2> regModelRebate_;
         std::array<std::vector<McRegressionModel>, 2> regModelContinuationValue_;
         std::array<std::vector<McRegressionModel>, 2> regModelOption_;
+        std::array<std::vector<McRegressionModel>, 2> regModelRpaUndDirty_;
+        std::array<std::vector<McRegressionModel>, 2> regModelRpaOption_;
+        std::array<std::vector<McRegressionModel>, 2> regModelRpaFee_;
         Real resultValue_;
         Array initialState_;
         Currency baseCurrency_;
@@ -193,29 +212,42 @@ public:
         bool includeTodaysCashflows_;
         bool includeReferenceDateEvents_;
 
+        bool isRpa_;
+        bool rpaProtectionFeePayer_;
+        Real rpaParticipationRate_;
+
         std::vector<Filter> exercised_;
 
         // used for serialisation of amc trianing
         friend class boost::serialization::access;
         template <class Archive> void serialize(Archive& ar, const unsigned int version);
-
     };
+
+    // generate the cashflow info
+    std::vector<McCashflowInfo> generateCashflowInfo(const std::vector<Leg>& legs,
+                                                     const std::vector<Currency>& currencies,
+                                                     const std::vector<bool>& payers) const;
 
     // generate the mc path values of the model process
     void generatePathValues(const std::vector<Real>& simulationTimes,
                             std::vector<std::vector<RandomVariable>>& pathValues) const;
 
     // the model training logic
-    void calculateModels(const std::set<Real>& simulationTimes, const std::set<Real>& exerciseXvaTimes,
-                         const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
-                         const std::vector<McCashflowInfo>& cashflowInfo,
-                         const std::vector<std::vector<RandomVariable>>& pathValues,
-                         const std::vector<std::vector<const RandomVariable*>>& pathValuesRef,
-                         std::vector<McRegressionModel>& regModelUndDirty,
-                         std::vector<McRegressionModel>& regModelUndExInto, std::vector<McRegressionModel>& regModelRebate,
-                         std::vector<McRegressionModel>& regModelContinuationValue,
-                         std::vector<McRegressionModel>& regModelOption, RandomVariable& pathValueUndDirty,
-                         RandomVariable& pathValueUndExInto, RandomVariable& pathValueOption) const;
+    void
+    calculateModels(const std::set<Real>& simulationTimes, const std::set<Real>& exerciseXvaRpaTimes,
+                    const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes, const std::set<Real>& rpaTimes,
+                    const Real firstRpaTime, const std::vector<McCashflowInfo>& cashflowInfo,
+                    const std::vector<McCashflowInfo>& rpaFeeCashflowInfo,
+                    const std::vector<std::vector<RandomVariable>>& pathValues,
+                    const std::vector<std::vector<const RandomVariable*>>& pathValuesRef,
+                    std::vector<McRegressionModel>& regModelUndDirty, std::vector<McRegressionModel>& regModelUndExInto,
+                    std::vector<McRegressionModel>& regModelRebate,
+                    std::vector<McRegressionModel>& regModelContinuationValue,
+                    std::vector<McRegressionModel>& regModelOption, std::vector<McRegressionModel>& regModelRpaUndDirty,
+                    std::vector<McRegressionModel>& regModelRpaOption, std::vector<McRegressionModel>& regModelRpaFee,
+                    RandomVariable& pathValueUndDirty, RandomVariable& pathValueUndExInto,
+                    RandomVariable& pathValueOption, RandomVariable& pathValueRpaUndDirty,
+                    RandomVariable& pathValueRpaOption, RandomVariable& pathValueRpaFee) const;
 
     // convert a date to a time w.r.t. the valuation date
     Real time(const Date& d) const;
@@ -224,7 +256,8 @@ public:
     Size timeIndex(const Time t, const std::set<Real>& simulationTimes) const;
 
     // compute a cashflow path value (in model base ccy)
-    RandomVariable cashflowPathValue(const McCashflowInfo& cf, const std::vector<std::vector<RandomVariable>>& pathValues,
+    RandomVariable cashflowPathValue(const McCashflowInfo& cf,
+                                     const std::vector<std::vector<RandomVariable>>& pathValues,
                                      const std::set<Real>& simulationTimes) const;
 
     // valuation date
@@ -233,6 +266,5 @@ public:
     // lgm vectorised instances for each ccy
     mutable std::vector<LgmVectorised> lgmVectorised_;
 };
-
 
 } // namespace QuantExt

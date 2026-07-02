@@ -22,6 +22,42 @@
 namespace ore {
 namespace data {
 
+// clang-format off
+
+static const std::string autocallable_01_amc_script =
+    "NUMBER i, terminated, currentNotional;\n"
+    "NUMBER a, s, d, nthPayoff[SIZE(FixingDates)], bwdPayoff, _AMC_NPV[SIZE(_AMC_SimDates)];\n"
+    "FOR i IN (1, SIZE(FixingDates), 1) DO\n"
+    "  IF terminated == 0 AND Underlying(FixingDates[i]) <= TriggerLevel THEN\n"
+    "    Option = LOGPAY( LongShort * NotionalAmount * AccumulationFactors[i], FixingDates[i],\n"
+    "                     SettlementDates[i], PayCcy);\n"
+    "    nthPayoff[i] = PAY( LongShort * NotionalAmount * AccumulationFactors[i], FixingDates[i],\n"
+    "                        SettlementDates[i], PayCcy);\n"
+    "    terminated = 1;\n"
+    "  END;\n"
+    "  IF terminated == 0 AND i == SIZE(FixingDates) AND Underlying(FixingDates[i]) > DeterminationLevel THEN\n"
+    "    Option = LOGPAY( -LongShort * NotionalAmount * min( Cap, Underlying(FixingDates[i]) -\n"
+    "                                                             DeterminationLevel ),\n"
+    "                     FixingDates[i], SettlementDates[i], PayCcy);\n"
+    "    nthPayoff[i] = PAY( -LongShort * NotionalAmount * min( Cap, Underlying(FixingDates[i]) -\n"
+    "                                                                DeterminationLevel ),\n"
+    "                        FixingDates[i], SettlementDates[i], PayCcy);\n"
+    "  END;\n"
+    "END;\n"
+    // Backward induction keyed on SettlementDates; NPV computed before adding payoff.
+    "FOR a IN (SIZE(SettlementAndSimDates), 1, -1) DO\n"
+    "  s = DATEINDEX(SettlementAndSimDates[a], _AMC_SimDates, EQ);\n"
+    "  IF s > 0 THEN\n"
+    "    _AMC_NPV[s] = NPVMEM( bwdPayoff, _AMC_SimDates[s], a);\n"
+    "  END;\n"
+    "  d = DATEINDEX(SettlementAndSimDates[a], SettlementDates, EQ);\n"
+    "  IF d > 0 THEN\n"
+    "    bwdPayoff = bwdPayoff + nthPayoff[d];\n"
+    "  END;\n"
+    "END;\n";
+
+// clang-format on
+
 void Autocallable_01::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
     // set script parameters
@@ -50,22 +86,34 @@ void Autocallable_01::build(const QuantLib::ext::shared_ptr<EngineFactory>& fact
 
     // set script
 
-    script_ = {{"", ScriptedTradeScriptData(
-                        "NUMBER i, terminated, currentNotional;\n"
-                        "FOR i IN (1, SIZE(FixingDates), 1) DO\n"
-                        "  IF terminated == 0 AND Underlying(FixingDates[i]) <= TriggerLevel THEN\n"
-                        "    Option = LOGPAY( LongShort * NotionalAmount * AccumulationFactors[i], FixingDates[i],\n"
-                        "                     SettlementDates[i], PayCcy);\n"
-                        "    terminated = 1;\n"
-                        "  END;\n"
-                        "  IF terminated == 0 AND i == SIZE(FixingDates) AND Underlying(FixingDates[i]) > "
-                        "DeterminationLevel THEN\n"
-                        "    Option = LOGPAY( -LongShort * NotionalAmount * min( Cap, Underlying(FixingDates[i]) -\n"
-                        "                                                             DeterminationLevel ),\n"
-                        "                     FixingDates[i], SettlementDates[i], PayCcy);\n"
-                        "  END;\n"
-                        "END;\n",
-                        "Option", {{"currentNotional", "NotionalAmount"}, {"notionalCurrency", "PayCcy"}}, {})}};
+    script_.clear();
+
+    script_[""] = ScriptedTradeScriptData(
+        "NUMBER i, terminated, currentNotional;\n"
+        "FOR i IN (1, SIZE(FixingDates), 1) DO\n"
+        "  IF terminated == 0 AND Underlying(FixingDates[i]) <= TriggerLevel THEN\n"
+        "    Option = LOGPAY( LongShort * NotionalAmount * AccumulationFactors[i], FixingDates[i],\n"
+        "                     SettlementDates[i], PayCcy);\n"
+        "    terminated = 1;\n"
+        "  END;\n"
+        "  IF terminated == 0 AND i == SIZE(FixingDates) AND Underlying(FixingDates[i]) > "
+        "DeterminationLevel THEN\n"
+        "    Option = LOGPAY( -LongShort * NotionalAmount * min( Cap, Underlying(FixingDates[i]) -\n"
+        "                                                             DeterminationLevel ),\n"
+        "                     FixingDates[i], SettlementDates[i], PayCcy);\n"
+        "  END;\n"
+        "END;\n",
+        "Option", {{"currentNotional", "NotionalAmount"}, {"notionalCurrency", "PayCcy"}}, {});
+
+    script_["AMC"] = ScriptedTradeScriptData(
+        autocallable_01_amc_script,
+        "Option",
+        {{"currentNotional", "NotionalAmount"}, {"notionalCurrency", "PayCcy"}},
+        {},
+        {ScriptedTradeScriptData::NewScheduleData("SettlementAndSimDates", "Join", {"_AMC_SimDates", "SettlementDates"})},
+        {},
+        {"terminated"},
+        {"Asset"});
 
     // build trade
 

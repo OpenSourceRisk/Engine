@@ -116,13 +116,13 @@ void McLgmFwdBondEngine::calculate() const {
 
 RandomVariable
 McLgmFwdBondEngine::overwritePathValueUndDirty(double t, const RandomVariable& pathValueUndDirty,
-                                               const std::set<Real>& exerciseXvaTimes,
+                                               const std::set<Real>& exerciseXvaRpaTimes,
                                                const std::vector<std::vector<QuantExt::RandomVariable>>& paths) const {
 
     double fwdMaturity = time(arguments_.fwdMaturityDate);
     if (t < fwdMaturity) {
 
-        Size ind = std::distance(exerciseXvaTimes.begin(), exerciseXvaTimes.find(t));
+        Size ind = std::distance(exerciseXvaRpaTimes.begin(), exerciseXvaRpaTimes.find(t));
         Size samples = paths.front().front().size();
 
         // numeraire adjustment {ref + spread} (t) / ois (t) ... ois below with return ...
@@ -210,9 +210,9 @@ std::vector<QuantExt::RandomVariable> McLgmFwdBondEngine::FwdBondAmcCalculator::
             result[++counter] = RandomVariable(samples, 0.0);
             continue;
         }
-        Size ind = std::distance(exerciseXvaTimes_.begin(), exerciseXvaTimes_.find(t));
-        QL_REQUIRE(ind < exerciseXvaTimes_.size(), "FwdBondAmcCalculator::simulatePath(): internal error, xva time "
-                                                       << t << " not found in exerciseXvaTimes vector.");
+        Size ind = std::distance(exerciseXvaRpaTimes_.begin(), exerciseXvaRpaTimes_.find(t));
+        QL_REQUIRE(ind < exerciseXvaRpaTimes_.size(), "FwdBondAmcCalculator::simulatePath(): internal error, xva time "
+                                                       << t << " not found in exerciseXvaRpaTimes vector.");
 
         RandomVariable forwardContractForwardValue =
             regModelUndDirty_[regModelIndex][ind].apply(initialState_, effPaths, xvaTimes_);

@@ -213,6 +213,7 @@
     <DefaultCurve name="CPTY_2">Default/EUR/CPTY_2_SR_EUR</DefaultCurve>
     <DefaultCurve name="CPTY_3">Default/EUR/CPTY_3_SR_EUR</DefaultCurve>
     -->
+    <DefaultCurve name="ISIN:GB0004893086">Default/USD/ISIN:GB0004893086</DefaultCurve>
   </DefaultCurves>
   <!-- inflation volatility curves definition -->
   <YYInflationCapFloorVolatilities id="default">

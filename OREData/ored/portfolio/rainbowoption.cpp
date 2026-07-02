@@ -42,6 +42,27 @@ namespace data {
         "      Option = LongShort * Notional * PAY(bestPrice, Expiry, Settlement, PayCcy);\n"
         "      currentNotional = Notional * Strike;\n";
 
+    static const std::string best_of_asset_or_cash_rainbow_option_amc_script =
+        "      REQUIRE SIZE(Underlyings) == SIZE(Weights);\n"
+        "      NUMBER u, thisPrice, bestPrice, Payoff, currentNotional;\n"
+        "      NUMBER i, _AMC_NPV[SIZE(_AMC_SimDates)];\n"
+        "      NUMBER expUnderValue[SIZE(Underlyings)];\n"
+        "      bestPrice = Strike;\n"
+        "      FOR u IN (1, SIZE(Underlyings), 1) DO\n"
+        "          expUnderValue[u] = Underlyings[u](Expiry);\n"
+        "          thisPrice = Underlyings[u](Expiry) * Weights[u];\n"
+        "          IF thisPrice > bestPrice THEN\n"
+        "              bestPrice = thisPrice;\n"
+        "          END;\n"
+        "      END;\n"
+        "      Option = LongShort * Notional * PAY(bestPrice, Expiry, Settlement, PayCcy);\n"
+        "      currentNotional = Notional * Strike;\n"
+        "      FOR i IN (1, SIZE(_AMC_SimDates), 1) DO\n"
+        "        IF _AMC_SimDates[i] < Settlement THEN\n"
+        "          _AMC_NPV[i] = NPVMEM(Option, _AMC_SimDates[i], i);\n"
+        "        END;\n"
+        "      END;\n";
+
     static const std::string worst_of_asset_or_cash_rainbow_option_script =
         "      REQUIRE SIZE(Underlyings) == SIZE(Weights);\n"
         "      NUMBER u, thisPrice, worstPrice, Payoff, currentNotional;\n"
@@ -56,6 +77,27 @@ namespace data {
         "      END;\n"
         "      Option = LongShort * Notional * PAY(worstPrice, Expiry, Settlement, PayCcy);\n"
         "      currentNotional = Notional * Strike;\n";
+
+    static const std::string worst_of_asset_or_cash_rainbow_option_amc_script =
+        "      REQUIRE SIZE(Underlyings) == SIZE(Weights);\n"
+        "      NUMBER u, thisPrice, worstPrice, Payoff, currentNotional;\n"
+        "      NUMBER i, _AMC_NPV[SIZE(_AMC_SimDates)];\n"
+        "      NUMBER expUnderValue[SIZE(Underlyings)];\n"
+        "      worstPrice = Strike;\n"
+        "      FOR u IN (1, SIZE(Underlyings), 1) DO\n"
+        "          expUnderValue[u] = Underlyings[u](Expiry);\n"
+        "          thisPrice = Underlyings[u](Expiry) * Weights[u];\n"
+        "          IF thisPrice < worstPrice THEN\n"
+        "              worstPrice = thisPrice;\n"
+        "          END;\n"
+        "      END;\n"
+        "      Option = LongShort * Notional * PAY(worstPrice, Expiry, Settlement, PayCcy);\n"
+        "      currentNotional = Notional * Strike;\n"
+        "      FOR i IN (1, SIZE(_AMC_SimDates), 1) DO\n"
+        "        IF _AMC_SimDates[i] < Settlement THEN\n"
+        "          _AMC_NPV[i] = NPVMEM(Option, _AMC_SimDates[i], i);\n"
+        "        END;\n"
+        "      END;\n";
 
     static const std::string max_rainbow_option_script =
         "      REQUIRE SIZE(Underlyings) == SIZE(Weights);\n"
@@ -79,6 +121,35 @@ namespace data {
         "          ExerciseProbability = 1;\n"
         "      END;\n"
         "      currentNotional = Notional * Strike;\n";
+
+    static const std::string max_rainbow_option_amc_script =
+        "      REQUIRE SIZE(Underlyings) == SIZE(Weights);\n"
+        "\n"
+        "      NUMBER u, thisPrice, maxPrice, Payoff, ExerciseProbability, currentNotional;\n"
+        "      NUMBER i, _AMC_NPV[SIZE(_AMC_SimDates)];\n"
+        "      NUMBER expUnderValue[SIZE(Underlyings)];\n"
+        "      maxPrice = 0;\n"
+        "      FOR u IN (1, SIZE(Underlyings), 1) DO\n"
+        "          expUnderValue[u] = Underlyings[u](Expiry);\n"
+        "          thisPrice = Underlyings[u](Expiry) * Weights[u];\n"
+        "          IF thisPrice > maxPrice THEN\n"
+        "              maxPrice = thisPrice;\n"
+        "          END;\n"
+        "      END;\n"
+        "\n"
+        "      Payoff = max(PutCall * (maxPrice - Strike), 0);\n"
+        "\n"
+        "      Option = LongShort * Notional * PAY(Payoff, Expiry, Settlement, PayCcy);\n"
+        "\n"
+        "      IF Payoff > 0 THEN\n"
+        "          ExerciseProbability = 1;\n"
+        "      END;\n"
+        "      currentNotional = Notional * Strike;\n"
+        "      FOR i IN (1, SIZE(_AMC_SimDates), 1) DO\n"
+        "        IF _AMC_SimDates[i] < Settlement THEN\n"
+        "          _AMC_NPV[i] = NPVMEM(Option, _AMC_SimDates[i], i);\n"
+        "        END;\n"
+        "      END;\n";
 
     static const std::string min_rainbow_option_script =
         "      REQUIRE SIZE(Underlyings) == SIZE(Weights);\n"
@@ -104,6 +175,36 @@ namespace data {
         "      END;\n"
         "      currentNotional = Notional * Strike;\n";
 
+    static const std::string min_rainbow_option_amc_script =
+        "      REQUIRE SIZE(Underlyings) == SIZE(Weights);\n"
+        "      REQUIRE SIZE(Underlyings) > 0;\n"
+        "\n"
+        "      NUMBER u, thisPrice, minPrice, Payoff, ExerciseProbability, currentNotional;\n"
+        "      NUMBER i, _AMC_NPV[SIZE(_AMC_SimDates)];\n"
+        "      NUMBER expUnderValue[SIZE(Underlyings)];\n"
+        "      minPrice = Underlyings[1](Expiry) * Weights[1];\n"
+        "      FOR u IN (1, SIZE(Underlyings), 1) DO\n"
+        "          expUnderValue[u] = Underlyings[u](Expiry);\n"
+        "          thisPrice = Underlyings[u](Expiry) * Weights[u];\n"
+        "          IF thisPrice < minPrice THEN\n"
+        "              minPrice = thisPrice;\n"
+        "          END;\n"
+        "      END;\n"
+        "\n"
+        "      Payoff = max(PutCall * (minPrice - Strike), 0);\n"
+        "\n"
+        "      Option = LongShort * Notional * PAY(Payoff, Expiry, Settlement, PayCcy);\n"
+        "\n"
+        "      IF Payoff > 0 THEN\n"
+        "          ExerciseProbability = 1;\n"
+        "      END;\n"
+        "      currentNotional = Notional * Strike;\n"
+        "      FOR i IN (1, SIZE(_AMC_SimDates), 1) DO\n"
+        "        IF _AMC_SimDates[i] < Settlement THEN\n"
+        "          _AMC_NPV[i] = NPVMEM(Option, _AMC_SimDates[i], i);\n"
+        "        END;\n"
+        "      END;\n";
+
 // clang-format on
 
 void RainbowOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
@@ -125,16 +226,20 @@ void RainbowOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& factor
 
     numbers_.emplace_back("Number", "Strike", strike_);
 
-    std::string scriptToUse;
+    std::string scriptToUse, amcScriptToUse;
     if (optionData_.payoffType() == "BestOfAssetOrCash") {
         scriptToUse = best_of_asset_or_cash_rainbow_option_script;
+        amcScriptToUse = best_of_asset_or_cash_rainbow_option_amc_script;
     } else if (optionData_.payoffType() == "WorstOfAssetOrCash") {
         scriptToUse = worst_of_asset_or_cash_rainbow_option_script;
+        amcScriptToUse = worst_of_asset_or_cash_rainbow_option_amc_script;
     } else if (optionData_.payoffType() == "MaxRainbow") {
         scriptToUse = max_rainbow_option_script;
+        amcScriptToUse = max_rainbow_option_amc_script;
         numbers_.emplace_back("Number", "PutCall", parseOptionType(optionData_.callPut()) == Option::Call ? "1" : "-1");
     } else if (optionData_.payoffType() == "MinRainbow") {
         scriptToUse = min_rainbow_option_script;
+        amcScriptToUse = min_rainbow_option_amc_script;
         numbers_.emplace_back("Number", "PutCall", parseOptionType(optionData_.callPut()) == Option::Call ? "1" : "-1");
     } else {
         QL_FAIL("payoff type '" << optionData_.payoffType() << "' not recognised");
@@ -146,11 +251,18 @@ void RainbowOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& factor
 
     // set script
 
-    script_ = {{"", ScriptedTradeScriptData(scriptToUse, "Option",
-                                            {{"currentNotional", "currentNotional"},
-                                             {"notionalCurrency", "PayCcy"},
-                                             {"expectedUnderlyingValue", "expUnderValue"}},
-                                            {})}};
+    script_ = {{"",    ScriptedTradeScriptData(scriptToUse,
+                                               "Option",
+                                               {{"currentNotional", "currentNotional"},
+                                                {"notionalCurrency", "PayCcy"},
+                                                {"expectedUnderlyingValue", "expUnderValue"}},
+                                               {})},
+               {"AMC", ScriptedTradeScriptData(amcScriptToUse,
+                                               "Option",
+                                               {{"currentNotional", "currentNotional"},
+                                                {"notionalCurrency", "PayCcy"},
+                                                {"expectedUnderlyingValue", "expUnderValue"}},
+                                               {})}};
 
     // build trade
 

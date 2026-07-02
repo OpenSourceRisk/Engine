@@ -23,7 +23,6 @@
 
 #pragma once
 
-#include <qle/math/covariancesalvage.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/utilities/progressbar.hpp>

@@ -1807,7 +1807,8 @@ SalvagingAlgorithm::Type parseSalvagingAlgorithmType(const std::string& s) {
                                                       {"Spectral", SalvagingAlgorithm::Spectral},
                                                       {"Hypersphere", SalvagingAlgorithm::Hypersphere},
                                                       {"LowerDiagonal", SalvagingAlgorithm::LowerDiagonal},
-                                                      {"Higham", SalvagingAlgorithm::Higham}};
+                                                      {"Higham", SalvagingAlgorithm::Higham},
+                                                      {"Principal", SalvagingAlgorithm::Principal}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -1829,10 +1830,12 @@ std::ostream& operator<<(std::ostream& os, SalvagingAlgorithm::Type type) {
         os << "LowerDiagonal";
     } else if (type == SalvagingAlgorithm::Higham) {
         os << "Higham";
+    } else if (type == SalvagingAlgorithm::Principal) {
+        os << "Principal";
     } else {
         QL_FAIL("SalvagingAlgorithm::Type ("
                 << static_cast<int>(type)
-                << " not recognized. Expected 'None', 'Spectral', 'Hypersphere', 'LowerDiagonal', or 'Higham'.");
+                << " not recognized. Expected 'None', 'Spectral', 'Hypersphere', 'LowerDiagonal', 'Higham', 'Principal'.");
     }
 
     return os;

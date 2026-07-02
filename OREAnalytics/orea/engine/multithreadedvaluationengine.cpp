@@ -163,7 +163,7 @@ void MultiThreadedValuationEngine::buildCube(
 
     LOG("Extract pricing stats and clear them in the current portfolio");
 
-    std::map<std::string, std::pair<std::size_t, boost::timer::nanosecond_type>> pricingStats;
+    std::map<std::string, std::pair<std::size_t, unsigned long long>> pricingStats;
     for (auto const& [tid, t] : portfolio->trades())
         pricingStats[tid] = std::make_pair(t->getNumberOfPricings(), t->getCumulativePricingTime());
 
@@ -301,7 +301,7 @@ void MultiThreadedValuationEngine::buildCube(
     std::vector<std::thread> jobs; // not needed if thread pool is used
 
     // pricing stats accumulated in worker threads
-    std::vector<std::map<std::string, std::pair<std::size_t, boost::timer::nanosecond_type>>> workerPricingStats(
+    std::vector<std::map<std::string, std::pair<std::size_t, unsigned long long>>> workerPricingStats(
         eff_nThreads);
 
     // get obs mode of main thread, so that we can set this mode in the worker threads below
@@ -471,7 +471,7 @@ void MultiThreadedValuationEngine::buildCube(
     for (auto const& [tid, t] : portfolio->trades()) {
         auto p = pricingStats[tid];
         std::size_t n = p.first;
-        boost::timer::nanosecond_type d = p.second;
+        unsigned long long d = p.second;
         for (auto const& w : workerPricingStats) {
             auto p = w.find(tid);
             if (p != w.end()) {
