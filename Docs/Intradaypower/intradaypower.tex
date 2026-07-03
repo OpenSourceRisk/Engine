@@ -37,21 +37,17 @@ daily price, but power markets trade at a finer granularity. Intraday products r
 the day, e.g.\ the 09:00--10:00 hour on a weekday.
 
 The earlier approach modelled this with dedicated load curves, e.g.\ peak and off-peak curves built from the
-respective futures. A separate curve was needed for every delivery pattern. This was cumbersome to configure, made
-historical fixings hard to manage, and offered no support for intraday fixings within the delivery day.
+respective futures. A separate curve was needed for every delivery pattern.
 
 The intraday power framework replaces these dedicated curves with a single curve per underlying that carries an
-intraday shape, combined with a trade-specific load profile. This supports flexible and overlapping delivery windows
-without a new curve per pattern. The scope of this first version is limited to intraday power forwards and swaps;
-exposure simulation of these products is not yet covered.
+intraday shape, combined with a trade-specific load profile. This supports flexible delivery windows
+without a new curve per pattern. The scope of this first version is limited to intraday power forwards and commodity swaps with 
+intraday power floating legs; exposure simulation of these products is not yet covered.
 
 A day-level price comes from a commodity price curve. Intraday shape factors, provided as market data, scale this
 price across the buckets of the day. A trade specifies which buckets it delivers into through its load profile. The
 pricing of overlapping intervals and the treatment of daylight saving are described in Section
 \ref{ss:intraday_power_pricing}.
-
-This is the first version of intraday power support in ORE. Some configuration and parameterisation details may change
-as the feature set grows.
 
 %-------------------------------------------------------------------------------
 \section{Pricing}
@@ -73,7 +69,7 @@ and are loaded through the curve configuration.
 
 \input{../UserGuide/marketdata_intradaypower}
 
-The shape resolution is flexible. A single curve can mix buckets of different lengths, e.g.\ 15 minute buckets for the
+The shape resolution is flexible. A single curve can mix buckets of different lengths, e.g.\ 15 minute buckets for the today and the
 next day, hourly buckets further out and daily buckets beyond that. Alternatively, separate curves can be set up per
 granularity for the same underlying, e.g.\ a 15 minute curve and an hourly curve. Separate curves are reported on
 different risk factor keys, so their stress and sensitivity results needs to be aggregated or simulated through curve algebra (see the curve algebra section of the User Guide).
@@ -82,7 +78,7 @@ different risk factor keys, so their stress and sensitivity results needs to be 
 \section{Reusable Load Profiles}
 %-------------------------------------------------------------------------------
 
-A load profile defines intraday time buckets a trade delivers into and the load in each bucket. We can specify the load profile on a trade level 
+A load profile defines intraday time buckets and the load in for each delivery bucket. We can specify the load profile on a trade level 
 or reuse a profile defined in the conventions.
 
 \input{../UserGuide/parameterisation/conventions_intradaypowercurves}
