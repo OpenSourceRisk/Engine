@@ -2985,6 +2985,8 @@ QuantLib::ext::shared_ptr<Convention> Conventions::get(const string& id) const {
         convention = QuantLib::ext::make_shared<ZeroInflationIndexConvention>();
     } else if (type == "BondYield") {
         convention = QuantLib::ext::make_shared<BondYieldConvention>();
+    } else if (type == "IntradayPowerLoad") {
+        convention = QuantLib::ext::make_shared<IntradayPowerLoadConvention>();
     } else {
         QL_FAIL("Convention '" << id << "' has unknown type '" + type + "' not recognized.");
     }
@@ -3077,6 +3079,33 @@ void Conventions::add(const QuantLib::ext::shared_ptr<Convention>& convention) c
     data_[id] = convention;
 }
 
+void IntradayPowerLoadConvention::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "IntradayPowerLoad");
+    type_ = Type::IntradayPowerLoad;
+    id_ = XMLUtils::getChildValue(node, "Id", true);
+
+    // Parse the PowerLoadProfileData from the XML node
+    XMLNode* dataNode = XMLUtils::getChildNode(node, "PowerLoadProfileData");
+    if (dataNode) {
+        data_.fromXML(dataNode);
+    }
+    build();
+}
+
+XMLNode* IntradayPowerLoadConvention::toXML(XMLDocument& doc) const {
+    XMLNode* node = doc.allocNode("IntradayPowerLoad");
+    XMLUtils::addChild(doc, node, "Id", id_);
+
+    XMLNode* dataNode = data_.toXML(doc);
+    XMLUtils::appendNode(node, dataNode);
+
+    return node;
+}
+
+void IntradayPowerLoadConvention::build() {
+    // No additional building needed, PowerLoadProfileData is already built
+}
+
 std::ostream& operator<<(std::ostream& out, Convention::Type type) {
     switch (type) {
     case Convention::Type::Zero:
@@ -3131,6 +3160,8 @@ std::ostream& operator<<(std::ostream& out, Convention::Type type) {
         return out << "FxOptionTimeWeighting";        
     case Convention::Type::BondYield:
         return out << "BondYield";
+    case Convention::Type::IntradayPowerLoad:
+        return out << "IntradayPowerLoad";
     default:
         return out << "unknown convention type (" << static_cast<int>(type) << ")";
     }

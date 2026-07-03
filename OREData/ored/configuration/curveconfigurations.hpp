@@ -29,6 +29,7 @@
 #include <ored/configuration/cdsvolcurveconfig.hpp>
 #include <ored/configuration/commoditycurveconfig.hpp>
 #include <ored/configuration/commodityvolcurveconfig.hpp>
+#include <ored/configuration/intradaypowercurveconfig.hpp>
 #include <ored/configuration/correlationcurveconfig.hpp>
 #include <ored/configuration/defaultcurveconfig.hpp>
 #include <ored/configuration/equitycurveconfig.hpp>
@@ -138,6 +139,9 @@ public:
 
     bool hasBondFutureVolatilityConfig(const std::string& curveID) const;
     QuantLib::ext::shared_ptr<BondFutureVolatilityConfig> bondFutureVolatilityConfig(const std::string& curveID) const;
+
+    bool hasIntradayPowerCurveConfig(const std::string& curveID) const;
+    QuantLib::ext::shared_ptr<IntradayPowerCurveConfig> intradayPowerCurveConfig(const std::string& curveID) const;
 
     QuantLib::ext::shared_ptr<CurveConfigurations>
     minimalCurveConfig(const QuantLib::ext::shared_ptr<TodaysMarketParameters> todaysMarketParams,

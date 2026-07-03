@@ -1,0 +1,68 @@
+Intraday power curves in the simulation market are configured in an \lstinline!IntradayPowerCurves! node under
+\lstinline!Market!. The node structure is:
+
+\begin{itemize}
+\item \lstinline!Simulate! [Optional]: If present, enables or disables simulation of intraday power curves. If omitted,
+  it defaults to \lstinline!false!.
+\item \lstinline!Names!: List of intraday power curve names to include.
+\item \lstinline!Tenors!: Pillar tenors used to build simulated curve points. Tenors can be provided per name using
+  attribute \lstinline!name!, or as a default tenor set with empty \lstinline!name! (or no attribute).
+\item \lstinline!Interpolation! [Optional]: Interpolation method for each intraday power curve. Can be specified per
+  name via attribute \lstinline!name! or as a default. If omitted, the default interpolation is
+  \lstinline!Linear!.
+\end{itemize}
+
+Simulation currently evolves the day-average prices of intraday power price curve only. Intraday shape factors are kept
+constant during simulation and are used to distribute simulated day-average prices to intraday buckets.
+
+If \lstinline!UseSpreadedTermStructures! is enabled in the sensitivity setup, \lstinline!LogLinear! and
+\lstinline!LogLinearFlat! interpolation should not be used for intraday power curves, because spreaded values can
+become negative.
+
+At least one \lstinline!Name! and at least one \lstinline!Tenors! node are required.
+If tenors are not provided for each named curve explicitly, a default tenor set must be provided.
+
+An example configuration is shown in Listing \ref{lst:simulation_intraday_power_curves}.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<IntradayPowerCurves>
+  <Simulate>true</Simulate>
+  <Names>
+    <Name>PJM_WH_RT_PK</Name>
+  </Names>
+  <Tenors name="">1W,2W,1M,2M,3M,6M,1Y</Tenors>
+  <Interpolation name="">Linear</Interpolation>
+</IntradayPowerCurves>
+\end{minted}
+\caption{Simulation market intraday power curves configuration}
+\label{lst:simulation_intraday_power_curves}
+\end{listing}
+
+Curve linking and algebraic mapping for intraday power curves are described in Section
+\ref{sec:sim_curve_algebra}.
+
+It can be preferable to simulate intraday power curves via their
+underlying commodity curves and report sensitivities on the commodity curve keys, for example during sensitivity analysis or stresstesting.
+
+This can be achieve configured using CurveAlgebra as shown below.
+
+An intraday power mapping example is shown in Listing \ref{lst:curve_algebra_intraday_power_mapping}.
+
+\begin{listing}
+  \begin{minted}[fontsize=\footnotesize]{xml}
+    <CurveAlgebra>
+      <Curve>
+        <Key>IntradayPowerCurve/PJM_WH_RT_PK</Key>
+        <Operation>
+          <Type>Spreaded</Type>
+          <Arguments>
+            <Argument>CommodityCurve/PJM_WH_RT_PK,1</Argument>
+          </Arguments>
+        </Operation>
+      </Curve>
+    </CurveAlgebra>
+  \end{minted}
+\caption{CurveAlgebra node for intraday power to commodity mapping}
+\label{lst:curve_algebra_intraday_power_mapping}
+\end{listing}

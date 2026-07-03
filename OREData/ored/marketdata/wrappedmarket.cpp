@@ -202,5 +202,15 @@ Handle<BlackVolTermStructure> WrappedMarket::bondFutureVol(const string& contrac
     return market_->bondFutureVol(contractName, configuration);
 }
 
+QuantLib::Handle<QuantExt::IntradayPowerPriceTermStructure>
+WrappedMarket::intradayPowerPriceCurve(const std::string& indexName, const std::string& configuration) const {
+    return market_->intradayPowerPriceCurve(indexName, configuration);
+}
+
+QuantLib::Handle<QuantExt::IntradayPowerIndex>
+WrappedMarket::intradayPowerIndex(const std::string& indexName, const std::string& configuration) const {
+    return market_->intradayPowerIndex(indexName, configuration);
+}
+
 } // namespace data
 } // namespace ore

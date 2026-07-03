@@ -358,5 +358,132 @@ XMLNode* CommodityFloatingLegData::toXML(XMLDocument& doc) const {
     return node;
 }
 
+IntradayPowerFloatingLegData::IntradayPowerFloatingLegData()
+    : LegAdditionalData(LegType::IntradayPowerFloating), includePeriodStart_(true), includePeriodEnd_(false),
+      businessDays_(true), avgPricePrecision_(Null<Natural>()), quantityMode_(QuantExt::IntradayPowerQuantityMode::TotalEnergy) {}
+
+IntradayPowerFloatingLegData::IntradayPowerFloatingLegData(
+    const string& name, const vector<Real>& quantities, const vector<string>& quantityDates,
+    const vector<Real>& spreads, const vector<string>& spreadDates, const vector<Real>& gearings,
+    const vector<string>& gearingDates, const string& pricingCalendar, bool includePeriodStart, bool includePeriodEnd,
+    bool businessDays, const std::optional<PowerLoadProfileData>& loadProfileData, const string& fxIndex,
+    Natural avgPricePrecision, QuantExt::IntradayPowerQuantityMode quantityMode)
+    : LegAdditionalData(LegType::IntradayPowerFloating), name_(name), quantities_(quantities),
+      quantityDates_(quantityDates), spreads_(spreads), spreadDates_(spreadDates), gearings_(gearings),
+      gearingDates_(gearingDates), pricingCalendar_(pricingCalendar), includePeriodStart_(includePeriodStart),
+      includePeriodEnd_(includePeriodEnd), businessDays_(businessDays), loadProfileData_(loadProfileData),
+      fxIndex_(fxIndex), avgPricePrecision_(avgPricePrecision), quantityMode_(quantityMode) {
+    indices_.insert("POWER-" + name_);
+}
+
+void IntradayPowerFloatingLegData::fromXML(XMLNode* node) {
+
+    XMLUtils::checkNode(node, "IntradayPowerFloatingLegData");
+
+    indices_.clear();
+    name_ = XMLUtils::getChildValue(node, "Name", true);
+    indices_.insert("POWER-" + name_);
+
+    quantities_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Quantities", "Quantity", "startDate",
+                                                                  quantityDates_, &parseReal, true);
+
+    spreads_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Spreads", "Spread", "startDate",
+                                                               spreadDates_, &parseReal);
+    gearings_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Gearings", "Gearing", "startDate",
+                                                                gearingDates_, &parseReal);
+
+    pricingCalendar_ = XMLUtils::getChildValue(node, "PricingCalendar", false);
+
+    includePeriodStart_ = true;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "IncludePeriodStart")) {
+        includePeriodStart_ = parseBool(XMLUtils::getNodeValue(n));
+    }
+
+    includePeriodEnd_ = false;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "IncludePeriodEnd")) {
+        includePeriodEnd_ = parseBool(XMLUtils::getNodeValue(n));
+    }
+
+    businessDays_ = true;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "BusinessDays")) {
+        businessDays_ = parseBool(XMLUtils::getNodeValue(n));
+    }
+
+    powerLoadProfileReference_ = XMLUtils::getChildValue(node, "PowerLoadProfileReference", false);
+    if (!powerLoadProfileReference_.empty() && InstrumentConventions::instance().conventions()->has(
+                                             powerLoadProfileReference_, Convention::Type::IntradayPowerLoad)) {
+        auto [found, conv] = InstrumentConventions::instance().conventions()->get(powerLoadProfileReference_, Convention::Type::IntradayPowerLoad);
+        loadProfileData_ = QuantLib::ext::dynamic_pointer_cast<IntradayPowerLoadConvention>(conv)->data();
+
+    }
+
+    if (XMLNode* n = XMLUtils::getChildNode(node, "PowerLoadProfileData");
+        !loadProfileData_.has_value() && n != nullptr) {
+        loadProfileData_ = PowerLoadProfileData();
+        loadProfileData_->fromXML(n);
+    }
+
+    fxIndex_ = XMLUtils::getChildValue(node, "FXIndex", false);
+
+    avgPricePrecision_ = Null<Natural>();
+    if (XMLNode* n = XMLUtils::getChildNode(node, "AvgPricePrecision")) {
+        int precision = parseInteger(XMLUtils::getNodeValue(n));
+        QL_REQUIRE(precision >= 0,
+                   "IntradayPowerFloatingLegData: avgPricePrecision must be non-negative, got " << precision);
+        avgPricePrecision_ = static_cast<Natural>(precision);
+    }
+
+    tag_ = XMLUtils::getChildValue(node, "Tag", false);
+
+    quantityMode_ = QuantExt::IntradayPowerQuantityMode::TotalEnergy;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "QuantityMode")) {
+        quantityMode_ = QuantExt::parseIntradayPowerQuantityMode(XMLUtils::getNodeValue(n));
+    }
+}
+
+XMLNode* IntradayPowerFloatingLegData::toXML(XMLDocument& doc) const {
+
+    XMLNode* node = doc.allocNode("IntradayPowerFloatingLegData");
+
+    XMLUtils::addChild(doc, node, "Name", name_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Quantities", "Quantity", quantities_, "startDate",
+                                                quantityDates_);
+
+    if (!spreads_.empty())
+        XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Spreads", "Spread", spreads_, "startDate",
+                                                    spreadDates_);
+
+    if (!gearings_.empty())
+        XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate",
+                                                    gearingDates_);
+
+    if (!pricingCalendar_.empty())
+        XMLUtils::addChild(doc, node, "PricingCalendar", pricingCalendar_);
+
+    XMLUtils::addChild(doc, node, "IncludePeriodStart", includePeriodStart_);
+    XMLUtils::addChild(doc, node, "IncludePeriodEnd", includePeriodEnd_);
+    XMLUtils::addChild(doc, node, "BusinessDays", businessDays_);
+
+    if (powerLoadProfileReference_ != "") {
+        XMLUtils::addChild(doc, node, "PowerLoadProfileReference", powerLoadProfileReference_);
+    } else if (loadProfileData_.has_value()) {
+        auto lpNode = loadProfileData_->toXML(doc);
+        XMLUtils::appendNode(node, lpNode);
+    }
+
+    if (!fxIndex_.empty())
+        XMLUtils::addChild(doc, node, "FXIndex", fxIndex_);
+
+    if (avgPricePrecision_ != Null<Natural>())
+        XMLUtils::addChild(doc, node, "AvgPricePrecision", static_cast<int>(avgPricePrecision_));
+
+    if (!tag_.empty())
+        XMLUtils::addChild(doc, node, "Tag", tag_);
+
+    XMLUtils::addChild(doc, node, "QuantityMode", to_string(quantityMode_));
+
+    return node;
+}
+
 } // namespace data
 } // namespace ore

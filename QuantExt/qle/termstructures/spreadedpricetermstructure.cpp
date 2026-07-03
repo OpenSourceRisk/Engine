@@ -20,27 +20,56 @@
 
 #include <qle/math/flatextrapolation.hpp>
 
+#include <ql/math/interpolations/backwardflatinterpolation.hpp>
+#include <ql/math/interpolations/cubicinterpolation.hpp>
+#include <ql/math/interpolations/forwardflatinterpolation.hpp>
+#include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 
 using namespace QuantLib;
 
 namespace QuantExt {
 
+namespace {
+QuantLib::ext::shared_ptr<QuantLib::Interpolation>
+makeSpreadInterpolation(const std::string& interpolation, const std::vector<Real>& times,
+                        const std::vector<Real>& data) {
+    if (interpolation == "Linear")
+        return QuantLib::ext::make_shared<LinearInterpolation>(times.begin(), times.end(), data.begin());
+    else if (interpolation == "Cubic")
+        return QuantLib::ext::make_shared<CubicNaturalSpline>(times.begin(), times.end(), data.begin());
+    else if (interpolation == "BackwardFlat")
+        return QuantLib::ext::make_shared<BackwardFlatInterpolation>(times.begin(), times.end(), data.begin());
+    else if (interpolation == "ForwardFlat")
+        return QuantLib::ext::make_shared<ForwardFlatInterpolation>(times.begin(), times.end(), data.begin());
+    else if (interpolation == "LinearFlat")
+        return QuantLib::ext::make_shared<LinearInterpolation>(times.begin(), times.end(), data.begin());
+    else if (interpolation == "CubicFlat")
+        return QuantLib::ext::make_shared<CubicNaturalSpline>(times.begin(), times.end(), data.begin());
+    else if (interpolation == "LogLinearFlat" || interpolation == "LogLinear")
+        QL_FAIL("SpreadedPriceTermStructure: interpolation '" << interpolation
+                << "' not allowed for spreaded price term structures, as spreads can be negative.");
+    else
+        QL_FAIL("SpreadedPriceTermStructure: interpolation '" << interpolation << "' not recognised.");
+}
+} // namespace
+
 SpreadedPriceTermStructure::SpreadedPriceTermStructure(
     const QuantLib::Handle<PriceTermStructure>& referenceCurve, const std::vector<QuantLib::Real>& times,
-    const std::vector<QuantLib::Handle<QuantLib::Quote>>& priceSpreads, const PriceCurveRollDown priceCurveRollDown)
+    const std::vector<QuantLib::Handle<QuantLib::Quote>>& priceSpreads, const PriceCurveRollDown priceCurveRollDown,
+    const std::string& interpolation)
     : PriceTermStructure(0, !referenceCurve->calendar().empty() ? referenceCurve->calendar() : NullCalendar(),
                          referenceCurve->dayCounter()),
       referenceCurve_(referenceCurve), times_(times), priceSpreads_(priceSpreads),
-      priceCurveRollDown_(priceCurveRollDown), data_(times.size()) {
+      priceCurveRollDown_(priceCurveRollDown), interpolationType_(interpolation), data_(times.size()) {
     QL_REQUIRE(times_.size() > 1, "SpreadedPriceTermStructure: at least two times required");
     QL_REQUIRE(times_.size() == priceSpreads_.size(),
                "SpreadedPriceTermStructure: size of time and quote vectors do not match");
     QL_REQUIRE(times_[0] == 0.0, "SpreadedPriceTermStructure: first time must be 0, got " << times_[0]);
     for (auto const& q : priceSpreads_)
         registerWith(q);
-    interpolation_ = QuantLib::ext::make_shared<FlatExtrapolation>(
-        QuantLib::ext::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin()));
+    interpolation_ =
+        QuantLib::ext::make_shared<FlatExtrapolation>(makeSpreadInterpolation(interpolationType_, times_, data_));
     interpolation_->enableExtrapolation();
     registerWith(referenceCurve_);
 }
