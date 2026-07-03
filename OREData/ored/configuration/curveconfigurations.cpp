@@ -50,6 +50,8 @@ CurveConfigurations::CurveConfigurations(const CurveConfigurations& configs) {
     refDataManager_ = configs.refDataManager_;
     iborFallbackConfig_ = configs.iborFallbackConfig_;
     curveConfigOverride_ = configs.curveConfigOverride_;
+    unparsed_ = configs.unparsed_;
+    configs_ = configs.configs_;
     reportConfigEqVols_ = configs.reportConfigEqVols_;
     reportConfigFxVols_ = configs.reportConfigFxVols_;
     reportConfigCommVols_ = configs.reportConfigCommVols_;
