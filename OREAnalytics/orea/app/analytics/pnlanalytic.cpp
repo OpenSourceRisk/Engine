@@ -168,6 +168,14 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         CONSOLE("OK");
     }
 
+    //Capture trades cashflows at t0
+    auto trades = analytic()->portfolio()->trades();
+    std::map<std::string, std::vector<ore::data::TradeCashflowReportData>> tradeCashflowsT0;
+    for(auto const& t: trades){
+        auto tradeCF = t.second->cashflows(effectiveResultCurrency,analytic()->market(),marketConfig, inputs_->includePastCashflows());
+        tradeCashflowsT0[t.first] = tradeCF;
+    }
+
     /****************************************************
      *
      * 2. Write cash flow report for the clean actual P&L 
@@ -455,7 +463,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     QuantLib::ext::shared_ptr<InMemoryReport> pnlReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     ReportWriter(inputs_->reportNaString())
         .writePnlReport(*pnlReport, t0NpvReport, t0m1p0NpvReport, t1m0p0NpvReport, t1m1p0NpvReport, t1m0p1NpvReport, t1m1p1NpvReport,
-			t0CashFlowReport, inputs_->asof(), mporDate(), effectiveResultCurrency, analytic()->market(), 
+			tradeCashflowsT0, inputs_->asof(), mporDate(), effectiveResultCurrency, analytic()->market(), 
             marketConfig, analytic()->portfolio());
     analytic()->addReport(LABEL, "pnl", pnlReport);
 

@@ -2271,38 +2271,6 @@ void ReportWriter::writeIMScheduleTradeReport(const map<string, vector<IMSchedul
     LOG("IM Schedule trade results report written.");
 }
 
-Real aggregateTradeFlow(const std::string& tradeId, const Date& d0, const Date& d1, 
-            const ext::shared_ptr<InMemoryReport>& cashFlowReport,
-            const ext::shared_ptr<ore::data::Market>& market, const std::string& configuration,
-            const std::string& baseCurrency)  {
-    Size tradeIdColumn = 0;
-    Size dateColumn = 4;
-    Size amountColumn = 6;
-    Size ccyColumn = 7;
-    QL_REQUIRE(cashFlowReport->header(tradeIdColumn) == "TradeId", "incorrect trade id column " << tradeIdColumn);
-    QL_REQUIRE(cashFlowReport->header(amountColumn) == "Amount", "incorrect trade id column " << amountColumn);
-    QL_REQUIRE(cashFlowReport->header(ccyColumn) == "Currency", "incorrect trade id column " << ccyColumn);
-    QL_REQUIRE(cashFlowReport->header(dateColumn) == "PayDate", "incorrect trade id column " << dateColumn);
-
-    Real flow = 0.0;
-    for (Size i = 0; i < cashFlowReport->rows(); ++i) {
-        string id = boost::get<string>(cashFlowReport->data(tradeIdColumn, i));
-    if (id != tradeId)
-        continue;
-    Date date = boost::get<Date>(cashFlowReport->data(dateColumn, i));
-    if (date <= d0 || date > d1)
-        continue;
-    string ccy = boost::get<string>(cashFlowReport->data(ccyColumn, i));
-    Real amount = boost::get<Real>(cashFlowReport->data(amountColumn, i));
-    Real fx = 1.0;
-    if (ccy != baseCurrency)
-        fx = market->fxRate(ccy + baseCurrency, configuration)->value();
-    flow += fx * amount; 
-    }
-    
-    return flow;
-}
-
 void ReportWriter::writePnlReport(ore::data::Report& report,
             const ext::shared_ptr<InMemoryReport>& t0NpvReport,
             const ext::shared_ptr<InMemoryReport>& t0m1p0NpvReport,
@@ -2310,7 +2278,7 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
             const ext::shared_ptr<InMemoryReport>& t1m1p0NpvReport,
             const ext::shared_ptr<InMemoryReport>& t1m0p1NpvReport,
             const ext::shared_ptr<InMemoryReport>& t1m1p1NpvReport,
-            const ext::shared_ptr<InMemoryReport>& t0CashFlowReport,
+            const std::map<std::string, std::vector<ore::data::TradeCashflowReportData>>& tradeCashflows,
             const Date& startDate, const Date& endDate,
             const std::string& baseCurrency,
             const ext::shared_ptr<ore::data::Market>& market,
@@ -2424,7 +2392,9 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
             
             Real tradeChangePnl = t1m1p1Npv - t1m1p0Npv;
             Real hypotheticalCleanPnl = t0m1p0Npv - t0Npv;
-            Real periodFlow = aggregateTradeFlow(tradeId, startDate, endDate, t0CashFlowReport, market, configuration, baseCurrency);
+            auto cfIt = tradeCashflows.find(tradeId);
+            Real periodFlow = cfIt == tradeCashflows.end() ? 0.0 : getAggregateTradeFlows(startDate, endDate, 
+                                                                            cfIt->second, market, configuration, baseCurrency);
             Real matured =
                 (maturityDate <= endDate && close_enough(t1m1p0Npv, 0.0) && close_enough(t1m1p1Npv, 0.0)) ? t0Npv : 0.0;
             Real terminated = (close_enough(t1m1p1Npv, 0.0) && !close_enough(t1m1p0Npv, 0.0)) ? t0Npv : 0.0;
