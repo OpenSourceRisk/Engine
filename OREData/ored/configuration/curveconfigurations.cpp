@@ -18,6 +18,7 @@
 
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/inflationcurveconfig.hpp>
+#include <ored/configuration/intradaypowercurveconfig.hpp>
 #include <ored/configuration/inflationcapfloorvolcurveconfig.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/structuredcurveerror.hpp>
@@ -140,6 +141,10 @@ void CurveConfigurations::parseNode(const CurveSpec::CurveType& type, const stri
             }
             case CurveSpec::CurveType::BondFutureVolatility: {
                 config = QuantLib::ext::make_shared<BondFutureVolatilityConfig>();
+                break;
+            }
+            case CurveSpec::CurveType::IntradayPowerCurve: {
+                config = QuantLib::ext::make_shared<IntradayPowerCurveConfig>();
                 break;
             }
             }
@@ -664,6 +669,16 @@ CurveConfigurations::bondFutureVolatilityConfig(const string& curveID) const {
     return ext::dynamic_pointer_cast<BondFutureVolatilityConfig>(cc);
 }
 
+bool CurveConfigurations::hasIntradayPowerCurveConfig(const string& curveID) const {
+    return has(CurveSpec::CurveType::IntradayPowerCurve, curveID);
+}
+
+ext::shared_ptr<IntradayPowerCurveConfig>
+CurveConfigurations::intradayPowerCurveConfig(const string& curveID) const {
+    auto cc = get(CurveSpec::CurveType::IntradayPowerCurve, curveID);
+    return ext::dynamic_pointer_cast<IntradayPowerCurveConfig>(cc);
+}
+
 #include <iostream>
 void CurveConfigurations::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CurveConfiguration");
@@ -727,6 +742,7 @@ void CurveConfigurations::fromXML(XMLNode* node) {
     getNode(node, "CommodityVolatilities", "CommodityVolatility");
     getNode(node, "Correlations", "Correlation");
     getNode(node, "BondFutureVolatilities", "BondFutureVolatility");
+    getNode(node, "IntradayPowerCurves", "IntradayPowerCurve");
 }
 
 XMLNode* CurveConfigurations::toXML(XMLDocument& doc) const {
@@ -750,6 +766,7 @@ XMLNode* CurveConfigurations::toXML(XMLDocument& doc) const {
     addNodes(doc, parent, "CommodityVolatilities");
     addNodes(doc, parent, "Correlations");
     addNodes(doc, parent, "BondFutureVolatilities");
+    addNodes(doc, parent, "IntradayPowerCurves");
     addReportConfigurationNode(doc, parent);
 
     return parent;

@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<ORE>
+  <Setup>
+    <Parameter name="asofDate">2021-01-05</Parameter>
+    <Parameter name="inputPath">Input/Intradaypower</Parameter>
+    <Parameter name="outputPath">Output/Intradaypower/histvar</Parameter>
+    <Parameter name="logFile">log.txt</Parameter>
+    <Parameter name="logMask">255</Parameter>
+    <Parameter name="marketDataFile">market.txt</Parameter>
+    <Parameter name="fixingDataFile">fixings.txt</Parameter>
+    <Parameter name="baseCurrency">USD</Parameter>
+    <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
+    <Parameter name="conventionsFile">conventions.xml</Parameter>
+    <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
+    <Parameter name="portfolioFile">portfolio.xml</Parameter>
+    <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
+    <Parameter name="additionalResults">Y</Parameter>
+  </Setup>
+  <Markets>
+    <Parameter name="lgmcalibration">default</Parameter>
+    <Parameter name="fxcalibration">default</Parameter>
+    <Parameter name="pricing">default</Parameter>
+  </Markets>
+  <Analytics>
+    <Analytic type="historicalSimulationVar">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="historicalScenarioFile">scenario.csv</Parameter>
+      <Parameter name="simulationConfigFile">simulation_curveAlgebra.xml</Parameter>
+      <Parameter name="historicalPeriod">2020-05-12,2020-05-22</Parameter>
+      <Parameter name="mporDays">10</Parameter>
+      <Parameter name="mporCalendar">USD</Parameter>
+      <Parameter name="mporOverlappingPeriods">true</Parameter>
+      <Parameter name="quantiles">0.01,0.05,0.95,0.99</Parameter>
+      <Parameter name="includeExpectedShortfall">Y</Parameter>
+      <Parameter name="breakdown">Y</Parameter>
+      <Parameter name="tradePnl">Y</Parameter>
+      <Parameter name="riskFactorBreakdown">Y</Parameter>
+      <Parameter name="riskClassBreakdown">Y</Parameter>
+      <Parameter name="outputHistoricalScenarios">Y</Parameter>
+      <Parameter name="outputHistoricalScenarios">Y</Parameter>
+      <Parameter name="outputFile">var.csv</Parameter>
+    </Analytic>
+  </Analytics>
+</ORE>

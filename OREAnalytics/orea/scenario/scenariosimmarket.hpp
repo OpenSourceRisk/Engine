@@ -152,6 +152,7 @@ protected:
     void applyCurveAlgebra();
     void applyCurveAlgebraSpreadedYieldCurve(const ScenarioSimMarketParameters::CurveAlgebraData::Curve& a);
     void applyCurveAlgebraCommodityPriceCurve(const ScenarioSimMarketParameters::CurveAlgebraData::Curve& a);
+    void applyCurveAlgebraIntradayPowerPriceCurve(const ScenarioSimMarketParameters::CurveAlgebraData::Curve& a);
 
     /*! Given a yield curve spec ID, \p yieldSpecId, return the corresponding yield term structure
     from the \p market. If \p market is `nullptr`, then the yield term structure is taken from
