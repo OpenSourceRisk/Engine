@@ -153,18 +153,31 @@ StressScenarioGenerator::populateShiftData(
 
 void StressScenarioGenerator::addFxShifts(StressTestScenarioData::StressTestData& std,
                                           QuantLib::ext::shared_ptr<Scenario>& scenario) {
-    auto& data = std.fxShifts;
-    auto wildcards = wildcardList(data);
+    auto& fxShiftData = std.fxShifts;
+    auto wildcards = wildcardList(fxShiftData);
     if (wildcards.size() > 0) {
-        data = populateShiftData(data, wildcards, RiskFactorKey::KeyType::FXSpot);
+        fxShiftData = populateShiftData(fxShiftData, wildcards, RiskFactorKey::KeyType::FXSpot);
     }
 
-    for (auto d : data) {
-        string ccypair = d.first; // foreign + domestic;
+    for (const auto& [ccyPair, fxShiftDatumPtr] : fxShiftData) {
+        // ccyPair is foreign + domestic
+        // For example, USDEUR would imply number of units of EUR (domestic) per unit of USD (foreign).
+        string foreign = ccyPair.substr(0, 3);
+        string domestic = ccyPair.substr(3);
+        RiskFactorKey key(RiskFactorKey::KeyType::FXSpot, ccyPair);
 
-        RiskFactorKey key(RiskFactorKey::KeyType::FXSpot, ccypair);
-        // Check if base scenario contains the FX rate
-        if (!scenario->has(key)) {
+        // If FX scenario is specified using currency pair in scenario, everything is fine. For example, the shifts 
+        // in `data` are given as `USDEUR`, `GBPEUR`, etc. and this matches the scenario FX keys i.e. they are also 
+        // `USDEUR`, `GBPEUR`, etc.
+        // However, want to support the case where the shifts in `data` are specified using the inverse currency pair, 
+        // e.g. `USDEUR` is provided in `data` but the scenario FX key is `EURUSD`. In this case, we need to check if 
+        // the inverse pair is present in the scenario. We then use `usingInverse` below to apply the shift on 
+        // `USDEUR` while keeping the scenario key as `EURUSD`.
+        string inversePair = domestic + foreign;
+        RiskFactorKey inverseKey(RiskFactorKey::KeyType::FXSpot, inversePair);
+
+        // Check if base scenario contains the FX rate or its inverse.
+        if (!baseScenarioAbsolute_->has(key) && !baseScenarioAbsolute_->has(inverseKey)) {
             missingBaseScenarioKeys_.insert(key);
             continue;
         }
@@ -180,28 +193,46 @@ void StressScenarioGenerator::addFxShifts(StressTestScenarioData::StressTestData
         // - (b) the value of the GBPUSD trade stays the same
         // in light of the above we restrict the universe of FX pairs that we support here for the time being
         string baseCcy = simMarketData_->baseCcy();
-        string foreign = ccypair.substr(0, 3);
-        string domestic = ccypair.substr(3);
-        QL_REQUIRE((domestic == baseCcy) || (foreign == baseCcy),
-                   "SensitivityScenarioGenerator does not support cross FX pairs("
-                       << ccypair << ", but base currency is " << baseCcy << ")");
+        QL_REQUIRE((domestic == baseCcy) || (foreign == baseCcy), "StressScenarioGenerator does not support cross "
+            "FX pairs(" << ccyPair << ", but base currency is " << baseCcy << ")");
 
-        TLOG("Apply stress scenario to fx " << ccypair);
+        // If base scenario contains the inverse pair, we need to update the shifts below.
+        bool usingInverse = !baseScenarioAbsolute_->has(key) && baseScenarioAbsolute_->has(inverseKey);
 
-        StressTestScenarioData::SpotShiftData data = *d.second;
-        ShiftType type = data.shiftType;
-        bool relShift = (type == ShiftType::Relative);
-        // QL_REQUIRE(type == ShiftType::Relative, "FX scenario type must be relative");
-        Real size = data.shiftSize;
+        TLOG("Apply stress scenario to fx " << ccyPair << " (using inverse: " << std::boolalpha << usingInverse << ")");
 
-        Real rate = scenario->get(key);
-        Real newRate;
-        if (type == ShiftType::EqualTo)
-            newRate = size;
-        else
-            newRate = relShift ? rate * (1.0 + size) : (rate + size);
-        scenario->add(RiskFactorKey(RiskFactorKey::KeyType::FXSpot, ccypair),
-                      useSpreadedTermStructures_ ? newRate / rate : newRate);
+        // `scenRate` is in the units of the pair in the scenario keys. For example, if `USDEUR` is in the scenario
+        // keys, then `scenRate` is in units of EUR per USD.
+        Real scenRate = usingInverse ? baseScenarioAbsolute_->get(inverseKey) : baseScenarioAbsolute_->get(key);
+
+        // `baseRate` and `shiftedRate` are in the units of the shift `data`. For example, `USDEUR` could be in the 
+        // scenario keys but `USDEUR` or `EURUSD` can be in the shift `data`.
+        Real baseRate = usingInverse ? 1 / scenRate : scenRate;
+        Real shiftedRate;
+        const auto& fxShiftDatum = *fxShiftDatumPtr;
+        if (fxShiftDatum.shiftType == ShiftType::EqualTo) {
+            QL_REQUIRE(!close(fxShiftDatum.shiftSize, 0.0), "StressScenarioGenerator::addFxShifts: "
+                "when using shift type EqualTo, shift size must be non-zero.");
+            shiftedRate = fxShiftDatum.shiftSize;
+        } else if (fxShiftDatum.shiftType == ShiftType::Relative) {
+            shiftedRate = baseRate * (1.0 + fxShiftDatum.shiftSize);
+        } else if (fxShiftDatum.shiftType == ShiftType::Absolute) {
+            shiftedRate = baseRate + fxShiftDatum.shiftSize;
+        } else {
+            QL_FAIL("StressScenarioGenerator::addFxShifts: unknown shift type provided.");
+        }
+
+        // Switch back to the units of the pair in the scenario keys, if necessary.
+        Real scenShiftedRate = usingInverse ? 1 / shiftedRate : shiftedRate;
+
+        // Populate the scenario.
+        RiskFactorKey scenKey = usingInverse ? inverseKey : key;
+        if (useSpreadedTermStructures_) {
+            Real scenOffset = usingInverse ? baseScenario_->get(inverseKey) : baseScenario_->get(key);
+            scenario->add(scenKey, scenShiftedRate / scenRate * scenOffset);
+        } else {
+            scenario->add(scenKey, scenShiftedRate);
+        }
     }
     DLOG("FX scenarios done");
 }
