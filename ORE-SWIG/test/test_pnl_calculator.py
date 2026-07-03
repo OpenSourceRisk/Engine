@@ -1,13 +1,4 @@
-"""Tests for Ticket 4: PNLCalculator, CovarianceCalculator, HistoricalSensiPnlCalculator.
-
-Covers the acceptance criteria:
-- PNLCalculator constructible; pnls() returns a Python list of floats after populatePNLs()
-- HistoricalSensiPnlCalculator constructible from wrapped generator + stream
-- calculateSensiPnl() populates the PNL calculator with per-scenario PnL
-- CovarianceCalculator.covariance() returns a QuantLib Matrix accessible from Python
-- Integration test: sensitivity records + historical scenarios -> calculateSensiPnl()
-  -> verify PnL vector length matches scenario count
-"""
+"""Tests for PNLCalculator, CovarianceCalculator, and HistoricalSensiPnlCalculator."""
 
 import unittest
 
@@ -52,7 +43,7 @@ def _make_generator():
 
 
 class TestPNLCalculator(unittest.TestCase):
-    """AC1: PNLCalculator constructible; pnls()/foPnls() populated."""
+    """PNLCalculator construction and data access."""
 
     def test_constructible(self):
         tp = _make_time_period([ORE.Date(3, ORE.January, 2020), ORE.Date(7, ORE.January, 2020)])
@@ -97,7 +88,7 @@ class TestPNLCalculator(unittest.TestCase):
 
 
 class TestCovarianceCalculator(unittest.TestCase):
-    """AC3: CovarianceCalculator.covariance()/correlation() return a QuantLib Matrix."""
+    """CovarianceCalculator matrix access."""
 
     def test_constructible(self):
         tp = _make_time_period([ORE.Date(3, ORE.January, 2020), ORE.Date(7, ORE.January, 2020)])
@@ -124,7 +115,7 @@ class TestCovarianceCalculator(unittest.TestCase):
 
 
 class TestHistoricalSensiPnlCalculator(unittest.TestCase):
-    """AC2/AC4/AC5: HistoricalSensiPnlCalculator construction and calculateSensiPnl()."""
+    """HistoricalSensiPnlCalculator construction and calculateSensiPnl()."""
 
     def test_constructible(self):
         gen, _, _, _, _ = _make_generator()
@@ -139,7 +130,7 @@ class TestHistoricalSensiPnlCalculator(unittest.TestCase):
         self.assertEqual(calc.getScenarioNumber(), gen.numScenarios())
 
     def test_calculate_sensi_pnl_populates_pnl_vector(self):
-        """AC5: build a shift cube + sensitivity record set manually and verify
+        """Build a shift cube + sensitivity record set manually and verify
         that calculateSensiPnl() populates the PNL calculator with a PnL vector
         whose length matches the number of historical scenarios."""
         gen, key, d1, d2, d3 = _make_generator()
