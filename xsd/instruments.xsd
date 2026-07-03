@@ -110,6 +110,9 @@
       <xs:element type="dualEuroBinaryOptionData" name="DualEuroBinaryOptionData"/>
       <xs:element type="dualEuroBinaryOptionDoubleKOData" name="DualEuroBinaryOptionDoubleKOData"/>
       <xs:element type="volBarrierOptionData" name="VolatilityBarrierOptionData"/>
+      <xs:element type="forwardVolatilityAgreementData2" name="FxForwardVolatilityAgreementData"/>
+      <xs:element type="forwardVolatilityAgreementData2" name="EquityForwardVolatilityAgreementData"/>
+      <xs:element type="forwardVolatilityAgreementData2" name="CommodityForwardVolatilityAgreementData"/>
       <xs:element type="tarfData2" name="FxTaRFData"/>
       <xs:element type="tarfData2" name="EquityTaRFData"/>
       <xs:element type="tarfData2" name="CommodityTaRFData"/>
@@ -1383,6 +1386,9 @@
       <xs:enumeration value="CommodityVarianceSwap"/>
       <xs:enumeration value="Bond"/>
       <xs:enumeration value="ForwardBond"/>
+      <xs:enumeration value="FxForwardVolatilityAgreement"/>
+      <xs:enumeration value="EquityForwardVolatilityAgreement"/>
+      <xs:enumeration value="CommodityForwardVolatilityAgreement"/>
       <xs:enumeration value="BondFuture"/>
       <xs:enumeration value="BondFutureOption"/>
       <xs:enumeration value="CreditDefaultSwap"/>
@@ -4543,7 +4549,7 @@
   <xs:complexType name="constantMaturityVolatilitySwapData">
     <xs:all>
       <xs:element type="stFreeStyleNumber" name="NotionalAmount"/>
-        <xs:element type="stFreeStyleIndexVector" name="Underlyings"/>
+      <xs:element type="stFreeStyleIndexVector" name="Underlyings"/>
       <xs:element type="stFreeStyleLongShort" name="LongShort"/>
       <xs:element type="stFreeStyleNumber" name="Strike"/>
       <xs:element type="stFreeStyleDayCounter" name="DayCountFraction"/>
@@ -4558,19 +4564,32 @@
       <xs:element type="stFreeStyleEvent" name="FvaDate"/>
       <xs:element type="stFreeStyleEvent" name="OptionExpiry"/>
       <xs:element type="stFreeStyleEvent" name="PremiumDate"/>
-      <xs:element type="underlying" name="Underlying"/>
+      <xs:element type="stFreeStyleIndex" name="Underlying"/>
       <xs:element type="stFreeStyleLongShort" name="LongShort"/>
       <xs:element type="stFreeStyleNumber" name="ImpliedVolStrike"/>
       <xs:element type="stFreeStyleNumber" name="Quantity"/>
       <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
       <xs:element type="stFreeStyleEvent" name="SettlementDate"/>
-      <xs:element type="stFreeStyleNumber" name="UnderlyingStrike" minOccurs="0"/>
-      <xs:element type="stFreeStyleDayCounter" name="DayCountFraction"/>
-      <xs:element type="stFreeStyleNumber" name="DividendYield"/>
-      <xs:element type="stFreeStyleNumber" name="FixedRate"/>
-      <xs:element type="xs:string" name="PayoffType" minOccurs="0"/>
-
     </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="forwardVolatilityAgreementData2">
+        <xs:all>
+          <xs:element type="date" name="FvaDate"/>
+          <xs:element type="date" name="OptionExpiry"/>
+          <xs:element type="date" name="PremiumDate"/>
+          <xs:element type="underlying" name="Underlying"/>
+          <xs:element type="longShort" name="LongShort"/>
+          <xs:element type="xs:float" name="ImpliedVolStrike"/>
+          <xs:element type="xs:float" name="Quantity"/>
+          <xs:element type="currencyCode" name="PayCcy"/>
+          <xs:element type="date" name="SettlementDate"/>
+          <xs:element type="xs:float" name="UnderlyingStrike" minOccurs="0"/>
+          <xs:element type="dayCounter" name="DayCountFraction" minOccurs="0"/>
+          <xs:element type="xs:float" name="DividendYield" minOccurs="0"/>
+          <xs:element type="xs:float" name="FixedRate" minOccurs="0"/>
+          <xs:element type="xs:string" name="PayoffType" minOccurs="0"/>
+        </xs:all>
   </xs:complexType>
 
   <xs:complexType name="assetLinkedCliquetOptionData">
