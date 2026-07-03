@@ -188,8 +188,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
      ****************************************************/
 
     QuantLib::ext::shared_ptr<InMemoryReport> t0CashFlowReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-    ReportWriter(inputs_->reportNaString())
-      .writeCashflow(*t0CashFlowReport, analytic()->portfolio(), tradeCashflowsT0);
+    ReportWriter(inputs_->reportNaString()).writeCashflow(*t0CashFlowReport, analytic()->portfolio(), tradeCashflowsT0);
     analytic()->addReport(LABEL, "pnl_cashflow", t0CashFlowReport);
     
     /*******************************************************************************************

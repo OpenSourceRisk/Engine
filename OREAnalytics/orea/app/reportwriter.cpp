@@ -211,8 +211,6 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                  QuantLib::ext::shared_ptr<ore::data::Market> market, const std::string& configuration,
                                  const bool includePastCashflows) {
 
-    LOG("Writing cashflow report");
-
     addCashflowReportColumns(report);
 
     for (auto [tradeId, trade] : portfolio->trades()) {
@@ -2303,7 +2301,7 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
             const ext::shared_ptr<InMemoryReport>& t1m1p0NpvReport,
             const ext::shared_ptr<InMemoryReport>& t1m0p1NpvReport,
             const ext::shared_ptr<InMemoryReport>& t1m1p1NpvReport,
-            const std::map<std::string, std::vector<ore::data::TradeCashflowReportData>>& tradeCashflows,
+            const std::map<std::string, std::vector<ore::data::TradeCashflowReportData>>& t0TradeCashflows,
             const Date& startDate, const Date& endDate,
             const std::string& baseCurrency,
             const ext::shared_ptr<ore::data::Market>& market,
@@ -2417,8 +2415,8 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
             
             Real tradeChangePnl = t1m1p1Npv - t1m1p0Npv;
             Real hypotheticalCleanPnl = t0m1p0Npv - t0Npv;
-            auto cfIt = tradeCashflows.find(tradeId);
-            Real periodFlow = cfIt == tradeCashflows.end() ? 0.0 : getAggregateTradeFlows(startDate, endDate, 
+            auto cfIt = t0TradeCashflows.find(tradeId);
+            Real periodFlow = cfIt == t0TradeCashflows.end() ? 0.0 : getAggregateTradeFlows(startDate, endDate,
                                                                             cfIt->second, market, configuration, baseCurrency);
             Real matured =
                 (maturityDate <= endDate && close_enough(t1m1p0Npv, 0.0) && close_enough(t1m1p1Npv, 0.0)) ? t0Npv : 0.0;
