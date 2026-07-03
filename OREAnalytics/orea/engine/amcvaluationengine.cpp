@@ -42,6 +42,9 @@
 #include <boost/timer/timer.hpp>
 
 #include <future>
+#include <random>   // std::mt19937, std::random_device, std::uniform_int_distribution
+#include <numeric>  // std::iota
+#include <thread>   // std::thread::hardware_concurrency
 
 #ifdef ORE_MULTITHREADING_CPU_AFFINITY
 #include <pthread.h>
