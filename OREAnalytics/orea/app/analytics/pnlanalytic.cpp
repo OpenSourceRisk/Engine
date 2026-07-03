@@ -177,9 +177,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
             tradeCashflowsT0[tradeId] =
                 trade->cashflows(effectiveResultCurrency, analytic()->market(), marketConfig, inputs_->includePastCashflows());
         } catch (std::exception& e) {
-            ore::data::StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error during cashflow report generation",
-                                        e.what())
-                .log();
+            ore::data::StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error during cashflow report generation", e.what()).log();
         }
     }
 
