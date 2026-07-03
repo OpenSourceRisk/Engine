@@ -115,16 +115,18 @@ QuantLib::ext::shared_ptr<SmileSection> SpreadedSwaptionVolatility::smileSection
     QuantLib::ext::shared_ptr<SmileSection> baseSection;
     QuantLib::ext::shared_ptr<SmileSection> anchorBaseSection;
 
+    auto s0 = base_->smileSection(optionTime, swapLength);
+
     if (originalRefDate_ == actualRefDate_ || decayMode_ == ReactionToTimeDecay::ConstantVariance) {
-        baseSection = base_->smileSection(optionTime, swapLength);
+        baseSection = s0;
     } else {
         baseSection = base_->smileSection(optionTime + t0_, swapLength);
         anchorBaseSection = base_->smileSection(t0_, swapLength);
     }
 
     Real baseAtmLevel = Null<Real>();
-    if(originalRefDate_ == actualRefDate_ || simulatedIndexBaseRollDown_ == YieldCurveRollDown::ConstantDiscounts)
-        baseAtmLevel = base_->smileSection(optionTime, swapLength)->atmLevel();
+    if (originalRefDate_ == actualRefDate_ || simulatedIndexBaseRollDown_ == YieldCurveRollDown::ConstantDiscounts)
+        baseAtmLevel = s0->atmLevel();
     else
         baseAtmLevel = base_->smileSection(optionTime + t0_, swapLength)->atmLevel();
 
@@ -133,9 +135,18 @@ QuantLib::ext::shared_ptr<SmileSection> SpreadedSwaptionVolatility::smileSection
         simulatedAtmLevel = getAtmLevel(optionTime, swapLength, simulatedSwapIndexBase_, simulatedShortSwapIndexBase_);
     }
 
-    Real anchorBaseAtmLevel = Null<Real>();
-    Real anchorSimulatedAtmLevel = Null<Real>();
-    if (decayMode_ == ReactionToTimeDecay::ForwardForwardVariance) {
+    std::vector<Real> volSpreads(strikeSpreads_.size());
+    for (Size k = 0; k < volSpreads.size(); ++k) {
+        volSpreads[k] = volSpreadInterpolation_[k](swapLength, optionTime);
+    }
+
+    if (originalRefDate_ == actualRefDate_ || decayMode_ == ReactionToTimeDecay::ConstantVariance) {
+        return QuantLib::ext::make_shared<SpreadedSmileSection2>(baseSection, volSpreads, strikeSpreads_, true,
+                                                                 baseAtmLevel, simulatedAtmLevel, stickyAbsMoney_);
+
+    } else {
+        Real anchorBaseAtmLevel = Null<Real>();
+        Real anchorSimulatedAtmLevel = Null<Real>();
         if (simulatedIndexBaseRollDown_ == YieldCurveRollDown::ConstantDiscounts) {
             Rounding rounder(0);
             Period swapTenor(static_cast<Integer>(rounder(swapLength * 12.0)), Months);
@@ -155,18 +166,6 @@ QuantLib::ext::shared_ptr<SmileSection> SpreadedSwaptionVolatility::smileSection
             anchorSimulatedAtmLevel =
                 getAtmLevel(t0_, swapLength, simulatedSwapIndexBase_, simulatedShortSwapIndexBase_);
         }
-    }
-
-    std::vector<Real> volSpreads(strikeSpreads_.size());
-    for (Size k = 0; k < volSpreads.size(); ++k) {
-        volSpreads[k] = volSpreadInterpolation_[k](swapLength, optionTime);
-    }
-
-    if (originalRefDate_ == actualRefDate_ || decayMode_ == ReactionToTimeDecay::ConstantVariance) {
-        return QuantLib::ext::make_shared<SpreadedSmileSection2>(baseSection, volSpreads, strikeSpreads_, true,
-                                                                 baseAtmLevel, simulatedAtmLevel, stickyAbsMoney_);
-
-    } else {
         return QuantLib::ext::make_shared<SpreadedSmileSection2>(
             baseSection, anchorBaseSection, volSpreads, strikeSpreads_, true, baseAtmLevel, anchorBaseAtmLevel,
             simulatedAtmLevel, anchorSimulatedAtmLevel, stickyAbsMoney_);
