@@ -120,18 +120,15 @@ public:
                              const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
                              QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet) override {}
 
-    void init(const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<SimMarket>& simMarket) override;
-    void initScenario() override;
+    void init(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+              const QuantLib::ext::shared_ptr<SimMarket>& simMarket) override {}
+    void initScenario() override {}
 
 private:
     std::string baseCcyCode_;
     Date t0Date_;
     QuantLib::ext::shared_ptr<DateGrid> dateGrid_;
     Size index_;
-
-    std::vector<Handle<Quote>> ccyQuotes_;
-    std::vector<double> fxRates_;
-    std::vector<std::vector<Size>> tradeAndLegCcyIndex_;
 };
 
 //! NPVCalculatorFXT0
