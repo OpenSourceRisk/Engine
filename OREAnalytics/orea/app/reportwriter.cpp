@@ -138,13 +138,7 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
     LOG("NPV file written");
 }
 
-void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& baseCurrency,
-                                 QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio,
-                                 QuantLib::ext::shared_ptr<ore::data::Market> market, const std::string& configuration,
-                                 const bool includePastCashflows) {
-
-    LOG("Writing cashflow report");
-
+void addCashflowReportColumns(ore::data::Report& report) {
     report.addColumn("TradeId", string())
         .addColumn("Type", string())
         .addColumn("CashflowNo", Size())
@@ -174,46 +168,57 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
         .addColumn("EffectiveCapVolatility", double(), 10)
         .addColumn("Amount(Base)", double(), 4)
         .addColumn("DiscountFactor(Base)", double(), 10);
+}
 
-    for (auto [tradeId, trade]: portfolio->trades()) {
+void addTradeCashflowRows(ore::data::Report& report, const ext::shared_ptr<ore::data::Trade>& trade,
+                          const std::vector<ore::data::TradeCashflowReportData>& data) {
+    for (auto const& d : data) {
+        report.next()
+            .add(trade->id())
+            .add(trade->tradeType())
+            .add(d.cashflowNo)
+            .add(d.legNo)
+            .add(d.payDate)
+            .add(d.flowType)
+            .add(d.amount)
+            .add(d.currency)
+            .add(d.coupon)
+            .add(d.accrual)
+            .add(d.accrualStartDate)
+            .add(d.accrualEndDate)
+            .add(d.accruedAmount)
+            .add(d.fixingDate)
+            .add(d.fixingValue)
+            .add(d.notional)
+            .add(d.discountFactor)
+            .add(d.presentValue)
+            .add(d.fxRateLocalBase)
+            .add(d.presentValueBase)
+            .add(d.baseCurrency)
+            .add(d.floorStrike)
+            .add(d.capStrike)
+            .add(d.floorVolatility)
+            .add(d.capVolatility)
+            .add(d.effectiveFloorVolatility)
+            .add(d.effectiveCapVolatility)
+            .add(d.baseAmount)
+            .add(d.discountFactorBase);
+    }
+}
 
+void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& baseCurrency,
+                                 QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio,
+                                 QuantLib::ext::shared_ptr<ore::data::Market> market, const std::string& configuration,
+                                 const bool includePastCashflows) {
+
+    LOG("Writing cashflow report");
+
+    addCashflowReportColumns(report);
+
+    for (auto [tradeId, trade] : portfolio->trades()) {
         try {
-
             auto data = trade->cashflows(baseCurrency, market, configuration, includePastCashflows);
-
-            for(auto const& d: data) {
-                    report.next()
-                        .add(trade->id())
-                        .add(trade->tradeType())
-                        .add(d.cashflowNo)
-                        .add(d.legNo)
-                        .add(d.payDate)
-                        .add(d.flowType)
-                        .add(d.amount)
-                        .add(d.currency)
-                        .add(d.coupon)
-                        .add(d.accrual)
-                        .add(d.accrualStartDate)
-                        .add(d.accrualEndDate)
-                        .add(d.accruedAmount)
-                        .add(d.fixingDate)
-                        .add(d.fixingValue)
-                        .add(d.notional)
-                        .add(d.discountFactor)
-                        .add(d.presentValue)
-                        .add(d.fxRateLocalBase)
-                        .add(d.presentValueBase)
-                        .add(d.baseCurrency)
-                        .add(d.floorStrike)
-                        .add(d.capStrike)
-                        .add(d.floorVolatility)
-                        .add(d.capVolatility)
-                        .add(d.effectiveFloorVolatility)
-                        .add(d.effectiveCapVolatility)
-                        .add(d.baseAmount)
-                        .add(d.discountFactorBase);
-            }
-
+            addTradeCashflowRows(report, trade, data);
         } catch (std::exception& e) {
             StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error during cashflow report generation",
                                         e.what())
@@ -224,6 +229,26 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
     report.end();
     LOG("Cashflow report written");
 }
+
+void ReportWriter::writeCashflow(
+    ore::data::Report& report, QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio,
+    const std::map<std::string, std::vector<ore::data::TradeCashflowReportData>>& tradeCashflows) {
+
+    LOG("Writing cashflow report from precomputed cashflows");
+
+    addCashflowReportColumns(report);
+
+    for (auto [tradeId, trade] : portfolio->trades()) {
+        auto it = tradeCashflows.find(tradeId);
+        if (it == tradeCashflows.end())
+            continue;
+        addTradeCashflowRows(report, trade, it->second);
+    }
+
+    report.end();
+    LOG("Cashflow report written");
+}
+
 
 void ReportWriter::writeCashflowNpv(ore::data::Report& report, const ore::data::InMemoryReport& cashflowReport,
                                     QuantLib::ext::shared_ptr<ore::data::Market> market, const std::string& configuration,

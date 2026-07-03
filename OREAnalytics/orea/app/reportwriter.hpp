@@ -83,6 +83,10 @@ public:
                                const std::string& configuration,
                                const bool includePastCashflows = false);
 
+    virtual void writeCashflow(
+        ore::data::Report& report, QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio,
+        const std::map<std::string, std::vector<ore::data::TradeCashflowReportData>>& tradeCashflows);
+
     virtual void writeCashflowNpv(ore::data::Report& report,
                                   const ore::data::InMemoryReport& cashflowReport,
                                   QuantLib::ext::shared_ptr<ore::data::Market> market,

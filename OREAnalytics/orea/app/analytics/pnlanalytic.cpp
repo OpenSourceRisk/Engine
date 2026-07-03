@@ -31,6 +31,7 @@
 
 #include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/report/inmemoryreport.hpp>
+#include <ored/portfolio/structuredtradeerror.hpp>
 
 using RFType = ore::analytics::RiskFactorKey::KeyType;
 
@@ -171,9 +172,15 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     //Capture trades cashflows at t0
     auto trades = analytic()->portfolio()->trades();
     std::map<std::string, std::vector<ore::data::TradeCashflowReportData>> tradeCashflowsT0;
-    for(auto const& t: trades){
-        auto tradeCF = t.second->cashflows(effectiveResultCurrency,analytic()->market(),marketConfig, inputs_->includePastCashflows());
-        tradeCashflowsT0[t.first] = tradeCF;
+    for (auto const& [tradeId, trade] : trades) {
+        try {
+            tradeCashflowsT0[tradeId] =
+                trade->cashflows(effectiveResultCurrency, analytic()->market(), marketConfig, inputs_->includePastCashflows());
+        } catch (std::exception& e) {
+            ore::data::StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error during cashflow report generation",
+                                        e.what())
+                .log();
+        }
     }
 
     /****************************************************
@@ -184,8 +191,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
     QuantLib::ext::shared_ptr<InMemoryReport> t0CashFlowReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     ReportWriter(inputs_->reportNaString())
-      .writeCashflow(*t0CashFlowReport, effectiveResultCurrency, analytic()->portfolio(),
-		     analytic()->market(), marketConfig, inputs_->includePastCashflows());
+      .writeCashflow(*t0CashFlowReport, analytic()->portfolio(), tradeCashflowsT0);
     analytic()->addReport(LABEL, "pnl_cashflow", t0CashFlowReport);
     
     /*******************************************************************************************

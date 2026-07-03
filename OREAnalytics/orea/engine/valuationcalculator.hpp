@@ -120,8 +120,7 @@ public:
                              const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
                              QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet) override {}
 
-    void init(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
-              const QuantLib::ext::shared_ptr<SimMarket>& simMarket) override {}
+    void init(const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<SimMarket>& simMarket) override {}
     void initScenario() override {}
 
 private:
