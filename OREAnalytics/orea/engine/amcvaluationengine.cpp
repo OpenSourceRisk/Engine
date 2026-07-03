@@ -20,6 +20,7 @@
 
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/cube/inmemorycube.hpp>
+#include <orea/engine/cpuaffinity.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/pathdata.hpp>
 
@@ -840,6 +841,9 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<Portfolio>& p
 }
 
 void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio) {
+
+    boost::timer::cpu_timer timer;
+
     LOG("Starting multi-threaded AMCValuationEngine for "
         << portfolio->size() << " trades, " << nSamples_ << " samples and " << scenarioGeneratorData_->getGrid()->size()
         << " dates.");
@@ -974,12 +978,15 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
     }
 
     // run amc simulation on multiple threads
-
+    std::vector<std::size_t> cpuIds = getCpuIds(eff_nThreads, "[AMC_MULTITHREADING]");
     for (Size i = 0; i < eff_nThreads; ++i) {
 
-        auto job = [this, obsMode, includeTodaysCashFlows, localIncRefDateEvents, &portfoliosAsString, &loaders,
-                    &simDates, &stickyCloseOutDates, &progressIndicator, &pathData,
+        auto job = [this, &cpuIds, obsMode, includeTodaysCashFlows, localIncRefDateEvents, &portfoliosAsString,
+                    &loaders, &simDates, &stickyCloseOutDates, &progressIndicator, &pathData,
                     &marketModelBuilder](int id) -> resultType {
+
+            setThreadCpuAffinity(id, cpuIds, "[AMC_MULTITHREADING]");
+
             // set thread local singletons
 
             QuantLib::Settings::instance().evaluationDate() = today_;
@@ -1068,7 +1075,10 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
     // LOG("Stop thread pool");
     // threadPool.stop(true);
 
-    LOG("Finished multi-threaded AMCValuationEngine run.");
+    LOG("Finished multi-threaded AMCValuationEngine run, timings: "
+        << static_cast<double>(timer.elapsed().wall) / 1.0E9 << "s Wall, "
+        << static_cast<double>(timer.elapsed().user) / 1.0E9 << "s User, "
+        << static_cast<double>(timer.elapsed().system) / 1.0E9 << "s System.");
 }
 
 } // namespace analytics
