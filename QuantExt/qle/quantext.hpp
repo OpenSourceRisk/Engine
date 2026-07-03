@@ -462,7 +462,7 @@
 #include <qle/pricingengines/mccamequityforwardengine.hpp>
 #include <qle/pricingengines/mccamfxforwardengine.hpp>
 #include <qle/pricingengines/mccamfxoptionengine.hpp>
-#include <qle/pricingengines/mccashflowinfo.hpp>
+#include <qle/pricingengines/mcenginecashflowinfo.hpp>
 #include <qle/pricingengines/mcengineregression.hpp>
 #include <qle/pricingengines/mclgmbondengine.hpp>
 #include <qle/pricingengines/mclgmfwdbondengine.hpp>

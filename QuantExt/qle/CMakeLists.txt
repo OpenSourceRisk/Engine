@@ -334,7 +334,7 @@ pricingengines/mccamcurrencyswapengine.cpp
 pricingengines/mccamequityforwardengine.cpp
 pricingengines/mccamfxforwardengine.cpp
 pricingengines/mccamfxoptionengine.cpp
-pricingengines/mccashflowinfo.cpp
+pricingengines/mcenginecashflowinfo.cpp
 pricingengines/mcengineregression.cpp
 pricingengines/mclgmbondengine.cpp
 pricingengines/mclgmfwdbondengine.cpp
@@ -945,7 +945,7 @@ pricingengines/mccamcurrencyswapengine.hpp
 pricingengines/mccamequityforwardengine.hpp
 pricingengines/mccamfxforwardengine.hpp
 pricingengines/mccamfxoptionengine.hpp
-pricingengines/mccashflowinfo.hpp
+pricingengines/mcenginecashflowinfo.hpp
 pricingengines/mcengineregression.hpp
 pricingengines/mclgmbondengine.hpp
 pricingengines/mclgmfwdbondengine.hpp
