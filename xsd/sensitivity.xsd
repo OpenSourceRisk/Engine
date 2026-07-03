@@ -28,6 +28,7 @@
       <xs:element type="basecorrelations" name="BaseCorrelations"  minOccurs="0"/>
       <xs:element type="securityspreads" name="SecuritySpreads"  minOccurs="0"/>
       <xs:element type="commodityCurves" name="CommodityCurves"  minOccurs="0"/>
+      <xs:element type="intradaypowercurves" name="IntradayPowerCurves" minOccurs="0"/>
       <xs:element type="commodityvolatilities" name="CommodityVolatilities" minOccurs="0"/>
       <xs:element type="correlationcurves" name="Correlations" minOccurs="0"/>
       <xs:element type="sensiBondFutureVolatilities" name="BondFutureVolatilities" minOccurs="0"/>
@@ -576,6 +577,26 @@
   <xs:complexType name="commodityCurve">
     <xs:sequence>
       <xs:element type="currencyCode" name="Currency"/>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
+      <xs:choice>
+        <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
+        <xs:element type="xs:string" name="Shifts"/>
+      </xs:choice>
+      <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element type="xs:string" name="ShiftTenors"/>
+      <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="name" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="intradaypowercurves">
+    <xs:sequence>
+      <xs:element type="intradaypowercurve" name="IntradayPowerCurve" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="intradaypowercurve">
+    <xs:sequence>
       <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
       <xs:choice>
         <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>

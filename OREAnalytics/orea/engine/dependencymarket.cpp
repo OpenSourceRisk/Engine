@@ -671,6 +671,41 @@ Handle<BlackVolTermStructure> DependencyMarket::bondFutureVol(const string& cont
     return flatRateFxv();
 }
 
+Handle<QuantExt::IntradayPowerPriceTermStructure>
+DependencyMarket::intradayPowerPriceCurve(const string& name, const string& config) const {
+    addRiskFactor(RiskFactorKey::KeyType::IntradayPowerCurve, name);
+    addMarketObject(MarketObject::IntradayPowerPriceCurve, name, config);
+    Currency commCcy;
+    std::string savingsTime;
+    if (curveConfigs_ && curveConfigs_->hasIntradayPowerCurveConfig(name)) {
+        auto curveconf = curveConfigs_->intradayPowerCurveConfig(name);
+        commCcy = parseCurrency(curveconf->currency());
+        const auto& [found, conv] = InstrumentConventions::instance().conventions()->get(
+            curveconf->convention(), Convention::Type::CommodityFuture);
+        if (found) {
+            auto commFutureConv = QuantLib::ext::dynamic_pointer_cast<CommodityFutureConvention>(conv);
+            savingsTime = commFutureConv->savingsTime();
+        }
+    }
+    auto pts = flatRatePts(commCcy);
+
+    auto shapeTS = QuantLib::ext::make_shared<QuantExt::IntradayShapeTermstructure>(savingsTime);
+
+    return Handle<QuantExt::IntradayPowerPriceTermStructure>(
+        QuantLib::ext::make_shared<QuantExt::IntradayPowerPriceTermStructure>(pts, shapeTS));
+    QL_FAIL("Didn't find commodity curve config for " << name);
+}
+
+Handle<QuantExt::IntradayPowerIndex> DependencyMarket::intradayPowerIndex(const string& name, const string& config) const {
+    TLOG("Dependencymarket: Building intraday power index for " << name);
+    auto pts = intradayPowerPriceCurve(name, config);
+    TLOG("Dependencymarket: Built intraday power price curve for " << name);
+    auto index = parseIntradayPowerIndex(name, false, pts);
+    QL_REQUIRE(index != nullptr, "Failed to parse intraday power index " << name);
+    DLOG("Dependencymarket: Built intraday power index for " << name << " with " << index->name());
+    return Handle<QuantExt::IntradayPowerIndex>(index);
+}
+
 std::map<QuantLib::Period, QuantLib::Period>
 DependencyMarket::zeroInflationObservationLags(const string& indexName, const string& configuration) const {
     return {{1 * Years, 3 * Months}};

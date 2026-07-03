@@ -61,6 +61,7 @@ class Security;
 class CommodityCurve;
 class CommodityVolCurve;
 class CorrelationCurve;
+class IntradayPowerCurve;
 class BondFutureVolCurve;
 
 // TODO: rename class
@@ -168,6 +169,7 @@ private:
     mutable map<string, QuantLib::ext::shared_ptr<EquityCurve>> requiredEquityCurves_;
     mutable map<string, QuantLib::ext::shared_ptr<Security>> requiredSecurities_;
     mutable map<string, QuantLib::ext::shared_ptr<CommodityCurve>> requiredCommodityCurves_;
+    mutable map<string, QuantLib::ext::shared_ptr<IntradayPowerCurve>> requiredIntradayPowerCurves_;
     mutable map<string, QuantLib::ext::shared_ptr<CorrelationCurve>> requiredCorrelationCurves_;
     mutable map<string, QuantLib::ext::shared_ptr<BondFutureVolCurve>> requiredBondFutureVolCurves_;
     // cached market objects, with configuration added to the key (outer map)

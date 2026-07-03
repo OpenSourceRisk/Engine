@@ -1,0 +1,50 @@
+<TodaysMarket>
+	<Configuration id="inccy">
+		<YieldCurvesId>inccy</YieldCurvesId>
+		<DiscountingCurvesId>inccy</DiscountingCurvesId>
+		<IndexForwardingCurvesId>inccy</IndexForwardingCurvesId>
+	</Configuration>
+	<Configuration id="default">
+		<YieldCurvesId>default</YieldCurvesId>
+		<DiscountingCurvesId>default</DiscountingCurvesId>
+		<IndexForwardingCurvesId>default</IndexForwardingCurvesId>
+		<SwapIndexCurvesId>default</SwapIndexCurvesId>
+		<ZeroInflationIndexCurvesId>default</ZeroInflationIndexCurvesId>
+		<YYInflationIndexCurvesId>default</YYInflationIndexCurvesId>
+		<FxSpotsId>default</FxSpotsId>
+		<FxVolatilitiesId>default</FxVolatilitiesId>
+		<SwaptionVolatilitiesId>default</SwaptionVolatilitiesId>
+		<YieldVolatilitiesId>default</YieldVolatilitiesId>
+		<CapFloorVolatilitiesId>default</CapFloorVolatilitiesId>
+		<CDSVolatilitiesId>default</CDSVolatilitiesId>
+		<DefaultCurvesId>default</DefaultCurvesId>
+		<YYInflationCapFloorVolatilitiesId>default</YYInflationCapFloorVolatilitiesId>
+		<ZeroInflationCapFloorVolatilitiesId>default</ZeroInflationCapFloorVolatilitiesId>
+		<EquityCurvesId>default</EquityCurvesId>
+		<EquityVolatilitiesId>default</EquityVolatilitiesId>
+		<SecuritiesId>default</SecuritiesId>
+		<BaseCorrelationsId>default</BaseCorrelationsId>
+		<CommodityCurvesId>default</CommodityCurvesId>
+		<CommodityVolatilitiesId>default</CommodityVolatilitiesId>
+		<CorrelationsId>default</CorrelationsId>
+		<BondFutureVolatilitiesId>default</BondFutureVolatilitiesId>
+		<IntradayPowerPriceCurvesId>default</IntradayPowerPriceCurvesId>
+	</Configuration>
+	<DiscountingCurves id="default">
+		<DiscountingCurve currency="USD">Yield/USD/USD-FedFunds</DiscountingCurve>
+	</DiscountingCurves>
+	<DiscountingCurves id="inccy">
+		<DiscountingCurve currency="USD">Yield/USD/USD-FedFunds</DiscountingCurve>
+	</DiscountingCurves>
+	<IndexForwardingCurves id="default">
+		<Index name="USD-FedFunds">Yield/USD/USD-FedFunds</Index>
+	</IndexForwardingCurves>
+	<FxSpots id="default" />
+	<CommodityCurves id="default">
+		<CommodityCurve name="PJM_WH_RT_PK">Commodity/USD/PJM_WH_RT_PK</CommodityCurve>
+	</CommodityCurves>
+	<IntradayPowerPriceCurves id="default">
+		<IntradayPowerPriceCurve name="PJM_WH_RT_PK">IntradayPowerCurve/USD/PJM_WH_RT_PK</IntradayPowerPriceCurve>
+		<IntradayPowerPriceCurve name="PJM_WH_RT_PK_15MIN">IntradayPowerCurve/USD/PJM_WH_RT_PK_15MIN</IntradayPowerPriceCurve>
+	</IntradayPowerPriceCurves>
+</TodaysMarket>

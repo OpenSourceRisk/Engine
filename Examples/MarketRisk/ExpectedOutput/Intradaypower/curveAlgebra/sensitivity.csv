@@ -1,0 +1,26 @@
+#TradeId,IsPar,Factor_1,ShiftSize_1,Factor_2,ShiftSize_2,Currency,Base NPV,Delta,Gamma,Currency(Trade),Base NPV(Trade),Delta(Trade),Gamma(Trade)
+Commodity_Swap_ExplicitLoad,false,DiscountCurve/USD/1/1M,0.000100,,0.000000,USD,-167433.14,1.42,#N/A,USD,-167433.14,1.42,#N/A
+Commodity_Swap_ExplicitLoad,false,CommodityCurve/PJM_WH_RT_PK/0/1Y,0.000000,,0.000000,USD,-167433.14,-5581.64,#N/A,USD,-167433.14,-5581.64,#N/A
+Commodity_Swap_NoLoad,false,DiscountCurve/USD/1/1M,0.000100,,0.000000,USD,-499985.69,1.42,#N/A,USD,-499985.69,1.42,#N/A
+Commodity_Swap_NoLoad,false,DiscountCurve/USD/2/3M,0.000100,,0.000000,USD,-499985.69,8.10,#N/A,USD,-499985.69,8.10,#N/A
+Commodity_Swap_NoLoad,false,DiscountCurve/USD/3/6M,0.000100,,0.000000,USD,-499985.69,0.20,#N/A,USD,-499985.69,0.20,#N/A
+Commodity_Swap_NoLoad,false,CommodityCurve/PJM_WH_RT_PK/0/1Y,0.000000,,0.000000,USD,-499985.69,-17074.05,#N/A,USD,-499985.69,-17074.05,#N/A
+Commodity_Swap_RulebasedLoad,false,DiscountCurve/USD/1/1M,0.000100,,0.000000,USD,-167433.14,1.42,#N/A,USD,-167433.14,1.42,#N/A
+Commodity_Swap_RulebasedLoad,false,CommodityCurve/PJM_WH_RT_PK/0/1Y,0.000000,,0.000000,USD,-167433.14,-5581.64,#N/A,USD,-167433.14,-5581.64,#N/A
+Commodity_Swap_TradeSpecificLoadAndDSTHours,false,DiscountCurve/USD/1/1M,0.000100,,0.000000,USD,-954001.42,-0.46,#N/A,USD,-954001.42,-0.46,#N/A
+Commodity_Swap_TradeSpecificLoadAndDSTHours,false,DiscountCurve/USD/2/3M,0.000100,,0.000000,USD,-954001.42,5.59,#N/A,USD,-954001.42,5.59,#N/A
+Commodity_Swap_TradeSpecificLoadAndDSTHours,false,DiscountCurve/USD/3/6M,0.000100,,0.000000,USD,-954001.42,24.85,#N/A,USD,-954001.42,24.85,#N/A
+Commodity_Swap_TradeSpecificLoadAndDSTHours,false,DiscountCurve/USD/4/1Y,0.000100,,0.000000,USD,-954001.42,28.00,#N/A,USD,-954001.42,28.00,#N/A
+Commodity_Swap_TradeSpecificLoadAndDSTHours,false,CommodityCurve/PJM_WH_RT_PK/0/1Y,0.000000,,0.000000,USD,-954001.42,-33173.17,#N/A,USD,-954001.42,-33173.17,#N/A
+Forward_0.45am_1.15am,false,DiscountCurve/USD/2/3M,0.000100,,0.000000,USD,599.28,-0.01,#N/A,USD,599.28,-0.01,#N/A
+Forward_0.45am_1.15am,false,DiscountCurve/USD/3/6M,0.000100,,0.000000,USD,599.28,-0.02,#N/A,USD,599.28,-0.02,#N/A
+Forward_0.45am_1.15am,false,CommodityCurve/PJM_WH_RT_PK/0/1Y,0.000000,,0.000000,USD,599.28,-10.15,#N/A,USD,599.28,-10.15,#N/A
+Forward_0.45am_1.15am_15minCurve,false,DiscountCurve/USD/2/3M,0.000100,,0.000000,USD,761.70,-0.01,#N/A,USD,761.70,-0.01,#N/A
+Forward_0.45am_1.15am_15minCurve,false,DiscountCurve/USD/3/6M,0.000100,,0.000000,USD,761.70,-0.02,#N/A,USD,761.70,-0.02,#N/A
+Forward_0.45am_1.15am_15minCurve,false,CommodityCurve/PJM_WH_RT_PK/0/1Y,0.000000,,0.000000,USD,761.70,-8.53,#N/A,USD,761.70,-8.53,#N/A
+Forward_0am_1am,false,DiscountCurve/USD/2/3M,0.000100,,0.000000,USD,883.52,-0.01,#N/A,USD,883.52,-0.01,#N/A
+Forward_0am_1am,false,DiscountCurve/USD/3/6M,0.000100,,0.000000,USD,883.52,-0.03,#N/A,USD,883.52,-0.03,#N/A
+Forward_0am_1am,false,CommodityCurve/PJM_WH_RT_PK/0/1Y,0.000000,,0.000000,USD,883.52,-7.31,#N/A,USD,883.52,-7.31,#N/A
+Forward_0am_1am_15minCurve,false,DiscountCurve/USD/2/3M,0.000100,,0.000000,USD,883.52,-0.01,#N/A,USD,883.52,-0.01,#N/A
+Forward_0am_1am_15minCurve,false,DiscountCurve/USD/3/6M,0.000100,,0.000000,USD,883.52,-0.03,#N/A,USD,883.52,-0.03,#N/A
+Forward_0am_1am_15minCurve,false,CommodityCurve/PJM_WH_RT_PK/0/1Y,0.000000,,0.000000,USD,883.52,-7.31,#N/A,USD,883.52,-7.31,#N/A

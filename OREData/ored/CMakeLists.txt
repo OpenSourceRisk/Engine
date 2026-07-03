@@ -8,6 +8,7 @@ configuration/capfloorvolcurveconfig.cpp
 configuration/cdsvolcurveconfig.cpp
 configuration/commoditycurveconfig.cpp
 configuration/commodityvolcurveconfig.cpp
+configuration/intradaypowercurveconfig.cpp
 configuration/conventions.cpp
 configuration/correlationcurveconfig.cpp
 configuration/currencyconfig.cpp
@@ -39,6 +40,7 @@ marketdata/commoditycurve.cpp
 marketdata/commodityvolcurve.cpp
 marketdata/correlationcurve.cpp
 marketdata/csvloader.cpp
+marketdata/intradaypowercurve.cpp
 marketdata/curvespec.cpp
 marketdata/curvespecparser.cpp
 marketdata/defaultcurve.cpp
@@ -297,6 +299,7 @@ portfolio/indexcreditdefaultswapoption.cpp
 portfolio/indexing.cpp
 portfolio/inflationswap.cpp
 portfolio/instrumentwrapper.cpp
+portfolio/intradaypowerforward.cpp
 portfolio/knockoutswap.cpp
 portfolio/legbuilders.cpp
 portfolio/legdata.cpp
@@ -312,6 +315,7 @@ portfolio/optionwrapper.cpp
 portfolio/pairwisevarianceswap.cpp
 portfolio/performanceoption_01.cpp
 portfolio/portfolio.cpp
+portfolio/powerloadprofiledata.cpp
 portfolio/premiumdata.cpp
 portfolio/rainbowoption.cpp
 portfolio/rangebound.cpp
@@ -434,6 +438,7 @@ configuration/capfloorvolcurveconfig.hpp
 configuration/cdsvolcurveconfig.hpp
 configuration/commoditycurveconfig.hpp
 configuration/commodityvolcurveconfig.hpp
+configuration/intradaypowercurveconfig.hpp
 configuration/conventions.hpp
 configuration/correlationcurveconfig.hpp
 configuration/currencyconfig.hpp
@@ -469,6 +474,7 @@ marketdata/commoditycurve.hpp
 marketdata/commodityvolcurve.hpp
 marketdata/compositeloader.hpp
 marketdata/correlationcurve.hpp
+marketdata/intradaypowercurve.hpp
 marketdata/csvloader.hpp
 marketdata/curvespec.hpp
 marketdata/curvespecparser.hpp
@@ -638,6 +644,7 @@ portfolio/builders/fxoption.hpp
 portfolio/builders/fxtouchoption.hpp
 portfolio/builders/indexcreditdefaultswap.hpp
 portfolio/builders/indexcreditdefaultswapoption.hpp
+portfolio/builders/intradaypowerforward.hpp
 portfolio/builders/pairwisevarianceswap.hpp
 portfolio/builders/quantoequityoption.hpp
 portfolio/builders/quantovanillaoption.hpp
@@ -739,6 +746,7 @@ portfolio/indexcreditdefaultswapoption.hpp
 portfolio/indexing.hpp
 portfolio/inflationswap.hpp
 portfolio/instrumentwrapper.hpp
+portfolio/intradaypowerforward.hpp
 portfolio/knockoutswap.hpp
 portfolio/legbuilders.hpp
 portfolio/legdata.hpp
@@ -754,6 +762,7 @@ portfolio/optionwrapper.hpp
 portfolio/pairwisevarianceswap.hpp
 portfolio/performanceoption_01.hpp
 portfolio/portfolio.hpp
+portfolio/powerloadprofiledata.hpp
 portfolio/premiumdata.hpp
 portfolio/rainbowoption.hpp
 portfolio/rangebound.hpp
