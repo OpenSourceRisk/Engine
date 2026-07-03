@@ -33,6 +33,7 @@
 #include <ored/utilities/to_string.hpp>
 
 #include <qle/models/projectedcrossassetmodel.hpp>
+#include <qle/models/representativeswaption.hpp>
 
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
@@ -275,6 +276,7 @@ RiskParticipationAgreementSwapLGMGridEngineBuilder::engineImpl(const std::string
 
     // the first ibor / ois index found
     QuantLib::ext::shared_ptr<InterestRateIndex> index;
+    std::string qualifier;
 
     // if protection end <= today there is no model dependent part to value (just fees, possibly)
 
@@ -296,16 +298,28 @@ RiskParticipationAgreementSwapLGMGridEngineBuilder::engineImpl(const std::string
         strikes = getCalibrationStrikesFromLegs(qlInstr->underlying(), expiries);
         maturities = std::vector<Date>(expiries.size(), calibrationMaturity);
 
+        qualifier = index == nullptr ? rpa->npvCurrency() : IndexNameTranslator::instance().oreName(index->name());
+
         // overwrite with delta-gamma adjusted basket, if this is configured
 
-
-
+        if (parseCalibrationStrategy(modelParameter("CalibrationStrategy", {}, false, "None")) ==
+            CalibrationStrategy::DeltaGammaAdjusted) {
+            auto adjustedSwaptions = buildRepresentativeSwaptions(engineFactory(), qualifier, qlInstr.get(), expiries);
+            expiries.clear();
+            strikes.clear();
+            maturities.clear();
+            for (auto const& swaption : adjustedSwaptions) {
+                expiries.push_back(swaption->exercise()->dates().front());
+                maturities.push_back(swaption->underlying()->maturityDate());
+                strikes.push_back(swaption->underlying()->fixedRate());
+            }
+        }
     }
 
     // build model + engine
     DLOG("Building LGM Grid RPA engine for trade " << id);
     auto lgm = std::get<Handle<LGM>>(ore::data::model(
-        this, id, {index == nullptr ? rpa->npvCurrency() : IndexNameTranslator::instance().oreName(index->name())},
+        this, id, {qualifier},
         expiries, maturities, {strikes}, {}, false));
     DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
     Handle<DefaultProbabilityTermStructure> creditCurve =
@@ -315,6 +329,26 @@ RiskParticipationAgreementSwapLGMGridEngineBuilder::engineImpl(const std::string
         rpa->npvCurrency(), getDiscountCurves(rpa), getFxSpots(rpa), lgm, sy, ny, sx, nx, creditCurve, recoveryRate,
         maxGapDays, maxDiscretisationPoints,
         parseRpaOptionExpiryPosition(engineParameter("OptionExpiryPosition", {}, false, "Mid")));
+}
+
+std::vector<QuantLib::ext::shared_ptr<QuantLib::Swaption>>
+RiskParticipationAgreementSwapLGMGridEngineBuilder::buildRepresentativeSwaptions(
+    const EngineFactory* engineFactory, const std::string& qualifier, const QuantExt::RiskParticipationAgreement* rpa,
+    const std::vector<Date>& expiries) const {
+    DLOG("build representative swaps.")
+    auto market = QuantLib::ext::dynamic_pointer_cast<Market>(engineFactory->market());
+    auto configuration = engineFactory->configuration(MarketContext::irCalibration);
+    Handle<YieldTermStructure> discountCurve = market->discountCurve(rpa->underlyingCcys().front(), configuration);
+    Handle<SwapIndex> swapIndex = market->swapIndex(market->swapIndexBase(qualifier, configuration), configuration);
+    QuantExt::RepresentativeSwaptionMatcher matcher(rpa->underlying(), rpa->underlyingPayer(), *swapIndex, true,
+                                                    discountCurve, 0.0);
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::Swaption>> swaptions;
+    for (auto const& ed : expiries) {
+        if (auto tmp = matcher.representativeSwaption(
+                ed, QuantExt::RepresentativeSwaptionMatcher::InclusionCriterion::AccrualStartGeqExercise))
+            swaptions.push_back(tmp);
+    }
+    return swaptions;
 }
 
 QuantLib::ext::shared_ptr<QuantLib::PricingEngine>

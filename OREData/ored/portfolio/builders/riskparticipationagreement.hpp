@@ -28,6 +28,8 @@
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 
+#include <qle/instruments/riskparticipationagreement.hpp>
+
 #include <boost/make_shared.hpp>
 
 namespace ore {
@@ -75,10 +77,6 @@ class RiskParticipationAgreementLGMGridEngineBuilder : public RiskParticipationA
 public:
     explicit RiskParticipationAgreementLGMGridEngineBuilder(const std::set<std::string>& tradeTypes)
         : RiskParticipationAgreementEngineBuilderBase("LGM", "Grid", tradeTypes) {}
-
-// protected:
-//     QuantLib::Handle<QuantExt::LGM> model(const string& id, const string& key, const std::vector<Date>& expiries,
-//                                           const Date& maturity, const std::vector<Real>& strikes);
 };
 
 //! RPA Numeric LGM engine builder for swap underlyings
@@ -89,6 +87,10 @@ public:
               {"RiskParticipationAgreement_Vanilla", "RiskParticipationAgreement_Structured"}) {}
 
 protected:
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::Swaption>>
+    buildRepresentativeSwaptions(const EngineFactory* engineFactory, const std::string& qualifier,
+                                 const QuantExt::RiskParticipationAgreement* rpa,
+                                 const std::vector<Date>& expiries) const;
     QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id,
                                                                   RiskParticipationAgreement* rpa) override;
 };
