@@ -20,6 +20,7 @@
 
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/cube/inmemorycube.hpp>
+#include <orea/engine/cpuaffinity.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/pathdata.hpp>
 
@@ -43,11 +44,6 @@
 
 #include <future>
 #include <random>
-
-#ifdef ORE_MULTITHREADING_CPU_AFFINITY
-#include <pthread.h>
-#include <sched.h>
-#endif
 
 using namespace ore::data;
 using namespace ore::analytics;
@@ -77,35 +73,6 @@ struct AmcTradeInfo {
 };
 
 namespace {
-
-#ifdef ORE_MULTITHREADING_CPU_AFFINITY
-std::vector<std::size_t> getCpuIds(std::size_t nThreads) {
-
-    std::size_t nCPU = std::max(1U, std::thread::hardware_concurrency());
-    WLOG("[AMC_MULTITHREADING] Number of CPUs found: " << nCPU);
-
-    std::vector<std::size_t> result(nThreads);
-
-    std::mt19937 gen{std::random_device{}()};
-    std::vector<std::size_t> availableCpus;
-
-    for (std::size_t i = 0; i < nThreads; ++i) {
-        if (availableCpus.empty()) {
-            availableCpus.resize(nCPU);
-            std::iota(availableCpus.begin(), availableCpus.end(), 0);
-        }
-        std::uniform_int_distribution<> distrib(0, availableCpus.size() - 1);
-        auto pos = std::next(availableCpus.begin(), distrib(gen));
-        result[i] = *pos;
-        availableCpus.erase(pos);
-    }
-
-    for (std::size_t i = 0; i < nThreads; ++i) {
-        WLOG("[AMC_MULTITHREADING] Assigning thread " << i << " to CPU #" << result[i]);
-    }
-    return result;
-}
-#endif
 
 Real fx(const std::vector<std::vector<std::vector<Real>>>& fxBuffer, const Size ccyIndex, const Size timeIndex,
         const Size sample) {
@@ -1012,33 +979,14 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
     }
 
     // run amc simulation on multiple threads
-    std::vector<std::size_t> cpuIds;
-#ifdef ORE_MULTITHREADING_CPU_AFFINITY
-    cpuIds = getCpuIds(eff_nThreads);
-#endif
+    std::vector<std::size_t> cpuIds = getCpuIds(eff_nThreads, "[AMC_MULTITHREADING]");
     for (Size i = 0; i < eff_nThreads; ++i) {
 
-        auto job = [this, 
-#ifdef ORE_MULTITHREADING_CPU_AFFINITY
-                    &cpuIds,
-#endif
-                    obsMode, includeTodaysCashFlows, localIncRefDateEvents, &portfoliosAsString, &loaders,
-                    &simDates, &stickyCloseOutDates, &progressIndicator, &pathData,
+        auto job = [this, &cpuIds, obsMode, includeTodaysCashFlows, localIncRefDateEvents, &portfoliosAsString,
+                    &loaders, &simDates, &stickyCloseOutDates, &progressIndicator, &pathData,
                     &marketModelBuilder](int id) -> resultType {
 
-#ifdef ORE_MULTITHREADING_CPU_AFFINITY
-            pthread_t self = pthread_self();
-            cpu_set_t cpuset;
-            CPU_ZERO(&cpuset);
-            CPU_SET(cpuIds[id], &cpuset);
-            if (int rc = pthread_setaffinity_np(self, sizeof(cpu_set_t), &cpuset)) {
-                WLOG("[AMC_MULTITHREADING] Error while setting cpu affinity for thread "
-                     << id << " to cpu id " << cpuIds[id] << ": got return code " << rc);
-            } else {
-                WLOG("[AMC_MULTITHREADING] Setting cpu affinity for thread " << id << " to cpu id " << cpuIds[id]
-                                                                         << ", running on cpu " << sched_getcpu());
-            }
-#endif
+            setThreadCpuAffinity(id, cpuIds, "[AMC_MULTITHREADING]");
 
             // set thread local singletons
 
