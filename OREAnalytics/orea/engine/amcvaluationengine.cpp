@@ -853,6 +853,10 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
 
     QL_REQUIRE(portfolio->size() > 0, "AMCValuationEngine::buildCube: empty portfolio");
 
+    // make sure curve configs are read-only to avoid data races
+
+    curveConfigs_->parseAll();
+
     // split portfolio into nThreads parts (just distribute the trades assuming all are approximately expensive)
 
     LOG("Splitting portfolio.");

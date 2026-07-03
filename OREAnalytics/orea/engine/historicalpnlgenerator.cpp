@@ -174,6 +174,9 @@ void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<Scenar
             // then iterates over a subset of risk factor keys. This avoids
             // the massive overhead of rebuilding everything per key.
 
+            // make sure curve configs are read-only to avoid data races
+            curveConfigs_->parseAll();
+
             ext::shared_ptr<Scenario> sc = hisScenGen_->baseScenario();
             QL_REQUIRE(sc != nullptr,
                        "HistoricalPnlGenerator: base scenario must be set for multi-threaded risk factor breakdown");
