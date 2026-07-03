@@ -268,19 +268,22 @@ RiskParticipationAgreementSwapLGMGridEngineBuilder::engineImpl(const std::string
 
     std::vector<Date> expiries;
     std::vector<Real> strikes;
+    std::vector<Date> maturities;
 
     Date today = Settings::instance().evaluationDate();
     Date calibrationMaturity = std::max(qlInstr->underlyingMaturity(), today);
 
     // the first ibor / ois index found
-    QuantLib::ext::shared_ptr<IborIndex> index;
+    QuantLib::ext::shared_ptr<InterestRateIndex> index;
 
     // if protection end <= today there is no model dependent part to value (just fees, possibly)
 
     if (rpa->protectionEnd() > today) {
+
         std::vector<Date> gridDates = RiskParticipationAgreementBaseEngine::buildDiscretisationGrid(
             today, rpa->protectionStart(), rpa->protectionEnd(), qlInstr->underlying(), maxGapDays,
             maxDiscretisationPoints);
+
         for (Size i = 0; i < gridDates.size() - 1; ++i) {
             Date mid = gridDates[i] + (gridDates[i + 1] - gridDates[i]) / 2;
             // mid might be = reference date degenerate cases where the first two discretisation points
@@ -288,15 +291,22 @@ RiskParticipationAgreementSwapLGMGridEngineBuilder::engineImpl(const std::string
             if (mid > today && ((calibrationMaturity - mid) >= 90 || expiries.empty()))
                 expiries.push_back(mid);
         }
-        auto index = getInterestRateIndexFromLegs(qlInstr->underlying()).front();
-        auto strikes = getCalibrationStrikesFromLegs(qlInstr->underlying(), expiries);
+
+        index = getInterestRateIndexFromLegs(qlInstr->underlying()).front();
+        strikes = getCalibrationStrikesFromLegs(qlInstr->underlying(), expiries);
+        maturities = std::vector<Date>(expiries.size(), calibrationMaturity);
+
+        // overwrite with delta-gamma adjusted basket, if this is configured
+
+
+
     }
 
     // build model + engine
     DLOG("Building LGM Grid RPA engine for trade " << id);
     auto lgm = std::get<Handle<LGM>>(ore::data::model(
         this, id, {index == nullptr ? rpa->npvCurrency() : IndexNameTranslator::instance().oreName(index->name())},
-        expiries, std::vector<Date>(expiries.size(), calibrationMaturity), {strikes}, {}, false));
+        expiries, maturities, {strikes}, {}, false));
     DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
     Handle<DefaultProbabilityTermStructure> creditCurve =
         market_->defaultCurve(rpa->creditCurveId(), configuration(MarketContext::pricing))->curve();
