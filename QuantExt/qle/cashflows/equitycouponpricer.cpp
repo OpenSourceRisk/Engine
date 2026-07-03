@@ -71,6 +71,22 @@ Rate EquityCouponPricer::swapletRate() {
 
     if (coupon_->fixingEndDate() > Settings::instance().evaluationDate() && !equityVolatility_.empty() &&
         !fxVolatility_.empty() && !correlation_.empty()) {
+
+        // Quanto Convexity adjustment for start price
+        if (coupon_->fixingStartDate() > Settings::instance().evaluationDate()) {
+            Real sigmaEqStart =
+                equityVolatility_->blackVol(coupon_->fixingStartDate(), additionalResultCache_.currentPeriodStartPrice);
+            Real sigmaFxStart =
+                fxVolatility_->blackVol(coupon_->fixingStartDate(), additionalResultCache_.currentPeriodStartFxFixing);
+            Real rhoStart = correlation_->correlation(coupon_->fixingStartDate());
+            Real startConvexityAdjustment =
+                std::exp(sigmaEqStart * sigmaFxStart * rhoStart *
+                         equityCurve_->equityForecastCurve()->dayCounter().yearFraction(
+                             Settings::instance().evaluationDate(), coupon_->fixingStartDate()));
+            additionalResultCache_.currentPeriodStartPrice *= startConvexityAdjustment;
+        }
+
+        // Quanto Convexity adjustment for end price
         Real sigmaEq = equityVolatility_->blackVol(coupon_->fixingEndDate(), additionalResultCache_.endFixing);
         Real sigmaFx =
             fxVolatility_->blackVol(coupon_->fixingEndDate(), additionalResultCache_.currentPeriodEndFxFixing);
