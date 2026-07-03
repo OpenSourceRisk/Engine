@@ -18,6 +18,7 @@
 
 #include <ored/portfolio/builders/riskparticipationagreement.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
+#include <ored/portfolio/swaption.hpp>
 
 #include <ored/scripting/engines/analyticblackriskparticipationagreementengine.hpp>
 #include <ored/scripting/engines/analyticxccyblackriskparticipationagreementengine.hpp>
@@ -274,8 +275,8 @@ RiskParticipationAgreementSwapLGMGridEngineBuilder::engineImpl(const std::string
     // the first ibor / ois index found
     QuantLib::ext::shared_ptr<IborIndex> index;
 
-    // if protection end <= today there is no model dependent part to value (just fees, possibly), so
-    // we just pass a dummy calibration instruments
+    // if protection end <= today there is no model dependent part to value (just fees, possibly)
+
     if (rpa->protectionEnd() > today) {
         std::vector<Date> gridDates = RiskParticipationAgreementBaseEngine::buildDiscretisationGrid(
             today, rpa->protectionStart(), rpa->protectionEnd(), qlInstr->underlying(), maxGapDays,
@@ -287,40 +288,8 @@ RiskParticipationAgreementSwapLGMGridEngineBuilder::engineImpl(const std::string
             if (mid > today && ((calibrationMaturity - mid) >= 90 || expiries.empty()))
                 expiries.push_back(mid);
         }
-
-        std::vector<QuantLib::ext::shared_ptr<QuantLib::FixedRateCoupon>> fixedCpns;
-        std::vector<QuantLib::ext::shared_ptr<QuantLib::FloatingRateCoupon>> floatingCpns;
-        for (auto const& l : qlInstr->underlying()) {
-            for (auto const& c : l) {
-                if (auto fixedCpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::FixedRateCoupon>(c))
-                    fixedCpns.push_back(fixedCpn);
-                if (auto floatingCpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(c)) {
-                    floatingCpns.push_back(floatingCpn);
-                    if (index == nullptr)
-                        index = QuantLib::ext::dynamic_pointer_cast<IborIndex>(floatingCpn->index());
-                }
-            }
-        }
-        auto cpnLt = [](const QuantLib::ext::shared_ptr<Coupon>& x, const QuantLib::ext::shared_ptr<Coupon>& y) {
-            return x->accrualStartDate() < y->accrualStartDate();
-        };
-        std::sort(fixedCpns.begin(), fixedCpns.end(), cpnLt);
-        std::sort(floatingCpns.begin(), floatingCpns.end(), cpnLt);
-
-        auto accLt = [](const QuantLib::ext::shared_ptr<Coupon>& x, const Date& e) {
-            return x->accrualStartDate() < e;
-        };
-        for (auto const& expiry : expiries) {
-            // look for the first fixed and float coupon with accrual start >= expiry
-            auto firstFix = std::lower_bound(fixedCpns.begin(), fixedCpns.end(), expiry, accLt);
-            auto firstFloat = std::lower_bound(floatingCpns.begin(), floatingCpns.end(), expiry, accLt);
-            // if we find both coupons, we take the fixed rate minus the floating spread as the calibration strike
-            // otherwise we set the strike to null meaning we request an ATM strike for the calibration
-            if (firstFix != fixedCpns.end() && firstFloat != floatingCpns.end())
-                strikes.push_back((*firstFix)->rate() - (*firstFloat)->spread());
-            else
-                strikes.push_back(Null<Real>());
-        }
+        auto index = getInterestRateIndexFromLegs(qlInstr->underlying()).front();
+        auto strikes = getCalibrationStrikesFromLegs(qlInstr->underlying(), expiries);
     }
 
     // build model + engine
