@@ -18,7 +18,6 @@
 
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/inflationcurveconfig.hpp>
-#include <ored/configuration/intradaypowercurveconfig.hpp>
 #include <ored/configuration/inflationcapfloorvolcurveconfig.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/structuredcurveerror.hpp>
@@ -44,23 +43,6 @@ void addMinimalCurves(const char* nodeName, const map<string, QuantLib::ext::sha
             n[id] = it.second;
         }
     }
-}
-
-CurveConfigurations::CurveConfigurations(const CurveConfigurations& configs) {
-    refDataManager_ = configs.refDataManager_;
-    iborFallbackConfig_ = configs.iborFallbackConfig_;
-    curveConfigOverride_ = configs.curveConfigOverride_;
-    unparsed_ = configs.unparsed_;
-    configs_ = configs.configs_;
-    reportConfigEqVols_ = configs.reportConfigEqVols_;
-    reportConfigFxVols_ = configs.reportConfigFxVols_;
-    reportConfigCommVols_ = configs.reportConfigCommVols_;
-    reportConfigIrCapFloorVols_ = configs.reportConfigIrCapFloorVols_;
-    reportConfigIrSwaptionVols_ = configs.reportConfigIrSwaptionVols_;
-    reportConfigYieldCurves_ = configs.reportConfigYieldCurves_;
-    reportConfigInflationCapFloorVols_ = configs.reportConfigInflationCapFloorVols_;
-    reportConfigBondFutureVols_ = configs.reportConfigBondFutureVols_;
-    reportConfigDefaultCurves_ = configs.reportConfigDefaultCurves_;
 }
 
 void CurveConfigurations::addNodes(XMLDocument& doc, XMLNode* parent, const char* nodeName) const {
@@ -160,10 +142,6 @@ void CurveConfigurations::parseNode(const CurveSpec::CurveType& type, const stri
                 config = QuantLib::ext::make_shared<BondFutureVolatilityConfig>();
                 break;
             }
-            case CurveSpec::CurveType::IntradayPowerCurve: {
-                config = QuantLib::ext::make_shared<IntradayPowerCurveConfig>();
-                break;
-            }
             }
             try {
                 config->fromXMLString(itc->second);
@@ -185,12 +163,10 @@ void CurveConfigurations::parseNode(const CurveSpec::CurveType& type, const stri
 
 void CurveConfigurations::add(const CurveSpec::CurveType& type, const string& curveId,
     const QuantLib::ext::shared_ptr<CurveConfig>& config) {
-    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     configs_[type][curveId] = config;
 }
 
 bool CurveConfigurations::has(const CurveSpec::CurveType& type, const string& curveId) const {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     return (curveConfigOverride_ && curveConfigOverride_->has(type, curveId)) ||
         (configs_.count(type) > 0 && configs_.at(type).count(curveId) > 0) ||
         (unparsed_.count(type) > 0 && unparsed_.at(type).count(curveId) > 0);
@@ -198,37 +174,28 @@ bool CurveConfigurations::has(const CurveSpec::CurveType& type, const string& cu
 
 const QuantLib::ext::shared_ptr<CurveConfig>& CurveConfigurations::get(const CurveSpec::CurveType& type,
                                                                        const string& curveId) const {
-    {
-        boost::shared_lock<boost::shared_mutex> lock(mutex_);
-        const auto& it = configs_.find(type);
-        if (it != configs_.end()) {
-            const auto& itc = it->second.find(curveId);
-            if (itc != it->second.end()) {
-                return itc->second;
-            }
+
+    const auto& it = configs_.find(type);
+    if (it != configs_.end()) {
+        const auto& itc = it->second.find(curveId);
+        if (itc != it->second.end()) {
+            return itc->second;
         }
     }
 
-    {
-        // check if is in the overrides first, and then add to configs_ if so
-        boost::unique_lock<boost::shared_mutex> lock(mutex_);
-        if (curveConfigOverride_ && curveConfigOverride_->has(type, curveId)) {
-            auto cc = curveConfigOverride_->get(type, curveId);
-            configs_[type][curveId] = cc;
-            return configs_.at(type).at(curveId);
-        }
-    }
-
-    {
-        // next check the unparsed configs
-        boost::unique_lock<boost::shared_mutex> lock(mutex_);
-        parseNode(type, curveId);
+    // check if is in the overrides first, and then add to configs_ if so
+    if (curveConfigOverride_ && curveConfigOverride_->has(type, curveId)) {
+        auto cc = curveConfigOverride_->get(type, curveId);
+        configs_[type][curveId] = cc;
         return configs_.at(type).at(curveId);
     }
+
+    // next check the unparsed configs
+    parseNode(type, curveId);
+    return configs_.at(type).at(curveId);
 }
 
 void CurveConfigurations::parseAll() {
-    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     for (const auto& u : unparsed_) {
         for (auto it = u.second.cbegin(), nit = it; it != u.second.cend(); it = nit) {
             nit++;
@@ -244,10 +211,7 @@ void CurveConfigurations::getNode(XMLNode* node, const char* parentName, const c
         for (XMLNode* child = XMLUtils::getChildNode(parentNode, childName); child;
              child = XMLUtils::getNextSibling(child, childName)) {
             const auto& id = XMLUtils::getChildValue(child, "CurveId", true);
-            {
-                boost::unique_lock<boost::shared_mutex> lock(mutex_);
-                unparsed_[type][id] = XMLUtils::toString(child);
-            }
+            unparsed_[type][id] = XMLUtils::toString(child);
         }
     }
 }
@@ -308,8 +272,6 @@ std::set<string> CurveConfigurations::quotes(const QuantLib::ext::shared_ptr<Tod
 }
 
 std::set<string> CurveConfigurations::quotes() const {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
-
     set<string> quotes;
 
     // only add quotes for parsed configs
@@ -336,7 +298,6 @@ std::set<string> CurveConfigurations::conventions(const QuantLib::ext::shared_pt
 }
 
 std::set<string> CurveConfigurations::conventions() const {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     set<string> conventions;
     for (const auto& cc : configs_) {
         if (cc.first == CurveSpec::CurveType::Yield) {
@@ -399,7 +360,6 @@ std::set<string> CurveConfigurations::conventions() const {
 }
 
 set<string> CurveConfigurations::yieldCurveConfigIds() {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     set<string> curves;
     const auto& it = configs_.find(CurveSpec::CurveType::Yield);
     if (it != configs_.end()) {
@@ -418,7 +378,6 @@ set<string> CurveConfigurations::yieldCurveConfigIds() {
 
 QuantLib::ext::shared_ptr<CurveConfig>
 CurveConfigurations::findInflationCurveConfig(const string& id, InflationCurveConfig::Type type) const {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     set<string> curves;
     const auto& it = configs_.find(CurveSpec::CurveType::Inflation);
     if (it != configs_.end()) {
@@ -449,7 +408,6 @@ CurveConfigurations::findInflationCurveConfig(const string& id, InflationCurveCo
 
 QuantLib::ext::shared_ptr<CurveConfig>
 CurveConfigurations::findInflationVolCurveConfig(const string& id, InflationCapFloorVolatilityCurveConfig::Type type) {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     set<string> curves;
     const auto& it = configs_.find(CurveSpec::CurveType::InflationCapFloorVolatility);
     if (it != configs_.end()) {
@@ -706,16 +664,6 @@ CurveConfigurations::bondFutureVolatilityConfig(const string& curveID) const {
     return ext::dynamic_pointer_cast<BondFutureVolatilityConfig>(cc);
 }
 
-bool CurveConfigurations::hasIntradayPowerCurveConfig(const string& curveID) const {
-    return has(CurveSpec::CurveType::IntradayPowerCurve, curveID);
-}
-
-ext::shared_ptr<IntradayPowerCurveConfig>
-CurveConfigurations::intradayPowerCurveConfig(const string& curveID) const {
-    auto cc = get(CurveSpec::CurveType::IntradayPowerCurve, curveID);
-    return ext::dynamic_pointer_cast<IntradayPowerCurveConfig>(cc);
-}
-
 #include <iostream>
 void CurveConfigurations::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CurveConfiguration");
@@ -779,7 +727,6 @@ void CurveConfigurations::fromXML(XMLNode* node) {
     getNode(node, "CommodityVolatilities", "CommodityVolatility");
     getNode(node, "Correlations", "Correlation");
     getNode(node, "BondFutureVolatilities", "BondFutureVolatility");
-    getNode(node, "IntradayPowerCurves", "IntradayPowerCurve");
 }
 
 XMLNode* CurveConfigurations::toXML(XMLDocument& doc) const {
@@ -803,7 +750,6 @@ XMLNode* CurveConfigurations::toXML(XMLDocument& doc) const {
     addNodes(doc, parent, "CommodityVolatilities");
     addNodes(doc, parent, "Correlations");
     addNodes(doc, parent, "BondFutureVolatilities");
-    addNodes(doc, parent, "IntradayPowerCurves");
     addReportConfigurationNode(doc, parent);
 
     return parent;
@@ -842,7 +788,6 @@ void CurveConfigurations::addReportConfigurationNode(XMLDocument& doc, XMLNode* 
 }
 
 void CurveConfigurations::addAdditionalCurveConfigs(const CurveConfigurations& c) {
-    boost::unique_lock<boost::shared_mutex> lock(mutex_);
 
     // add parsed configs
 
@@ -880,7 +825,6 @@ void CurveConfigurations::addAdditionalCurveConfigs(const CurveConfigurations& c
 }
 
 void CurveConfigurationsManager::setOverride(const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigOverride) {
-    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     override_ = curveConfigOverride;
     for (auto& it : configs_) {
 		it.second->setCurveConfigOverride(override_);
@@ -888,14 +832,12 @@ void CurveConfigurationsManager::setOverride(const QuantLib::ext::shared_ptr<Cur
 }
 
 void CurveConfigurationsManager::add(const QuantLib::ext::shared_ptr<CurveConfigurations>& config, std::string id) {
-    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     if (override_)
         config->setCurveConfigOverride(override_);
     configs_[id] = config;
 }
 
 const QuantLib::ext::shared_ptr<CurveConfigurations>& CurveConfigurationsManager::get(std::string id) const {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     auto it = configs_.find(id);
     if (it == configs_.end()) {
         WLOG("CurveConfigurationsManager: could not find CurveConfiguration for id "
@@ -907,7 +849,6 @@ const QuantLib::ext::shared_ptr<CurveConfigurations>& CurveConfigurationsManager
 }
 
 const bool CurveConfigurationsManager::has(std::string id) const { 
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     auto it = configs_.find(id); 
     return it != configs_.end();
 }
@@ -917,7 +858,6 @@ const std::map<std::string, QuantLib::ext::shared_ptr<CurveConfigurations>>& Cur
 }
 
 const bool CurveConfigurationsManager::empty() const { 
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     return configs_.size() == 0; 
 }
 } // namespace data

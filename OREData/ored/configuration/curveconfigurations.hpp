@@ -29,7 +29,6 @@
 #include <ored/configuration/cdsvolcurveconfig.hpp>
 #include <ored/configuration/commoditycurveconfig.hpp>
 #include <ored/configuration/commodityvolcurveconfig.hpp>
-#include <ored/configuration/intradaypowercurveconfig.hpp>
 #include <ored/configuration/correlationcurveconfig.hpp>
 #include <ored/configuration/defaultcurveconfig.hpp>
 #include <ored/configuration/equitycurveconfig.hpp>
@@ -62,12 +61,11 @@ using ore::data::XMLSerializable;
 */
 class CurveConfigurations : public XMLSerializable {
 public:
+    //! Default constructor
     CurveConfigurations(const QuantLib::ext::shared_ptr<ReferenceDataManager>& refDataManager = nullptr,
                         const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig = nullptr,
                         const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigOverride = nullptr)
         : refDataManager_(refDataManager), iborFallbackConfig_(iborFallbackConfig), curveConfigOverride_(curveConfigOverride) {}
-
-    CurveConfigurations(const CurveConfigurations& configs);
 
     //! \name Setters and Getters
     //@{
@@ -81,7 +79,6 @@ public:
     const ReportConfig& reportConfigDefaultCurves() const { return reportConfigDefaultCurves_; }
 
     void setCurveConfigOverride(const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigOverride) {
-        boost::unique_lock<boost::shared_mutex> lock(mutex_);
         curveConfigOverride_ = curveConfigOverride;
     }
 
@@ -140,9 +137,6 @@ public:
     bool hasBondFutureVolatilityConfig(const std::string& curveID) const;
     QuantLib::ext::shared_ptr<BondFutureVolatilityConfig> bondFutureVolatilityConfig(const std::string& curveID) const;
 
-    bool hasIntradayPowerCurveConfig(const std::string& curveID) const;
-    QuantLib::ext::shared_ptr<IntradayPowerCurveConfig> intradayPowerCurveConfig(const std::string& curveID) const;
-
     QuantLib::ext::shared_ptr<CurveConfigurations>
     minimalCurveConfig(const QuantLib::ext::shared_ptr<TodaysMarketParameters> todaysMarketParams,
                        const std::set<std::string>& configurations = {""}) const;
@@ -195,34 +189,32 @@ public:
     //@}
 
  private:
-     mutable boost::shared_mutex mutex_;
+    QuantLib::ext::shared_ptr<ReferenceDataManager> refDataManager_;
+    QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
+    QuantLib::ext::shared_ptr<CurveConfigurations> curveConfigOverride_;
 
-     QuantLib::ext::shared_ptr<ReferenceDataManager> refDataManager_;
-     QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
-     QuantLib::ext::shared_ptr<CurveConfigurations> curveConfigOverride_;
+    ReportConfig reportConfigEqVols_;
+    ReportConfig reportConfigFxVols_;
+    ReportConfig reportConfigCommVols_;
+    ReportConfig reportConfigIrCapFloorVols_;
+    ReportConfig reportConfigIrSwaptionVols_;
+    ReportConfig reportConfigYieldCurves_;
+    ReportConfig reportConfigInflationCapFloorVols_;
+    ReportConfig reportConfigBondFutureVols_;
+    ReportConfig reportConfigDefaultCurves_;
 
-     ReportConfig reportConfigEqVols_;
-     ReportConfig reportConfigFxVols_;
-     ReportConfig reportConfigCommVols_;
-     ReportConfig reportConfigIrCapFloorVols_;
-     ReportConfig reportConfigIrSwaptionVols_;
-     ReportConfig reportConfigYieldCurves_;
-     ReportConfig reportConfigInflationCapFloorVols_;
-     ReportConfig reportConfigBondFutureVols_;
-     ReportConfig reportConfigDefaultCurves_;
+    mutable std::map<CurveSpec::CurveType, std::map<std::string, QuantLib::ext::shared_ptr<CurveConfig>>> configs_;
+    mutable std::map<CurveSpec::CurveType, std::map<std::string, std::string>> unparsed_;
 
-     mutable std::map<CurveSpec::CurveType, std::map<std::string, QuantLib::ext::shared_ptr<CurveConfig>>> configs_;
-     mutable std::map<CurveSpec::CurveType, std::map<std::string, std::string>> unparsed_;
+    // utility function for parsing a node of name "parentName" and storing the result in the map
+    void parseNode(const CurveSpec::CurveType& type, const string& curveId) const;
+    
+    // utility function for getting a child curve config node
+    void getNode(XMLNode* node, const char* parentName, const char* childName);
 
-     // utility function for parsing a node of name "parentName" and storing the result in the map
-     void parseNode(const CurveSpec::CurveType& type, const string& curveId) const;
-
-     // utility function for getting a child curve config node
-     void getNode(XMLNode* node, const char* parentName, const char* childName);
-
-     // add to XML doc
-     void addNodes(XMLDocument& doc, XMLNode* parent, const char* nodeName) const;
-     void addReportConfigurationNode(XMLDocument& doc, XMLNode* parent) const;
+    // add to XML doc
+    void addNodes(XMLDocument& doc, XMLNode* parent, const char* nodeName) const;
+    void addReportConfigurationNode(XMLDocument& doc, XMLNode* parent) const;
 };
 
 class CurveConfigurationsManager {
@@ -238,7 +230,6 @@ public:
     const bool empty() const;
 
 private:
-    mutable boost::shared_mutex mutex_;
     std::map<std::string, QuantLib::ext::shared_ptr<CurveConfigurations>> configs_;
     QuantLib::ext::shared_ptr<CurveConfigurations> override_;
 };
