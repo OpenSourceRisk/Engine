@@ -80,6 +80,7 @@ public:
     const ReportConfig& reportConfigDefaultCurves() const { return reportConfigDefaultCurves_; }
 
     void setCurveConfigOverride(const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigOverride) {
+        boost::unique_lock<boost::shared_mutex> lock(mutex_);
         curveConfigOverride_ = curveConfigOverride;
     }
 
@@ -233,6 +234,7 @@ public:
     const bool empty() const;
 
 private:
+    mutable boost::shared_mutex mutex_;
     std::map<std::string, QuantLib::ext::shared_ptr<CurveConfigurations>> configs_;
     QuantLib::ext::shared_ptr<CurveConfigurations> override_;
 };

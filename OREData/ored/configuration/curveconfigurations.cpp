@@ -178,10 +178,12 @@ void CurveConfigurations::parseNode(const CurveSpec::CurveType& type, const stri
 
 void CurveConfigurations::add(const CurveSpec::CurveType& type, const string& curveId,
     const QuantLib::ext::shared_ptr<CurveConfig>& config) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     configs_[type][curveId] = config;
 }
 
 bool CurveConfigurations::has(const CurveSpec::CurveType& type, const string& curveId) const {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     return (curveConfigOverride_ && curveConfigOverride_->has(type, curveId)) ||
         (configs_.count(type) > 0 && configs_.at(type).count(curveId) > 0) ||
         (unparsed_.count(type) > 0 && unparsed_.at(type).count(curveId) > 0);
@@ -191,7 +193,6 @@ const QuantLib::ext::shared_ptr<CurveConfig>& CurveConfigurations::get(const Cur
                                                                        const string& curveId) const {
     {
         boost::shared_lock<boost::shared_mutex> lock(mutex_);
-
         const auto& it = configs_.find(type);
         if (it != configs_.end()) {
             const auto& itc = it->second.find(curveId);
@@ -199,8 +200,11 @@ const QuantLib::ext::shared_ptr<CurveConfig>& CurveConfigurations::get(const Cur
                 return itc->second;
             }
         }
+    }
 
+    {
         // check if is in the overrides first, and then add to configs_ if so
+        boost::unique_lock<boost::shared_mutex> lock(mutex_);
         if (curveConfigOverride_ && curveConfigOverride_->has(type, curveId)) {
             auto cc = curveConfigOverride_->get(type, curveId);
             configs_[type][curveId] = cc;
@@ -297,6 +301,8 @@ std::set<string> CurveConfigurations::quotes(const QuantLib::ext::shared_ptr<Tod
 }
 
 std::set<string> CurveConfigurations::quotes() const {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+
     set<string> quotes;
 
     // only add quotes for parsed configs
@@ -323,6 +329,7 @@ std::set<string> CurveConfigurations::conventions(const QuantLib::ext::shared_pt
 }
 
 std::set<string> CurveConfigurations::conventions() const {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     set<string> conventions;
     for (const auto& cc : configs_) {
         if (cc.first == CurveSpec::CurveType::Yield) {
@@ -385,6 +392,7 @@ std::set<string> CurveConfigurations::conventions() const {
 }
 
 set<string> CurveConfigurations::yieldCurveConfigIds() {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     set<string> curves;
     const auto& it = configs_.find(CurveSpec::CurveType::Yield);
     if (it != configs_.end()) {
@@ -403,6 +411,7 @@ set<string> CurveConfigurations::yieldCurveConfigIds() {
 
 QuantLib::ext::shared_ptr<CurveConfig>
 CurveConfigurations::findInflationCurveConfig(const string& id, InflationCurveConfig::Type type) const {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     set<string> curves;
     const auto& it = configs_.find(CurveSpec::CurveType::Inflation);
     if (it != configs_.end()) {
@@ -433,6 +442,7 @@ CurveConfigurations::findInflationCurveConfig(const string& id, InflationCurveCo
 
 QuantLib::ext::shared_ptr<CurveConfig>
 CurveConfigurations::findInflationVolCurveConfig(const string& id, InflationCapFloorVolatilityCurveConfig::Type type) {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     set<string> curves;
     const auto& it = configs_.find(CurveSpec::CurveType::InflationCapFloorVolatility);
     if (it != configs_.end()) {
@@ -813,6 +823,7 @@ void CurveConfigurations::addReportConfigurationNode(XMLDocument& doc, XMLNode* 
 }
 
 void CurveConfigurations::addAdditionalCurveConfigs(const CurveConfigurations& c) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
 
     // add parsed configs
 
@@ -850,6 +861,7 @@ void CurveConfigurations::addAdditionalCurveConfigs(const CurveConfigurations& c
 }
 
 void CurveConfigurationsManager::setOverride(const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigOverride) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     override_ = curveConfigOverride;
     for (auto& it : configs_) {
 		it.second->setCurveConfigOverride(override_);
@@ -857,12 +869,14 @@ void CurveConfigurationsManager::setOverride(const QuantLib::ext::shared_ptr<Cur
 }
 
 void CurveConfigurationsManager::add(const QuantLib::ext::shared_ptr<CurveConfigurations>& config, std::string id) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     if (override_)
         config->setCurveConfigOverride(override_);
     configs_[id] = config;
 }
 
 const QuantLib::ext::shared_ptr<CurveConfigurations>& CurveConfigurationsManager::get(std::string id) const {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     auto it = configs_.find(id);
     if (it == configs_.end()) {
         WLOG("CurveConfigurationsManager: could not find CurveConfiguration for id "
@@ -874,6 +888,7 @@ const QuantLib::ext::shared_ptr<CurveConfigurations>& CurveConfigurationsManager
 }
 
 const bool CurveConfigurationsManager::has(std::string id) const { 
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     auto it = configs_.find(id); 
     return it != configs_.end();
 }
@@ -883,6 +898,7 @@ const std::map<std::string, QuantLib::ext::shared_ptr<CurveConfigurations>>& Cur
 }
 
 const bool CurveConfigurationsManager::empty() const { 
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     return configs_.size() == 0; 
 }
 } // namespace data
