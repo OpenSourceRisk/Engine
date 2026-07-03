@@ -43,8 +43,6 @@
 
 #include <future>
 #include <random>
-#include <numeric>
-#include <thread>
 
 #ifdef ORE_MULTITHREADING_CPU_AFFINITY
 #include <pthread.h>
