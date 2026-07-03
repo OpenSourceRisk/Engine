@@ -1,0 +1,142 @@
+\subsection{Intraday Power Pricing}
+\label{ss:intraday_power_pricing}
+
+Intraday power pricing converts a daily-average commodity price into a load-weighted average price per MWh by applying intraday shape factors and a delivery-period load profile.
+
+\subsubsection{Components}
+
+Intraday power pricing combines three main components:
+
+\begin{itemize}
+\item \textbf{Commodity price curve}: Provides the underlying daily-average power prices as a function of delivery date. These are typically constructed from futures prices using backward-flat interpolation.
+
+\item \textbf{Intraday shape factors}: Define the relative price profile across hours of the day. Shape factors partition the day into buckets (e.g., peak hours 08:00--20:00 and off-peak hours 20:00--08:00 the next day or even more granular) and assign a multiplicative weight to each bucket.
+
+\item \textbf{Load profile}: Specifies the trades the energy load (in MW) for each time interval during the delivery period. For example, 50 MW load from 07:15 to 07:30.
+\end{itemize}
+
+\subsubsection{Daily Intraday Price}
+
+For a given delivery date $d$, the daily-average price $P_d^{\mathrm{day}}$ from the commodity curve is scaled by a load-weighted average shape factor to give the intraday load weighted price:
+
+$$
+P_d^{\mathrm{intraday}} = P_d^{\mathrm{day}} \times \bar{s}_d^{\mathrm{load}}.
+$$
+
+For each load bucket $i$ (with constant load $\ell_i$ MW over $[\mathrm{start}_i, \mathrm{end}_i)$), two quantities are computed:
+
+\begin{itemize}
+\item The energy delivered: $M_{d,i} = \ell_i \cdot \Delta t_{d,i} / 3600$ (MWh, where $\Delta t_{d,i}$ is the DST-adjusted duration in seconds),
+\item The time-weighted shape factor: $s_i = s(\mathrm{start}_i, \mathrm{end}_i)$ (see Section below).
+\end{itemize}
+
+The load-weighted average shape factor is then:
+
+$$
+\bar{s}_d^{\mathrm{load}} = \frac{\sum_{i=1}^{n} M_{d,i} \cdot s_i}{\sum_{i=1}^{n} M_{d,i}},
+$$
+
+i.e.\ each shape factor $s_i$ is weighted by the energy $\ell_i \cdot \Delta t_{d,i}$ delivered in that bucket.
+
+\subsubsection{Time-Weighted Shape Factor}
+
+Shape factors are typically given as a discrete step function: a constant multiplier $w_j$ applies over each interval $[t_j, t_{j+1})$. The time-weighted average shape factor over $[\mathrm{start}, \mathrm{end})$ is:
+
+$$
+s(\mathrm{start}, \mathrm{end}) = \frac{\sum_{j} w_j \cdot \max(0, \min(\mathrm{end}, t_{j+1}) - \max(\mathrm{start}, t_j))}{\mathrm{end} - \mathrm{start}}.
+$$
+
+This formula iterates over all shape intervals and computes the overlap of each interval $[t_j, t_{j+1})$ with $[\mathrm{start}, \mathrm{end})$, weighted by the shape factor $w_j$ on that interval.
+
+\subsubsection{Load Profile and Energy Calculation}
+
+A load profile specifies a constant load $\ell_i$ (in MW) for each intraday time interval $[\mathrm{start}_i, \mathrm{end}_i)$. On delivery date $d$, the applicable profile is determined by forward-flat filling: the profile with the latest effective date $\leq d$ is used. Two representations are supported: explicit profiles keyed by date, or rule-based profiles with separate shapes for business days and non-business days.
+
+On a normal day the duration is simply $\Delta t_{d,i} = \mathrm{end}_i - \mathrm{start}_i$ seconds. DST transitions adjust this:
+
+\begin{itemize}
+\item \textbf{Forward-shift date} (spring forward, 23-hour day): the hour 02:00--03:00 does not exist. Any bucket overlapping that window has its duration reduced by the overlap; buckets entirely within 02:00--03:00 contribute zero energy and are excluded from the weighted average.
+\item \textbf{Backward-shift date} (fall back, 25-hour day): an extra hour 02:00--03:00 is repeated. Load segments marked with the \lstinline!dst! flag represent the load in that extra hour and are included only on backward-shift dates. The use either specific weights for the DST hour or fall back to use the regular scaling.
+\end{itemize}
+
+\subsubsection{Period Average Price}
+
+Over a calculation period from start date to end date, the average intraday price is the daily-load-weighted average of the daily intraday prices:
+
+$$
+P_{\mathrm{period}} = \frac{\sum_{d \in \mathcal{D}} M_d^{\mathrm{total}} \cdot P_d^{\mathrm{intraday}}}{\sum_{d \in \mathcal{D}} M_d^{\mathrm{total}}},
+$$
+
+where:
+\begin{itemize}
+\item $\mathcal{D}$ is the set of pricing dates in the period (determined by the pricing calendar and business-day flags),
+\item $M_d^{\mathrm{total}} = \sum_i M_{d,i}$ is the total energy on day $d$ (after DST adjustment),
+\item $P_d^{\mathrm{intraday}}$ is the load-weighted intraday price on day $d$.
+\end{itemize}
+
+The period amount is then:
+
+$$
+\mathrm{Amount} = Q \cdot P_{\mathrm{period}} \cdot G + S,
+$$
+
+where $Q$ is the quantity, $G$ is the gearing multiplier, and $S$ is the additive spread. The quantity interpretation depends on the \lstinline!QuantityMode!:
+
+\begin{itemize}
+\item \textbf{TotalEnergy}: $Q$ is the total MWh for the full period; $\sum_d M_d^{\mathrm{total}}$ is normalized to determine the relative delivery across days.
+\item \textbf{LoadShapeMultiplier}: $Q$ is a multiplier applied to the absolute total load; $\sum_d M_d^{\mathrm{total}}$ scales the fixed period energy.
+\end{itemize}
+
+\subsubsection{Example}
+
+Consider a simple example with:
+\begin{itemize}
+\item Delivery period: single day, 2026-06-25 (normal day, 24 hours),
+\item Commodity price: $P_d^{\mathrm{day}} = 100$ USD/MWh,
+\item Load profile: constant 50 MW from 01:00 to 08:00 (7 hours),
+\item Shape factors: 0.8 from 01:00 to 05:00, 1. from 05:00 to 08:00.
+\end{itemize}
+
+First, compute the energy in each segment:
+\begin{itemize}
+\item Segment 1 (01:00--05:00): $M_1 = 50 \text{ MW} \times 4 \text{ h} = 200 \text{ MWh}$,
+\item Segment 2 (05:00--08:00): $M_2 = 50 \text{ MW} \times 3 \text{ h} = 150 \text{ MWh}$,
+\item Total: $M_d^{\mathrm{total}} = 350 \text{ MWh}$.
+\end{itemize}
+
+Next, compute the load-weighted average shape factor:
+
+$$
+\bar{s}_d^{\mathrm{load}} = \frac{200 \times 0.8 + 150 \times 1.5}{350} = \frac{160 + 225}{350} = \frac{385}{350} = 1.1
+$$
+
+Finally, compute the intraday price:
+
+$$
+P_d^{\mathrm{intraday}} = 100 \times 1.1 = 110.0 \text{ USD/MWh}.
+$$
+
+If the period consists of this single day with $\mathrm{QuantityMode} = \mathrm{TotalEnergy}$ and $Q = 700$ MWh, the period amount is:
+
+$$
+\mathrm{Amount} = 700 \times 110. = 77000 \text{ USD}.
+$$
+
+\subsubsection{Backward-Flat Filling}
+
+Both the commodity price curve and the shape factors are constructed using backward-flat interpolation on the delivery date axis. This means that:
+
+\begin{itemize}
+\item If the commodity curve provides monthly prices with backward-flat interpolation, all days in a month reference that month's price until a new monthly price takes effect.
+\item Similarly, if shape factors are updated on specific dates, the latest shape profile applies to all subsequent days until a new profile is provided.
+\end{itemize}
+
+This sparse schedule approach allows for compact representation of seasonal and calendar patterns.
+
+\subsubsection{Daylight-Saving Adjustment}
+
+On a daylight-saving forward-shift date (spring forward, e.g., USA transitions at 02:00 to 03:00), the day has 23 hours. The missing hour between 02:00 and 03:00 is excluded from both the total energy calculation and the shape factor weighting. Any load segments that span 02:00--03:00 have their duration reduced accordingly.
+
+On a daylight-saving backward-shift date (fall back, e.g., USA transitions at 02:00 back to 01:00), the day has 25 hours. An extra hour exists between 02:00 and 03:00. Load segments marked with the \lstinline!dst! flag (intended to specify the load for this extra hour) contribute to the calculation. Load segments without the flag are applied to the entire day, including the repeated hour, unless explicit logic excludes them.
+
+See Section \ref{sss:intraday_power_load_conventions} for details on the load profile structure and the \lstinline!dst! attribute.

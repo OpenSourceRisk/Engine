@@ -35,12 +35,13 @@ Allowable values: Any real number.
   SWAPTION, CAPFLOOR, FX\_OPTION, HAZARD\_RATE, RECOVERY\_RATE, ASSUMED\_RECOVERY\_RATE,
   ZC\_INFLATIONSWAP, YY\_INFLATIONSWAP, ZC\_INFLATIONCAPFLOOR,
   SEASONALITY, EQUITY\_SPOT, EQUITY\_FWD, EQUITY\_DIVIDEND,
-  EQUITY\_OPTION, BOND, INDEX\_CDS\_OPTION, CPR, COMMODITY, COMMODITY\_FWD, COMMODITY\_OPTION,
+    EQUITY\_OPTION, BOND, INDEX\_CDS\_OPTION, CPR, COMMODITY, COMMODITY\_FWD, COMMODITY\_OPTION,
+    SHAPE\_PROFILE,
   BOND\_FUTURE\_OPTION} \\
 \hline
   Quote Type & \emph{BASIS\_SPREAD, CREDIT\_SPREAD, CONV\_CREDIT\_SPREAD, YIELD\_SPREAD, HAZARD\_RATE,
   RATE, RATIO, PRICE, RATE\_LNVOL, RATE\_NVOL, RATE\_SLNVOL,
-  BASE\_CORRELATION, SHIFT} \\
+    BASE\_CORRELATION, SHIFT, SHAPE\_FACTOR} \\
 \hline
   \end{tabular}
   \caption{Allowable values for Instrument and Quote type market data.}
@@ -1211,6 +1212,8 @@ Examples:
 \begin{itemize}
     \item {COMMODITY\_FWD/PRICE/NYMEX:CL/USD/2030-11-20}
 \end{itemize}
+
+\input{marketdata_intradaypower}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Commodity Option Implied Volatility}
