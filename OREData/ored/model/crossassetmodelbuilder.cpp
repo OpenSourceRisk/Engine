@@ -121,12 +121,8 @@ CrossAssetModelBuilder::CrossAssetModelBuilder(
 
     // register market observer with correlations
     marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
-    for (auto const& c : config->correlations()) {
+    for (auto const& c : config->correlations())
         marketObserver_->addObservable(c.second);
-        LOG("OBS_ORIGIN," << ext::shared_ptr<QuantLib::Observable>(c.second).get() << "," <<
-            marketObserver_.get() << "," << std::this_thread::get_id() <<
-            ",CrossAssetModelBuilder marketObserver_->registerWith(correlation)");
-    }
 
     // reset market observer's updated flag
     marketObserver_->hasUpdated(true);

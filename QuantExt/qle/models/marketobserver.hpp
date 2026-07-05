@@ -22,19 +22,11 @@
 */
 
 #pragma once
+
 #include <ql/patterns/observable.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <fstream>
-#include <mutex>
-#include <thread>
-#include <typeinfo>
 
 namespace QuantExt {
 using namespace QuantLib;
-
-namespace {
-    std::mutex debugLogMutex;
-}
 
 //! Observer class for Model Builders
 /*!
@@ -46,21 +38,7 @@ namespace {
 */
 class MarketObserver : public Observer, public Observable {
 public:
-    MarketObserver() : updated_(true) {}
-
-    ~MarketObserver() {
-        std::lock_guard<std::mutex> lock(debugLogMutex);
-        std::ofstream outDtor("C:/Users/fduffy/Downloads/marketobserver_dtor.log", std::ios::app);
-        outDtor << boost::posix_time::to_simple_string(boost::posix_time::microsec_clock::local_time()) << "," <<
-            std::this_thread::get_id() << "," << this << '\n';
-
-        std::ofstream out("C:/Users/fduffy/Downloads/marketobserver.log", std::ios::app);
-        for (const auto& observable : observables_) {
-            out << boost::posix_time::to_simple_string(boost::posix_time::microsec_clock::local_time()) << "," <<
-                std::this_thread::get_id() << "," << this << "," << observable.get() << "," <<
-                typeid(*observable).name() << '\n';
-        }
-    }
+    MarketObserver() : updated_(true){};
 
     //! Add an observable
     void addObservable(QuantLib::ext::shared_ptr<Observable> observable);

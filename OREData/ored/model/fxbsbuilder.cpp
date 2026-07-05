@@ -93,8 +93,6 @@ FxBsBuilder::FxBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& mar
 
     // register with market observables except vols
     marketObserver_->addObservable(fxSpot_);
-    LOG("OBS_ORIGIN," << ext::shared_ptr<QuantLib::Observable>(fxSpot_).get() << "," << marketObserver_.get() << "," <<
-        std::this_thread::get_id() << ",FxBsBuilder marketObserver_->registerWith(fxSpot_)");
     marketObserver_->addObservable(ytsDom_);
     marketObserver_->addObservable(ytsFor_);
 
