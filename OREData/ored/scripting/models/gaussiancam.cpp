@@ -497,7 +497,7 @@ RandomVariable GaussianCam::getInfIndexValue(const Size indexNo, const Date& d, 
     if (fwd != Null<Date>())
         fixingDate = fwd;
     const auto& index = infIndices_[indexNo].second;
-    const auto& zits = index->zeroInflationTermStructure().currentLink();
+    const auto zits = index->zeroInflationTermStructure().currentLink();
     auto lag = simulationLag(zits);
     // we have an simulation lag when simulating inf indices, we need to adjust the observation date accordingly,
     // (see scriptedtrade.cpp, when compiling the inflation simulation dates).

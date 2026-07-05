@@ -1338,7 +1338,7 @@ vector<Contribution> SaccrTradeData::Impl::calculateSingleOptionContribution(con
         auto underlyingData = getUnderlyingData(eqBarrierOption->equityName(), OREAssetClass::EQ);
         optionData = eqBarrierOption->option();
 
-        const string& currency = eqBarrierOption->tradeCurrency().code();
+        const string currency = eqBarrierOption->tradeCurrency().code();
         Real quantity = eqBarrierOption->quantity();
         Real adjNotional = quantity * price;
 
@@ -1348,7 +1348,7 @@ vector<Contribution> SaccrTradeData::Impl::calculateSingleOptionContribution(con
         auto underlyingData = getUnderlyingData(eqDBarrierOpt->equityName(), OREAssetClass::EQ);
         optionData = eqDBarrierOpt->option();
 
-        const string& currency = eqDBarrierOpt->tradeCurrency().code();
+        const string currency = eqDBarrierOpt->tradeCurrency().code();
         Real quantity = eqDBarrierOpt->quantity();
         Real adjNotional = quantity * price;
 
@@ -2134,7 +2134,7 @@ vector<Contribution> ScriptedTradeSaccrImpl::calculateImplContributions() const 
         vector<Date> lastExerciseDates = getDateValues("lastExerciseDate");
 
         // Some special cases where there are multiple exercise dates but we only need the last date
-        for (const string& sn : {"VarianceOption"}) {
+        for (const string sn : {"VarianceOption"}) {
             if (scriptedTrade->scriptName() == sn) {
                 QL_REQUIRE(!lastExerciseDates.empty(),
                            name() << "::calculateImplContributions() " << sn << " exercise dates cannot be empty");

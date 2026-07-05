@@ -306,7 +306,7 @@ QuantLib::ext::shared_ptr<IborIndex> parseIborIndex(const string& s, string& ten
     // if we do not have a convention, look up the index in the hardcoded maps below
 
     // Map from our _unique internal name_ to an overnight index
-    static map<string, QuantLib::ext::shared_ptr<OvernightIndex>> onIndices = {
+    thread_local map<string, QuantLib::ext::shared_ptr<OvernightIndex>> onIndices = {
         {"EUR-EONIA", QuantLib::ext::make_shared<Eonia>()},
         {"EUR-ESTER", QuantLib::ext::make_shared<Estr>()},
         {"GBP-SONIA", QuantLib::ext::make_shared<Sonia>()},
@@ -336,7 +336,7 @@ QuantLib::ext::shared_ptr<IborIndex> parseIborIndex(const string& s, string& ten
         {"THB-THOR", QuantLib::ext::make_shared<THBThor>()}};
 
     // Map from our _unique internal name_ to an ibor index (the period does not matter here)
-    static map<string, QuantLib::ext::shared_ptr<IborIndexParser>> iborIndices = {
+    thread_local map<string, QuantLib::ext::shared_ptr<IborIndexParser>> iborIndices = {
         {"AUD-BBSW", QuantLib::ext::make_shared<IborIndexParserWithPeriod<Bbsw>>()},
         {"AUD-LIBOR", QuantLib::ext::make_shared<IborIndexParserWithPeriod<AUDLibor>>()},
         {"EUR-EURIBOR", QuantLib::ext::make_shared<IborIndexParserWithPeriod<Euribor>>()},
@@ -393,7 +393,7 @@ QuantLib::ext::shared_ptr<IborIndex> parseIborIndex(const string& s, string& ten
         {"CAD-CORRA", QuantLib::ext::make_shared<IborIndexParserWithPeriod<QuantExt::CORRATerm>>()}};
 
     // Check (once) that we have a one-to-one mapping
-    static bool checked = false;
+    thread_local bool checked = false;
     if (!checked) {
         checkOneToOne(onIndices, iborIndices);
         checked = true;

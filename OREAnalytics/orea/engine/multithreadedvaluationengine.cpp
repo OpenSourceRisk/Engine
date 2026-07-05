@@ -129,6 +129,10 @@ void MultiThreadedValuationEngine::buildCube(
     for (auto const& [tid, t] : portfolio->trades())
         pricingStats[tid] = std::make_pair(t->getNumberOfPricings(), t->getCumulativePricingTime());
 
+    // make sure curve configs are read-only to avoid data races
+
+    curveConfigs_->parseAll();
+
     // build portfolio against init market and trigger single pricing to generate pricing stats
 
     LOG("Reset and build portfolio against init market to produce pricing stats from a single pricing. Using pricing "
