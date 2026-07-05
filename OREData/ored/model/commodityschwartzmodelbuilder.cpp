@@ -59,6 +59,8 @@ CommoditySchwartzModelBuilder::CommoditySchwartzModelBuilder(
 
     // register with market observables except vols
     marketObserver_->registerWith(fxSpot_);
+    LOG("OBS_ORIGIN," << ext::shared_ptr<QuantLib::Observable>(fxSpot_).get() << "," << marketObserver_.get() << "," <<
+        std::this_thread::get_id() << ",CommoditySchwartzModelBuilder marketObserver_->registerWith(fxSpot_)");
     marketObserver_->registerWith(curve_);
 
     // register the builder with the vol and the market observer

@@ -18,6 +18,7 @@
 
 #include <ored/model/assetmodelbuilderbase.hpp>
 #include <ored/model/utilities.hpp>
+#include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 
 namespace ore {
@@ -57,6 +58,9 @@ AssetModelBuilderBase::AssetModelBuilderBase(
         registerWith(p->riskFreeRate());
         registerWith(p->dividendYield());
         marketObserver_->registerWith(p->stateVariable());
+        LOG("OBS_ORIGIN," << ext::shared_ptr<QuantLib::Observable>(p->stateVariable()).get() << "," <<
+            marketObserver_.get() << "," << std::this_thread::get_id() <<
+            ",AssetModelBuilderBase marketObserver_->registerWith(p->stateVariable())");
     }
 
     registerWith(marketObserver_);
