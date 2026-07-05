@@ -958,8 +958,26 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
                 initMarket, simMarketParams_, configuration, *curveConfigs_, *todaysMarketParams_, continueOnError,
                 true, true, false, iborFallbackConfig_, false, offsetScenario_);
         }
+
+        // Need to copy crossAssetModelData_ and use a copy of the correlation quotes. If we don't do this, in 
+        // CrossAssetModelBuilder, for each correlation quote handle `cqh` we have marketObserver_->addObservable(cqh). 
+        // There is a separate marketObserver_ per thread but the `cqh` is the same quote handle in each of the 
+        // different threads. Problems can arise for example when the `cqh` attempts to unregisterObserver.
+        // In particular, we can have unregisterObserver called on the same `cqh` from different threads simultaneously
+        // and consequently an attempt is made to edit the `observers_` set from multiple threads which is undefined
+        // behaviour and can lead to a crash.
+        auto camdCopy = ext::make_shared<CrossAssetModelData>(*crossAssetModelData_);
+        map<CorrelationKey, Handle<Quote>> corrCopy;
+        for (const auto& [key, quoteHandle] : crossAssetModelData_->correlations()) {
+            QL_REQUIRE(!quoteHandle.empty(), "AMCValuationEngine::buildCube: empty correlation quote handle "
+                "for key (" << key.first << ", " << key.second << ")");
+            auto quoteCopy = ext::make_shared<SimpleQuote>(quoteHandle->value());
+            corrCopy.emplace(key, Handle<Quote>(quoteCopy));
+        }
+        camdCopy->setCorrelations(corrCopy);
+
         ore::data::CrossAssetModelBuilder modelBuilder(
-            market, crossAssetModelData_, configurationLgmCalibration_, configurationFxCalibration_,
+            market, camdCopy, configurationLgmCalibration_, configurationFxCalibration_,
             configurationEqCalibration_, configurationInfCalibration_, configurationCrCalibration_,
             configurationFinalModel_, false, continueOnCalibrationError_, std::string(), "xva/amc cam building", false,
             allowModelFallbacks_);
