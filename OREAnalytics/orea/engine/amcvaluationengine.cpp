@@ -43,6 +43,7 @@
 #include <boost/timer/timer.hpp>
 
 #include <future>
+#include <barrier>
 
 using namespace ore::data;
 using namespace ore::analytics;
@@ -979,11 +980,14 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
 
     // run amc simulation on multiple threads
     std::vector<std::size_t> cpuIds = getCpuIds(eff_nThreads, "[AMC_MULTITHREADING]");
+    auto cleanupBarrier = std::make_shared<std::barrier<>>(eff_nThreads);
+    LOG("THREAD_DEBUG: main thread is " << std::this_thread::get_id() << ".");
+
     for (Size i = 0; i < eff_nThreads; ++i) {
 
         auto job = [this, &cpuIds, obsMode, includeTodaysCashFlows, localIncRefDateEvents, &portfoliosAsString,
                     &loaders, &simDates, &stickyCloseOutDates, &progressIndicator, &pathData,
-                    &marketModelBuilder](int id) -> resultType {
+                    &marketModelBuilder, cleanupBarrier](int id) -> resultType {
 
             setThreadCpuAffinity(id, cpuIds, "[AMC_MULTITHREADING]");
 
@@ -1027,7 +1031,7 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
 
                 // return code 0 = ok
 
-                LOG("Thread " << id << " successfully finished.");
+                // LOG("Thread " << id << " successfully finished.");
 
                 rc = 0;
 
@@ -1042,6 +1046,10 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
             }
 
             // exit
+
+            LOG("Thread " << id << " waiting at cleanup barrier.");
+            cleanupBarrier->arrive_and_wait();
+            LOG("Thread " << id << " leaving cleanup barrier (" << std::this_thread::get_id() << ").");
 
             return rc;
         };

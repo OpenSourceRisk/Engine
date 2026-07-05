@@ -34,6 +34,7 @@
 #include <future>
 
 // #include <ctpl_stl.h>
+#include <barrier>
 
 namespace ore {
 namespace analytics {
@@ -275,11 +276,13 @@ void MultiThreadedValuationEngine::buildCube(
 
     std::vector<std::size_t> cpuIds = getCpuIds(eff_nThreads, "[MULTITHREADING]");
 
+    auto cleanupBarrier = std::make_shared<std::barrier<>>(eff_nThreads);
+
     for (Size i = 0; i < eff_nThreads; ++i) {
 
         auto job = [this, &cpuIds, obsMode, includeTodaysCashFlows, localIncRefDateEvents, dryRun, &calculators,
                     errorPolicy, &cptyCalculators, mporStickyDate, &portfoliosAsString, &scenarioGenerators, &loaders,
-                    &workerPricingStats, &progressIndicator](int id) -> resultType {
+                    &workerPricingStats, &progressIndicator, cleanupBarrier](int id) -> resultType {
 
             setThreadCpuAffinity(id, cpuIds, "[MULTITHREADING]");
 
@@ -359,7 +362,7 @@ void MultiThreadedValuationEngine::buildCube(
 
                 // return code 0 = ok
 
-                LOG("Thread " << id << " successfully finished.");
+                // LOG("Thread " << id << " successfully finished.");
 
                 rc = 0;
 
@@ -372,6 +375,10 @@ void MultiThreadedValuationEngine::buildCube(
             }
 
             // exit
+
+            LOG("Thread " << id << " waiting at cleanup barrier.");
+            cleanupBarrier->arrive_and_wait();
+            LOG("Thread " << id << " leaving cleanup barrier.");
 
             return rc;
         };
