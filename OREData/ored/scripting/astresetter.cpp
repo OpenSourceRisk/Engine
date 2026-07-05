@@ -22,7 +22,7 @@ namespace ore {
 namespace data {
 
 namespace {
-class ASTResetter : public AcyclicVisitor, public Visitor<ASTNode>, public Visitor<VariableNode> {
+class ASTResetter : public StAstVisitor {
 public:
     ASTResetter() {}
 
