@@ -267,6 +267,10 @@ void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
         expiryDate = barrierOptionWrapper->exerciseDate();
         additionalData_["exerciseDate"] = expiryDate;
 
+        maturityCause_ = MaturityCause::BarrierTouched;
+        maturityTriggerDate_ = expiryDate;
+        maturityPayoffTiming_ = payoffAtExpiry ? "expiry" : "touch/exercise";
+
         if (!payoffAtExpiry && type_ == "One-Touch") {
             payDate = payCalendar.advance(expiryDate, payLag, Days, payConvention);
             barrierOptionWrapper = buildBarrierOptionWrapperInstr(expiryDate, payDate);

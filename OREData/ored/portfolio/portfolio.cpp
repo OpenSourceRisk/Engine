@@ -122,13 +122,7 @@ bool Portfolio::remove(const std::string& tradeID) {
 void Portfolio::removeMatured(const Date& asof) {
     for (auto it = trades_.begin(); it != trades_.end(); /* manual */) {
         if ((*it).second->isExpired(asof)) {
-            std::ostringstream maturityDate;
-            maturityDate << (*it).second->maturity();
-            string maturityType = (*it).second->maturityType().empty()
-                ? "" : (*it).second->maturityType();
-            string message = "Trade is Matured. " + maturityType + " [" + maturityDate.str() +
-                             "]" + " is On or Before Valuation Date.";
-            StructuredTradeWarningMessage((*it).second, "", message).log();
+            StructuredTradeWarningMessage((*it).second, "", (*it).second->maturityMessage(asof)).log();
             it=trades_.erase(it);
         } else {
             ++it;

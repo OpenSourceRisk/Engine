@@ -184,6 +184,9 @@ void Trade::reset() {
     legCashflowInclusion_.clear();
     maturity_ = Date();
     maturityType_.clear();
+    maturityCause_ = MaturityCause::Scheduled;
+    maturityTriggerDate_ = Date();
+    maturityPayoffTiming_.clear();
     issuer_.clear();
     requiredFixings_.clear();
     sensitivityTemplate_.clear();
@@ -193,6 +196,17 @@ void Trade::reset() {
 }
     
 const std::map<std::string, QuantLib::ext::any>& Trade::additionalData() const { return additionalData_; }
+
+std::string Trade::maturityMessage(const QuantLib::Date& asof) const {
+    if (maturityCause_ == MaturityCause::BarrierTouched) {
+        std::string timing = maturityPayoffTiming_.empty() ? "touch/exercise" : maturityPayoffTiming_;
+        return "Trade is Matured. The barrier was touched on [" + ore::data::to_string(maturityTriggerDate_) +
+               "] and the payoff is at " + timing + ", which settles on [" + ore::data::to_string(maturity_) +
+               "], on or before the valuation date [" + ore::data::to_string(asof) + "].";
+    }
+    std::string maturityType = maturityType_.empty() ? "" : maturityType_;
+    return "Trade is Matured. " + maturityType + " [" + ore::data::to_string(maturity_) + "]" + " is On or Before Valuation Date.";
+}
 
 void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
     if (legs_.size() < i + 1)
