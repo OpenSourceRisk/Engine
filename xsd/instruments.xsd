@@ -1627,7 +1627,7 @@
   </xs:complexType>
 
   <xs:complexType name="fxBarrierOptionData">
-    <xs:sequence>
+    <xs:all>
       <xs:element type="optionData" name="OptionData" minOccurs="1"/>
       <xs:element type="barrierData" name="BarrierData" minOccurs="1"/>
       <xs:element type="date" name="StartDate"  minOccurs="0"/>
@@ -1639,11 +1639,11 @@
       <xs:element type="xs:float" name="BoughtAmount"/>
       <xs:element type="currencyCode" name="SoldCurrency"/>
       <xs:element type="xs:float" name="SoldAmount"/>
-    </xs:sequence>
+    </xs:all>
   </xs:complexType>
 
   <xs:complexType name="fxDigitalBarrierOptionData">
-    <xs:sequence>
+    <xs:all>
       <xs:element type="optionData" name="OptionData" minOccurs="1"/>
       <xs:element type="barrierData" name="BarrierData" minOccurs="1"/>
       <xs:element type="date" name="StartDate"  minOccurs="0"/>
@@ -1656,7 +1656,7 @@
       <xs:element type="currencyCode" name="PayoffCurrency" minOccurs="0"/>
       <xs:element type="currencyCode" name="ForeignCurrency"/>
       <xs:element type="currencyCode" name="DomesticCurrency"/>
-    </xs:sequence>
+    </xs:all>
   </xs:complexType>
 
   <xs:complexType name="fxTouchOptionData">
