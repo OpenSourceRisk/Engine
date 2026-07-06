@@ -16,6 +16,9 @@
   FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ored/portfolio/builders/commodityswap.hpp>
+#include <ored/portfolio/commoditylegdata.hpp>
+#include <ored/portfolio/commodityswap.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/legdata.hpp>
@@ -23,14 +26,12 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <ored/portfolio/builders/commodityswap.hpp>
-#include <ored/portfolio/commoditylegdata.hpp>
-#include <ored/portfolio/commodityswap.hpp>
 #include <ql/cashflows/cashflows.hpp>
-#include <qle/cashflows/commodityindexedcashflow.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
-#include <qle/cashflows/nettedcommoditycashflow.hpp>
+#include <qle/cashflows/commodityindexedcashflow.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
+#include <qle/cashflows/intradaypowercashflow.hpp>
+#include <qle/cashflows/nettedcommoditycashflow.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/instruments/currencyswap.hpp>
 
@@ -99,7 +100,12 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
             floatingLegs[cfld->tag()] = legs_.back();
             if (!cfld->foreignCurrency().empty())
                 tagToForeignCcy[cfld->tag()] = cfld->foreignCurrency();
+        } else if (auto ipf = QuantLib::ext::dynamic_pointer_cast<IntradayPowerFloatingLegData>(legDatum.concreteLegData())) {
+            floatingLegs[ipf->tag()] = legs_.back();
+            if (!ipf->priceCurrency().empty())
+                tagToForeignCcy[ipf->tag()] = ipf->priceCurrency();
         }
+
     }
     DLOG("CommoditySwap::build() built " << floatingLegs.size() << " floating legs for trade " << id());
     // Build any fixed legs skipped above.
@@ -132,6 +138,8 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
                     quantities.push_back(cicf->periodQuantity());
                 } else if (auto ciacf = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(ucf)) {
                     quantities.push_back(ciacf->periodQuantity());
+                } else if (auto powerCf = QuantLib::ext::dynamic_pointer_cast<IntradayPowerCashFlow>(ucf)) {
+                    quantities.push_back(powerCf->periodQuantity());
                 } else {
                     QL_FAIL("Expected a commodity indexed cashflow while building commodity fixed" <<
                         " leg quantities for trade " << id() << ".");
@@ -319,6 +327,41 @@ const std::map<std::string,QuantLib::ext::any>& CommoditySwap::additionalData() 
                     if (!weightsVector.empty()) {
                         additionalData_["weights[" + label + "]"] = weightsVector;
                     }
+                }
+                auto intradayPowerFlow = QuantLib::ext::dynamic_pointer_cast<IntradayPowerCashFlow>(unpackIndexWrappedCashFlow(flow));
+                if (intradayPowerFlow) {
+                    std::vector<std::string> indexVec;
+                    std::vector<Date> indexExpiryVec, pricingDateVec;
+                    std::vector<Real> priceVec;
+                    std::vector<Real> weightsVector;
+                    std::vector<Real> totalDeliveryHoursVec;
+                    std::vector<Real> totalMWhVec;
+                    auto weights = intradayPowerFlow->weights();
+                    for (const auto& [deliveryDate, index] : intradayPowerFlow->indices()) {
+                        indexVec.push_back(index->name());
+                        indexExpiryVec.push_back(index->deliveryDate());
+                        pricingDateVec.push_back(deliveryDate);
+                        priceVec.push_back(index->fixing(deliveryDate));
+                        if (!weights.empty()) {
+                            auto weight = weights.find(deliveryDate);
+                            // Add null for missing weight, dont throw here
+                            weightsVector.push_back(weight != weights.end() ? weight->second : Null<Real>());
+                        }
+                        if (index->loadProfile() != nullptr) {
+                            totalMWhVec.push_back(index->totalLoadMWh());
+                        }
+                    }
+                    additionalData_["index[" + label + "]"] = indexVec;
+                    additionalData_["indexExpiry[" + label + "]"] = indexExpiryVec;
+                    additionalData_["price[" + label + "]"] = priceVec;
+                    additionalData_["pricingDate[" + label + "]"] = pricingDateVec;
+                    additionalData_["periodUnitPrice[" + label + "]"] = intradayPowerFlow->fixing();
+                    additionalData_["weights[" + label + "]"] = weightsVector;
+                    additionalData_["loadProfileTotalDeliveryHours[" + label + "]"] = totalDeliveryHoursVec;
+                    additionalData_["loadProfileTotalMWh[" + label + "]"] = totalMWhVec;
+                    additionalData_["periodQuantity[" + label + "]"] = intradayPowerFlow->periodQuantity();
+                    additionalData_["gearing[" + label + "]"] = intradayPowerFlow->gearing();
+                    additionalData_["spread[" + label + "]"] = intradayPowerFlow->spread();
                 }
                 // CommodityFixedLeg consists of simple cash flows
                 Real flowAmount = 0.0;
@@ -560,9 +603,11 @@ void CommoditySwap::buildNettedLegs(const QuantLib::ext::shared_ptr<EngineFactor
             vector<ext::shared_ptr<CommodityCashFlow>> cfs;
             vector<bool> payers;
             for (const auto& legId : legIds) {
-                cfs.push_back(ext::dynamic_pointer_cast<CommodityCashFlow>(
-                    unpackIndexWrappedCashFlow(originalLegsBeforeNetting_[legId][i])));
-                QL_REQUIRE(cfs.back(), "NettedCommodityCashFlow: underlying cashflow is not a CommodityCashFlow type");
+                if (auto cf = QuantLib::ext::dynamic_pointer_cast<CommodityCashFlow>(unpackIndexWrappedCashFlow(originalLegsBeforeNetting_[legId][i]))) {
+                    cfs.push_back(cf);
+                } else{
+                    QL_FAIL("NettedCommodityCashFlow: is only supported for commodity cashflows (not intraday power cashflows) for trade " << id() << ".");
+                }
                 payers.push_back(originalLegPayersBeforeNetting_[legId]);
             }
             nettedLeg.push_back(ext::make_shared<NettedCommodityCashFlow>(cfs, payers, nettingPrecision_));
@@ -598,6 +643,10 @@ QuantLib::Leg CommoditySwap::fxSettledLeg(const QuantLib::Leg& leg, const ore::d
         foreignCcy = ld->foreignCurrency();
     else if (auto ld = QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegData>(legData.concreteLegData()))
         foreignCcy = ld->foreignCurrency();
+    else if (auto ld = QuantLib::ext::dynamic_pointer_cast<IntradayPowerFloatingLegData>(legData.concreteLegData()))
+        foreignCcy = ld->priceCurrency();
+    else
+        QL_FAIL("Unsupported leg data type for FX settlement in trade " << id());
 
     fxIndex = buildFxIndex(legData.settlementFxIndex(), legData.currency(), foreignCcy,
                           engineFactory->market(), configuration);

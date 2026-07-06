@@ -760,7 +760,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->getString("sensitivity", "marketConfigFile", false);
         if (tmp != "") {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Loading sensitivity scenario sim market parameters from file" << file);
+            LOG("Loading sensitivity scenario sim market parameters from file: " << file);
             setSensiSimMarketParamsFromFile(file);
         } else {
             WLOG("ScenarioSimMarket parameters for sensitivity not loaded");
@@ -769,7 +769,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->getString("sensitivity", "sensitivityConfigFile", false);
         if (tmp != "") {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Load sensitivity scenario data from file" << file);
+            LOG("Load sensitivity scenario data from file: " << file);
             setSensiScenarioDataFromFile(file);
         } else {
             WLOG("Sensitivity scenario data not loaded");
@@ -818,7 +818,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->getString("scenario", "simulationConfigFile", false);
         if (tmp != "") {
             string simulationConfigFile = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Loading scenario simulation config from file" << simulationConfigFile);
+            LOG("Loading scenario simulation config from file: " << simulationConfigFile);
             setScenarioSimMarketParamsFromFile(simulationConfigFile);
         } else {
             ALOG("Scenario Simulation market data not loaded");
@@ -840,7 +840,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->getString("stress", "marketConfigFile", false);
         if (tmp != "") {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Loading stress test scenario sim market parameters from file" << file);
+            LOG("Loading stress test scenario sim market parameters from file: " << file);
             setStressSimMarketParamsFromFile(file);
         } else {
             WLOG("ScenarioSimMarket parameters for stress testing not loaded");
@@ -855,7 +855,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->getString("stress", "stressConfigFile", false);
         if (tmp != "") {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Load stress test scenario data from file" << file);
+            LOG("Load stress test scenario data from file: " << file);
             setStressScenarioDataFromFile(file);
         } else {
             WLOG("Stress scenario data not loaded");
@@ -881,7 +881,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->getString("stress", "sensitivityConfigFile", false);
         if (tmp != "") {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Load sensitivity scenario data from file" << file);
+            LOG("Load sensitivity scenario data from file: " << file);
             setStressSensitivityScenarioDataFromFile(file);
         } else {
             WLOG("Sensitivity scenario data not loaded, don't support par stress tests");
@@ -936,7 +936,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->getString("parStressConversion", "marketConfigFile", false);
         if (tmp != "") {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Loading parStressConversion test scenario sim market parameters from file" << file);
+            LOG("Loading parStressConversion test scenario sim market parameters from file: " << file);
             setParStressSimMarketParamsFromFile(file);
         } else {
             WLOG("ScenarioSimMarket parameters for par stress conversion testing not loaded");
@@ -945,7 +945,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->getString("parStressConversion", "stressConfigFile", false);
         if (tmp != "") {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Load stress test scenario data from file" << file);
+            LOG("Load stress test scenario data from file: " << file);
             setParStressScenarioDataFromFile(file);
         } else {
             WLOG("Stress scenario data not loaded");
@@ -963,7 +963,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->getString("parStressConversion", "sensitivityConfigFile", false);
         if (tmp != "") {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Load sensitivity scenario data from file" << file);
+            LOG("Load sensitivity scenario data from file: " << file);
             setParStressSensitivityScenarioDataFromFile(file);
         } else {
             WLOG("Sensitivity scenario data not loaded, don't support par stress tests");
@@ -1019,7 +1019,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->getString("zeroToParShift", "stressConfigFile", false);
         if (tmp != "") {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Load zero to par shift conversion scenario data from file" << file);
+            LOG("Load zero to par shift conversion scenario data from file: " << file);
             setZeroToParShiftScenarioDataFromFile(file);
         } else {
             WLOG("Zero to par shift conversion scenario data not loaded");
@@ -1037,7 +1037,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->getString("zeroToParShift", "sensitivityConfigFile", false);
         if (tmp != "") {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Load sensitivity scenario data from file" << file);
+            LOG("Load sensitivity scenario data from file: " << file);
             setZeroToParShiftSensitivityScenarioDataFromFile(file);
         } else {
             WLOG("Sensitivity scenario data not loaded for zero to par shift conversion");
@@ -1120,7 +1120,7 @@ void OREAppInputParameters::loadParameters() {
             tmp = params_->getString("crif", "marketConfigFile", false);
             if (tmp != "") {
                 string file = (setupVariables_.inputPath_ / tmp).generic_string();
-                LOG("Loading sensitivity scenario sim market parameters from file" << file);
+                LOG("Loading sensitivity scenario sim market parameters from file: " << file);
                 setSensiSimMarketParamsFromFile(file);
             } else {
                 WLOG("ScenarioSimMarket parameters for sensitivity not loaded");
@@ -1129,7 +1129,7 @@ void OREAppInputParameters::loadParameters() {
             tmp = params_->getString("crif", "sensitivityConfigFile", false);
             if (tmp != "") {
                 string file = (setupVariables_.inputPath_ / tmp).generic_string();
-                LOG("Load sensitivity scenario data from file" << file);
+                LOG("Load sensitivity scenario data from file: " << file);
                 setSensiScenarioDataFromFile(file);
             } else {
                 WLOG("Sensitivity scenario data not loaded");
@@ -1322,7 +1322,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->getString("xvaStress", "marketConfigFile", false);
         if (!tmp.empty()) {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Loading xva stress test scenario sim market parameters from file" << file);
+            LOG("Loading xva stress test scenario sim market parameters from file: " << file);
             setXvaStressSimMarketParamsFromFile(file);
         } else {
             WLOG("ScenarioSimMarket parameters for xva stress testing not loaded");
@@ -1331,7 +1331,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->getString("xvaStress", "stressConfigFile", false);
         if (!tmp.empty()) {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Load xav stress test scenario data from file" << file);
+            LOG("Load xav stress test scenario data from file: " << file);
             setXvaStressScenarioDataFromFile(file);
         } else {
             WLOG("Xva Stress scenario data not loaded");
@@ -1349,7 +1349,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->getString("xvaStress", "sensitivityConfigFile", false);
         if (tmp != "") {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Load sensitivity scenario data from file" << file);
+            LOG("Load sensitivity scenario data from file: " << file);
             setXvaStressSensitivityScenarioDataFromFile(file);
         } else {
             WLOG("Sensitivity scenario data not loaded, don't support par stress tests");
@@ -1364,7 +1364,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->getString("sensitivityStress", "marketConfigFile", false);
         if (!tmp.empty()) {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Loading sensitivity stress test scenario sim market parameters from file" << file);
+            LOG("Loading sensitivity stress test scenario sim market parameters from file: " << file);
             setSensitivityStressSimMarketParamsFromFile(file);
         } else {
             WLOG("ScenarioSimMarket parameters for sensitivity stress testing not loaded");
@@ -1373,7 +1373,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->getString("sensitivityStress", "stressConfigFile", false);
         if (!tmp.empty()) {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Load sensitivity stress test scenario data from file" << file);
+            LOG("Load sensitivity stress test scenario data from file: " << file);
             setSensitivityStressScenarioDataFromFile(file);
         } else {
             WLOG("Sensitivity Stress scenario data not loaded");
@@ -1382,7 +1382,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->getString("sensitivityStress", "sensitivityConfigFile", false);
         if (tmp != "") {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Load sensitivity scenario data from file" << file);
+            LOG("Load sensitivity scenario data from file: " << file);
             setSensitivityStressSensitivityScenarioDataFromFile(file);
         } else {
             WLOG("Sensitivity scenario data not loaded, don't support par stress tests");
@@ -1399,7 +1399,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->getString("xvaSensitivity", "marketConfigFile", false);
         if (!tmp.empty()) {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Loading xva sensitivity scenario sim market parameters from file" << file);
+            LOG("Loading xva sensitivity scenario sim market parameters from file: " << file);
             setXvaSensiSimMarketParamsFromFile(file);
         } else {
             WLOG("ScenarioSimMarket parameters for xva sensitivity not loaded");
@@ -1408,7 +1408,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->getString("xvaSensitivity", "sensitivityConfigFile", false);
         if (!tmp.empty()) {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Load xva sensitivity scenario data from file" << file);
+            LOG("Load xva sensitivity scenario data from file: " << file);
             setXvaSensiScenarioDataFromFile(file);
         } else {
             WLOG("Xva sensitivity scenario data not loaded");
@@ -1439,7 +1439,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->getString("xvaExplain", "marketConfigFile", false);
         if (!tmp.empty()) {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Loading xva explain scenario sim market parameters from file" << file);
+            LOG("Loading xva explain scenario sim market parameters from file: " << file);
             setXvaExplainSimMarketParamsFromFile(file);
         } else {
             WLOG("ScenarioSimMarket parameters for xvaExplain not loaded");
@@ -1448,7 +1448,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->getString("xvaExplain", "sensitivityConfigFile", false);
         if (!tmp.empty()) {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Load xvaExplain sensitivity scenario data from file" << file);
+            LOG("Load xvaExplain sensitivity scenario data from file: " << file);
             setXvaExplainSensitivityScenarioDataFromFile(file);
         } else {
             WLOG("xvaExplain scenario data not loaded");
@@ -1682,7 +1682,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->getString("zeroToParSensiConversion", "marketConfigFile", false);
         if (tmp != "") {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Loading par converions scenario sim market parameters from file" << file);
+            LOG("Loading par converions scenario sim market parameters from file: " << file);
             setParConversionSimMarketParamsFromFile(file);
         } else {
             WLOG("ScenarioSimMarket parameters for par conversion testing not loaded");
@@ -1691,7 +1691,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->getString("zeroToParSensiConversion", "sensitivityConfigFile", false);
         if (tmp != "") {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Load par conversion scenario data from file" << file);
+            LOG("Load par conversion scenario data from file: " << file);
             setParConversionScenarioDataFromFile(file);
         } else {
             WLOG("Par conversion scenario data not loaded");
@@ -1743,7 +1743,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->getString("crif", "marketConfigFile", false);
         if (tmp != "") {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Loading sensitivity scenario sim market parameters from file" << file);
+            LOG("Loading sensitivity scenario sim market parameters from file: " << file);
             setSensiSimMarketParamsFromFile(file);
         } else {
             WLOG("ScenarioSimMarket parameters for sensitivity not loaded");
@@ -1752,7 +1752,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->getString("crif", "sensitivityConfigFile", false);
         if (tmp != "") {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Load sensitivity scenario data from file" << file);
+            LOG("Load sensitivity scenario data from file: " << file);
             setSensiScenarioDataFromFile(file);
         } else {
             WLOG("Sensitivity scenario data not loaded");

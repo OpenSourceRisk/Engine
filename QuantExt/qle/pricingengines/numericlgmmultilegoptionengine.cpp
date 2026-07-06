@@ -306,13 +306,12 @@ NumericLgmMultiLegOptionEngineBase::CashflowInfo NumericLgmMultiLegOptionEngineB
             Real raFixedRate = Null<Real>();
             if (auto raPricer = QuantLib::ext::dynamic_pointer_cast<QuantLib::RangeAccrualPricer>(ra->pricer()))
                 raFixedRate = raPricer->fixedRate();
-                info.calculator_ = [ra, iborIndex, raFixedRate, T, payrec, multiplier](
-                                   const LgmVectorised& lgm, const Real t, const RandomVariable& x,
-                                   const Handle<YieldTermStructure>& discountCurve) {
+            info.calculator_ = [ra, iborIndex, raFixedRate, T, payrec,
+                                multiplier](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
+                                            const Handle<YieldTermStructure>& discountCurve) {
                 return multiplier *
-                       lgm.rangeAccrualRate(iborIndex, ra->fixingDate(), ra->observationDates(),
-                                            ra->lowerTrigger(), ra->upperTrigger(),
-                                            ra->gearing(), ra->spread(), T, t, x, raFixedRate) *
+                       lgm.rangeAccrualRate(iborIndex, ra->fixingDate(), ra->observationDates(), ra->lowerTrigger(),
+                                            ra->upperTrigger(), ra->gearing(), ra->spread(), T, t, x, raFixedRate) *
                        RandomVariable(x.size(), ra->accrualPeriod() * ra->nominal() * payrec) *
                        lgm.reducedDiscountBond(t, T, x, discountCurve);
             };

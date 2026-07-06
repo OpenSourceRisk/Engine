@@ -33,11 +33,12 @@ namespace QuantExt {
 //! Spreaded Price term structure
 class SpreadedPriceTermStructure final : public PriceTermStructure, QuantLib::LazyObject {
 public:
-    //! times should be consistent with reference curve day counter
+    //! times should be consistent with reference curve day counter∂
     SpreadedPriceTermStructure(const QuantLib::Handle<PriceTermStructure>& referenceCurve,
                                const std::vector<QuantLib::Real>& times,
                                const std::vector<QuantLib::Handle<QuantLib::Quote>>& priceSpreads,
-                               const PriceCurveRollDown rollDown = PriceCurveRollDown::Forward);
+                               const PriceCurveRollDown rollDown = PriceCurveRollDown::Forward,
+                               const std::string& interpolation = "Linear");
 
     QuantLib::Date maxDate() const override;
     QuantLib::Time minTime() const override;
@@ -61,6 +62,7 @@ private:
     mutable std::vector<QuantLib::Real> times_;
     std::vector<QuantLib::Handle<QuantLib::Quote>> priceSpreads_;
     PriceCurveRollDown priceCurveRollDown_;
+    std::string interpolationType_;
 
     mutable std::vector<QuantLib::Real> data_;
     QuantLib::ext::shared_ptr<QuantLib::Interpolation> interpolation_;

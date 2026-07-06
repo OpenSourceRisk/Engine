@@ -613,8 +613,7 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
                 auto targetFunction = [&cdo, &mktUpfront, &baseCorrelQuote, &previousTrancheCleanNPV,
                                        &trancheWidth](const double correlation) {
                     baseCorrelQuote->setValue(correlation);
-                    double implyUpfront = implyUpfront = (cdo->cleanNPV() - previousTrancheCleanNPV) / trancheWidth;
-                    return mktUpfront - implyUpfront;
+                    return mktUpfront - (cdo->cleanNPV() - previousTrancheCleanNPV) / trancheWidth;
                 };
 
                 Brent solver;
