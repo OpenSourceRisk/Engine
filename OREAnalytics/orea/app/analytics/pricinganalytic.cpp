@@ -31,9 +31,9 @@ using namespace std::filesystem;
 namespace ore {
 namespace analytics {
 
-/*******************************************************************
- * PRICING Analytic: NPV, CASHFLOW, CASHFLOWNPV, SENSITIVITY, STRESS
- *******************************************************************/
+/****************************************************************************
+ * PRICING Analytic: NPV, CURVES, CASHFLOW, CASHFLOWNPV, SENSITIVITY, STRESS
+ ***************************************************************************/
 
  void PricingVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs){
     inputs->loadParameter<bool>(outputCurves_, "curves", "active", false,
@@ -150,7 +150,11 @@ void PricingAnalyticImpl::runAnalytic(
                 CONSOLE("OK");
             }
             auto pVars = QuantLib::ext::dynamic_pointer_cast<PricingVariables>(inputVariables_);
-            if (pVars && pVars->outputCurves_) {
+            // If the standalone CURVES analytic is also requested, let it emit the (single) curves
+            // report to avoid a duplicate "curves" report and the resulting disambiguated file names.
+            bool curvesHandledSeparately =
+                analytic()->analyticTypes().count("CURVES") > 0 && runTypes.count("CURVES") > 0;
+            if (pVars && pVars->outputCurves_ && !curvesHandledSeparately) {
                 CONSOLEW("Pricing: Curves Report");
                 LOG("Write curves report");
                 QuantLib::ext::shared_ptr<InMemoryReport> curvesReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
@@ -162,7 +166,18 @@ void PricingAnalyticImpl::runAnalytic(
                 analytic()->addReport(type, "curves", curvesReport);
                 CONSOLE("OK");
             }
-
+        } else if (type == "CURVES") {
+            auto pVars = QuantLib::ext::dynamic_pointer_cast<PricingVariables>(inputVariables_);
+            if (pVars && pVars->outputCurves_) {
+                QuantLib::ext::shared_ptr<InMemoryReport> curvesReport =
+                    QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                DateGrid grid(pVars->curvesGrid_, parseCalendar(pVars->curvesCalendar_));
+                ReportWriter(inputs_->reportNaString())
+                    .writeCurves(*curvesReport, pVars->curvesMarketConfig_, grid,
+                                *analytic()->configurations().todaysMarketParams,
+                                analytic()->market(), inputs_->continueOnError());
+                analytic()->addReport(type, "curves", curvesReport);
+            }
         } else if (type == "CASHFLOW") {
             CONSOLEW("Pricing: Cashflow Report");
             ReportWriter(inputs_->reportNaString())
