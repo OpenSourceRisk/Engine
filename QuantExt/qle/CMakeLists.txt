@@ -56,6 +56,7 @@ cashflows/iborfracoupon.cpp
 cashflows/indexedcoupon.cpp
 cashflows/interpolatediborcoupon.cpp
 cashflows/interpolatediborcouponpricer.cpp
+cashflows/intradaypowercashflow.cpp
 cashflows/jyyoyinflationcouponpricer.cpp
 cashflows/lognormalcmsspreadpricer.cpp
 cashflows/mcgaussianformulabasedcouponpricer.cpp
@@ -84,6 +85,7 @@ currencies/metals.cpp
 indexes/bondindex.cpp
 indexes/commoditybasisfutureindex.cpp
 indexes/commodityindex.cpp
+indexes/intradaypowerindex.cpp
 indexes/compoequityindex.cpp
 indexes/compositeindex.cpp
 indexes/dividendmanager.cpp
@@ -417,6 +419,9 @@ termstructures/fxvoltimeweighting.cpp
 termstructures/generatordefaulttermstructure.cpp
 termstructures/hazardspreadeddefaulttermstructure.cpp
 termstructures/iborfallbackcurve.cpp
+termstructures/intradaypowerloadtermstructure.cpp
+termstructures/intradaypowerpricetermstructure.cpp
+termstructures/intradayshapetermstructure.cpp
 termstructures/immfraratehelper.cpp
 termstructures/indexcdsvolstripper.cpp
 termstructures/inflation/constantcpivolatility.cpp
@@ -476,6 +481,7 @@ utilities/creditcurves.cpp
 utilities/creditindexconstituentcurvecalibration.cpp
 utilities/fairrate.cpp
 utilities/inflation.cpp
+utilities/intradaypower.cpp
 utilities/ratehelpers.cpp
 utilities/time.cpp)
 
@@ -543,6 +549,7 @@ cashflows/iborfracoupon.hpp
 cashflows/indexedcoupon.hpp
 cashflows/interpolatediborcoupon.hpp
 cashflows/interpolatediborcouponpricer.hpp
+cashflows/intradaypowercashflow.hpp
 cashflows/jyyoyinflationcouponpricer.hpp
 cashflows/lognormalcmsspreadpricer.hpp
 cashflows/mcgaussianformulabasedcouponpricer.hpp
@@ -1061,6 +1068,9 @@ termstructures/interpolateddiscountcurve.hpp
 termstructures/interpolateddiscountcurve2.hpp
 termstructures/interpolatedhazardratecurve.hpp
 termstructures/interpolatedyoycapfloortermpricesurface.hpp
+termstructures/intradayshapetermstructure.hpp
+termstructures/intradaypowerloadtermstructure.hpp
+termstructures/intradaypowerpricetermstructure.hpp
 termstructures/iterativebootstrap.hpp
 termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp
 termstructures/multisectiondefaultcurve.hpp
@@ -1139,6 +1149,7 @@ utilities/creditindexconstituentcurvecalibration.hpp
 utilities/fairrate.hpp
 utilities/inflation.hpp
 utilities/interpolation.hpp
+utilities/intradaypower.hpp
 utilities/localiborcouponsettings.hpp
 utilities/mcstats.hpp
 utilities/ratehelpers.hpp

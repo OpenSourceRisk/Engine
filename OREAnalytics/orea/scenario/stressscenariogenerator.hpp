@@ -85,6 +85,8 @@ private:
     void addFxShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addEquityShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addCommodityCurveShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
+    void addIntradayPowerCurveShifts(StressTestScenarioData::StressTestData& data,
+                                     QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addDiscountCurveShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addIndexCurveShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addYieldCurveShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);

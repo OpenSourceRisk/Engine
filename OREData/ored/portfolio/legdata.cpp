@@ -182,6 +182,7 @@ const boost::bimap<string, LegType> legTypeMap =
     ("CPI", LegType::CPI)
     ("ZeroCouponFixed", LegType::ZeroCouponFixed)
     ("FormulaBased", LegType::FormulaBased)
+    ("IntradayPowerFloating", LegType::IntradayPowerFloating)
     ("CommodityFloating", LegType::CommodityFloating)
     ("CommodityFixed", LegType::CommodityFixed)
     ("EquityMargin", LegType::EquityMargin)
