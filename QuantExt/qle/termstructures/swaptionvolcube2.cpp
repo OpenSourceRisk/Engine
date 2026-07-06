@@ -83,6 +83,8 @@ void SwaptionVolCube2::performCalculations() const {
                 volSpreadsMatrix_[i]));
         volSpreadsInterpolator_[i].enableExtrapolation();
     }
+
+    smileSectionCache_.clear();
 }
 
 QuantLib::ext::shared_ptr<SmileSection> SwaptionVolCube2::smileSectionImpl(Time optionTime, Time swapLength) const {
@@ -99,8 +101,12 @@ QuantLib::ext::shared_ptr<SmileSection> SwaptionVolCube2::smileSectionImpl(Time 
 }
 
 QuantLib::ext::shared_ptr<SmileSection> SwaptionVolCube2::smileSectionImpl(const Date& optionDate,
-                                                                   const Period& swapTenor) const {
+                                                                           const Period& swapTenor) const {
     calculate();
+
+    if (auto s = smileSectionCache_.find(std::make_pair(optionDate, swapTenor)); s != smileSectionCache_.end())
+        return s->second;
+
     Rate atmForward = atmStrike(optionDate, swapTenor);
     Volatility referenceVol = volsAreSpreads_ ? atmVol_->volatility(optionDate, swapTenor, atmForward) : 0.0;
     Time optionTime = std::max(1E-6, timeFromReference(optionDate));
@@ -114,11 +120,17 @@ QuantLib::ext::shared_ptr<SmileSection> SwaptionVolCube2::smileSectionImpl(const
         stdDevs.push_back(exerciseTimeSqrt * (referenceVol + volSpreadsInterpolator_[i](length, optionTime)));
     }
     Real shift = atmVol_->shift(optionTime, length);
+    QuantLib::ext::shared_ptr<SmileSection> result;
     if (!flatExtrapolation_)
-        return QuantLib::ext::shared_ptr<SmileSection>(new InterpolatedSmileSection<Linear>(
+        result = QuantLib::ext::shared_ptr<SmileSection>(new InterpolatedSmileSection<Linear>(
             optionTime, strikes, stdDevs, atmForward, Linear(), Actual365Fixed(), volatilityType(), shift));
     else
-        return QuantLib::ext::shared_ptr<SmileSection>(new InterpolatedSmileSection<LinearFlat>(
+        result = QuantLib::ext::shared_ptr<SmileSection>(new InterpolatedSmileSection<LinearFlat>(
             optionTime, strikes, stdDevs, atmForward, LinearFlat(), Actual365Fixed(), volatilityType(), shift));
+
+    smileSectionCache_[std::make_pair(optionDate, swapTenor)] = result;
+
+    return result;
 }
+
 } // namespace QuantExt

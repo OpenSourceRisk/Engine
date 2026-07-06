@@ -18,9 +18,8 @@ void ForwardVolatilityAgreement::build(const QuantLib::ext::shared_ptr<EngineFac
     numbers_.emplace_back("Number", "HasUnderlyingStrike", underlyingStrikeProvided_ ? "1" : "0");
     numbers_.emplace_back("Number", "ImpliedVolStrike", impliedVolStrike_);
     numbers_.emplace_back("Number", "Quantity", quantity_);
-    
 
-    daycounters_.emplace_back("Daycounter", "DayCountFraction", dayCountFraction_);
+    daycounters_.emplace_back("Daycounter", "DayCountFraction", dayCountFraction_.empty() ? "A360" : dayCountFraction_);
 
     const bool isStraddle = payoffType_ == "Straddle" || payoffType_.empty();
     const bool isPut = payoffType_ == "Put";
@@ -32,8 +31,8 @@ void ForwardVolatilityAgreement::build(const QuantLib::ext::shared_ptr<EngineFac
         QL_REQUIRE(!fixedRate_.empty(), "FixedRate is required for Put payoff type");
     }
 
-    numbers_.emplace_back("Number", "DividendYield", dividendYield_);
-    numbers_.emplace_back("Number", "FixedRate", fixedRate_);
+    numbers_.emplace_back("Number", "DividendYield", dividendYield_.empty() ? "0.0" : dividendYield_);
+    numbers_.emplace_back("Number", "FixedRate", fixedRate_.empty() ? "0.0" : fixedRate_);
 
     currencies_.emplace_back("Currency", "PayCcy", payCcy_);
 
@@ -119,7 +118,7 @@ void ForwardVolatilityAgreement::initIndices() {
 void ForwardVolatilityAgreement::fromXML(XMLNode* node) {
     Trade::fromXML(node);
 
-    XMLNode* tradeDataNode = XMLUtils::getChildNode(node, "ForwardVolatilityAgreementData");
+    XMLNode* tradeDataNode = XMLUtils::getChildNode(node, tradeType() + "Data");
     QL_REQUIRE(tradeDataNode, "ForwardVolatilityAgreementData node not found");
 
     fvaDate_ = XMLUtils::getChildValue(tradeDataNode, "FvaDate", true);
@@ -133,7 +132,7 @@ void ForwardVolatilityAgreement::fromXML(XMLNode* node) {
     underlying_ = underlyingBuilder.underlying();
     longShort_ = XMLUtils::getChildValue(tradeDataNode, "LongShort", true);
     underlyingStrike_ = XMLUtils::getChildValue(tradeDataNode, "UnderlyingStrike", false);
-    underlyingStrikeProvided_ = underlyingStrike_ != "0";
+    underlyingStrikeProvided_ = underlyingStrike_ != "0" && !underlyingStrike_.empty();
     impliedVolStrike_ = XMLUtils::getChildValue(tradeDataNode, "ImpliedVolStrike", true);
     quantity_ = XMLUtils::getChildValue(tradeDataNode, "Quantity", true);
     payCcy_ = XMLUtils::getChildValue(tradeDataNode, "PayCcy", true);
@@ -147,7 +146,7 @@ void ForwardVolatilityAgreement::fromXML(XMLNode* node) {
 
 XMLNode* ForwardVolatilityAgreement::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
-    XMLNode* tradeNode = doc.allocNode("ForwardVolatilityAgreementData");
+    XMLNode* tradeNode = doc.allocNode(tradeType() + "Data");
     XMLUtils::appendNode(node, tradeNode);
 
     XMLUtils::addChild(doc, tradeNode, "FvaDate", fvaDate_);
