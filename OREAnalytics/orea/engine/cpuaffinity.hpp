@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2020 Quaternion Risk Management Ltd
+ Copyright (C) 2022 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,35 +16,23 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/scripting/astresetter.hpp>
+/*! \file orea/engine/cpuaffinity.hpp
+    \brief helpers to assign worker threads to cpus
+    \ingroup engine
+*/
+
+#pragma once
+
+#include <cstddef>
+#include <string>
+#include <vector>
 
 namespace ore {
-namespace data {
+namespace analytics {
 
-namespace {
-class ASTResetter : public StAstVisitor {
-public:
-    ASTResetter() {}
+std::vector<std::size_t> getCpuIds(std::size_t nThreads, const std::string& logPrefix);
 
-    void visit(ASTNode& n) override {
-        for (auto const& c : n.args)
-            if (c != nullptr)
-                c->accept(*this);
-    }
+void setThreadCpuAffinity(int id, const std::vector<std::size_t>& cpuIds, const std::string& logPrefix);
 
-    void visit(VariableNode& n) override {
-        n.isCached = n.isScalar = false;
-        n.cachedScalar = nullptr;
-        n.cachedVector = nullptr;
-        visit(static_cast<ASTNode&>(n));
-    }
-};
-} // namespace
-
-void reset(const ASTNodePtr root) {
-    ASTResetter r;
-    root->accept(r);
-}
-
-} // namespace data
+} // namespace analytics
 } // namespace ore

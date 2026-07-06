@@ -204,7 +204,12 @@ void CurveConfigurations::parseAll() {
     for (const auto& u : unparsed_) {
         for (auto it = u.second.cbegin(), nit = it; it != u.second.cend(); it = nit) {
             nit++;
-            parseNode(u.first, it->first);
+            try {
+                parseNode(u.first, it->first);
+            } catch (...) {
+                /* do not fail here, because a curve config might never be requested, and if it is,
+                   we will fail in get(). parseNode() will emit a structured error regardless */
+            }
         }
     }
 }

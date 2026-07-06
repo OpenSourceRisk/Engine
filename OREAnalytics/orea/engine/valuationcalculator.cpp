@@ -63,12 +63,14 @@ void NPVCalculator::calculate(const QuantLib::ext::shared_ptr<Trade>& trade, Siz
                               Size sample, bool isCloseOut) {
     if (!isCloseOut) {
         Real flows = 0.0;
-        if(includeAggregateFlows_) {
-            Date d0 = dateIndex == 0 ? simMarket->asofDate() : outputCube->dates()[dateIndex-1];
-            flows = getAggregateTradeFlows(
-                        d0, date, trade->cashflows(baseCcyCode_, simMarket, Market::defaultConfiguration, false),
-                        simMarket, Market::defaultConfiguration, baseCcyCode_) /
-                    simMarket->numeraire();
+        if (includeAggregateFlows_) {
+            Date d0 = dateIndex == 0 ? simMarket->asofDate() : outputCube->dates()[dateIndex - 1];
+            if (date > d0) {
+                flows = getAggregateTradeFlows(
+                            d0, date, trade->cashflows(baseCcyCode_, simMarket, Market::defaultConfiguration, false),
+                            simMarket, Market::defaultConfiguration, baseCcyCode_) /
+                        simMarket->numeraire();
+            }
         }
         outputCube->set(npv(tradeIndex, trade, simMarket) + flows, tradeIndex, dateIndex, sample, index_);
     }

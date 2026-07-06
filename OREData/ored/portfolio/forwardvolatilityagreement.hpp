@@ -36,7 +36,7 @@ namespace data {
 */
 class ForwardVolatilityAgreement : public ScriptedTrade {
 public:
-    ForwardVolatilityAgreement() : ScriptedTrade("ForwardVolatilityAgreement") {}
+    explicit ForwardVolatilityAgreement(const std::string& tradeType = "ForwardVolatilityAgreement") : ScriptedTrade(tradeType) {}
     ForwardVolatilityAgreement(const Envelope& env, const std::string& fvaDate, const std::string& optionExpiry,
                                const std::string& premiumDate, const QuantLib::ext::shared_ptr<Underlying>& underlying,
                                const std::string& longShort, const std::string& underlyingStrike,
@@ -77,5 +77,21 @@ private:
     std::string fixedRate_ = "0";
     bool underlyingStrikeProvided_ = false;
 };
+
+class EquityForwardVolatilityAgreement : public ForwardVolatilityAgreement {
+public:
+    EquityForwardVolatilityAgreement() : ForwardVolatilityAgreement("EquityForwardVolatilityAgreement") {}
+};
+
+class FxForwardVolatilityAgreement : public ForwardVolatilityAgreement {
+public:
+    FxForwardVolatilityAgreement() : ForwardVolatilityAgreement("FxForwardVolatilityAgreement") {}
+};
+
+class CommodityForwardVolatilityAgreement : public ForwardVolatilityAgreement {
+public:
+    CommodityForwardVolatilityAgreement() : ForwardVolatilityAgreement("CommodityForwardVolatilityAgreement") {}
+};
+
 } // namespace data
 } // namespace ore

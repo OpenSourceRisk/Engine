@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2026
+ Copyright (C) 2026 AcadiaSoft Inc
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
