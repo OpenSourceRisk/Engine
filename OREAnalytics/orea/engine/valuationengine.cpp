@@ -481,7 +481,7 @@ void ValuationEngine::populateCube(
         runCalculators(false, counterparties, cptyCalculators, outputCptyCube, d, cubeDateIndex, sample);
     }
 
-    timings.pricingTime += data::os::nanosecondsClock() - t6;
+    timings.pricingTime += data::os::nanosecondsClock() - t8;
 }
 
 } // namespace analytics
