@@ -169,14 +169,16 @@ void PricingAnalyticImpl::runAnalytic(
         } else if (type == "CURVES") {
             auto pVars = QuantLib::ext::dynamic_pointer_cast<PricingVariables>(inputVariables_);
             if (pVars && pVars->outputCurves_) {
-                QuantLib::ext::shared_ptr<InMemoryReport> curvesReport =
-                    QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                CONSOLEW("Pricing: Curves Report");
+                LOG("Write curves report");
+                QuantLib::ext::shared_ptr<InMemoryReport> curvesReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 DateGrid grid(pVars->curvesGrid_, parseCalendar(pVars->curvesCalendar_));
+                std::string config = pVars->curvesMarketConfig_;
                 ReportWriter(inputs_->reportNaString())
-                    .writeCurves(*curvesReport, pVars->curvesMarketConfig_, grid,
-                                *analytic()->configurations().todaysMarketParams,
-                                analytic()->market(), inputs_->continueOnError());
+                    .writeCurves(*curvesReport, config, grid, *analytic()->configurations().todaysMarketParams,
+                                 analytic()->market(), inputs_->continueOnError());
                 analytic()->addReport(type, "curves", curvesReport);
+                CONSOLE("OK");
             }
         } else if (type == "CASHFLOW") {
             CONSOLEW("Pricing: Cashflow Report");

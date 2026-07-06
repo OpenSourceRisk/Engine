@@ -5,7 +5,6 @@
         <Parameter name="inputPath">Input/Curves</Parameter>
         <Parameter name="outputPath">Output/Curves</Parameter>
         <Parameter name="logFile">log.txt</Parameter>
-        <Parameter name="logMask">31</Parameter>
         <Parameter name="marketDataFile">market.txt</Parameter>
         <Parameter name="fixingDataFile">fixings.txt</Parameter>
         <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
@@ -34,7 +33,7 @@
             <Parameter name="configuration">default</Parameter>
             <Parameter name="grid">360,1M</Parameter>
             <Parameter name="outputFileName">curves.csv</Parameter>
-            <Parameter name="outputTodaysMarketCalibration">true</Parameter>
+            <Parameter name="outputTodaysMarketCalibration">false</Parameter>
         </Analytic>
     </Analytics>
 </ORE>
