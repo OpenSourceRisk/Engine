@@ -31,6 +31,7 @@
 #include <ql/cashflows/overnightindexedcoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/exercise.hpp>
+#include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
 #include <ql/instruments/makeois.hpp>
 #include <ql/instruments/makevanillaswap.hpp>
 #include <ql/math/optimization/costfunction.hpp>
@@ -74,7 +75,20 @@ RepresentativeSwaptionMatcher::RepresentativeSwaptionMatcher(
     // build underlying leg with its ibor / ois coupons linked to model forward curves
     QuantLib::ext::shared_ptr<IborIndex> modelIborIndexToUse, iborIndexToUse;
     for (Size l = 0; l < underlying_.size(); ++l) {
-        for (auto const& c : underlying_[l]) {
+        for (auto c : underlying_[l]) {
+            // unpack cap / floored coupons, we match the underlying in the end
+            if (auto s = QuantLib::ext::dynamic_pointer_cast<QuantLib::StrippedCappedFlooredCoupon>(c)) {
+                c = s->underlying();
+            }
+            if (auto cf = QuantLib::ext::dynamic_pointer_cast<QuantLib::CappedFlooredCoupon>(c)) {
+                c = cf->underlying();
+            }
+            if (auto cfon = QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(c)) {
+                c = cfon->underlying();
+            }
+            if (auto cfon = QuantLib::ext::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(c)) {
+                c = cfon->underlying();
+            }
             if (auto i = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(c)) {
                 // standard ibor coupon
                 QL_REQUIRE(!i->isInArrears(), "RepresentativeSwaptionMatcher: can not handle in arrears fixing");
