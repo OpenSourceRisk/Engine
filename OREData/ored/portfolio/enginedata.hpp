@@ -59,8 +59,11 @@ public:
         return model_.at(productName);
     }
     const map<string, string>& modelParameters(const string& productName) const {
-        if (engineDataOverride_ && engineDataOverride_->hasProduct(productName))
+        if (engineDataOverride_ && engineDataOverride_->hasProduct(productName)) {
+            LOG("EngineData::model retrieving model override for " << productName);        
             return engineDataOverride_->modelParameters(productName);
+        }
+        LOG("EngineData::model No model override for " << productName);
         return modelParams_.at(productName);
     }
     const string& engine(const string& productName) const {
