@@ -250,6 +250,13 @@ QuantLib::ext::shared_ptr<QuantLib::PricingEngine> ConvertibleBondFDDefaultableE
         calibrate = parseBool(calParam->second);
     }
 
+    auto rt = globalParameters_.find("RunType");
+    std::string runType = rt != globalParameters_.end() ? rt->second : "<<no run type set>>";
+    if (staticMesher && (runType != "SensitivityDelta" && runType != "SensitivityDeltaGamma")) {
+        staticMesher = false;
+        LOG("overwrite staticMesher with false, because run type is not Sensitivity*");
+    }
+
     // set up model and pricing engine
 
     auto modelBuilder = QuantLib::ext::make_shared<DefaultableEquityJumpDiffusionModelBuilder>(
