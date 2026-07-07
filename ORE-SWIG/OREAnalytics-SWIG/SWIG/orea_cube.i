@@ -37,6 +37,8 @@
 %shared_ptr(ore::analytics::AggregationScenarioData)
 %shared_ptr(ore::analytics::InMemoryCubeOpt<float>);
 %shared_ptr(ore::analytics::InMemoryCubeOpt<double>);
+%feature("notabstract") ore::analytics::InMemoryCubeOpt<float>;
+%feature("notabstract") ore::analytics::InMemoryCubeOpt<double>;
 %shared_ptr(ore::analytics::JointNPVCube)
 
 namespace ore {

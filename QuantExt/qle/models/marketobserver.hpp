@@ -38,7 +38,7 @@ using namespace QuantLib;
 */
 class MarketObserver : public Observer, public Observable {
 public:
-    MarketObserver() : updated_(true){};
+    MarketObserver() : updated_(true) {}
 
     //! Add an observable
     void addObservable(QuantLib::ext::shared_ptr<Observable> observable);

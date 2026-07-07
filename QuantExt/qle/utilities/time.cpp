@@ -111,6 +111,15 @@ QuantLib::Integer daylightSavingCorrection(const std::string& location, const Qu
             if (start <= d2 && end > d2)
                 ++result;
         }
+    } else if (location == "EU") {
+        for (Integer y = start.year(); y <= end.year(); ++y) {
+            Date d1 = Date::nextWeekday(Date(1, April, y), Sunday) - 7;    // last Sunday of March
+            Date d2 = Date::nextWeekday(Date(1, November, y), Sunday) - 7; // last Sunday of October
+            if (start <= d1 && end > d1)
+                --result;
+            if (start <= d2 && end > d2)
+                ++result;
+        }
     } else {
         QL_FAIL("daylightSavings(" << location << ") not supported. Contact dev to add support for this location.");
     }

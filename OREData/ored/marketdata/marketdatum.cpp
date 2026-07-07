@@ -66,6 +66,8 @@ std::ostream& operator<<(std::ostream& out, const MarketDatum::QuoteType& type) 
         return out << "TRANSITION_PROBABILITY";
     case MarketDatum::QuoteType::CONVERSION_FACTOR:
         return out << "CONVERSION_FACTOR";
+    case MarketDatum::QuoteType::SHAPE_FACTOR:
+        return out << "SHAPE_FACTOR";
     case MarketDatum::QuoteType::NONE:
         return out << "NULL";
     default:
@@ -157,6 +159,8 @@ std::ostream& operator<<(std::ostream& out, const MarketDatum::InstrumentType& t
         return out << "COMMODITY_OPTION";
     case MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION:
         return out << "COMMODITY_CALENDAR_SPREAD_OPTION";
+    case MarketDatum::InstrumentType::SHAPE_PROFILE:
+        return out << "SHAPE_PROFILE";
     case MarketDatum::InstrumentType::CPR:
         return out << "CPR";
     case MarketDatum::InstrumentType::RATING:
@@ -739,6 +743,15 @@ template <class Archive> void BondFutureOptionQuote::serialize(Archive& ar, cons
     ar& isCall_;
 }
 
+template <class Archive> void IntradayPowerCurveQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& quoteName_;
+    ar& deliveryDate_;
+    ar& startTimeInSec_;
+    ar& timeUnit_;
+    ar& isDST_;
+}
+
 template void MarketDatum::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
 template void MarketDatum::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 template void MoneyMarketQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
@@ -840,6 +853,8 @@ template void BondFutureConversionFactor::serialize(boost::archive::binary_iarch
 template void TransitionProbabilityQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
 template void TransitionProbabilityQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 template void BondFutureOptionQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void IntradayPowerCurveQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void IntradayPowerCurveQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
 
 } // namespace data
 } // namespace ore
@@ -894,3 +909,4 @@ BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::BondFuturePriceQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::BondFutureConversionFactor);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::TransitionProbabilityQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::BondFutureOptionQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::IntradayPowerCurveQuote);

@@ -1,0 +1,66 @@
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Intraday Power Shape Factor}
+\label{md:intraday_power_shape_factor}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{|p{3.2cm}|p{4.8cm}|p{6.8cm}|}
+    \hline
+    {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{SHAPE\_PROFILE} & Intraday power shape profile quote. \\ \hline
+    Quote Type & \emph{SHAPE\_FACTOR} & Multiplicative intraday shape factor. \\ \hline
+    Quote Name & String & Shape profile identifier, e.g. market region/profile id. \\ \hline
+    Delivery Date & Date string & Date for which the intraday profile is defined. \\ \hline
+    Start Time & Integer & Start offset from beginning of day in the given time unit. \\ \hline
+    Unit & \emph{SEC, HOUR} & Time unit used for the start time offset. \\ \hline
+    DST Flag [Optional] & \emph{DST} & Marks a factor used for daylight-saving handling. \\ \hline
+  \end{tabular}
+  \caption{Intraday Power Shape Factor}
+  \label{tab:intraday_power_shape_factor_quote}
+\end{table}
+
+The quote format is:
+\begin{itemize}
+  \item \lstinline!SHAPE_PROFILE/SHAPE_FACTOR/<QuoteName>/<DeliveryDate>/<StartTime>/<Unit>[/DST]!
+\end{itemize}
+
+Examples:
+\begin{itemize}
+  \item \lstinline!SHAPE_PROFILE/SHAPE_FACTOR/PJM_WH_RT_PK_HOURLY/2021-01-01/0/SEC!
+  \item \lstinline!SHAPE_PROFILE/SHAPE_FACTOR/PJM_WH_RT_PK_HOURLY/2021-01-01/3600/SEC!
+  \item \lstinline!SHAPE_PROFILE/SHAPE_FACTOR/PJM_WH_RT_PK_HOURLY/2021-01-01/7200/SEC!
+  \item \lstinline!SHAPE_PROFILE/SHAPE_FACTOR/PJM_WH_RT_PK_HOURLY/2021-03-01/7200/SEC/DST!
+\end{itemize}
+
+The quote value is always a price in currency per MWh during the delivery window.
+
+Assume for illustration that these four quotes represent prices in USD/MWh for each delivery window. The first quote
+is for 00:00--01:00, the second for 01:00--02:00 and the third for 02:00 onward according to the profile definition.
+The last quote with the optional \lstinline!DST! flag is only used on a backward DST day for the extra 02:00--03:00
+hour.
+
+For backward DST handling, there must be a \lstinline!DST! quote starting at 02:00 and all \lstinline!DST! quotes for
+the day must have a start time strictly before 03:00.
+
+Worked examples:
+\begin{itemize}
+\item Assume the daily average price is 100 USD/MWh, the shape factor for
+  \lstinline!SHAPE_PROFILE/SHAPE_FACTOR/PJM_WH_RT_PK_HOURLY/2021-01-01/3600/SEC! is 1.10 and the contract delivers
+  40 MW from 01:15 to 01:30. The delivered energy is
+$$
+40 \times \frac{15}{60} = 10 \text{ MWh}
+$$
+and the delivery falls fully into the 01:00--02:00 bucket, so the price is
+$$
+100 \times 1.10 = 110 \text{ USD/MWh}.
+$$
+
+\item Assume the daily average price is again 100 USD/MWh, the 01:00--02:00 shape factor is 1.10 and the 02:00 onward
+  shape factor from \lstinline!SHAPE_PROFILE/SHAPE_FACTOR/PJM_WH_RT_PK_HOURLY/2021-01-01/7200/SEC! is 1.00. If the
+  contract delivers 50 MW from 01:30 to 02:30, the first half hour contributes 25 MWh in the 01:00--02:00 bucket and
+  the second half hour contributes 25 MWh in the 02:00--03:00 bucket. The weighted price is
+$$
+100 \times \frac{25 \times 1.10 + 25 \times 1.0}{50} = 105 \text{ USD/MWh}.
+$$
+\end{itemize}

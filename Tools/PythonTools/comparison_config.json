@@ -128,7 +128,7 @@
           }
         ]
       },
-      "simm_sensitivity_config\\.csv": {
+      ".*sensitivity_config\\.csv": {
         "keys": [
           "Key"
         ],

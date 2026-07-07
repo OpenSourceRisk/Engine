@@ -84,9 +84,11 @@ public:
     QuantLib::ext::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const override;
     //@}
 private:
-    const bool flatExtrapolation_, volsAreSpreads_;
+    bool flatExtrapolation_, volsAreSpreads_;
     mutable std::vector<Interpolation2D> volSpreadsInterpolator_;
     mutable std::vector<Matrix> volSpreadsMatrix_;
+    mutable std::map<std::pair<QuantLib::Date, QuantLib::Period>, QuantLib::ext::shared_ptr<QuantLib::SmileSection>>
+        smileSectionCache_;
 };
 
 } // namespace QuantExt

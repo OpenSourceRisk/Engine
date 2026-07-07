@@ -78,7 +78,8 @@ public:
         Correlation,
         CPR,
         Theta,
-        BondFutureVolatility
+        BondFutureVolatility,
+        IntradayPowerCurve,
     };
 
     //! Constructor
