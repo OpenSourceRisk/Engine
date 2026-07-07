@@ -76,7 +76,17 @@ void PricingAnalyticImpl::runAnalytic(
     Settings::instance().evaluationDate() = inputs_->asof();
     ObservationMode::instance().setMode(inputs_->observationModel());
 
-    QL_REQUIRE(inputs_->portfolio(), "PricingAnalytic::run: No portfolio loaded.");
+    // CURVES only needs the market (see writeCurves below); the other pricing sub-analytics
+    // Only enforce the portfolio requirement if a portfolio-dependent sub-analytic is requested.
+    static const std::set<std::string> portfolioIndependentTypes{"CURVES"};
+    bool requiresPortfolio = false;
+    for (const auto& rt : runTypes) {
+        if (analytic()->analyticTypes().count(rt) > 0 && portfolioIndependentTypes.count(rt) == 0) {
+            requiresPortfolio = true;
+            break;
+        }
+    }
+    QL_REQUIRE(!requiresPortfolio || inputs_->portfolio(), "PricingAnalytic::run: No portfolio loaded.");
 
     CONSOLEW("Pricing: Build Market");
     analytic()->buildMarket(loader);
