@@ -136,6 +136,11 @@ void SensitivityScenarioData::curveShiftDataFromXML(XMLNode* child, CurveShiftDa
         XMLUtils::getChildValue(child, "ShiftTenors", true), &parseScenarioCurvePillar);
 }
 
+void SensitivityScenarioData::intradayPowerShiftDataFromXML(XMLNode* child, IntradayPowerShiftData& data) {
+    shiftDataFromXML(child, data);
+    data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
+}
+
 void SensitivityScenarioData::volShiftDataFromXML(XMLNode* child, VolShiftData& data, const bool requireShiftStrikes) {
     shiftDataFromXML(child, data);
     data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
@@ -162,6 +167,12 @@ void SensitivityScenarioData::shiftDataToXML(XMLDocument& doc, XMLNode* node, co
 }
 
 void SensitivityScenarioData::curveShiftDataToXML(XMLDocument& doc, XMLNode* node, const CurveShiftData& data) const {
+    shiftDataToXML(doc, node, data);
+    XMLUtils::addGenericChildAsList(doc, node, "ShiftTenors", data.shiftTenors);
+}
+
+void SensitivityScenarioData::intradayPowerShiftDataToXML(XMLDocument& doc, XMLNode* node,
+                                                          const IntradayPowerShiftData& data) const {
     shiftDataToXML(doc, node, data);
     XMLUtils::addGenericChildAsList(doc, node, "ShiftTenors", data.shiftTenors);
 }
@@ -213,6 +224,8 @@ const ShiftData& SensitivityScenarioData::shiftData(const RiskFactorKey::KeyType
         return *dividendYieldShiftData().at(name);
     case RFType::CommodityCurve:
         return *commodityCurveShiftData().at(name);
+    case RFType::IntradayPowerCurve:
+        return *intradayPowerCurveShiftData().at(name);
     case RFType::CommodityVolatility:
         return *commodityVolShiftData().at(name);
     case RFType::SecuritySpread:
@@ -501,6 +514,18 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             CurveShiftData data;
             curveShiftDataFromXML(child, data);
             commodityCurveShiftData_[name] = QuantLib::ext::make_shared<CurveShiftData>(data);
+        }
+    }
+
+    DLOG("Get intraday power curve sensitivity parameters");
+    XMLNode* ipcNode = XMLUtils::getChildNode(node, "IntradayPowerCurves");
+    if (ipcNode) {
+        for (XMLNode* child = XMLUtils::getChildNode(ipcNode, "IntradayPowerCurve"); child;
+             child = XMLUtils::getNextSibling(child)) {
+            string name = XMLUtils::getAttribute(child, "name");
+            IntradayPowerShiftData data;
+            intradayPowerShiftDataFromXML(child, data);
+            intradayPowerCurveShiftData_[name] = QuantLib::ext::make_shared<IntradayPowerShiftData>(data);
         }
     }
 
@@ -929,6 +954,16 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) const {
         }
     }
 
+    if (!intradayPowerCurveShiftData_.empty()) {
+        DLOG("toXML for IntradayPowerCurves");
+        XMLNode* parent = XMLUtils::addChild(doc, root, "IntradayPowerCurves");
+        for (const auto& kv : intradayPowerCurveShiftData_) {
+            XMLNode* node = XMLUtils::addChild(doc, parent, "IntradayPowerCurve");
+            XMLUtils::addAttribute(doc, node, "name", kv.first);
+            intradayPowerShiftDataToXML(doc, node, *kv.second);
+        }
+    }
+
     if (!commodityVolShiftData_.empty()) {
         DLOG("toXML for CommodityVolatilities");
         XMLNode* parent = XMLUtils::addChild(doc, root, "CommodityVolatilities");
@@ -1204,6 +1239,8 @@ std::set<std::string> getShiftSpecKeys(const SensitivityScenarioData& d) {
     for (auto const& [_, v] : d.dividendYieldShiftData())
         extractKeysFromShiftData(*v, pids);
     for (auto const& [_, v] : d.commodityCurveShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.intradayPowerCurveShiftData())
         extractKeysFromShiftData(*v, pids);
     for (auto const& [_, v] : d.commodityVolShiftData())
         extractKeysFromShiftData(*v, pids);

@@ -31,7 +31,7 @@
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
-#include <qle/pricingengines/mccashflowinfo.hpp>
+#include <qle/pricingengines/mcenginecashflowinfo.hpp>
 
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>

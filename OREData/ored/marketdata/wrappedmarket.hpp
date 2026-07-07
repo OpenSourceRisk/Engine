@@ -138,6 +138,14 @@ public:
     yoyInflationObservationLags(const string& indexName,
                                 const string& configuration = Market::defaultConfiguration) const override;
 
+    QuantLib::Handle<QuantExt::IntradayPowerPriceTermStructure>
+    intradayPowerPriceCurve(const std::string& indexName,
+                            const std::string& configuration = Market::defaultConfiguration) const override;
+
+    QuantLib::Handle<QuantExt::IntradayPowerIndex>
+    intradayPowerIndex(const std::string& indexName,
+                       const std::string& configuration = Market::defaultConfiguration) const override;
+
 protected:
     QuantLib::ext::shared_ptr<Market> market_;
 };

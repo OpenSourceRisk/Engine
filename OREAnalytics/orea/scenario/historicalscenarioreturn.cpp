@@ -51,6 +51,7 @@ ReturnConfiguration::ReturnConfiguration() {
         {RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility, ReturnConfiguration::ReturnType::Relative},
         {RiskFactorKey::KeyType::YoYInflationCapFloorVolatility, ReturnConfiguration::ReturnType::Relative},
         {RiskFactorKey::KeyType::CommodityCurve, ReturnConfiguration::ReturnType::Relative},
+        {RiskFactorKey::KeyType::IntradayPowerCurve, ReturnConfiguration::ReturnType::Relative},
         {RiskFactorKey::KeyType::CommodityVolatility, ReturnConfiguration::ReturnType::Relative},
         {RiskFactorKey::KeyType::SecuritySpread, ReturnConfiguration::ReturnType::Absolute},
         {RiskFactorKey::KeyType::Correlation, ReturnConfiguration::ReturnType::Absolute}};

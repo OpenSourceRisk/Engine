@@ -27,6 +27,8 @@
 %shared_ptr(ore::analytics::XvaAnalytic)
 %shared_ptr(ore::analytics::SimmAnalytic)
 %shared_ptr(ore::analytics::SaCcrAnalytic)
+%shared_ptr(ore::analytics::PnlAnalytic)
+%shared_ptr(ore::analytics::PnlExplainAnalytic)
 
 %rename(SaccrAnalytic) ore::analytics::SaCcrAnalytic;
 
@@ -136,6 +138,60 @@ class AnalyticFactory {
 QuantLib::ext::shared_ptr<ore::analytics::XvaAnalytic> asXvaAnalytic(
     QuantLib::ext::shared_ptr<ore::analytics::Analytic> analytic) {
     return QuantLib::ext::dynamic_pointer_cast<ore::analytics::XvaAnalytic>(analytic);
+}
+%}
+
+namespace ore {
+namespace analytics {
+class PnlAnalytic : public ore::analytics::Analytic {
+  public:
+    %extend {
+        PnlAnalytic() {
+            auto inputs = QuantLib::ext::make_shared<ore::analytics::InputParameters>();
+            return new ore::analytics::PnlAnalytic(
+                inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
+        }
+        PnlAnalytic(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs) {
+            return new ore::analytics::PnlAnalytic(
+                inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
+        }
+    }
+};
+}
+}
+
+namespace ore {
+namespace analytics {
+class PnlExplainAnalytic : public ore::analytics::Analytic {
+  public:
+    %extend {
+        PnlExplainAnalytic() {
+            auto inputs = QuantLib::ext::make_shared<ore::analytics::InputParameters>();
+            return new ore::analytics::PnlExplainAnalytic(
+                inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
+        }
+        PnlExplainAnalytic(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs) {
+            return new ore::analytics::PnlExplainAnalytic(
+                inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
+        }
+    }
+};
+}
+}
+
+// Helper to downcast Analytic to PnlAnalytic
+%inline %{
+QuantLib::ext::shared_ptr<ore::analytics::PnlAnalytic> asPnlAnalytic(
+    QuantLib::ext::shared_ptr<ore::analytics::Analytic> analytic) {
+    return QuantLib::ext::dynamic_pointer_cast<ore::analytics::PnlAnalytic>(analytic);
+}
+%}
+
+// Helper to downcast Analytic to PnlExplainAnalytic
+%inline %{
+QuantLib::ext::shared_ptr<ore::analytics::PnlExplainAnalytic> asPnlExplainAnalytic(
+    QuantLib::ext::shared_ptr<ore::analytics::Analytic> analytic) {
+    return QuantLib::ext::dynamic_pointer_cast<ore::analytics::PnlExplainAnalytic>(analytic);
 }
 %}
 

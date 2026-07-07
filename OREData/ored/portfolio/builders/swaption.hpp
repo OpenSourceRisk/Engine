@@ -36,7 +36,7 @@
 namespace ore {
 namespace data {
 
-using SwaptionModel = std::variant<std::monostate, Handle<QuantExt::CrossAssetModel>, Handle<QuantExt::LGM>>;
+using CamOrLgmModel = std::variant<std::monostate, Handle<QuantExt::CrossAssetModel>, Handle<QuantExt::LGM>>;
 
 /*! Swaption engine builder base class. This is for the general xccy case, i.e. keys and strikes have one element per
     supported underlying currency. FX strikes are against base ccy, where base ccy is the first currenc resp. the base
@@ -46,26 +46,20 @@ class SwaptionEngineBuilder
     : public CachingPricingEngineBuilder<string, const string&, const std::vector<string>&, const std::vector<Date>&,
                                          const std::vector<Date>&, const std::vector<std::vector<Real>>&,
                                          const std::vector<std::vector<Real>>&, const bool, const string&,
-                                         const string&, const SwaptionModel&> {
+                                         const string&, const CamOrLgmModel&> {
 public:
     SwaptionEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes,
                           const bool idBasedKey = true)
         : CachingEngineBuilder(model, engine, tradeTypes), idBasedKey_(idBasedKey) {}
 
-    SwaptionModel model(const string& id, const std::vector<string>& keys, const std::vector<Date>& expiries,
-                        const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
-                        const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican) const;
-
     virtual bool instrumentIsHandled(QuantExt::MultiLegOption& s, std::vector<std::string>& messages) const;
-
-protected:
-    QuantExt::CrossAssetModel::Discretization discretization_ = QuantExt::CrossAssetModel::Discretization::Exact;
+    virtual QuantExt::CrossAssetModel::Discretization discretization() const;
 
 private:
     string keyImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
                    const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
                    const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican,
-                   const std::string& discountCurve, const std::string& securitySpread, const SwaptionModel&) override;
+                   const std::string& discountCurve, const std::string& securitySpread, const CamOrLgmModel&) override;
     bool idBasedKey_ = true;
 };
 
@@ -79,12 +73,13 @@ public:
                                 {"EuropeanSwaption", "EuropeanSwaption_NonStandard"}) {}
 
     bool instrumentIsHandled(QuantExt::MultiLegOption& s, std::vector<std::string>& messages) const override;
+
 private:
     QuantLib::ext::shared_ptr<PricingEngine>
     engineImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
                const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
                const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican, const std::string& discountCurve,
-               const std::string& securitySpread, const SwaptionModel&) override;
+               const std::string& securitySpread, const CamOrLgmModel&) override;
 };
 
 //! LGM based builders, base class
@@ -108,7 +103,7 @@ private:
     engineImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
                const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
                const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican, const std::string& discountCurve,
-               const std::string& securitySpread, const SwaptionModel&) override;
+               const std::string& securitySpread, const CamOrLgmModel&) override;
 };
 
 //! LGM FD engine
@@ -123,7 +118,7 @@ private:
     engineImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
                const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
                const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican, const std::string& discountCurve,
-               const std::string& securitySpread, const SwaptionModel&) override;
+               const std::string& securitySpread, const CamOrLgmModel&) override;
 };
 
 //!
@@ -149,7 +144,7 @@ private:
     engineImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
                const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
                const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican, const std::string& discountCurve,
-               const std::string& securitySpread, const SwaptionModel&) override;
+               const std::string& securitySpread, const CamOrLgmModel&) override;
 };
 
 //! CAM AMC engine
@@ -165,7 +160,7 @@ private:
     engineImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
                const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
                const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican, const std::string& discountCurve,
-               const std::string& securitySpread, const SwaptionModel&) override;
+               const std::string& securitySpread, const CamOrLgmModel&) override;
 
     const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
     const std::vector<Date> simulationDates_;
@@ -175,16 +170,15 @@ private:
 // CAM MCCG engine
 class CamMCCgSwaptionEngineBuilder final : public CamSwaptionEngineBuilder {
 public:
-    CamMCCgSwaptionEngineBuilder() : CamSwaptionEngineBuilder("MCCG") {
-        discretization_ = QuantExt::CrossAssetModel::Discretization::Euler;
-    }
+    CamMCCgSwaptionEngineBuilder() : CamSwaptionEngineBuilder("MCCG") {}
+    QuantExt::CrossAssetModel::Discretization discretization() const override;
 
 private:
     QuantLib::ext::shared_ptr<PricingEngine>
     engineImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
                const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
                const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican, const std::string& discountCurve,
-               const std::string& securitySpread, const SwaptionModel&) override;
+               const std::string& securitySpread, const CamOrLgmModel&) override;
 };
 
 //! CAM AMC-CG engine
@@ -194,18 +188,26 @@ public:
                                const std::vector<Date>& simulationDates)
         : CamSwaptionEngineBuilder("AMCCG", false), modelCg_(modelCg), simulationDates_(simulationDates) {
         cachingEnabled_ = false;
-}
+    }
+    QuantExt::CrossAssetModel::Discretization discretization() const override;
 
 private:
     QuantLib::ext::shared_ptr<PricingEngine>
     engineImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
                const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
                const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican, const std::string& discountCurve,
-               const std::string& securitySpread, const SwaptionModel&) override;
+               const std::string& securitySpread, const CamOrLgmModel&) override;
 
     const QuantLib::ext::shared_ptr<ore::data::ModelCG> modelCg_;
     const std::vector<Date> simulationDates_;
 };
+
+CamOrLgmModel
+model(const EngineBuilder* builder, const string& id, const std::vector<string>& keys,
+      const std::vector<Date>& expiries, const std::vector<Date>& maturities,
+      const std::vector<std::vector<Real>>& strikes, const std::vector<std::vector<Real>>& fxStrikes,
+      const bool isAmerican,
+      QuantExt::CrossAssetModel::Discretization discretization_ = QuantExt::CrossAssetModel::Discretization::Exact);
 
 } // namespace data
 } // namespace ore

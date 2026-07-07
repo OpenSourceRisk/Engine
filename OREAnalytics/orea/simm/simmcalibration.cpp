@@ -92,7 +92,7 @@ XMLNode* SimmCalibration::RiskClassData::RiskWeights::toXML(XMLDocument& doc) co
     auto riskWeightsNode = doc.allocNode("RiskWeights");
 
     // Delta and Vega risk weights
-    for (const string& rwType : {"Delta", "Vega"}) {
+    for (const string rwType : {"Delta", "Vega"}) {
         auto& riskWeightsMap = rwType == "Delta" ? delta_ : vega_;
 
         for (const auto& [mpor, riskWeights] : riskWeightsMap) {
@@ -123,7 +123,7 @@ void SimmCalibration::RiskClassData::RiskWeights::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "RiskWeights");
 
     // Delta and Vega risk weights
-    for (const string& rwType : {"Delta", "Vega"}) {
+    for (const string rwType : {"Delta", "Vega"}) {
         auto& riskWeightsMap = rwType == "Delta" ? delta_ : vega_;
         auto rwNodes = XMLUtils::getChildrenNodes(node, rwType);
         for (XMLNode* rwNode : rwNodes) {
@@ -154,7 +154,7 @@ XMLNode* SimmCalibration::RiskClassData::IRRiskWeights::toXML(XMLDocument& doc) 
     auto riskWeightsNode = RiskWeights::toXML(doc);
 
     // Inflation and XCcyBasis
-    for (const string& rwType : {"Inflation", "XCcyBasis"}) {
+    for (const string rwType : {"Inflation", "XCcyBasis"}) {
         auto container = rwType == "Inflation" ? inflation_ : xCcyBasis_;
         for (const auto& [mpor, amount] : container) {
             auto rwNode = amount->toXML(doc);
@@ -182,7 +182,7 @@ XMLNode* SimmCalibration::RiskClassData::IRRiskWeights::toXML(XMLDocument& doc) 
 void SimmCalibration::RiskClassData::IRRiskWeights::fromXML(XMLNode* node) {
     RiskWeights::fromXML(node);
 
-    for (const string& weightType : {"Inflation", "XCcyBasis"}) {
+    for (const string weightType : {"Inflation", "XCcyBasis"}) {
         auto& weightMap = weightType == "Inflation" ? inflation_ : xCcyBasis_;
         weightMap.clear();
         auto weightTypeNodes = XMLUtils::getChildrenNodes(node, weightType);
@@ -293,7 +293,7 @@ XMLNode* SimmCalibration::RiskClassData::Correlations::toXML(XMLDocument& doc) c
     auto correlationsNode = doc.allocNode("Correlations");
 
     // Intra- and Inter-bucket correlations
-    for (const string& corrType : {"IntraBucket", "InterBucket"}) {
+    for (const string corrType : {"IntraBucket", "InterBucket"}) {
         auto& correlations = corrType == "IntraBucket" ? intraBucketCorrelations_ : interBucketCorrelations_;
         
         if (correlations.empty())
@@ -316,7 +316,7 @@ void SimmCalibration::RiskClassData::Correlations::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Correlations");
 
     // Intra- and Inter-bucket correlations
-    for (const string& corrType : {"IntraBucket", "InterBucket"}) {
+    for (const string corrType : {"IntraBucket", "InterBucket"}) {
         auto& correlationsMap = corrType == "IntraBucket" ? intraBucketCorrelations_ : interBucketCorrelations_;
         correlationsMap.clear();
         auto corrNodes = XMLUtils::getChildrenNodes(node, corrType);
@@ -414,7 +414,7 @@ void SimmCalibration::RiskClassData::ConcentrationThresholds::fromXML(XMLNode* n
     XMLUtils::checkNode(node, "ConcentrationThresholds");
 
     // Delta and Vega risk weights
-    for (const string& concThresholdType : {"Delta", "Vega"}) {
+    for (const string concThresholdType : {"Delta", "Vega"}) {
         auto& concThresholdsMap = concThresholdType == "Delta" ? delta_ : vega_;
         concThresholdsMap.clear();
         auto concThresholdNodes = XMLUtils::getChildrenNodes(node, concThresholdType);

@@ -162,6 +162,7 @@ private:
     void generateYoYInflationCapFloorVolScenarios(bool up);
     void generateBaseCorrelationScenarios(bool up);
     void generateCommodityCurveScenarios(bool up);
+    void generateIntradayPowerCurveScenarios(bool up);
     void generateCommodityVolScenarios(bool up);
     void generateSecuritySpreadScenarios(bool up);
     void generateCorrelationScenarios(bool up);
@@ -200,6 +201,8 @@ private:
                                                            bool up, ShiftScheme shiftScheme);
     ScenarioDescription commodityCurveScenarioDescription(const std::string& commodityName, QuantLib::Size bucket,
                                                           bool up, ShiftScheme shiftScheme);
+    ScenarioDescription intradayPowerCurveScenarioDescription(const std::string& curveName, QuantLib::Size bucket,
+                                  bool up, ShiftScheme shiftScheme);
     ScenarioDescription commodityVolScenarioDescription(const std::string& commodityName, QuantLib::Size expiryBucket,
                                                         QuantLib::Size strikeBucket, bool up, ShiftScheme shiftScheme);
     ScenarioDescription securitySpreadScenarioDescription(string bond, bool up, ShiftScheme shiftScheme);

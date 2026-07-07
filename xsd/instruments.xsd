@@ -2,6 +2,7 @@
   xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
   <xs:include schemaLocation="ore_types.xsd"/>
+  <xs:include schemaLocation="intradaypowerloaddata.xsd"/>
 
   <xs:group name="oreTradeData">
     <xs:choice>
@@ -50,6 +51,7 @@
       <xs:element type="creditDefaultSwapData" name="CreditDefaultSwapData"/>
       <xs:element type="creditDefaultSwapOptionData" name="CreditDefaultSwapOptionData"/>
       <xs:element type="commodityForwardData" name="CommodityForwardData"/>
+      <xs:element type="intradayPowerForwardData" name="IntradayPowerForwardData"/>
       <xs:element type="commodityOptionData" name="CommodityOptionData"/>
       <xs:element type="commodityDigitalAveragePriceOptionData" name="CommodityDigitalAveragePriceOptionData"/>
       <xs:element type="commodityDigitalOptionData" name="CommodityDigitalOptionData"/>
@@ -1196,6 +1198,27 @@
     </xs:complexType>
   </xs:element>
 
+  <xs:element name="IntradayPowerFloatingLegData" substitutionGroup="legDataType">
+    <xs:complexType>
+      <xs:all>
+        <xs:element type="xs:string" name="Name"/>
+        <xs:element type="quantitiesType" name="Quantities"/>
+        <xs:element type="spreads" name="Spreads" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="gearings" name="Gearings" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="calendar" name="PricingCalendar" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:boolean" name="IncludePeriodStart" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:boolean" name="IncludePeriodEnd" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:boolean" name="BusinessDays" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:string" name="PowerLoadProfileReference" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="powerLoadProfileDataType" name="PowerLoadProfileData" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:string" name="FXIndex" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:nonNegativeInteger" name="AvgPricePrecision" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:string" name="Tag" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:string" name="QuantityMode" minOccurs="0" maxOccurs="1"/>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+
   <xs:complexType name="commoditySwapData">
     <xs:sequence>
       <xs:element type="xs:boolean" name="RoundNettedFloatingLegs" minOccurs="0" maxOccurs="1"/>
@@ -1373,6 +1396,7 @@
       <xs:enumeration value="EquityVarianceSwap"/>
       <xs:enumeration value="EquityCliquetOption"/>
       <xs:enumeration value="CommodityForward"/>
+      <xs:enumeration value="IntradayPowerForward"/>
       <xs:enumeration value="CommodityOption"/>
       <xs:enumeration value="CommodityDigitalAveragePriceOption"/>
       <xs:enumeration value="CommodityDigitalOption"/>
@@ -1461,6 +1485,7 @@
       <xs:enumeration value="Equity"/>
       <xs:enumeration value="FormulaBased"/>
       <xs:enumeration value="ZeroCouponFixed"/>
+      <xs:enumeration value="IntradayPowerFloating"/>
       <xs:enumeration value="CommodityFixed"/>
       <xs:enumeration value="CommodityFloating"/>
       <xs:enumeration value="EquityMargin"/>
@@ -1546,14 +1571,14 @@
   </xs:complexType>
 
   <xs:complexType name="fxDigitalOptionData">
-    <xs:sequence>
-      <xs:element type="optionData" name="OptionData"  maxOccurs="unbounded" minOccurs="1"/>
+    <xs:all>
+      <xs:element type="optionData" name="OptionData"/>
       <xs:element type="xs:float" name="Strike"/>
       <xs:element type="currencyCode" name="PayoffCurrency" minOccurs="0"/>
       <xs:element type="xs:float" name="PayoffAmount"/>
       <xs:element type="currencyCode" name="ForeignCurrency"/>
       <xs:element type="currencyCode" name="DomesticCurrency"/>
-    </xs:sequence>
+    </xs:all>
   </xs:complexType>
 
   <xs:complexType name="fxKIKOBarrierOptionData">
@@ -1633,9 +1658,9 @@
   </xs:complexType>
 
   <xs:complexType name="fxBarrierOptionData">
-    <xs:sequence>
-      <xs:element type="optionData" name="OptionData"  maxOccurs="unbounded" minOccurs="1"/>
-      <xs:element type="barrierData" name="BarrierData"  maxOccurs="unbounded" minOccurs="1"/>
+    <xs:all>
+      <xs:element type="optionData" name="OptionData" minOccurs="1"/>
+      <xs:element type="barrierData" name="BarrierData" minOccurs="1"/>
       <xs:element type="date" name="StartDate"  minOccurs="0"/>
       <xs:element type="calendar" name="Calendar"  minOccurs="0"/>
       <xs:element type="xs:string" name="FXIndex"  minOccurs="0"/>
@@ -1645,13 +1670,13 @@
       <xs:element type="xs:float" name="BoughtAmount"/>
       <xs:element type="currencyCode" name="SoldCurrency"/>
       <xs:element type="xs:float" name="SoldAmount"/>
-    </xs:sequence>
+    </xs:all>
   </xs:complexType>
 
   <xs:complexType name="fxDigitalBarrierOptionData">
-    <xs:sequence>
-      <xs:element type="optionData" name="OptionData"  maxOccurs="unbounded" minOccurs="1"/>
-      <xs:element type="barrierData" name="BarrierData"  maxOccurs="unbounded" minOccurs="1"/>
+    <xs:all>
+      <xs:element type="optionData" name="OptionData" minOccurs="1"/>
+      <xs:element type="barrierData" name="BarrierData" minOccurs="1"/>
       <xs:element type="date" name="StartDate"  minOccurs="0"/>
       <xs:element type="calendar" name="Calendar"  minOccurs="0"/>
       <xs:element type="xs:string" name="FXIndex"  minOccurs="0"/>
@@ -1662,13 +1687,13 @@
       <xs:element type="currencyCode" name="PayoffCurrency" minOccurs="0"/>
       <xs:element type="currencyCode" name="ForeignCurrency"/>
       <xs:element type="currencyCode" name="DomesticCurrency"/>
-    </xs:sequence>
+    </xs:all>
   </xs:complexType>
 
   <xs:complexType name="fxTouchOptionData">
-    <xs:sequence>
-      <xs:element type="optionData" name="OptionData"  maxOccurs="unbounded" minOccurs="1"/>
-      <xs:element type="barrierData" name="BarrierData"  maxOccurs="unbounded" minOccurs="1"/>
+    <xs:all>
+      <xs:element type="optionData" name="OptionData" minOccurs="1"/>
+      <xs:element type="barrierData" name="BarrierData" minOccurs="1"/>
       <xs:element type="currencyCode" name="ForeignCurrency"/>
       <xs:element type="currencyCode" name="DomesticCurrency"/>
       <xs:element type="currencyCode" name="PayoffCurrency"/>
@@ -1678,7 +1703,7 @@
       <xs:element type="xs:string" name="FXIndexDailyLows"  minOccurs="0"/>
       <xs:element type="xs:string" name="FXIndexDailyHighs"  minOccurs="0"/>
       <xs:element type="xs:string" name="Calendar" minOccurs="0"/>
-    </xs:sequence>
+    </xs:all>
   </xs:complexType>
 
   <xs:complexType name="fxForwardSettlementData">
@@ -1934,6 +1959,29 @@
       <xs:element type="xs:string" name="FXIndex" maxOccurs="1" minOccurs="1"/>
       <xs:element type="date" name="FixingDate" maxOccurs="1" minOccurs="1"/>
     </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="intradayPowerForwardData">
+    <xs:sequence>
+      <xs:element type="longShort" name="Position"/>
+      <xs:element type="date" name="Maturity"/>
+      <xs:element type="xs:string" name="Name"/>
+      <xs:element type="currencyCode" name="Currency"/>
+      <xs:element type="xs:float" name="Strike"/>
+      <xs:element type="xs:float" name="Quantity"/>
+      <xs:element type="date" name="DeliveryDate"/>
+      <xs:choice>
+        <xs:sequence>
+          <xs:element type="xs:integer" name="DeliveryStart"/>
+          <xs:element type="xs:integer" name="DeliveryEnd"/>
+          <xs:element type="xs:boolean" name="IsDstHour" minOccurs="0"/>
+        </xs:sequence>
+        <xs:element type="powerLoadProfileDataType" name="PowerLoadProfileData"/>
+      </xs:choice>
+      <xs:element type="bool" name="PhysicallySettled" minOccurs="0"/>
+      <xs:element type="date" name="PaymentDate" minOccurs="0"/>
+      <xs:element type="commForwardSettlementData" name="SettlementData" maxOccurs="1" minOccurs="0"/>
+    </xs:sequence>
   </xs:complexType>
 
   <xs:element name="creditCurveIdType" abstract="true"/>

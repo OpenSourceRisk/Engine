@@ -1,0 +1,62 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:complexType name="loadFactorType">
+    <xs:simpleContent>
+      <xs:extension base="xs:double">
+        <xs:attribute type="xs:integer" name="from" use="required"/>
+        <xs:attribute type="xs:integer" name="to" use="required"/>
+        <xs:attribute type="xs:string" name="unit" use="optional"/>
+        <xs:attribute type="bool" name="dst" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="loadFactorsType">
+    <xs:sequence>
+      <xs:element type="loadFactorType" name="LoadFactor" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="explicitLoadProfileType">
+    <xs:sequence>
+      <xs:element name="LoadProfileDatum" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="date" name="Date" minOccurs="1" maxOccurs="1"/>
+            <xs:element type="loadFactorsType" name="LoadFactors" minOccurs="1" maxOccurs="1"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ruleBasedLoadProfileType">
+    <xs:sequence>
+      <xs:element name="LoadProfileBusinessDayRule" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="date" name="Date" minOccurs="1" maxOccurs="1"/>
+            <xs:element type="xs:string" name="Calendar" minOccurs="1" maxOccurs="1"/>
+            <xs:element type="loadFactorsType" name="BusinessDayLoadFactors" minOccurs="0" maxOccurs="1"/>
+            <xs:element type="loadFactorsType" name="NonBusinessDayLoadFactors" minOccurs="0" maxOccurs="1"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="powerLoadProfileDataType">
+    <xs:choice>
+      <xs:element type="explicitLoadProfileType" name="ExplicitDates"/>
+      <xs:element type="ruleBasedLoadProfileType" name="BusinessDayRules"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="intradayPowerLoad">
+    <xs:all>
+      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="powerLoadProfileDataType" name="PowerLoadProfileData" minOccurs="0" maxOccurs="1"/>
+    </xs:all>
+  </xs:complexType>
+
+</xs:schema>

@@ -22,10 +22,27 @@
 %include types.i
 %include ored_iborfallbackconfig.i
 
+%{
+#include <ored/utilities/timeperiod.hpp>
+%}
+
 %shared_ptr(ore::data::DateGrid)
 
 namespace ore {
 namespace data {
+
+class TimePeriod {
+public:
+    TimePeriod(const std::vector<QuantLib::Date>& dates, QuantLib::Size mporDays = QuantLib::Null<QuantLib::Size>(),
+               const QuantLib::Calendar& calendar = QuantLib::Calendar());
+    QuantLib::Size numberOfContiguousParts() const;
+    const std::vector<QuantLib::Date>& startDates() const;
+    const std::vector<QuantLib::Date>& endDates() const;
+    bool contains(const QuantLib::Date& d) const;
+};
+
+TimePeriod totalTimePeriod(std::vector<std::string> timePeriods, QuantLib::Size mporDays = QuantLib::Null<QuantLib::Size>(),
+                           const QuantLib::Calendar& calendar = QuantLib::Calendar());
 
 class DateGrid {
 public:

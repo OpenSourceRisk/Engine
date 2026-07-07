@@ -56,7 +56,9 @@ CurveSpec::CurveType marketObjectToCurveType(MarketObject mo) {
         {MarketObject::CommodityVolatility, CurveSpec::CurveType::CommodityVolatility},
         {MarketObject::Correlation, CurveSpec::CurveType::Correlation},
         {MarketObject::YieldVol, CurveSpec::CurveType::YieldVolatility},
-        {MarketObject::BondFutureVol, CurveSpec::CurveType::BondFutureVolatility}};
+        {MarketObject::BondFutureVol, CurveSpec::CurveType::BondFutureVolatility},
+        {MarketObject::IntradayPowerPriceCurve, CurveSpec::CurveType::IntradayPowerCurve}
+    };
 
     auto it = moct.find(mo);
     if (it == moct.end())
@@ -226,6 +228,18 @@ string marketObjectToCurveSpec(const MarketObject& mo, const string& name, const
     }
     case CurveSpec::CurveType::SwapIndex: {
         return swapIndexDiscountCurve(name.substr(0, 3), baseCcy, name);
+    }
+    case CurveSpec::CurveType::IntradayPowerCurve: {
+        if (curveConfigs->hasIntradayPowerCurveConfig(name)) {
+            csName = IntradayPowerCurveSpec(curveConfigs->intradayPowerCurveConfig(name)->currency(), name).name();
+        } else {
+            StructuredCurveErrorMessage(
+                name, "Market Object to config",
+                "No intraday power curve config for curve '" + name +
+                    "'. Cannot add curve to todays market parameters. Add a curve config for this id.")
+                .log();
+        }
+        break;
     }
     default:
         QL_FAIL("Cannot convert market object " << mo << " to curve spec");

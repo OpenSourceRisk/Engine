@@ -38,7 +38,7 @@
 #include <qle/models/crlgmvectorised.hpp>
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/models/lgmvectorised.hpp>
-#include <qle/pricingengines/mccashflowinfo.hpp>
+#include <qle/pricingengines/mcenginecashflowinfo.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
 #include <qle/pricingengines/mcengineregression.hpp>
 #include <qle/utilities/callablebond.hpp>

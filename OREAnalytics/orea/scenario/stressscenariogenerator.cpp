@@ -83,6 +83,8 @@ void StressScenarioGenerator::generateScenarios() {
         addEquityShifts(data, scenario);
         if (simMarketData_->commodityCurveSimulate())
             addCommodityCurveShifts(data, scenario);
+        if (simMarketData_->intradayPowerCurveSimulate())
+            addIntradayPowerCurveShifts(data, scenario);
         addDiscountCurveShifts(data, scenario);
         addIndexCurveShifts(data, scenario);
         addYieldCurveShifts(data, scenario);
@@ -345,6 +347,63 @@ void StressScenarioGenerator::addCommodityCurveShifts(StressTestScenarioData::St
         }
     }
     DLOG("Commodity curve stress scenarios done");
+}
+
+void StressScenarioGenerator::addIntradayPowerCurveShifts(StressTestScenarioData::StressTestData& std,
+                                                          QuantLib::ext::shared_ptr<Scenario>& scenario) {
+    Date asof = baseScenario_->asof();
+    auto& data = std.intradayPowerCurveShifts;
+    auto wildcards = wildcardList(data);
+    if (wildcards.size() > 0) {
+        data = populateShiftData(data, wildcards, RiskFactorKey::KeyType::IntradayPowerCurve);
+    }
+
+    for (const auto& d : data) {
+        string name = d.first;
+        TLOG("Apply stress scenario to intraday power curve " << name);
+
+        const Size n_ten = simMarketData_->intradayPowerCurveTenors(name).size();
+        std::vector<Real> basePrices(n_ten);
+        std::vector<Real> times(n_ten);
+        std::vector<Real> shiftedPrices(n_ten);
+
+        StressTestScenarioData::IntradayPowerShiftData data = *d.second;
+        ShiftType shiftType = data.shiftType;
+        DayCounter dc = Actual365Fixed();
+        if (auto s = simMarket_.lock()) {
+            dc = s->intradayPowerPriceCurve(name)->dayCounter();
+        } else {
+            QL_FAIL("Internal error: could not lock simMarket. Contact dev.");
+        }
+
+        for (Size j = 0; j < n_ten; ++j) {
+            Date date = asof + simMarketData_->intradayPowerCurveTenors(name)[j];
+            times[j] = dc.yearFraction(asof, date);
+            RiskFactorKey key(RiskFactorKey::KeyType::IntradayPowerCurve, name, j);
+            basePrices[j] = baseScenarioAbsolute_->get(key);
+        }
+
+        QL_REQUIRE(!data.shiftTenors.empty(), "Intraday power shift tenors not specified");
+        std::vector<Real> shifts = data.shifts;
+        QL_REQUIRE(data.shiftTenors.size() == shifts.size(), "shift tenor and shift size vectors do not match");
+        std::vector<Time> shiftTimes(data.shiftTenors.size());
+        for (Size j = 0; j < data.shiftTenors.size(); ++j)
+            shiftTimes[j] = dc.yearFraction(asof, asof + data.shiftTenors[j]);
+
+        for (Size j = 0; j < data.shiftTenors.size(); ++j)
+            applyShift(j, shifts[j], true, shiftType, shiftTimes, basePrices, times, shiftedPrices,
+                       j == 0 ? true : false);
+
+        for (Size k = 0; k < n_ten; ++k) {
+            RiskFactorKey key(RiskFactorKey::KeyType::IntradayPowerCurve, name, k);
+            if (useSpreadedTermStructures_) {
+                scenario->add(key, shiftedPrices[k] - basePrices[k]);
+            } else {
+                scenario->add(key, shiftedPrices[k]);
+            }
+        }
+    }
+    DLOG("Intraday power curve stress scenarios done");
 }
 
 void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::StressTestData& std,

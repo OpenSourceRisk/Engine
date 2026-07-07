@@ -171,7 +171,6 @@ inline void LgmImpliedYtsFwdFwdCorrected::referenceTime(const Time t) {
         Ht_ = model_->parametrization()->H(t);
     }
     relativeTime_ = t;
-
     notifyObservers();
 }
 
@@ -181,7 +180,6 @@ inline void LgmImpliedYieldTermStructure::state(const Real s) {
 }
 
 inline void LgmImpliedYieldTermStructure::move(const Date& d, const Real s) {
-
     state_ = s;
     referenceDate(d);
 }
@@ -189,17 +187,15 @@ inline void LgmImpliedYieldTermStructure::move(const Date& d, const Real s) {
 inline void LgmImpliedYieldTermStructure::move(const Time t, const Real s) {
     state_ = s;
     referenceTime(t);
-
     notifyObservers();
 }
 
 inline void LgmImpliedYieldTermStructure::update() {
+    YieldTermStructure::update();
     if (!purelyTimeBased_) {
         relativeTime_ =
             dayCounter().yearFraction(model_->parametrization()->termStructure()->referenceDate(), referenceDate_);
     }
-
-    notifyObservers();
 }
 
 inline Real LgmImpliedYieldTermStructure::discountImpl(Time t) const {

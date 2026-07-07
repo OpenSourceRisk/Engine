@@ -1,0 +1,52 @@
+Intraday power sensitivity configuration is provided in an \lstinline!IntradayPowerCurves! block under
+\lstinline!SensitivityAnalysis!. The structure is:
+
+\begin{itemize}
+\item \lstinline!IntradayPowerCurves!: Container for intraday power curve sensitivity settings.
+\item \lstinline!IntradayPowerCurve! (attribute \lstinline!name!): Configuration for one intraday power curve.
+\item \lstinline!ShiftType!: Shift type, \lstinline!Absolute! or \lstinline!Relative!.
+\item \lstinline!ShiftSize!: Shift size.
+\item \lstinline!ShiftScheme! [Optional]: Finite-difference scheme. If omitted, defaults to \lstinline!Forward!.
+\item \lstinline!ShiftTenors!: Comma-separated list of tenors to shift.
+\end{itemize}
+
+At present, shocks are applied to the day-average intraday power curve level only. There is no separate
+parameterisation for shifting individual intraday time buckets directly.
+
+Bucket-level shocked prices are implied from the day-level shock and the shape profile:
+\begin{itemize}
+\item For \lstinline!Relative! shifts, the day-level price is shifted by $n\%$, and bucket prices are shifted by the
+same relative amount $n\%$.
+\item For \lstinline!Absolute! shifts, the day-level price is shifted by an absolute amount, and the implied bucket
+absolute shift is scaled by the corresponding intraday shape factor.
+\end{itemize}
+
+An example configuration is shown in listing \ref{lst:sensitivity_intraday_power_curves}.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\scriptsize]{xml}
+<IntradayPowerCurves>
+  <IntradayPowerCurve name="PJM_WH_RT">
+    <ShiftType>Absolute</ShiftType>
+    <ShiftSize>0.0001</ShiftSize>
+    <ShiftTenors>1W,2W,1M,2M,3M,6M,1Y</ShiftTenors>
+  </IntradayPowerCurve>
+</IntradayPowerCurves>
+\end{minted}
+\caption{Intraday power curve sensitivity configuration}
+\label{lst:sensitivity_intraday_power_curves}
+\end{longlisting}
+
+If sensitivities should be reported on the underlying commodity curve only (instead of separately on intraday
+power curves), this can be configured in simulation using CurveAlgebra, see
+Section \ref{sec:sim_curve_algebra} and Listing \ref{lst:curve_algebra_configuration}.
+
+This is useful for mixed portfolios containing both commodity-curve trades and intraday-power-curve trades, where
+external aggregation of sensitivities is not desired.
+
+The corresponding intraday power mapping example is shown in
+Listing \ref{lst:curve_algebra_intraday_power_mapping}.
+
+In this setup, \lstinline!Simulate! is set to \lstinline!true! for \lstinline!IntradayPowerCurves! in
+\lstinline!simulation.xml!, and no \lstinline!IntradayPowerCurves! shifts are defined in
+\lstinline!sensitivity.xml!.

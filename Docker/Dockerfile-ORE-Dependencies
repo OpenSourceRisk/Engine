@@ -20,6 +20,7 @@ RUN apt-get update \
     doxygen \
     graphviz \
     libeigen3-dev \
+    llvm \
     clang \
     swig \
     lld \
