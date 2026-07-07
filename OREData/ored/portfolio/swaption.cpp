@@ -590,6 +590,9 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
             dates.push_back(swaption->exercise()->dates().front());
             maturities.push_back(swaption->underlying()->maturityDate());
             strikes.back().push_back(swaption->underlying()->fixedRate());
+            DLOG("got representative swap: expiry "
+                 << QuantLib::io::iso_date(dates.back()) << ", maturity " << maturities.back()
+                 << ", strike " << strikes.back().back() << ", notional " << swaption->underlying()->nominal());
         }
     }
 
@@ -616,16 +619,13 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
     // 9.4 get engine and set it
 
-    auto t0 = os::nanosecondsClock();
     QuantLib::ext::shared_ptr<PricingEngine> swaptionEngine;
-
     swaptionEngine = swaptionBuilder->engine(
         id(), qualifiers, dates, maturities, strikes,
         std::vector<std::vector<Real>>(differentCurrencies.size() - 1, std::vector<Real>(dates.size(), Null<Real>())),
         exerciseType_ == Exercise::American, envelope().additionalField("discount_curve", false),
         envelope().additionalField("security_spread", false), std::monostate());
 
-    DLOG("Swaption model calibration time: " << (os::nanosecondsClock() - t0) / 1E3 << " mus");
     swaption->setPricingEngine(swaptionEngine);
     setSensitivityTemplate(*swaptionBuilder);
     addProductModelEngine(*swaptionBuilder);
@@ -636,7 +636,6 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 std::vector<QuantLib::ext::shared_ptr<QuantLib::Swaption>>
 Swaption::buildRepresentativeSwaptions(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                                        const std::string& qualifier) {
-    DLOG("build representative swaps.")
     auto market = QuantLib::ext::dynamic_pointer_cast<Market>(engineFactory->market());
     auto configuration = engineFactory->configuration(MarketContext::irCalibration);
     Handle<YieldTermStructure> discountCurve = market->discountCurve(npvCurrency_, configuration);
