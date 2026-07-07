@@ -136,10 +136,10 @@ public:
     QuantLib::ext::shared_ptr<Scenario> baseScenarioAbsolute() const { return baseScenarioAbsolute_; }
 
 private:
-    ShiftType getShiftType(SensitivityScenarioData::ShiftData& data) const;
-    Real getShiftSize(SensitivityScenarioData::ShiftData& data) const;
-    ShiftScheme getShiftScheme(SensitivityScenarioData::ShiftData& data) const;
-    bool isScenarioRelevant(bool up, SensitivityScenarioData::ShiftData& data) const;
+    ShiftType getShiftType(const SensitivityScenarioData::ShiftData& data) const;
+    Real getShiftSize(const SensitivityScenarioData::ShiftData& data) const;
+    ShiftScheme getShiftScheme(const SensitivityScenarioData::ShiftData& data) const;
+    bool isScenarioRelevant(bool up, const SensitivityScenarioData::ShiftData& data) const;
     void storeShiftData(const RiskFactorKey& key, const Real rate, const Real newRate);
 
     void generateScenarios();
