@@ -1572,7 +1572,7 @@
 
   <xs:complexType name="fxDigitalOptionData">
     <xs:all>
-      <xs:element type="optionData" name="OptionData"  maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="optionData" name="OptionData"/>
       <xs:element type="xs:float" name="Strike"/>
       <xs:element type="currencyCode" name="PayoffCurrency" minOccurs="0"/>
       <xs:element type="xs:float" name="PayoffAmount"/>
