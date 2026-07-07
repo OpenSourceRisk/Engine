@@ -29,7 +29,6 @@
       <Parameter name="configuration">default</Parameter>
       <Parameter name="grid">240,1M</Parameter>
       <Parameter name="outputFileName">curves.csv</Parameter>
-      <Parameter name="configuration">libor</Parameter>
     </Analytic>
   </Analytics>
 </ORE>
