@@ -179,6 +179,27 @@ private:
     // `calculate` delegates to this method when the underlying is a basket index and price per unit is specified.
     void calculateForIndex() const;
 
+    QuantLib::Real assetLegValue(std::vector<QuantExt::CashFlowResults>& cfResults,
+        std::vector<QuantLib::Real>& underlyingStartValue, std::vector<QuantLib::Real>& fxConversionFactor,
+        QuantLib::Date& startDate) const;
+
+    QuantLib::Real fundingLegValue(std::vector<QuantExt::CashFlowResults>& cfResults) const;
+
+    QuantLib::Real fundingLegPeriodResetNotionalFactor(QuantLib::Size currentIdx, const std::string& resultSuffix,
+        QuantLib::Size nthCpn) const;
+    QuantLib::Real fundingLegDailyResetNotionalFactor(const QuantLib::ext::shared_ptr<QuantLib::Coupon>& cpn,
+        QuantLib::Real localFundingLegNpv, const std::string& resultSuffix, QuantLib::Size nthCpn) const;
+
+    void finalizeResults(const std::vector<QuantExt::CashFlowResults>& cfResults,
+        const std::vector<QuantLib::Real>& underlyingStartValue,
+        const std::vector<QuantLib::Real>& fxConversionFactor, const QuantLib::Date& startDate,
+        QuantLib::Real fxAssetToPnlCcy) const;
+
+    QuantLib::Real additionalCashflowLegValue(std::vector<QuantExt::CashFlowResults>& cfResults,
+        QuantLib::Size legNumber) const;
+
+    void propagateUnderlyingAdditionalResults() const;
+
     // Compute asset leg value when the underlying is a basket index and price per unit is specified.
     QuantLib::Real assetLegValueForIndex(std::vector<QuantExt::CashFlowResults>& cfResults,
         QuantLib::ext::optional<std::pair<QuantLib::Real, QuantLib::Real>>& outS0Fx0) const;
