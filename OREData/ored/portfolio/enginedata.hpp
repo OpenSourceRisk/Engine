@@ -84,11 +84,11 @@ public:
     std::string& model(const std::string& productName) { return model_[productName]; }
     void setModel(const std::string& productName, const std::string& model) { model_[productName] = model; }
     std::map<std::string, std::string>& modelParameters(const std::string& productName) { return modelParams_[productName]; }
-    void setModelParameters(const std::string& productName, const std::map<std::string, std::string>& params) { modelParams_[productName] = params; }
+    void setModelParameters(const std::string& productName, const std::map<std::string, std::string>& params);
     std::string& engine(const std::string& productName) { return engine_[productName]; }
     void setEngine(const std::string& productName, const std::string& engine) { engine_[productName] = engine; }
     std::map<std::string, std::string>& engineParameters(const std::string& productName) { return engineParams_[productName]; }
-    void setEngineParameters(const std::string& productName, const std::map<std::string, std::string>& params) { engineParams_[productName] = params; }
+    void setEngineParameters(const std::string& productName, const std::map<std::string, std::string>& params);
     std::map<std::string, std::string>& globalParameters() { return globalParams_; }
     void setGlobalParameter(const std::string& name, const std::string& param) { globalParams_[name] = param; }
     //@}
