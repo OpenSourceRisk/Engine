@@ -349,63 +349,42 @@ Real TRSWrapperAccrualEngine::getFxConversionRate(const Date& date, const Curren
     if (source == target)
         return 1.0;
 
-    Real result1 = 1.0;
-    if (source != arguments_.fundingCurrency_) {
-        bool found = false;
-        for (Size i = 0; i < arguments_.fxIndexAsset_.size(); ++i) {
-            if (arguments_.fxIndexAsset_[i] == nullptr)
-                continue;
-            if (source == arguments_.fxIndexAsset_[i]->sourceCurrency() ||
-                source == arguments_.fxIndexAsset_[i]->targetCurrency()) {
-                result1 = getFxIndexFixing(arguments_.fxIndexAsset_[i], source, date, enforceProjection);
-                found = true;
-            }
+    return fxLegFactor(source, date, enforceProjection) / fxLegFactor(target, date, enforceProjection);
+}
+
+Real TRSWrapperAccrualEngine::fxLegFactor(const Currency& ccy, const Date& date, const bool enforceProjection) const {
+
+    if (ccy == arguments_.fundingCurrency_)
+        return 1.0;
+
+    Real result = 1.0;
+    bool found = false;
+    // if several asset fx indices match, the last one wins (as in the original implementation)
+    for (Size i = 0; i < arguments_.fxIndexAsset_.size(); ++i) {
+        if (arguments_.fxIndexAsset_[i] == nullptr)
+            continue;
+        if (ccy == arguments_.fxIndexAsset_[i]->sourceCurrency() ||
+            ccy == arguments_.fxIndexAsset_[i]->targetCurrency()) {
+            result = getFxIndexFixing(arguments_.fxIndexAsset_[i], ccy, date, enforceProjection);
+            found = true;
         }
-        if (!found) {
-            if (arguments_.fxIndexReturn_ != nullptr && (source == arguments_.fxIndexReturn_->sourceCurrency() ||
-                                                         source == arguments_.fxIndexReturn_->targetCurrency())) {
-                result1 = getFxIndexFixing(arguments_.fxIndexReturn_, source, date, enforceProjection);
-            } else if (arguments_.fxIndexAdditionalCashflows_ != nullptr &&
-                       (source == arguments_.fxIndexAdditionalCashflows_->sourceCurrency() ||
-                        source == arguments_.fxIndexAdditionalCashflows_->targetCurrency())) {
-                result1 = getFxIndexFixing(arguments_.fxIndexAdditionalCashflows_, source, date, enforceProjection);
-            } else {
-                QL_FAIL("TRSWrapperAccrualEngine: could not convert " << source.code() << " to funding currency "
-                                                                      << arguments_.fundingCurrency_
-                                                                      << ", are all required FXTerms set up?");
-            }
+    }
+    if (!found) {
+        if (arguments_.fxIndexReturn_ != nullptr && (ccy == arguments_.fxIndexReturn_->sourceCurrency() ||
+                                                     ccy == arguments_.fxIndexReturn_->targetCurrency())) {
+            result = getFxIndexFixing(arguments_.fxIndexReturn_, ccy, date, enforceProjection);
+        } else if (arguments_.fxIndexAdditionalCashflows_ != nullptr &&
+                   (ccy == arguments_.fxIndexAdditionalCashflows_->sourceCurrency() ||
+                    ccy == arguments_.fxIndexAdditionalCashflows_->targetCurrency())) {
+            result = getFxIndexFixing(arguments_.fxIndexAdditionalCashflows_, ccy, date, enforceProjection);
+        } else {
+            QL_FAIL("TRSWrapperAccrualEngine: could not convert " << ccy.code() << " to funding currency "
+                                                                  << arguments_.fundingCurrency_
+                                                                  << ", are all required FXTerms set up?");
         }
     }
 
-    Real result2 = 1.0;
-    if (target != arguments_.fundingCurrency_) {
-        bool found = false;
-        for (Size i = 0; i < arguments_.fxIndexAsset_.size(); ++i) {
-            if (arguments_.fxIndexAsset_[i] == nullptr)
-                continue;
-            if (target == arguments_.fxIndexAsset_[i]->sourceCurrency() ||
-                target == arguments_.fxIndexAsset_[i]->targetCurrency()) {
-                result2 = getFxIndexFixing(arguments_.fxIndexAsset_[i], target, date, enforceProjection);
-                found = true;
-            }
-        }
-        if (!found) {
-            if (arguments_.fxIndexReturn_ != nullptr && (target == arguments_.fxIndexReturn_->sourceCurrency() ||
-                                                         target == arguments_.fxIndexReturn_->targetCurrency())) {
-                result2 = getFxIndexFixing(arguments_.fxIndexReturn_, target, date, enforceProjection);
-            } else if (arguments_.fxIndexAdditionalCashflows_ != nullptr &&
-                       (target == arguments_.fxIndexAdditionalCashflows_->sourceCurrency() ||
-                        target == arguments_.fxIndexAdditionalCashflows_->targetCurrency())) {
-                result2 = getFxIndexFixing(arguments_.fxIndexAdditionalCashflows_, target, date, enforceProjection);
-            } else {
-                QL_FAIL("TRSWrapperAccrualEngine: could not convert " << source.code() << " to funding currency "
-                                                                      << arguments_.fundingCurrency_
-                                                                      << ", are all required FXTerms set up?");
-            }
-        }
-    }
-
-    return result1 / result2;
+    return result;
 }
 
 Real TRSWrapperAccrualEngine::getUnderlyingFixing(const Size i, const Date& date, const bool enforceProjection) const {
@@ -460,6 +439,13 @@ Real TRSWrapperAccrualEngine::getUnderlyingNPV(const Size i, std::map<std::strin
         }
         return arguments_.underlying_[i]->instrument()->NPV() * arguments_.indexQuantity_;
     }
+}
+
+std::string TRSWrapperAccrualEngine::underlyingSuffix(Size i, Size nth) const {
+    std::string suffix = arguments_.underlying_.size() > 1 ? "_" + std::to_string(i + 1) : "";
+    if (nth > 0)
+        suffix += "_nth(" + std::to_string(nth) + ")";
+    return suffix;
 }
 
 void TRSWrapperAccrualEngine::calculate() const {
@@ -537,9 +523,7 @@ Real TRSWrapperAccrualEngine::assetLegValue(std::vector<CashFlowResults>& cfResu
         // vector holding cashflow results, we store these as an additional result
         for (Size i = 0; i < arguments_.underlying_.size(); ++i) {
 
-            std::string resultSuffix = arguments_.underlying_.size() > 1 ? "_" + std::to_string(i + 1) : "";
-            if (nthCurrentPeriod > 0)
-                resultSuffix += "_nth(" + std::to_string(nthCurrentPeriod) + ")";
+            std::string resultSuffix = underlyingSuffix(i, nthCurrentPeriod);
 
             results_.additionalResults["underlyingCurrency" + resultSuffix] = arguments_.assetCurrency_[i].code();
 
@@ -660,7 +644,7 @@ Real TRSWrapperAccrualEngine::assetLegValue(std::vector<CashFlowResults>& cfResu
     } // loop over nth current period
 
     results_.additionalResults["assetLegNpv"] = assetMultiplier * assetLegNpv;
-    results_.additionalResults["assetLegNpvCurency"] = arguments_.returnCurrency_.code();
+    results_.additionalResults["assetLegNpvCurrency"] = arguments_.returnCurrency_.code();
     DLOG("asset leg npv = " << assetMultiplier * assetLegNpv << " " << arguments_.returnCurrency_.code());
 
     return assetMultiplier * assetLegNpv;
@@ -768,10 +752,7 @@ Real TRSWrapperAccrualEngine::fundingLegPeriodResetNotionalFactor(Size currentId
     Real fundingLegNotionalFactor = 0.0;
     for (Size j = 0; j < arguments_.underlying_.size(); ++j) {
 
-        std::string resultSuffix2 = arguments_.underlying_.size() > 1 ? "_" + std::to_string(j + 1) : "";
-
-        if (nthCpn > 0)
-            resultSuffix2 += "_nth(" + std::to_string(nthCpn) + ")";
+        std::string resultSuffix2 = underlyingSuffix(j, nthCpn);
 
         Real localNotionalFactor = 0.0, localFxFactor = 1.0; // local per underlying
         if (currentIdx == 0 && arguments_.initialPrice_ != Null<Real>()) {
@@ -810,10 +791,7 @@ Real TRSWrapperAccrualEngine::fundingLegDailyResetNotionalFactor(const ext::shar
     Real fundingLegNotionalFactor = 0.0;
     for (Size j = 0; j < arguments_.underlying_.size(); ++j) {
 
-        std::string resultSuffix2 = arguments_.underlying_.size() > 1 ? "_" + std::to_string(j + 1) : "";
-
-        if (nthCpn > 0)
-            resultSuffix2 += "_nth(" + std::to_string(nthCpn) + ")";
+        std::string resultSuffix2 = underlyingSuffix(j, nthCpn);
 
         if (QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(cpn) || QuantLib::ext::dynamic_pointer_cast<IborCoupon>(cpn)) {
 
@@ -905,8 +883,7 @@ Real TRSWrapperAccrualEngine::fundingLegDailyResetNotionalFactor(const ext::shar
                 Real priceFx = localNotional * localFxFactor;
                 Real deltaPriceFx = priceFx - prevPriceFx;
                 double tau = dc.yearFraction(d, endDate);
-                double compFactor = (comp == QuantLib::Compounded) ? std::pow(1.0 + rate, tau)
-                                                                    : (1.0 + rate * tau);
+                double compFactor = (comp == QuantLib::Compounded) ? std::pow(1.0 + rate, tau) : (1.0 + rate * tau);
                 accruedFunding += deltaPriceFx * compFactor;
                 results_.additionalResults["fundingLegNotional" + resultSuffix + resultSuffix2 + "_" +
                                            ore::data::to_string(d)] = localNotional;
@@ -954,7 +931,7 @@ void TRSWrapperAccrualEngine::finalizeResults(const std::vector<CashFlowResults>
 
     for (Size j = 0; j < arguments_.underlying_.size(); ++j) {
         // the start fixing will refer to the last of the nth current return periods
-        std::string resultSuffix = arguments_.underlying_.size() == 1 ? "" : "_" + std::to_string(j + 1);
+        std::string resultSuffix = underlyingSuffix(j, 0);
         Real startFixing = Null<Real>(), todaysFixing = Null<Real>();
         try {
             startFixing = getUnderlyingFixing(j, startDate, false);
@@ -1244,7 +1221,7 @@ Real TRSWrapperAccrualEngine::assetLegValueForIndex(vector<CashFlowResults>& cfR
 
     legValue *= multiplier;
     addRes["assetLegNpv"] = legValue;
-    addRes["assetLegNpvCurency"] = a.returnCurrency_.code();
+    addRes["assetLegNpvCurrency"] = a.returnCurrency_.code();
     DLOG("Asset leg npv (" << a.returnCurrency_.code() << ") = " << legValue);
     legNumber_++;
 
