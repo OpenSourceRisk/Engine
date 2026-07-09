@@ -398,8 +398,8 @@ InflationCurve::CurveBuildResults
                                           << " not found in market data for date " << asof);
             QL_REQUIRE(md->asofDate() == asof,
                        "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
-            QL_REQUIRE(md->instrumentType() == MarketDatum::InstrumentType::ZC_INFLATIONSWAP && deriveFromZC ||
-                           md->instrumentType() == MarketDatum::InstrumentType::YY_INFLATIONSWAP && !deriveFromZC,
+            QL_REQUIRE((md->instrumentType() == MarketDatum::InstrumentType::ZC_INFLATIONSWAP && deriveFromZC) ||
+                           (md->instrumentType() == MarketDatum::InstrumentType::YY_INFLATIONSWAP && !deriveFromZC),
                        "MarketDatum " << md << " is not a valid inflation swap quote");
             Handle<Quote> quote;
             Period term;

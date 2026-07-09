@@ -1,0 +1,391 @@
+<Conventions>
+	<CommodityFuture>
+		<Id>ICE:ODP</Id>
+		<ContractFrequency>Daily</ContractFrequency>
+		<Calendar>NullCalendar</Calendar>
+		<ExpiryMonthLag>0</ExpiryMonthLag>
+		<AdjustBeforeOffset>true</AdjustBeforeOffset>
+		<IsAveraging>false</IsAveraging>
+		<OptionExpiryMonthLag>0</OptionExpiryMonthLag>
+		<SavingsTime>EU</SavingsTime>
+	</CommodityFuture>
+	<CommodityFuture>
+		<Id>PJM_WH_RT_PK_15MIN</Id>
+		<ContractFrequency>Daily</ContractFrequency>
+		<Calendar>NullCalendar</Calendar>
+		<IndexName>ICE:PDQ</IndexName>
+		<SavingsTime>EU</SavingsTime>
+	</CommodityFuture>
+	<CommodityFuture>
+		<Id>PJM_WH_RT_PK_HOURLY</Id>
+		<ContractFrequency>Daily</ContractFrequency>
+		<Calendar>NullCalendar</Calendar>
+		<IndexName>ICE:PDQ</IndexName>
+		<SavingsTime>EU</SavingsTime>
+	</CommodityFuture>
+	<CommodityFuture>
+		<Id>ICE:OPJ</Id>
+		<AnchorDay>
+			<DayOfMonth>1</DayOfMonth>
+		</AnchorDay>
+		<ContractFrequency>Monthly</ContractFrequency>
+		<Calendar>ICE_FuturesUS</Calendar>
+		<ExpiryCalendar>ICE_FuturesUS_1</ExpiryCalendar>
+		<ExpiryMonthLag>0</ExpiryMonthLag>
+		<OffsetDays>-1</OffsetDays>
+		<BusinessDayConvention>Following</BusinessDayConvention>
+		<AdjustBeforeOffset>true</AdjustBeforeOffset>
+		<IsAveraging>true</IsAveraging>
+		<OptionExpiryMonthLag>0</OptionExpiryMonthLag>
+		<AveragingData>
+			<CommodityName>PJM_WH_RT_OPK</CommodityName>
+			<Period>PreviousMonth</Period>
+			<PricingCalendar>NullCalendar</PricingCalendar>
+			<UseBusinessDays>true</UseBusinessDays>
+			<Conventions>PJM_WH_RT_OPK</Conventions>
+		</AveragingData>
+		<SavingsTime>EU</SavingsTime>
+	</CommodityFuture>
+	<CommodityFuture>
+		<Id>ICE:PDA</Id>
+		<ContractFrequency>Daily</ContractFrequency>
+		<Calendar>NullCalendar</Calendar>
+		<ExpiryMonthLag>0</ExpiryMonthLag>
+		<AdjustBeforeOffset>true</AdjustBeforeOffset>
+		<IsAveraging>false</IsAveraging>
+		<OptionExpiryMonthLag>0</OptionExpiryMonthLag>
+		<SavingsTime>EU</SavingsTime>
+	</CommodityFuture>
+	<CommodityFuture>
+		<Id>ICE:PDO</Id>
+		<ContractFrequency>Daily</ContractFrequency>
+		<Calendar>NullCalendar</Calendar>
+		<ExpiryMonthLag>0</ExpiryMonthLag>
+		<AdjustBeforeOffset>true</AdjustBeforeOffset>
+		<IsAveraging>false</IsAveraging>
+		<OptionExpiryMonthLag>0</OptionExpiryMonthLag>
+		<SavingsTime>EU</SavingsTime>
+	</CommodityFuture>
+	<CommodityFuture>
+		<Id>ICE:PDQ</Id>
+		<ContractFrequency>Daily</ContractFrequency>
+		<Calendar>NullCalendar</Calendar>
+		<ExpiryMonthLag>0</ExpiryMonthLag>
+		<AdjustBeforeOffset>true</AdjustBeforeOffset>
+		<IsAveraging>false</IsAveraging>
+		<OptionExpiryMonthLag>0</OptionExpiryMonthLag>
+		<SavingsTime>EU</SavingsTime>
+	</CommodityFuture>
+	<CommodityFuture>
+		<Id>ICE:PJC</Id>
+		<AnchorDay>
+			<DayOfMonth>1</DayOfMonth>
+		</AnchorDay>
+		<ContractFrequency>Monthly</ContractFrequency>
+		<Calendar>ICE_FuturesUS</Calendar>
+		<ExpiryCalendar>ICE_FuturesUS_1</ExpiryCalendar>
+		<ExpiryMonthLag>0</ExpiryMonthLag>
+		<OffsetDays>-1</OffsetDays>
+		<BusinessDayConvention>Following</BusinessDayConvention>
+		<AdjustBeforeOffset>true</AdjustBeforeOffset>
+		<IsAveraging>true</IsAveraging>
+		<OptionExpiryMonthLag>0</OptionExpiryMonthLag>
+		<AveragingData>
+			<CommodityName>PJM_WH_DA_PK</CommodityName>
+			<Period>PreviousMonth</Period>
+			<PricingCalendar>US-NERC</PricingCalendar>
+			<UseBusinessDays>true</UseBusinessDays>
+			<Conventions>PJM_WH_DA_PK</Conventions>
+		</AveragingData>
+		<SavingsTime>EU</SavingsTime>
+	</CommodityFuture>
+	<CommodityFuture>
+		<Id>ICE:PJD</Id>
+		<AnchorDay>
+			<DayOfMonth>1</DayOfMonth>
+		</AnchorDay>
+		<ContractFrequency>Monthly</ContractFrequency>
+		<Calendar>ICE_FuturesUS</Calendar>
+		<ExpiryCalendar>ICE_FuturesUS_1</ExpiryCalendar>
+		<ExpiryMonthLag>0</ExpiryMonthLag>
+		<OffsetDays>-1</OffsetDays>
+		<BusinessDayConvention>Following</BusinessDayConvention>
+		<AdjustBeforeOffset>true</AdjustBeforeOffset>
+		<IsAveraging>true</IsAveraging>
+		<OptionExpiryMonthLag>0</OptionExpiryMonthLag>
+		<AveragingData>
+			<CommodityName>PJM_WH_DA_OPK</CommodityName>
+			<Period>PreviousMonth</Period>
+			<PricingCalendar>NullCalendar</PricingCalendar>
+			<UseBusinessDays>true</UseBusinessDays>
+			<Conventions>PJM_WH_DA_OPK</Conventions>
+		</AveragingData>
+		<SavingsTime>EU</SavingsTime>
+	</CommodityFuture>
+	<CommodityFuture>
+		<Id>ICE:PMI</Id>
+		<AnchorDay>
+			<DayOfMonth>1</DayOfMonth>
+		</AnchorDay>
+		<ContractFrequency>Monthly</ContractFrequency>
+		<Calendar>ICE_FuturesUS</Calendar>
+		<ExpiryCalendar>ICE_FuturesUS_1</ExpiryCalendar>
+		<ExpiryMonthLag>0</ExpiryMonthLag>
+		<OffsetDays>-1</OffsetDays>
+		<BusinessDayConvention>Following</BusinessDayConvention>
+		<AdjustBeforeOffset>true</AdjustBeforeOffset>
+		<IsAveraging>true</IsAveraging>
+		<OptionExpiryMonthLag>0</OptionExpiryMonthLag>
+		<AveragingData>
+			<CommodityName>PJM_WH_RT_PK</CommodityName>
+			<Period>PreviousMonth</Period>
+			<PricingCalendar>US-NERC</PricingCalendar>
+			<UseBusinessDays>true</UseBusinessDays>
+			<Conventions>PJM_WH_RT_PK</Conventions>
+		</AveragingData>
+		<SavingsTime>EU</SavingsTime>
+	</CommodityFuture>
+	<CommodityFuture>
+		<Id>PJM_WH_DA_OPK</Id>
+		<ContractFrequency>Daily</ContractFrequency>
+		<Calendar>NullCalendar</Calendar>
+		<ExpiryMonthLag>0</ExpiryMonthLag>
+		<AdjustBeforeOffset>true</AdjustBeforeOffset>
+		<IsAveraging>false</IsAveraging>
+		<OptionExpiryMonthLag>0</OptionExpiryMonthLag>
+		<OffPeakPowerIndexData>
+			<OffPeakIndex>ICE:PDO</OffPeakIndex>
+			<PeakIndex>ICE:PDA</PeakIndex>
+			<OffPeakHours>8</OffPeakHours>
+			<PeakCalendar>US-NERC</PeakCalendar>
+		</OffPeakPowerIndexData>
+		<SavingsTime>EU</SavingsTime>
+	</CommodityFuture>
+	<CommodityFuture>
+		<Id>PJM_WH_DA_PK</Id>
+		<ContractFrequency>Daily</ContractFrequency>
+		<Calendar>NullCalendar</Calendar>
+		<ExpiryMonthLag>0</ExpiryMonthLag>
+		<AdjustBeforeOffset>true</AdjustBeforeOffset>
+		<IsAveraging>false</IsAveraging>
+		<OptionExpiryMonthLag>0</OptionExpiryMonthLag>
+		<HoursPerDay>16</HoursPerDay>
+		<IndexName>ICE:PDA</IndexName>
+		<SavingsTime>EU</SavingsTime>
+	</CommodityFuture>
+	<CommodityFuture>
+		<Id>PJM_WH_RT_OPK</Id>
+		<ContractFrequency>Daily</ContractFrequency>
+		<Calendar>NullCalendar</Calendar>
+		<ExpiryMonthLag>0</ExpiryMonthLag>
+		<AdjustBeforeOffset>true</AdjustBeforeOffset>
+		<IsAveraging>false</IsAveraging>
+		<OptionExpiryMonthLag>0</OptionExpiryMonthLag>
+		<OffPeakPowerIndexData>
+			<OffPeakIndex>ICE:ODP</OffPeakIndex>
+			<PeakIndex>ICE:PDQ</PeakIndex>
+			<OffPeakHours>8</OffPeakHours>
+			<PeakCalendar>US-NERC</PeakCalendar>
+		</OffPeakPowerIndexData>
+		<SavingsTime>EU</SavingsTime>
+	</CommodityFuture>
+	<CommodityFuture>
+		<Id>PJM_WH_RT_PK</Id>
+		<ContractFrequency>Daily</ContractFrequency>
+		<Calendar>NullCalendar</Calendar>
+		<ExpiryMonthLag>0</ExpiryMonthLag>
+		<AdjustBeforeOffset>true</AdjustBeforeOffset>
+		<IsAveraging>false</IsAveraging>
+		<OptionExpiryMonthLag>0</OptionExpiryMonthLag>
+		<HoursPerDay>16</HoursPerDay>
+		<IndexName>ICE:PDQ</IndexName>
+		<SavingsTime>EU</SavingsTime>
+	</CommodityFuture>
+	<AverageOIS>
+		<Id>USD-AVERAGE-OIS</Id>
+		<SpotLag>2</SpotLag>
+		<FixedTenor>6M</FixedTenor>
+		<FixedDayCounter>30/360</FixedDayCounter>
+		<FixedCalendar>US</FixedCalendar>
+		<FixedConvention>MF</FixedConvention>
+		<FixedPaymentConvention>MF</FixedPaymentConvention>
+		<Index>USD-FedFunds</Index>
+		<OnTenor>3M</OnTenor>
+		<RateCutoff>2</RateCutoff>
+	</AverageOIS>
+	<OIS>
+		<Id>USD-OIS</Id>
+		<SpotLag>2</SpotLag>
+		<Index>USD-FedFunds</Index>
+		<FixedDayCounter>A360</FixedDayCounter>
+		<PaymentLag>2</PaymentLag>
+		<EOM>false</EOM>
+		<FixedFrequency>Annual</FixedFrequency>
+		<FixedConvention>Following</FixedConvention>
+		<FixedPaymentConvention>Following</FixedPaymentConvention>
+		<Rule>Backward</Rule>
+	</OIS>
+	<Deposit>
+		<Id>USD-ON-DEPOSIT</Id>
+		<IndexBased>true</IndexBased>
+		<Index>USD-FedFunds</Index>
+	</Deposit>
+	<IntradayPowerLoad>
+		<Id>LOAD_PROFILE_1_EXPLICT</Id>
+		<PowerLoadProfileData>
+			<ExplicitDates>
+				<LoadProfileDatum>
+					<Date>2021-01-01</Date>
+					<LoadFactors>
+						<LoadFactor from="0" to="24" unit="HOUR">0</LoadFactor>
+					</LoadFactors>
+				</LoadProfileDatum>
+
+				<LoadProfileDatum>
+					<Date>2021-01-04</Date>
+					<LoadFactors>
+						<LoadFactor from="8" to="9" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="9" to="10" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="10" to="11" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="11" to="12" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="12" to="13" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="13" to="14" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="14" to="15" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="15" to="16" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="16" to="17" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="17" to="18" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="18" to="19" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="19" to="20" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="20" to="21" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="21" to="22" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="22" to="23" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="23" to="24" unit="HOUR">50</LoadFactor>
+					</LoadFactors>
+				</LoadProfileDatum>
+
+				<LoadProfileDatum>
+					<Date>2021-01-09</Date>
+					<LoadFactors>
+						<LoadFactor from="0" to="24" unit="HOUR">0</LoadFactor>
+					</LoadFactors>
+				</LoadProfileDatum>
+
+				<LoadProfileDatum>
+					<Date>2021-01-11</Date>
+					<LoadFactors>
+						<LoadFactor from="8" to="9" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="9" to="10" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="10" to="11" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="11" to="12" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="12" to="13" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="13" to="14" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="14" to="15" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="15" to="16" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="16" to="17" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="17" to="18" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="18" to="19" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="19" to="20" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="20" to="21" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="21" to="22" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="22" to="23" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="23" to="24" unit="HOUR">50</LoadFactor>
+					</LoadFactors>
+				</LoadProfileDatum>
+
+				<LoadProfileDatum>
+					<Date>2021-01-16</Date>
+					<LoadFactors>
+						<LoadFactor from="0" to="24" unit="HOUR">0</LoadFactor>
+					</LoadFactors>
+				</LoadProfileDatum>
+
+				<LoadProfileDatum>
+					<Date>2021-01-18</Date>
+					<LoadFactors>
+						<LoadFactor from="8" to="9" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="9" to="10" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="10" to="11" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="11" to="12" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="12" to="13" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="13" to="14" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="14" to="15" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="15" to="16" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="16" to="17" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="17" to="18" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="18" to="19" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="19" to="20" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="20" to="21" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="21" to="22" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="22" to="23" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="23" to="24" unit="HOUR">50</LoadFactor>
+					</LoadFactors>
+				</LoadProfileDatum>
+
+				<LoadProfileDatum>
+					<Date>2021-01-23</Date>
+					<LoadFactors>
+						<LoadFactor from="0" to="24" unit="HOUR">0</LoadFactor>
+					</LoadFactors>
+				</LoadProfileDatum>
+
+				<LoadProfileDatum>
+					<Date>2021-01-25</Date>
+					<LoadFactors>
+						<LoadFactor from="8" to="9" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="9" to="10" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="10" to="11" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="11" to="12" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="12" to="13" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="13" to="14" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="14" to="15" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="15" to="16" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="16" to="17" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="17" to="18" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="18" to="19" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="19" to="20" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="20" to="21" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="21" to="22" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="22" to="23" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="23" to="24" unit="HOUR">50</LoadFactor>
+					</LoadFactors>
+				</LoadProfileDatum>
+
+				<LoadProfileDatum>
+					<Date>2021-01-30</Date>
+					<LoadFactors>
+						<LoadFactor from="0" to="24" unit="HOUR">0</LoadFactor>
+					</LoadFactors>
+				</LoadProfileDatum>
+			</ExplicitDates>
+		</PowerLoadProfileData>
+	</IntradayPowerLoad>
+	<IntradayPowerLoad>
+		<Id>LOAD_PROFILE_1_RULEBASED</Id>
+		<PowerLoadProfileData>
+			<BusinessDayRules>
+				<LoadProfileBusinessDayRule>
+					<Date>2020-01-01</Date>
+					<Calendar>US-NERC</Calendar>
+					<BusinessDayLoadFactors>
+						<LoadFactor from="8" to="9" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="9" to="10" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="10" to="11" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="11" to="12" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="12" to="13" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="13" to="14" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="14" to="15" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="15" to="16" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="16" to="17" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="17" to="18" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="18" to="19" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="19" to="20" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="20" to="21" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="21" to="22" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="22" to="23" unit="HOUR">50</LoadFactor>
+						<LoadFactor from="23" to="24" unit="HOUR">50</LoadFactor>
+					</BusinessDayLoadFactors>
+				</LoadProfileBusinessDayRule>
+			</BusinessDayRules>
+		</PowerLoadProfileData>
+	</IntradayPowerLoad>
+</Conventions>

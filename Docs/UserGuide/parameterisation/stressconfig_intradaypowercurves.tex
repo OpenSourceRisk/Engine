@@ -1,0 +1,39 @@
+\subsubsection{Intraday Power Curve Stress Configuration}
+
+Intraday power curve stresses are configured in an \lstinline!IntradayPowerCurves! block under each
+\lstinline!StressTest! node.
+
+The structure is:
+\begin{itemize}
+\item \lstinline!IntradayPowerCurves!: Container for intraday power curve stress definitions.
+\item \lstinline!IntradayPowerCurve! (attribute \lstinline!name!): Stress definition for one intraday power curve.
+\item \lstinline!ShiftType!: Shift type, e.g. \lstinline!Absolute!, \lstinline!Relative!, or \lstinline!EqualTo!.
+\item \lstinline!Shifts!: Vector of shift values.
+\item \lstinline!ShiftTenors!: Vector of tenors corresponding to \lstinline!Shifts!.
+\end{itemize}
+
+The number of entries in \lstinline!Shifts! must match the number of entries in \lstinline!ShiftTenors!.
+
+An example is shown in Listing \ref{lst:stress_config_intraday_power_curves}.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<IntradayPowerCurves>
+  <IntradayPowerCurve name="PJM_WH_RT_PK">
+    <ShiftType>Absolute</ShiftType>
+    <Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
+    <ShiftTenors>1W,2W,1M,2M,3M,6M,1Y</ShiftTenors>
+  </IntradayPowerCurve>
+</IntradayPowerCurves>
+\end{minted}
+\caption{Intraday power curve stress configuration}
+\label{lst:stress_config_intraday_power_curves}
+\end{listing}
+
+As in sensitivity and simulation, stress is applied to the day-average intraday power price curve. Intraday shape
+factors are not stressed separately.
+
+Intraday power stress can be represented through the underlying commodity
+curve via CurveAlgebra in simulation configuration, see Section \ref{sec:sim_curve_algebra} and Listing
+\ref{lst:curve_algebra_intraday_power_mapping}. In that setup, dedicated intraday power curve stress shifts can be
+omitted.

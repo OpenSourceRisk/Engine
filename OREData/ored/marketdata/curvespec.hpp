@@ -59,7 +59,8 @@ public:
         CommodityVolatility = 15,
         Correlation = 16,
         SwapIndex = 17,
-        BondFutureVolatility = 18
+        BondFutureVolatility = 18,
+        IntradayPowerCurve = 19
     };
 
     //! Default constructor
@@ -524,6 +525,33 @@ public:
     CurveType baseType() const override { return CurveType::BondFutureVolatility; }
     std::string subName() const override { return curveConfigID(); }
     //@}
+};
+
+//! Intraday power curve description
+/*! \ingroup curves
+ */
+class IntradayPowerCurveSpec : public CurveSpec {
+
+public:
+    //! \name Constructors
+    //@{
+    //! Default constructor
+    IntradayPowerCurveSpec() {}
+
+    //! Detailed constructor
+    IntradayPowerCurveSpec(const std::string& currency, const std::string& curveConfigID)
+        : CurveSpec(curveConfigID), currency_(currency) {}
+    //@}
+
+    //! \name Inspectors
+    //@{
+    CurveType baseType() const override { return CurveType::IntradayPowerCurve; }
+    const std::string& currency() const { return currency_; }
+    std::string subName() const override { return currency_ + "/" + curveConfigID(); }
+    //@}
+
+private:
+    std::string currency_;
 };
 
 } // namespace data

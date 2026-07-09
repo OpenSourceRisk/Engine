@@ -35,18 +35,7 @@ namespace ore {
 namespace data {
 
 namespace {
-class ASTIndexExtractor : public AcyclicVisitor,
-                          public Visitor<ASTNode>,
-                          public Visitor<FunctionPayNode>,
-                          public Visitor<FunctionLogPayNode>,
-                          public Visitor<FunctionNpvNode>,
-                          public Visitor<FunctionNpvMemNode>,
-                          public Visitor<FunctionDiscountNode>,
-                          public Visitor<FunctionFwdCompNode>,
-                          public Visitor<FunctionFwdAvgNode>,
-                          public Visitor<FunctionAboveProbNode>,
-                          public Visitor<FunctionBelowProbNode>,
-                          public Visitor<VarEvaluationNode> {
+class ASTIndexExtractor : public StAstVisitor {
 public:
     ASTIndexExtractor(std::map<std::string, std::set<QuantLib::Date>>& indexEvalDates,
                       std::map<std::string, std::set<QuantLib::Date>>& indexFwdDates,

@@ -25,7 +25,7 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-CommodityForward::CommodityForward(const QuantLib::ext::shared_ptr<CommodityIndex>& index, const QuantLib::Currency& currency,
+CommodityForward::CommodityForward(const QuantLib::ext::shared_ptr<QuantLib::Index>& index, const QuantLib::Currency& currency,
                                    QuantLib::Position::Type position, QuantLib::Real quantity,
                                    const QuantLib::Date& maturityDate, QuantLib::Real strike, bool physicallySettled,
                                    const Date& paymentDate, const QuantLib::Currency& payCcy, const Date& fixingDate,
