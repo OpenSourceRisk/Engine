@@ -189,6 +189,7 @@ struct CrifRecord {
         SEC,
         SEC_unseg,
         USPR,
+        NFRA,
         NONREG,
         BACEN,
         SANT,
