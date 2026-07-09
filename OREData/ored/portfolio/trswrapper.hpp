@@ -179,6 +179,31 @@ private:
     // `calculate` delegates to this method when the underlying is a basket index and price per unit is specified.
     void calculateForIndex() const;
 
+    // Build the additional-results / cash-flow suffix used to distinguish underlyings and "nth current" periods,
+    // e.g. "_2", "_nth(1)" or "_2_nth(1)". An empty string is returned for a single underlying and nth == 0.
+    std::string underlyingSuffix(QuantLib::Size i, QuantLib::Size nth) const;
+
+    QuantLib::Real assetLegValue(std::vector<QuantExt::CashFlowResults>& cfResults,
+        std::vector<QuantLib::Real>& underlyingStartValue, std::vector<QuantLib::Real>& fxConversionFactor,
+        QuantLib::Date& startDate) const;
+
+    QuantLib::Real fundingLegValue(std::vector<QuantExt::CashFlowResults>& cfResults) const;
+
+    QuantLib::Real fundingLegPeriodResetNotionalFactor(QuantLib::Size currentIdx, const std::string& resultSuffix,
+        QuantLib::Size nthCpn) const;
+    QuantLib::Real fundingLegDailyResetNotionalFactor(const QuantLib::ext::shared_ptr<QuantLib::Coupon>& cpn,
+        QuantLib::Real localFundingLegNpv, const std::string& resultSuffix, QuantLib::Size nthCpn) const;
+
+    void finalizeResults(const std::vector<QuantExt::CashFlowResults>& cfResults,
+        const std::vector<QuantLib::Real>& underlyingStartValue,
+        const std::vector<QuantLib::Real>& fxConversionFactor, const QuantLib::Date& startDate,
+        QuantLib::Real fxAssetToPnlCcy) const;
+
+    QuantLib::Real additionalCashflowLegValue(std::vector<QuantExt::CashFlowResults>& cfResults,
+        QuantLib::Size legNumber) const;
+
+    void propagateUnderlyingAdditionalResults() const;
+
     // Compute asset leg value when the underlying is a basket index and price per unit is specified.
     QuantLib::Real assetLegValueForIndex(std::vector<QuantExt::CashFlowResults>& cfResults,
         QuantLib::ext::optional<std::pair<QuantLib::Real, QuantLib::Real>>& outS0Fx0) const;
@@ -212,6 +237,11 @@ private:
     // return conversion rate from source to target on date, today's fixing projection is enforced
     QuantLib::Real getFxConversionRate(const QuantLib::Date& date, const QuantLib::Currency& source,
                                        const QuantLib::Currency& target, const bool enforceProjection) const;
+
+    // return the conversion factor from ccy to the funding currency on date, looking xthe currency up in the asset,
+    // return and additional cashflow fx indices; returns 1.0 if ccy is the funding currency
+    QuantLib::Real fxLegFactor(const QuantLib::Currency& ccy, const QuantLib::Date& date,
+                               const bool enforceProjection) const;
 
     // return underlying #i fixing on date < today
     Real getUnderlyingFixing(const Size i, const QuantLib::Date& date, const bool enforceProjection) const;
