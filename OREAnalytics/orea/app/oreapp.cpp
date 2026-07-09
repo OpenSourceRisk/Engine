@@ -699,6 +699,13 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->getString("npv", "active", false);
     if (!tmp.empty() && parseBool(tmp))
         insertAnalytic("NPV");
+    
+     /*************
+     * CURVES
+     *************/
+    tmp = params_->getString("curves", "active", false);
+    if (!tmp.empty() && parseBool(tmp))
+        insertAnalytic("CURVES");
 
     /*************
      * CASHFLOW
