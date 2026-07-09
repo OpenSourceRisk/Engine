@@ -27,7 +27,6 @@
 
 using namespace QuantLib;
 using std::pow;
-using std::vector;
 
 namespace QuantExt {
 
