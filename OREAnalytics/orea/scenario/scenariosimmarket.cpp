@@ -3876,12 +3876,9 @@ void ScenarioSimMarket::createOptionletVol(RiskFactorKey::KeyType rfKeyType, con
     const auto& initMktOvs = *bc.initMarket->capFloorVol(name, bc.configuration);
 
     // Determine the base optionlet volatility structure to use for the simulation market.
-    ext::shared_ptr<ProxyOptionletVolatility> proxy;
-    if (stickyness == Stickyness::StickySABR || !useSpreadedTermStructures_)
-        proxy = ext::dynamic_pointer_cast<ProxyOptionletVolatility>(initMktOvs);
-
     RelinkableHandle<OptionletVolatilityStructure> baseOvs;
-    if (proxy) 
+    auto proxy = ext::dynamic_pointer_cast<ProxyOptionletVolatility>(initMktOvs);
+    if (proxy)
         baseOvs.linkTo(*proxy->baseVol());
     else
         baseOvs.linkTo(initMktOvs);
