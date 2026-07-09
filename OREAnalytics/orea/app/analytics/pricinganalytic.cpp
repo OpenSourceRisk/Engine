@@ -31,9 +31,9 @@ using namespace std::filesystem;
 namespace ore {
 namespace analytics {
 
-/*******************************************************************
- * PRICING Analytic: NPV, CASHFLOW, CASHFLOWNPV, SENSITIVITY, STRESS
- *******************************************************************/
+/****************************************************************************
+ * PRICING Analytic: NPV, CURVES, CASHFLOW, CASHFLOWNPV, SENSITIVITY, STRESS
+ ***************************************************************************/
 
  void PricingVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs){
     inputs->loadParameter<bool>(outputCurves_, "curves", "active", false,
@@ -76,7 +76,17 @@ void PricingAnalyticImpl::runAnalytic(
     Settings::instance().evaluationDate() = inputs_->asof();
     ObservationMode::instance().setMode(inputs_->observationModel());
 
-    QL_REQUIRE(inputs_->portfolio(), "PricingAnalytic::run: No portfolio loaded.");
+    // CURVES only needs the market (see writeCurves below); the other pricing sub-analytics
+    // Only enforce the portfolio requirement if a portfolio-dependent sub-analytic is requested.
+    static const std::set<std::string> portfolioIndependentTypes{"CURVES"};
+    bool requiresPortfolio = false;
+    for (const auto& rt : runTypes) {
+        if (analytic()->analyticTypes().count(rt) > 0 && portfolioIndependentTypes.count(rt) == 0) {
+            requiresPortfolio = true;
+            break;
+        }
+    }
+    QL_REQUIRE(!requiresPortfolio || inputs_->portfolio(), "PricingAnalytic::run: No portfolio loaded.");
 
     CONSOLEW("Pricing: Build Market");
     analytic()->buildMarket(loader);
@@ -150,6 +160,24 @@ void PricingAnalyticImpl::runAnalytic(
                 CONSOLE("OK");
             }
             auto pVars = QuantLib::ext::dynamic_pointer_cast<PricingVariables>(inputVariables_);
+            // If the standalone CURVES analytic is also requested, let it emit the (single) curves
+            // report to avoid a duplicate "curves" report and the resulting disambiguated file names.
+            bool curvesHandledSeparately =
+                analytic()->analyticTypes().count("CURVES") > 0 && runTypes.count("CURVES") > 0;
+            if (pVars && pVars->outputCurves_ && !curvesHandledSeparately) {
+                CONSOLEW("Pricing: Curves Report");
+                LOG("Write curves report");
+                QuantLib::ext::shared_ptr<InMemoryReport> curvesReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                DateGrid grid(pVars->curvesGrid_, parseCalendar(pVars->curvesCalendar_));
+                std::string config = pVars->curvesMarketConfig_;
+                ReportWriter(inputs_->reportNaString())
+                    .writeCurves(*curvesReport, config, grid, *analytic()->configurations().todaysMarketParams,
+                                 analytic()->market(), inputs_->continueOnError());
+                analytic()->addReport(type, "curves", curvesReport);
+                CONSOLE("OK");
+            }
+        } else if (type == "CURVES") {
+            auto pVars = QuantLib::ext::dynamic_pointer_cast<PricingVariables>(inputVariables_);
             if (pVars && pVars->outputCurves_) {
                 CONSOLEW("Pricing: Curves Report");
                 LOG("Write curves report");
@@ -162,7 +190,6 @@ void PricingAnalyticImpl::runAnalytic(
                 analytic()->addReport(type, "curves", curvesReport);
                 CONSOLE("OK");
             }
-
         } else if (type == "CASHFLOW") {
             CONSOLEW("Pricing: Cashflow Report");
             ReportWriter(inputs_->reportNaString())

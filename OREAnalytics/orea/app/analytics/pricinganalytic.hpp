@@ -68,7 +68,7 @@ protected:
     std::optional<std::string> overwriteResultCurrency_;
 };
 
-static const std::set<std::string> pricingAnalyticSubAnalytics {"NPV", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY"};
+static const std::set<std::string> pricingAnalyticSubAnalytics {"NPV", "CURVES", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY"};
 
 class PricingAnalytic : public Analytic {
 public:
