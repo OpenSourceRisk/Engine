@@ -489,7 +489,8 @@ The parameters have the following meaning:
   pread of both the equity and the bond component. Since the security spread is understood as an effective discounting
   spread, it is scaled by $s \rightarrow s / (1-\rho)$ before it is added to $h$, where $\rho$ is the recovery rate of
   the bond.
-\item MesherIsStatic: whether to use the same finite-difference mesher under scenario / sensi calculations
+\item MesherIsStatic: whether to use the same finite-difference mesher under scenario calculations, this is restricted
+  to sensitivity runs
 \item Bootstrp.CalibrationGrid: The model is calibrated on a configurable set of times . All tenors from the specified
   grid before the maturity date of the convertible bond are kept and the maturity date itself is added to the resulting
   grid to avoid calibration for times beyond the bond maturity and at the same time ensuring that we do not need to
