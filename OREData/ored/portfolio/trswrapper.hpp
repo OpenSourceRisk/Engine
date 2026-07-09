@@ -238,7 +238,7 @@ private:
     QuantLib::Real getFxConversionRate(const QuantLib::Date& date, const QuantLib::Currency& source,
                                        const QuantLib::Currency& target, const bool enforceProjection) const;
 
-    // return the conversion factor from ccy to the funding currency on date, looking xthe currency up in the asset,
+    // return the conversion factor from ccy to the funding currency on date, looking the currency up in the asset,
     // return and additional cashflow fx indices; returns 1.0 if ccy is the funding currency
     QuantLib::Real fxLegFactor(const QuantLib::Currency& ccy, const QuantLib::Date& date,
                                const bool enforceProjection) const;
