@@ -560,32 +560,32 @@ Real TRSWrapperAccrualEngine::assetLegValue(std::vector<CashFlowResults>& cfResu
                 results_.additionalResults["underlyingMultiplier" + resultSuffix] = arguments_.underlyingMultiplier_[i];
 
                 // add return cashflow to additional results
-                cfResults.emplace_back();
-                cfResults.back().amount = fx1 * s1;
+                auto& cf = cfResults.emplace_back();
+                cf.amount = fx1 * s1;
                 if (arguments_.underlying_.size() == 1 || !usingInitialPrice) {
-                    cfResults.back().amount -= underlyingStartValue[i] * fxConversionFactor[i];
+                    cf.amount -= underlyingStartValue[i] * fxConversionFactor[i];
                 }
-                cfResults.back().amount *= assetMultiplier;
-                cfResults.back().payDate = today;
-                cfResults.back().currency = arguments_.returnCurrency_.code();
-                cfResults.back().legNumber = 0;
-                cfResults.back().type = "AccruedReturn" + resultSuffix;
-                cfResults.back().accrualStartDate = startDate;
-                cfResults.back().accrualEndDate = endDate == Null<Date>() ? today : endDate;
-                cfResults.back().fixingValue = s1 / arguments_.underlyingMultiplier_[i];
-                cfResults.back().notional = underlyingStartValue[i] * fxConversionFactor[i];
+                cf.amount *= assetMultiplier;
+                cf.payDate = today;
+                cf.currency = arguments_.returnCurrency_.code();
+                cf.legNumber = 0;
+                cf.type = "AccruedReturn" + resultSuffix;
+                cf.accrualStartDate = startDate;
+                cf.accrualEndDate = endDate == Null<Date>() ? today : endDate;
+                cf.fixingValue = s1 / arguments_.underlyingMultiplier_[i];
+                cf.notional = underlyingStartValue[i] * fxConversionFactor[i];
 
                 // if initial price is used and there is more than one underlying, add cf for initialPrice
                 if (arguments_.underlying_.size() > 1 && usingInitialPrice && i == 0) {
-                    cfResults.emplace_back();
-                    cfResults.back().amount = -underlyingStartValue[i] * fxConversionFactor[i];
-                    cfResults.back().payDate = today;
-                    cfResults.back().currency = arguments_.returnCurrency_.code();
-                    cfResults.back().legNumber = 0;
-                    cfResults.back().type = "AccruedReturn" + resultSuffix;
-                    cfResults.back().accrualStartDate = startDate;
-                    cfResults.back().accrualEndDate = endDate == Null<Date>() ? today : endDate;
-                    cfResults.back().notional = underlyingStartValue[i] * fxConversionFactor[i];
+                    auto& cf = cfResults.emplace_back();
+                    cf.amount = -underlyingStartValue[i] * fxConversionFactor[i];
+                    cf.payDate = today;
+                    cf.currency = arguments_.returnCurrency_.code();
+                    cf.legNumber = 0;
+                    cf.type = "AccruedReturn" + resultSuffix;
+                    cf.accrualStartDate = startDate;
+                    cf.accrualEndDate = endDate == Null<Date>() ? today : endDate;
+                    cf.notional = underlyingStartValue[i] * fxConversionFactor[i];
                 }
 
                 // startDate might be >= today, if an initial price is given, see the comment in startValue() above
@@ -598,13 +598,13 @@ Real TRSWrapperAccrualEngine::assetLegValue(std::vector<CashFlowResults>& cfResu
                                 Real tmp = c->amount() * arguments_.underlyingMultiplier_[i];
                                 cf += tmp;
                                 // add intermediate cashflows to additional results
-                                cfResults.emplace_back();
-                                cfResults.back().amount = assetMultiplier * (tmp * fx1);
-                                cfResults.back().payDate = c->date();
-                                cfResults.back().currency = arguments_.returnCurrency_.code();
-                                cfResults.back().legNumber = 1;
-                                cfResults.back().type = "UnderlyingCashFlow" + resultSuffix;
-                                cfResults.back().notional = underlyingStartValue[i] * fxConversionFactor[i];
+                                auto& cf = cfResults.emplace_back();
+                                cf.amount = assetMultiplier * (tmp * fx1);
+                                cf.payDate = c->date();
+                                cf.currency = arguments_.returnCurrency_.code();
+                                cf.legNumber = 1;
+                                cf.type = "UnderlyingCashFlow" + resultSuffix;
+                                cf.notional = underlyingStartValue[i] * fxConversionFactor[i];
                             }
                         }
                     }
@@ -620,13 +620,13 @@ Real TRSWrapperAccrualEngine::assetLegValue(std::vector<CashFlowResults>& cfResu
                     cf += dividends;
                     if (!close_enough(dividends, 0.0)) {
                         // add dividends as one cashflow to additional results
-                        cfResults.emplace_back();
-                        cfResults.back().amount = assetMultiplier * (dividends * fx1);
-                        cfResults.back().payDate = today;
-                        cfResults.back().currency = arguments_.returnCurrency_.code();
-                        cfResults.back().legNumber = 2;
-                        cfResults.back().type = "UnderlyingDividends" + resultSuffix;
-                        cfResults.back().notional = underlyingStartValue[i] * fxConversionFactor[i];
+                        auto& cf = cfResults.emplace_back();
+                        cf.amount = assetMultiplier * (dividends * fx1);
+                        cf.payDate = today;
+                        cf.currency = arguments_.returnCurrency_.code();
+                        cf.legNumber = 2;
+                        cf.type = "UnderlyingDividends" + resultSuffix;
+                        cf.notional = underlyingStartValue[i] * fxConversionFactor[i];
                     }
 
                     DLOG("add cashflows in return period (" << io::iso_date(startDate) << ", " << io::iso_date(today)
@@ -698,11 +698,14 @@ Real TRSWrapperAccrualEngine::fundingLegValue(std::vector<CashFlowResults>& cfRe
             } catch (...) {
             }
 
-            if (arguments_.fundingNotionalTypes_[i] == TRS::FundingData::NotionalType::Fixed) {
+            using FNT = TRS::FundingData::NotionalType;
+            const auto& ntlType = arguments_.fundingNotionalTypes_[i];
+
+            if (ntlType == FNT::Fixed) {
                 fundingLegNotionalFactor = 1.0;
-            } else if (arguments_.fundingNotionalTypes_[i] == TRS::FundingData::NotionalType::PeriodReset) {
+            } else if (ntlType == FNT::PeriodReset) {
                 fundingLegNotionalFactor = fundingLegPeriodResetNotionalFactor(currentIdx, resultSuffix, nthCpn);
-            } else if (arguments_.fundingNotionalTypes_[i] == TRS::FundingData::NotionalType::DailyReset) {
+            } else if (ntlType == FNT::DailyReset) {
                 fundingLegNotionalFactor = fundingLegDailyResetNotionalFactor(cpn, localFundingLegNpv, resultSuffix, nthCpn);
             } else {
                 QL_FAIL("internal error: unknown notional type, contact dev");
@@ -711,27 +714,24 @@ Real TRSWrapperAccrualEngine::fundingLegValue(std::vector<CashFlowResults>& cfRe
             DLOG("fundingLegNpv for funding leg #"
                  << (i + 1) << " is " << fundingMultiplier * localFundingLegNpv << " * " << fundingLegNotionalFactor
                  << " = " << fundingMultiplier * localFundingLegNpv * fundingLegNotionalFactor << " "
-                 << arguments_.fundingCurrency_ << " (notional type of leg is '" << arguments_.fundingNotionalTypes_[i]
-                 << "')");
+                 << arguments_.fundingCurrency_ << " (notional type of leg is '" << ntlType << "')");
 
             localFundingLegNpv *= fundingLegNotionalFactor;
 
             results_.additionalResults["fundingLegNpv" + resultSuffix] = fundingMultiplier * localFundingLegNpv;
 
             // add funding leg cashflow to addtional results
-            cfResults.emplace_back();
-            cfResults.back().amount = fundingMultiplier * localFundingLegNpv;
-            cfResults.back().payDate = today;
-            cfResults.back().currency = arguments_.fundingCurrency_.code();
-            cfResults.back().legNumber = 3 + i;
-            cfResults.back().type = "AccruedFunding" + (nthCpn > 0 ? "_nth(" + std::to_string(nthCpn) + ")" : "");
-            cfResults.back().accrualStartDate = std::min(fundingStartDate, today);
-            cfResults.back().accrualEndDate = today;
-            cfResults.back().notional = arguments_.fundingNotionalTypes_[i] == TRS::FundingData::NotionalType::Fixed
-                                            ? fundingCouponNotional
-                                            : fundingLegNotionalFactor;
+            auto& cf = cfResults.emplace_back();
+            cf.amount = fundingMultiplier * localFundingLegNpv;
+            cf.payDate = today;
+            cf.currency = arguments_.fundingCurrency_.code();
+            cf.legNumber = 3 + i;
+            cf.type = "AccruedFunding" + (nthCpn > 0 ? "_nth(" + std::to_string(nthCpn) + ")" : "");
+            cf.accrualStartDate = std::min(fundingStartDate, today);
+            cf.accrualEndDate = today;
+            cf.notional = ntlType == TRS::FundingData::NotionalType::Fixed ? fundingCouponNotional : fundingLegNotionalFactor;
 
-            results_.additionalResults["fundingLegNotional" + resultSuffix] = cfResults.back().notional;
+            results_.additionalResults["fundingLegNotional" + resultSuffix] = cf.notional;
 
             fundingLegNpv += localFundingLegNpv;
             ++nthCpn;
@@ -798,6 +798,7 @@ Real TRSWrapperAccrualEngine::fundingLegDailyResetNotionalFactor(const ext::shar
             Real dcfTotal =
                 cpn->dayCounter().yearFraction(cpn->accrualStartDate(), std::min(cpn->accrualEndDate(), today));
             for (QuantLib::Date d = cpn->accrualStartDate(); d < std::min(cpn->accrualEndDate(), today); ++d) {
+                string cpnSuffix = resultSuffix + resultSuffix2 + "_" + ore::data::to_string(d);
                 Real dcfLocal = cpn->dayCounter().yearFraction(d, d + 1);
                 Date fixingDate = arguments_.underlyingIndex_[j]->fixingCalendar().adjust(d, Preceding);
                 Real localNotionalFactor = getUnderlyingFixing(j, fixingDate, false) *
@@ -806,10 +807,8 @@ Real TRSWrapperAccrualEngine::fundingLegDailyResetNotionalFactor(const ext::shar
                                                          arguments_.fundingCurrency_, false);
                 fundingLegNotionalFactor += localNotionalFactor * localFxFactor;
 
-                results_.additionalResults["fundingLegNotional" + resultSuffix + resultSuffix2 + "_" +
-                                           ore::data::to_string(d)] = localNotionalFactor;
-                results_.additionalResults["fundingLegFxRate" + resultSuffix + resultSuffix2 + "_" +
-                                           ore::data::to_string(d)] = localFxFactor;
+                results_.additionalResults["fundingLegNotional" + cpnSuffix] = localNotionalFactor;
+                results_.additionalResults["fundingLegFxRate" + cpnSuffix] = localFxFactor;
             }
         } else if (QuantLib::ext::dynamic_pointer_cast<OvernightIndexedCouponBase>(cpn)) {
             auto overnightCpn = QuantLib::ext::dynamic_pointer_cast<OvernightIndexedCouponBase>(cpn);
@@ -823,6 +822,7 @@ Real TRSWrapperAccrualEngine::fundingLegDailyResetNotionalFactor(const ext::shar
             for (size_t i = 0; i < intDates.size() - 1; ++i) {
                 const Date& intStartDate = intDates[i];
                 const Date& intEndDate = intDates[i + 1];
+                string cpnSuffix = resultSuffix + resultSuffix2 + "_" + ore::data::to_string(intStartDate);
                 double irFixing = fixingValues[i];
                 if (overnightCpn->includeSpread())
                     irFixing += overnightCpn->spread();
@@ -835,14 +835,10 @@ Real TRSWrapperAccrualEngine::fundingLegDailyResetNotionalFactor(const ext::shar
                         getUnderlyingFixing(j, fixingDate, false) * arguments_.underlyingMultiplier_[j];
                     Real localFxFactor = getFxConversionRate(fixingDate, arguments_.assetCurrency_[j],
                                                              arguments_.fundingCurrency_, false);
-                    results_.additionalResults["fundingLegNotional" + resultSuffix + resultSuffix2 + "_" +
-                                               ore::data::to_string(intStartDate)] = localNotional;
-                    results_.additionalResults["fundingLegFxRate" + resultSuffix + resultSuffix2 + "_" +
-                                               ore::data::to_string(intStartDate)] = localFxFactor;
-                    results_.additionalResults["fundingLegOISRate" + resultSuffix + resultSuffix2 + "_" +
-                                               ore::data::to_string(intStartDate)] = irFixing;
-                    results_.additionalResults["fundingLegDCF" + resultSuffix + resultSuffix2 + "_" +
-                                               ore::data::to_string(intStartDate)] = dt;
+                    results_.additionalResults["fundingLegNotional" + cpnSuffix] = localNotional;
+                    results_.additionalResults["fundingLegFxRate" + cpnSuffix] = localFxFactor;
+                    results_.additionalResults["fundingLegOISRate" + cpnSuffix] = irFixing;
+                    results_.additionalResults["fundingLegDCF" + cpnSuffix] = dt;
                     localNotional *= localFxFactor;
                     if (overnightCpn->rateType() != OvernightIndexedCouponBase::Type::Averaging) {
                         accruedInterest = localNotional * irFixing * dt + accruedInterest * (1 + irFixing * dt);
@@ -853,9 +849,7 @@ Real TRSWrapperAccrualEngine::fundingLegDailyResetNotionalFactor(const ext::shar
                         accruedInterest += localNotional * (gearing * irFixing + spread) * dt;
                     }
 
-                    results_.additionalResults["fundingLegAccruedInterest" + resultSuffix + resultSuffix2 +
-                                               "_" + ore::data::to_string(intStartDate)] =
-                        accruedInterest + accruedSpreadInterest;
+                    results_.additionalResults["fundingLegAccruedInterest" + cpnSuffix] = accruedInterest + accruedSpreadInterest;
                 }
             }
 
@@ -874,6 +868,7 @@ Real TRSWrapperAccrualEngine::fundingLegDailyResetNotionalFactor(const ext::shar
             double accruedFunding = 0.0;
             double prevPriceFx = 0.0;
             for (QuantLib::Date d = cpn->accrualStartDate(); d < endDate; ++d) {
+                string cpnSuffix = resultSuffix + resultSuffix2 + "_" + ore::data::to_string(d);
                 Date fixingDate =
                     arguments_.underlyingIndex_[j]->fixingCalendar().adjust(d, Preceding);
                 Real localNotional =
@@ -885,14 +880,10 @@ Real TRSWrapperAccrualEngine::fundingLegDailyResetNotionalFactor(const ext::shar
                 double tau = dc.yearFraction(d, endDate);
                 double compFactor = (comp == QuantLib::Compounded) ? std::pow(1.0 + rate, tau) : (1.0 + rate * tau);
                 accruedFunding += deltaPriceFx * compFactor;
-                results_.additionalResults["fundingLegNotional" + resultSuffix + resultSuffix2 + "_" +
-                                           ore::data::to_string(d)] = localNotional;
-                results_.additionalResults["fundingLegFxRate" + resultSuffix + resultSuffix2 + "_" +
-                                           ore::data::to_string(d)] = localFxFactor;
-                results_.additionalResults["fundingLegDeltaNotionalFx" + resultSuffix + resultSuffix2 + "_" +
-                                           ore::data::to_string(d)] = deltaPriceFx;
-                results_.additionalResults["fundingLegCompoundFactor" + resultSuffix + resultSuffix2 + "_" +
-                                           ore::data::to_string(d)] = compFactor;
+                results_.additionalResults["fundingLegNotional" + cpnSuffix] = localNotional;
+                results_.additionalResults["fundingLegFxRate" + cpnSuffix] = localFxFactor;
+                results_.additionalResults["fundingLegDeltaNotionalFx" + cpnSuffix] = deltaPriceFx;
+                results_.additionalResults["fundingLegCompoundFactor" + cpnSuffix] = compFactor;
                 prevPriceFx = priceFx;
             }
             // When subtractNotional=true the coupon's accruedAmount (=localFundingLegNpv) subtracts
@@ -980,13 +971,13 @@ Real TRSWrapperAccrualEngine::additionalCashflowLegValue(std::vector<CashFlowRes
             Real discountFactor = additionalCashflowCurrencyDiscountCurve_->discount(cf->date());
             additionalCashflowLegNpv += tmp * discountFactor;
             // add additional cashflows to additional results
-            cfResults.emplace_back();
-            cfResults.back().amount = tmp;
-            cfResults.back().discountFactor = discountFactor;
-            cfResults.back().payDate = cf->date();
-            cfResults.back().currency = arguments_.additionalCashflowCurrency_.code();
-            cfResults.back().legNumber = legNumber;
-            cfResults.back().type = "AdditionalCashFlow";
+            auto& cfR = cfResults.emplace_back();
+            cfR.amount = tmp;
+            cfR.discountFactor = discountFactor;
+            cfR.payDate = cf->date();
+            cfR.currency = arguments_.additionalCashflowCurrency_.code();
+            cfR.legNumber = legNumber;
+            cfR.type = "AdditionalCashFlow";
         }
     }
     DLOG("additionalCashflowLegNpv = " << additionalCashflowLegNpv << " " << arguments_.additionalCashflowCurrency_);
