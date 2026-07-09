@@ -67,6 +67,13 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
+
+    //! Clear barrier-touch maturity state in addition to the base class reset
+    void reset() override;
+
+    //! Barrier-specific maturity message when the option matured due to a barrier touch
+    std::string maturityMessage(const QuantLib::Date& asof) const override;
+
 private:
     OptionData option_;
     BarrierData barrier_;
@@ -78,6 +85,10 @@ private:
     string payoffCurrency_;
     std::string fxIndexDailyLowsStr_;
     std::string fxIndexDailyHighsStr_;
+
+    // maturity state populated by build() when the barrier has been touched
+    QuantLib::Date maturityTriggerDate_;   // barrier touch date
+    std::string maturityPayoffTiming_;     // "touch/exercise" | "expiry"
 };
 } // namespace data
 } // namespace oreplus

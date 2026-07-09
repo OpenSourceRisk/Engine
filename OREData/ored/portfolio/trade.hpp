@@ -58,8 +58,6 @@ public:
 
     //! Enum to control notional calculation behaviour
     enum class NotionalType { Default, IMSchedule };
-    //! Enum to control maturity check behaviour
-    enum class MaturityCause { Scheduled, BarrierTouched };
 
     //! Default constructor
     Trade() {}
@@ -232,8 +230,7 @@ public:
     /* get build status */
     bool isBuilt() const { return isBuilt_; }
 
-    MaturityCause maturityCause() const { return maturityCause_; }
-    // default returns the current generic wording; overridable
+    // default returns the generic maturity wording; derived trades may override to add trade-specific reasons
     virtual std::string maturityMessage(const QuantLib::Date& asof) const;
 
 protected:
@@ -279,10 +276,6 @@ protected:
 
     // update additional data based on stored product, model, engine
     void updateProductModelEngineAdditionalData();
-
-    MaturityCause maturityCause_ = MaturityCause::Scheduled;
-    QuantLib::Date maturityTriggerDate_ = QuantLib::Date();   // e.g. barrier touch date
-    std::string   maturityPayoffTiming_;                      // "touch/exercise" | "expiry"
 
 private:
     string id_;
