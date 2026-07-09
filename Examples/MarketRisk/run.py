@@ -25,6 +25,7 @@ cases = [
     "run_scenariostress.py",
     "run_correlation.py",
     "run_curvealgebra.py",
+    "run_curves.py",
     "run_intradaypower.py"
 ]
 

@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ORE>
+    <Setup>
+        <Parameter name="asofDate">2023-01-31</Parameter>
+        <Parameter name="inputPath">Input/Curves</Parameter>
+        <Parameter name="outputPath">Output/Curves</Parameter>
+        <Parameter name="logFile">log.txt</Parameter>
+        <Parameter name="marketDataFile">market.txt</Parameter>
+        <Parameter name="fixingDataFile">fixings.txt</Parameter>
+        <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
+        <Parameter name="conventionsFile">conventions.xml</Parameter>
+        <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
+        <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
+        <Parameter name="portfolioFile">portfolio.xml</Parameter>
+    </Setup>
+    <Markets>
+        <Parameter name="lgmcalibration">default</Parameter>
+        <Parameter name="fxcalibration">default</Parameter>
+        <Parameter name="pricing">default</Parameter>
+        <Parameter name="simulation">default</Parameter>
+    </Markets>
+    <Analytics>
+        <!-- <Analytic type="npv">
+            <Parameter name="active">Y</Parameter>
+            <Parameter name="baseCurrency">USD</Parameter>
+            <Parameter name="outputFileName">npv.csv</Parameter>
+            <Parameter name="outputCurves">Y</Parameter>
+            <Parameter name="additionalResults">Y</Parameter>
+            <Parameter name="additionalResultsReportPrecision">9</Parameter>
+        </Analytic> -->
+        <Analytic type="curves">
+            <Parameter name="active">Y</Parameter>
+            <Parameter name="configuration">default</Parameter>
+            <Parameter name="grid">360,1M</Parameter>
+            <Parameter name="outputFileName">curves.csv</Parameter>
+            <Parameter name="outputTodaysMarketCalibration">false</Parameter>
+        </Analytic>
+    </Analytics>
+</ORE>

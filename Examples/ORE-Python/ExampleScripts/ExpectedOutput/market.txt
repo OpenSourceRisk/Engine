@@ -1,7 +1,7 @@
 RUN market.py
 Run ORE using ../Input/ore_market.xml
-Get analytic MARKETDATA
-Get market object from analytic MARKETDATA
+Get analytic CURVES
+Get market object from analytic CURVES
 Market asof date February 5th, 2016
 Get term structures for ccy  EUR and index EUR-EURIBOR-6M
    discount curve is of type <class 'ORE.YieldTermStructureHandle'>
