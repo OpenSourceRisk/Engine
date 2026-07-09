@@ -36,6 +36,7 @@ SpreadedZeroInflationCurve::SpreadedZeroInflationCurve(const Handle<ZeroInflatio
     interpolation_ = QuantLib::ext::make_shared<FlatExtrapolation>(
         QuantLib::ext::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin()));
     interpolation_->enableExtrapolation();
+    enableExtrapolation(referenceCurve_->allowsExtrapolation());
     registerWith(referenceCurve_);
 }
 
@@ -84,6 +85,7 @@ SpreadedYoYInflationCurve::SpreadedYoYInflationCurve(const Handle<YoYInflationTe
     interpolation_ = QuantLib::ext::make_shared<FlatExtrapolation>(
         QuantLib::ext::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin()));
     interpolation_->enableExtrapolation();
+    enableExtrapolation(referenceCurve_->allowsExtrapolation());
     registerWith(referenceCurve_);
 }
 
