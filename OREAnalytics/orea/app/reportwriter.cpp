@@ -138,6 +138,8 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
     LOG("NPV file written");
 }
 
+namespace {
+
 void addCashflowReportColumns(ore::data::Report& report) {
     report.addColumn("TradeId", string())
         .addColumn("Type", string())
@@ -206,6 +208,8 @@ void addTradeCashflowRows(ore::data::Report& report, const ext::shared_ptr<ore::
     }
 }
 
+} // namespace
+
 void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& baseCurrency,
                                  QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio,
                                  QuantLib::ext::shared_ptr<ore::data::Market> market, const std::string& configuration,
@@ -238,8 +242,10 @@ void ReportWriter::writeCashflow(
 
     for (auto [tradeId, trade] : portfolio->trades()) {
         auto it = tradeCashflows.find(tradeId);
-        if (it == tradeCashflows.end())
+        if (it == tradeCashflows.end()){
+            WLOG("Trade " << tradeId << " not found in precomputed cashflows, skipping.");
             continue;
+        }
         addTradeCashflowRows(report, trade, it->second);
     }
 
