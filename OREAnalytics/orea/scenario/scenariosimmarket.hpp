@@ -32,6 +32,7 @@
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/iborfallbackconfig.hpp>
 
+#include <qle/termstructures/proxyoptionletvolatility.hpp>
 #include <qle/utilities/scenarioinformation.hpp>
 
 #include <map>
@@ -236,6 +237,42 @@ private:
 
     void createBondFutureVol(QuantExt::RiskFactorKey::KeyType rfKeyType, const std::string& name, bool simulate,
         bool& simDataWritten, const BuildContext& context);
+
+    // Helpers for creating optionlet volatilities.
+    struct CapFloorConventions {
+        QuantLib::Natural settleDays = 0;
+        bool isOis = false;
+        QuantLib::Calendar irIndexCalendar;
+        QuantLib::Size onSettlementDays = 0;
+    };
+    CapFloorConventions getCapFloorConventions(const std::string& name,
+        const ore::data::CurveConfigurations& curveConfigs,
+        const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& irIndex) const;
+    std::vector<QuantLib::Date> getOptionDates(const std::vector<QuantLib::Period>& optionTenors,
+        const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& irIndex, const CapFloorConventions& conv,
+        const QuantLib::ext::shared_ptr<QuantLib::OptionletVolatilityStructure>& baseOvs,
+        const QuantLib::Period& rateCompPeriod, const std::string& name) const;
+    std::pair<bool, std::vector<QuantLib::Rate>> getStrikes(const std::string& name,
+        const std::vector<QuantLib::Rate>& configuredStrikes) const;
+    std::vector<QuantLib::Rate> getAtmStrikes(const std::vector<QuantLib::Period>& optionTenors,
+        const std::vector<QuantLib::Date>& optionDates, const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& irIndex,
+        const CapFloorConventions& conv, const QuantLib::Period& rateCompPeriod, const std::string& name,
+        const std::string& configuration, const QuantLib::ext::shared_ptr<ore::data::Market>& initMarket) const;
+    std::vector<QuantLib::Real> getProxyAdjustments(const std::vector<QuantLib::Period>& optionTenors,
+        const std::vector<QuantLib::Date>& optionDates,
+        const QuantLib::ext::shared_ptr<QuantExt::ProxyOptionletVolatility>& proxy) const;
+    void createOptionletVol(QuantExt::RiskFactorKey::KeyType rfKeyType, const std::string& name, bool simulate,
+        bool& simDataWritten, const BuildContext& context);
+    QuantLib::Handle<QuantLib::OptionletVolatilityStructure> createNonSimulatedOptionletVol(
+        const QuantLib::ext::shared_ptr<QuantLib::OptionletVolatilityStructure>& baseOvs);
+    QuantLib::Handle<QuantLib::OptionletVolatilityStructure> createNonSabrOptionletVol(
+        QuantExt::RiskFactorKey::KeyType rfKeyType, const std::string& name, bool& simDataWritten,
+        const BuildContext& context, const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& irIndex,
+        const QuantLib::Handle<QuantLib::OptionletVolatilityStructure>& baseOvs, const QuantLib::Period& rateCompPeriod,
+        const QuantLib::ext::shared_ptr<QuantExt::ProxyOptionletVolatility>& proxy);
+    //QuantLib::Handle<QuantLib::OptionletVolatilityStructure> createSabrOptionletVol(
+    //    QuantExt::RiskFactorKey::KeyType rfKeyType, const std::string& name, bool simulate, bool& simDataWritten,
+    //    const BuildContext& context);
 };
 } // namespace analytics
 } // namespace ore

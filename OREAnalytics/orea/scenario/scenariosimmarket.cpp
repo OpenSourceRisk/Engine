@@ -63,7 +63,6 @@
 #include <qle/termstructures/interpolateddiscountcurve2.hpp>
 #include <qle/termstructures/pricecurve.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
-#include <qle/termstructures/proxyoptionletvolatility.hpp>
 #include <qle/termstructures/proxyswaptionvolatility.hpp>
 #include <qle/termstructures/sabrstrippedoptionletadapter.hpp>
 #include <qle/termstructures/spreadedblackvolatilitycurve.hpp>
@@ -1235,390 +1234,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                 for (const auto& name : param.second.second) {
                     bool simDataWritten = false;
                     try {
-                        LOG("building " << name << " cap/floor volatility curve...");
-                        RelinkableHandle<OptionletVolatilityStructure> wrapper;
-
-                        bool stickySabr =
-                            parseStickyness(parameters->capFloorVolSmileDynamics(name)) == Stickyness::StickySABR;
-                        QuantLib::ext::shared_ptr<ProxyOptionletVolatility> proxy;
-                        proxy = stickySabr || !useSpreadedTermStructures_ ?
-                            QuantLib::ext::dynamic_pointer_cast<ProxyOptionletVolatility>(
-                                *initMarket->capFloorVol(name, configuration))
-                            : nullptr;
-                        if (proxy) {
-                            DLOG("Detected ProxyOptionletVolatility for " << name);
-                            wrapper.linkTo(*proxy->baseVol());
-                        } else {
-                            wrapper.linkTo(*initMarket->capFloorVol(name, configuration));
-                        }
-
-                        auto [iborIndexName, rateComputationPeriod] =
-                            initMarket->capFloorVolIndexBase(name, configuration);
-                        QuantLib::ext::shared_ptr<IborIndex> iborIndex =
-                            iborIndexName.empty() ? nullptr : parseIborIndex(iborIndexName);
-
-                        LOG("Initial market cap/floor volatility type = " << wrapper->volatilityType());
-
-                        Handle<OptionletVolatilityStructure> hCapletVol;
-
-                        // Check if the risk factor is simulated before adding it
-                        if (param.second.first) {
-                            LOG("Simulating Cap/Floor Optionlet vols for key " << name);
-
-                            // Try to get the ibor index that the cap floor structure relates to
-                            // We use this to convert Period to Date below to sample from `wrapper`
-                            Natural settleDays = 0;
-                            bool isOis = false;
-                            Calendar iborCalendar;
-                            Size onSettlementDays = 0;
-
-                            // get the curve config for the index, or if not available for its ccy
-                            QuantLib::ext::shared_ptr<CapFloorVolatilityCurveConfig> config;
-                            if (curveConfigs.hasCapFloorVolCurveConfig(name)) {
-                                config = curveConfigs.capFloorVolCurveConfig(name);
-                            } else {
-                                if (iborIndex && curveConfigs.hasCapFloorVolCurveConfig(iborIndex->currency().code())) {
-                                    config = curveConfigs.capFloorVolCurveConfig(iborIndex->currency().code());
-                                }
-                            }
-
-                            // get info from the config if we have one
-                            if (config) {
-                                settleDays = config->settleDays();
-                                onSettlementDays = config->onCapSettlementDays();
-                            }
-
-                            // derive info from the ibor index
-                            if (iborIndex) {
-                                iborCalendar = iborIndex->fixingCalendar();
-                                isOis = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(iborIndex) != nullptr;
-                            }
-
-                            vector<Period> optionTenors = parameters->capFloorVolExpiries(name);
-                            vector<Date> optionDates(optionTenors.size());
-
-                            vector<vector<Real>> strikesSabr;
-                            vector<vector<Handle<Quote>>> volSpreadsSabr;
-
-                            vector<Real> strikes = parameters->capFloorVolStrikes(name);
-                            bool isAtm = false;
-                            if (stickySabr) {
-                                if (auto sabr = QuantLib::ext::dynamic_pointer_cast<SabrStrippedOptionletAdapter<Linear>>(*wrapper)) {
-                                    strikesSabr = vector<vector<Real>>(optionTenors.size(), sabr->optionletBase()->optionletStrikes(0));
-                                } else if (auto sabr = QuantLib::ext::dynamic_pointer_cast<SabrStrippedOptionletAdapter<LinearFlat>>(*wrapper)) {
-                                    strikesSabr = vector<vector<Real>>(optionTenors.size(), sabr->optionletBase()->optionletStrikes(0));
-                                } else if (auto sabr = QuantLib::ext::dynamic_pointer_cast<SabrStrippedOptionletAdapter<Cubic>>(*wrapper)) {
-                                    strikesSabr = vector<vector<Real>>(optionTenors.size(), sabr->optionletBase()->optionletStrikes(0));
-                                } else if (auto sabr = QuantLib::ext::dynamic_pointer_cast<SabrStrippedOptionletAdapter<CubicFlat>>(*wrapper)) {
-                                    strikesSabr = vector<vector<Real>>(optionTenors.size(), sabr->optionletBase()->optionletStrikes(0));
-                                } else if (auto sabr = QuantLib::ext::dynamic_pointer_cast<SabrStrippedOptionletAdapter<BackwardFlat>>(*wrapper)) {
-                                    strikesSabr = vector<vector<Real>>(optionTenors.size(), sabr->optionletBase()->optionletStrikes(0));
-                                } else {
-                                     QL_FAIL("SSM: expected SabrStrippedOptionletAdapter for stickySabr optionlet vol for key "
-                                                << name
-                                                << ". T0 cap/floor vol surface should be of a SABR variant"
-                                                << ". Supported time interpolators are: Linear, LinearFlat, Cubic, CubicFlat, BackwardFlat.");
-                                }
-                                volSpreadsSabr.resize(optionTenors.size(), vector<Handle<Quote>>(strikesSabr[0].size(), Handle<Quote>()));
-                                strikes = {0.0};
-                                isAtm = true;
-                            }
-                            // Strikes may be empty here which means that an ATM curve has been configured
-                            if (strikes.empty()) {
-                                QL_REQUIRE(
-                                    parameters->capFloorVolIsAtm(name),
-                                    "Strikes for "
-                                        << name
-                                        << " is empty in simulation parameters so expected its ATM flag to be true");
-                                strikes = {0.0};
-                                isAtm = true;
-                            }
-
-                            vector<vector<Real>> strikesProxyAdjusted(optionTenors.size(), strikes);
-                            vector<vector<Handle<Quote>>> quotes(
-                                optionTenors.size(), vector<Handle<Quote>>(strikes.size(), Handle<Quote>()));
-
-                            DLOG("cap floor use adjusted option pillars = " << std::boolalpha << parameters_->capFloorVolAdjustOptionletPillars());
-                            DLOG("have ibor index = " << std::boolalpha << (iborIndex != nullptr));
-
-                            vector<Rate> atmStrikes(optionTenors.size(), Null<Rate>());
-                            auto atmStrikesProxyAdjusted = atmStrikes;
-                            vector<Rate> atmVols(optionTenors.size(), Null<Rate>());
-                            for (Size i = 0, index = 0; i < optionTenors.size(); ++i) {
-
-                                if (parameters_->capFloorVolAdjustOptionletPillars() && iborIndex) {
-                                    // If we ask for cap pillars at tenors t_i for i = 1,...,N, we should attempt to
-                                    // place the optionlet pillars at the fixing date of the last optionlet in the cap
-                                    // with tenor t_i, if capFloorVolAdjustOptionletPillars is true.
-                                    if(isOis) {
-                                        Leg capFloor =
-                                            MakeOISCapFloor(
-                                                CapFloor::Cap, optionTenors[i],
-                                                QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndex>(iborIndex),
-                                                rateComputationPeriod, 0.0)
-                                                .withTelescopicValueDates(true)
-                                                .withSettlementDays(onSettlementDays);
-                                        if (capFloor.empty()) {
-                                            optionDates[i] = asof_ + 1;
-                                        } else {
-                                            auto lastCoupon = QuantLib::ext::dynamic_pointer_cast<
-                                                QuantExt::CappedFlooredOvernightIndexedCoupon>(capFloor.back());
-                                            QL_REQUIRE(lastCoupon, "SSM internal error, could not cast to "
-                                                                   "CappedFlooredOvernightIndexedCoupon "
-                                                                   "when building optionlet vol for '"
-                                                                       << name << "' (index=" << iborIndex->name()
-                                                                       << ")");
-                                            optionDates[i] = std::max(
-                                                asof_ + 1, wrapper->useEffectiveVolatility()
-                                                               ? lastCoupon->underlying()->fixingDateNoCutoff()
-                                                               : lastCoupon->underlying()->fixingDates().front());
-                                        }
-                                    } else {
-                                        QuantLib::ext::shared_ptr<CapFloor> capFloor =
-                                            MakeCapFloor(CapFloor::Cap, optionTenors[i], iborIndex, 0.0, 0 * Days);
-                                        if (capFloor->floatingLeg().empty()) {
-                                            optionDates[i] = asof_ + 1;
-                                        } else {
-                                            optionDates[i] =
-                                                std::max(asof_ + 1, capFloor->lastFloatingRateCoupon()->fixingDate());
-                                        }
-                                    }
-                                    QL_REQUIRE(i == 0 || optionDates[i] > optionDates[i - 1],
-                                               "SSM: got non-increasing option dates "
-                                                   << optionDates[i - 1] << ", " << optionDates[i] << " for tenors "
-                                                   << optionTenors[i - 1] << ", " << optionTenors[i] << " for index "
-                                                   << iborIndex->name());
-                                } else {
-                                    // Otherwise, just place the optionlet pillars at the configured tenors.
-                                    optionDates[i] = wrapper->optionDateFromTenor(optionTenors[i]);
-                                    if (iborCalendar != Calendar()) {
-                                        // In case the original cap floor surface has the incorrect calendar configured.
-                                        optionDates[i] = iborCalendar.adjust(optionDates[i]);
-                                    }
-                                }
-
-                                DLOG("Option [tenor, date] pair is [" << optionTenors[i] << ", "
-                                                                      << io::iso_date(optionDates[i]) << "]");
-
-                                // If ATM, use initial market's discount curve and ibor index to calculate ATM rate
-                                if (isAtm) {
-                                    QL_REQUIRE(iborIndex != nullptr,
-                                               "SSM: Expected ibor index for key "
-                                                   << name << " from the key or a curve config for a ccy");
-                                    auto t0_iborIndex = *initMarket->iborIndex(
-                                        IndexNameTranslator::instance().oreName(iborIndex->name()), configuration);
-                                    if (parameters_->capFloorVolUseCapAtm()) {
-                                        QL_REQUIRE(!isOis, "SSM: capFloorVolUseCapATM not supported for OIS indices ("
-                                                               << t0_iborIndex->name() << ")");
-                                        QuantLib::ext::shared_ptr<CapFloor> cap =
-                                            MakeCapFloor(CapFloor::Cap, optionTenors[i], t0_iborIndex, 0.0, 0 * Days);
-                                        atmStrikes[i] = cap->atmRate(**initMarket->discountCurve(name, configuration));
-                                    } else {
-                                        if (isOis) {
-                                            Leg capFloor =
-                                                MakeOISCapFloor(CapFloor::Cap, optionTenors[i],
-                                                                QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(t0_iborIndex),
-                                                                rateComputationPeriod, 0.0)
-                                                    .withTelescopicValueDates(true)
-                                                    .withSettlementDays(onSettlementDays);
-                                            if (capFloor.empty()) {
-                                                atmStrikes[i] = t0_iborIndex->fixing(optionDates[i]);
-                                            } else {
-                                                auto lastCoupon =
-                                                    QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(
-                                                        capFloor.back());
-                                                QL_REQUIRE(lastCoupon, "SSM internal error, could not cast to "
-                                                                       "CappedFlooredOvernightIndexedCoupon "
-                                                                       "when building optionlet vol for '"
-                                                                           << name << "', index=" << t0_iborIndex->name());
-                                                atmStrikes[i] = lastCoupon->underlying()->rate();
-                                            }
-                                        } else {
-                                            atmStrikes[i] = t0_iborIndex->fixing(optionDates[i]);
-                                        }
-                                    }
-                                }
-                                
-                                Real proxyAdjustment = 0.0;
-                                if (proxy) {
-                                    Real baseAtmLevel = proxy->getAtmLevel(optionDates[i], proxy->baseIndex(),
-                                                                           proxy->baseRateComputationPeriod());
-                                    DLOG("Base ATM level from proxy for option tenor " << optionTenors[i]
-                                                                                       << " is " << baseAtmLevel);
-                                    Real targetAtmLevel = proxy->getAtmLevel(optionDates[i], proxy->targetIndex(),
-                                                                             proxy->targetRateComputationPeriod());
-                                    DLOG("Target ATM level from proxy for option tenor " << optionTenors[i]
-                                                                                         << " is " << targetAtmLevel);
-                                    proxyAdjustment = -(targetAtmLevel - baseAtmLevel);
-                                    DLOG("Adjusted strikes for option tenor " << optionTenors[i]
-                                                                              << " by proxy adjustment of "
-                                                                              << proxyAdjustment);
-                                }
-                                for (Size j = 0; j < strikesProxyAdjusted[i].size(); ++j) {
-                                    strikesProxyAdjusted[i][j] = strikes[j] + proxyAdjustment;
-                                    if (!close_enough(proxyAdjustment, 0.0))
-                                        DLOG("  adjusted strike from " << strikes[j] << " to " << strikesProxyAdjusted[i][j]);
-                                }
-                                atmStrikesProxyAdjusted[i] = atmStrikes[i] + proxyAdjustment;
-                                if (!close_enough(proxyAdjustment, 0.0))
-                                    DLOG("  adjusted ATM strike from " << atmStrikes[i] << " to " << atmStrikesProxyAdjusted[i]);
-
-                                for (Size j = 0; j < strikesProxyAdjusted[i].size(); ++j, ++index) {
-                                    Real strike = isAtm ? atmStrikesProxyAdjusted[i] : strikesProxyAdjusted[i][j];
-                                    Real vol =
-                                        wrapper->volatility(optionDates[i], strike, true);
-                                    if (isAtm)
-                                        atmVols[i] = vol;
-                                    DLOG("Vol at [date, strike] pair [" << optionDates[i] << ", " << std::fixed
-                                                                        << std::setprecision(4) << strike << "] is "
-                                                                        << std::setprecision(12) << vol);
-                                    QuantLib::ext::shared_ptr<SimpleQuote> q =
-                                        QuantLib::ext::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 0.0 : vol);
-                                    
-                                    simDataTmp.emplace(std::piecewise_construct,
-                                                       std::forward_as_tuple(param.first, name, index),
-                                                       std::forward_as_tuple(q));
-                                    if (useSpreadedTermStructures_) {
-                                        absoluteSimDataTmp.emplace(std::piecewise_construct,
-                                                                   std::forward_as_tuple(param.first, name, index),
-                                                                   std::forward_as_tuple(vol));
-                                    }
-                                    quotes[i][j] = Handle<Quote>(q);
-                                }
-                                if (!strikesSabr.empty()) {
-                                    for (Size j = 0; j < strikesSabr[i].size(); ++j) {
-                                        QL_REQUIRE(quotes[i].size() == 1, 
-                                                "SSM internal error: expected quotes size 1 for stickySabr");
-                                        Real strike = strikesSabr[i][j];
-                                        Real vol =
-                                            wrapper->volatility(optionDates[i], strike, true);
-                                        DLOG("Vol at [date, strike] pair [" << optionDates[i] << ", " << std::fixed
-                                                                            << std::setprecision(4) << strike << "] is "
-                                                                            << std::setprecision(12) << vol);
-                                        Real volSpread = vol - atmVols[i];
-                                        DLOG("VolSpread at [date, strike] pair [" << optionDates[i] << ", " << std::fixed
-                                                                                  << std::setprecision(4) << strike << "] is "
-                                                                                  << std::setprecision(12) << volSpread);
-                                        volSpreadsSabr[i][j] = Handle<Quote>(
-                                            QuantLib::ext::make_shared<SimpleQuote>(volSpread));
-                                    }
-                                }
-                            }
-
-                            std::vector<std::vector<Real>> coordinates(2);
-                            for(Size i=0;i<optionTenors.size();++i) {
-                                coordinates[0].push_back(
-                                    wrapper->timeFromReference(wrapper->optionDateFromTenor(optionTenors[i])));
-                            }
-                            for(Size j=0;j<strikes.size();++j) {
-                                coordinates[1].push_back(isAtm ? atmStrikes.back() : strikes[j]);
-                            }
-
-                            writeSimData(simDataTmp, absoluteSimDataTmp, param.first, name, coordinates);
-                            simDataWritten = true;
-
-                            DayCounter dc = wrapper->dayCounter();
-
-                            QuantLib::ext::shared_ptr<QuantLib::StrippedOptionlet> optionlet;
-
-                            if (useSpreadedTermStructures_) {
-                                
-                                if (proxy) {
-                                    // Use AtmAdjustedSpreadedOptionletVolatility2 which adjusts strike level in the volSpread matrix
-                                    // according to difference in ATM levels when a smileSection is queried
-                                    hCapletVol = Handle<OptionletVolatilityStructure>(
-                                        QuantLib::ext::make_shared<AtmAdjustedSpreadedOptionletVolatility2>(
-                                            wrapper, optionDates, strikes, quotes, proxy->baseIndex(),
-                                            proxy->targetIndex(), proxy->baseRateComputationPeriod(),
-                                            proxy->targetRateComputationPeriod(), proxy->scalingFactor(),
-                                            parseDecayMode(parameters->capFloorVolDecayMode())));
-                                    hCapletVol->setAdjustReferenceDate(false);
-                                } else {
-                                    hCapletVol = Handle<OptionletVolatilityStructure>(
-                                        QuantLib::ext::make_shared<QuantExt::SpreadedOptionletVolatility2>(
-                                            wrapper, optionDates, strikes, quotes,
-                                            parseDecayMode(parameters->capFloorVolDecayMode())));
-                                    hCapletVol->setAdjustReferenceDate(false);
-                                }
-                                                                                                       
-                                if (stickySabr) {
-                                    auto strikeVec = vector<vector<Real>>(optionDates.size());
-                                    auto optionletQuotes = vector<vector<Handle<Quote>>>(optionDates.size());
-                                    for (Size i = 0; i < optionDates.size(); ++i) {
-                                        strikeVec[i].push_back(atmStrikesProxyAdjusted[i]);
-                                        optionletQuotes[i] = vector<Handle<Quote>>(1);
-                                        optionletQuotes[i][0] = Handle<Quote>(ext::make_shared<SimpleQuote>(0.0));
-                                    }
-                                    iborIndex = *initMarket->iborIndex(
-                                        IndexNameTranslator::instance().oreName(iborIndex->name()), configuration);
-
-                                    optionlet = QuantLib::ext::make_shared<QuantExt::StrippedOptionlet>(
-                                        settleDays, wrapper->calendar(), wrapper->businessDayConvention(), iborIndex,
-                                        optionDates, strikeVec, hCapletVol, optionletQuotes,
-                                        dc, wrapper->volatilityType(),
-                                        wrapper->displacement());
-                                }
-                            } else {
-                                // FIXME: Works as of today only, i.e. for sensitivity/scenario analysis.
-                                // TODO: Build floating reference date StrippedOptionlet class for MC path generators
-
-                                // If StickySABR, we need initial market's discount curve in ibor index to calculate ATM rate
-                                // in SabrStrippedOptionletAdapter via optionletBase()->atmOptionletRates()
-                                if (stickySabr) {
-                                    iborIndex = *initMarket->iborIndex(
-                                        IndexNameTranslator::instance().oreName(iborIndex->name()), configuration);
-                                }
-                                optionlet = QuantLib::ext::make_shared<QuantLib::StrippedOptionlet>(
-                                    settleDays, wrapper->calendar(), wrapper->businessDayConvention(), iborIndex,
-                                    optionDates, strikesProxyAdjusted, quotes, dc, wrapper->volatilityType(),
-                                    wrapper->displacement());
-                                if (!stickySabr) {
-                                    hCapletVol = Handle<OptionletVolatilityStructure>(
-                                        QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, LinearFlat>>(
-                                            optionlet));
-                                }
-                            }
-                            if (stickySabr) {
-                                RelinkableHandle<OptionletVolatilityStructure> tmpHandle;
-                                if (!createSabrAdapter<Linear>(tmpHandle, optionlet, strikesSabr, volSpreadsSabr, *wrapper) &&
-                                    !createSabrAdapter<LinearFlat>(tmpHandle, optionlet, strikesSabr, volSpreadsSabr, *wrapper) &&
-                                    !createSabrAdapter<Cubic>(tmpHandle, optionlet, strikesSabr, volSpreadsSabr, *wrapper) &&
-                                    !createSabrAdapter<CubicFlat>(tmpHandle, optionlet, strikesSabr, volSpreadsSabr, *wrapper) &&
-                                    !createSabrAdapter<BackwardFlat>(tmpHandle, optionlet, strikesSabr, volSpreadsSabr, *wrapper)) {
-                                    QL_FAIL("SSM: expected SabrStrippedOptionletAdapter for stickySabr optionlet vol for key "
-                                                << name
-                                                << ". T0 cap/floor vol surface should be of a SABR variant"
-                                                << ". Supported time interpolators are: Linear, LinearFlat, Cubic, CubicFlat, BackwardFlat.");
-                                }
-                                hCapletVol = Handle<OptionletVolatilityStructure>(*tmpHandle);
-                            }
-                            if (proxy) {
-                                DLOG("Wrapping simulated vol structure with ProxyOptionletVolatility for " << name);
-                                hCapletVol = Handle<OptionletVolatilityStructure>(
-                                    QuantLib::ext::make_shared<ProxyOptionletVolatility>(hCapletVol,
-                                                                                         proxy->baseIndex(),
-                                                                                         proxy->targetIndex(),
-                                                                                         proxy->baseRateComputationPeriod(),
-                                                                                         proxy->targetRateComputationPeriod(),
-                                                                                         proxy->scalingFactor()));
-                            }
-                        } else {
-                            ReactionToTimeDecay decayMode = parseDecayMode(parameters->capFloorVolDecayMode());
-                            QuantLib::ext::shared_ptr<OptionletVolatilityStructure> capletVol = 
-                                    QuantLib::ext::make_shared<DynamicOptionletVolatilityStructure>(*wrapper, 0, NullCalendar(), decayMode);
-
-                            hCapletVol = Handle<OptionletVolatilityStructure>(capletVol);
-                        }
-                        hCapletVol->setAdjustReferenceDate(false);
-                        hCapletVol->enableExtrapolation();
-                        capFloorCurves_.emplace(std::piecewise_construct,
-                                                std::forward_as_tuple(Market::defaultConfiguration, name),
-                                                std::forward_as_tuple(hCapletVol));
-                        capFloorIndexBase_.emplace(
-                            std::piecewise_construct, std::forward_as_tuple(Market::defaultConfiguration, name),
-                            std::forward_as_tuple(std::make_pair(iborIndexName, rateComputationPeriod)));
-
-                        LOG("Simulation market cap/floor volatility type = " << hCapletVol->volatilityType());
+                        createOptionletVol(param.first, name, param.second.first, simDataWritten, bc);
                     } catch (const std::exception& e) {
                         processException(e, name, param.first, simDataWritten);
                         gotException = true;
@@ -4149,8 +3765,6 @@ void ScenarioSimMarket::applyCurveAlgebraIntradayPowerPriceCurve(const ScenarioS
     makeCommodityPriceCurveSpreaded(avgDayPriceCurve, bases, multiplier);
 }
 
-
-
 void ScenarioSimMarket::createBondFutureVol(RiskFactorKey::KeyType rfKeyType, const string& name, bool simulate,
     bool& simDataWritten, const BuildContext& bc) {
 
@@ -4252,6 +3866,760 @@ void ScenarioSimMarket::createBondFutureVol(RiskFactorKey::KeyType rfKeyType, co
 
     DLOG("ScenarioSimMarket: bond future volatility built for " << name);
 }
+
+void ScenarioSimMarket::createOptionletVol(RiskFactorKey::KeyType rfKeyType, const string& name, bool simulate,
+    bool& simDataWritten, const BuildContext& bc) {
+
+    DLOG("ScenarioSimMarket: building cap floor volatility for " << name);
+
+    auto stickyness = parseStickyness(parameters_->capFloorVolSmileDynamics(name));
+    const auto& initMktOvs = *bc.initMarket->capFloorVol(name, bc.configuration);
+
+    // Determine the base optionlet volatility structure to use for the simulation market.
+    ext::shared_ptr<ProxyOptionletVolatility> proxy;
+    if (stickyness == Stickyness::StickySABR || !useSpreadedTermStructures_)
+        proxy = ext::dynamic_pointer_cast<ProxyOptionletVolatility>(initMktOvs);
+
+    RelinkableHandle<OptionletVolatilityStructure> baseOvs;
+    if (proxy) 
+        baseOvs.linkTo(*proxy->baseVol());
+    else
+        baseOvs.linkTo(initMktOvs);
+
+    // Get IR index name and rate tenor.
+    auto indexNameRateCompPeriod = bc.initMarket->capFloorVolIndexBase(name, bc.configuration);
+    const auto& [indexName, rateCompPeriod] = indexNameRateCompPeriod;
+    ext::shared_ptr<IborIndex> irIndex;
+    if (!indexName.empty())
+        irIndex = parseIborIndex(indexName);
+
+    // Delegate to helper methods depending on what we are looking for.
+    Handle<OptionletVolatilityStructure> ssmOvs;
+    if (!simulate) {
+        ssmOvs = createNonSimulatedOptionletVol(*baseOvs);
+    } else if (stickyness == Stickyness::StickySABR) {
+        QL_FAIL("ScenarioSimMarket: sticky SABR optionlet volatility not refactored yet.");
+        // ssmOvs = createSabrOptionletVol(rfKeyType, name, simulate, simDataWritten, bc);
+    } else {
+        ssmOvs = createNonSabrOptionletVol(rfKeyType, name, simDataWritten, bc, irIndex,
+            baseOvs, rateCompPeriod, proxy);
+    }
+
+    // Final steps common to all.
+    ssmOvs->setAdjustReferenceDate(false);
+    ssmOvs->enableExtrapolation();
+    capFloorCurves_.emplace(std::pair{ Market::defaultConfiguration, name }, ssmOvs);
+    capFloorIndexBase_.emplace(std::pair{ Market::defaultConfiguration, name }, indexNameRateCompPeriod);
+
+    DLOG("ScenarioSimMarket: cap floor volatility built for " << name);
+}
+
+ScenarioSimMarket::CapFloorConventions ScenarioSimMarket::getCapFloorConventions(const string& name,
+    const CurveConfigurations& curveConfigs, const ext::shared_ptr<IborIndex>& irIndex) const
+{
+    CapFloorConventions result;
+
+    // Try to get the relevant cap floor curve configuration.
+    ext::shared_ptr<CapFloorVolatilityCurveConfig> config;
+    if (curveConfigs.hasCapFloorVolCurveConfig(name)) {
+        config = curveConfigs.capFloorVolCurveConfig(name);
+    } else if (irIndex) {
+        const auto& ccy = irIndex->currency().code();
+        if (curveConfigs.hasCapFloorVolCurveConfig(ccy))
+            config = curveConfigs.capFloorVolCurveConfig(ccy);
+    }
+
+    // If we got a curve configuration above, populate some information from it.
+    if (config) {
+        result.settleDays = config->settleDays();
+        result.onSettlementDays = config->onCapSettlementDays();
+    }
+
+    // If we have an IR index, populate some information from it.
+    if (irIndex) {
+        result.irIndexCalendar = irIndex->fixingCalendar();
+        result.isOis = ext::dynamic_pointer_cast<OvernightIndex>(irIndex) != nullptr;
+    }
+
+    return result;
+}
+
+vector<Date> ScenarioSimMarket::getOptionDates(const vector<Period>& optionTenors,
+    const ext::shared_ptr<IborIndex>& irIndex, const CapFloorConventions& conv,
+    const ext::shared_ptr<OptionletVolatilityStructure>& baseOvs, const Period& rateCompPeriod,
+    const std::string& name) const
+{
+    vector<Date> optionDates(optionTenors.size());
+
+    // Deal with the simple case first and return.
+    if (!parameters_->capFloorVolAdjustOptionletPillars() || !irIndex) {
+        for (Size i = 0; i < optionTenors.size(); ++i) {
+            optionDates[i] = baseOvs->optionDateFromTenor(optionTenors[i]);
+            if (!conv.irIndexCalendar.empty())
+                optionDates[i] = conv.irIndexCalendar.adjust(optionDates[i]);
+            DLOG("Option [tenor, date] pair is [" << optionTenors[i] << ", " << io::iso_date(optionDates[i]) << "]");
+        }
+        return optionDates;
+    }
+
+    // More involved case where we need to adjust the optionlet pillars.
+    ext::shared_ptr<OvernightIndex> onIndex;
+    if (conv.isOis)
+        onIndex = ext::static_pointer_cast<OvernightIndex>(irIndex);
+
+    for (Size i = 0; i < optionTenors.size(); ++i) {
+        if (conv.isOis) {
+            // Create a cap, on overnight indexed coupons, with the relevant option tenor.
+            Leg capFloor = MakeOISCapFloor(CapFloor::Cap, optionTenors[i], onIndex, rateCompPeriod, 0.0)
+                .withTelescopicValueDates(true)
+                .withSettlementDays(conv.onSettlementDays);
+
+            if (capFloor.empty()) {
+                optionDates[i] = asof_ + 1;
+            } else {
+                // Get the last coupon of the cap and use its fixing date as the optionlet pillar.
+                auto cpn = ext::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCoupon>(capFloor.back());
+                QL_REQUIRE(cpn, "ScenarioSimMarket: internal error, could not cast to "
+                    "CappedFlooredOvernightIndexedCoupon when building optionlet vol for '" << name <<
+                    "' with overnight index '" << onIndex->name() << "'");
+                auto und = cpn->underlying();
+                auto d = baseOvs->useEffectiveVolatility() ? und->fixingDateNoCutoff() : und->fixingDates().front();
+                optionDates[i] = std::max(asof_ + 1, d);
+            }
+        } else {
+            // Create a cap, on ibor coupons, with the relevant option tenor.
+            // Use the fixing date of the last coupon as the optionlet pillar.
+            ext::shared_ptr<CapFloor> capFloor = MakeCapFloor(CapFloor::Cap, optionTenors[i], irIndex, 0.0, 0 * Days);
+            if (capFloor->floatingLeg().empty()) {
+                optionDates[i] = asof_ + 1;
+            } else {
+                optionDates[i] = std::max(asof_ + 1, capFloor->lastFloatingRateCoupon()->fixingDate());
+            }
+        }
+
+        // Check that the option dates are increasing.
+        QL_REQUIRE(i == 0 || optionDates[i] > optionDates[i - 1], "ScenarioSimMarket: got non-increasing option dates "
+            << optionDates[i - 1] << ", " << optionDates[i] << " for tenors " << optionTenors[i - 1] << ", " <<
+            optionTenors[i] << " for index " << irIndex->name());
+
+        DLOG("Option [tenor, date] pair is [" << optionTenors[i] << ", " << io::iso_date(optionDates[i]) << "]");
+    }
+
+    return optionDates;
+}
+
+pair<bool, vector<Rate>> ScenarioSimMarket::getStrikes(const string& name, const vector<Rate>& configuredStrikes) const
+{
+    auto result = make_pair(false, configuredStrikes);
+    if (configuredStrikes.empty()) {
+        QL_REQUIRE(parameters_->capFloorVolIsAtm(name), "ScenarioSimMarket: strikes for " << name <<
+            " is empty in simulation parameters so expected its ATM flag to be true.");
+        result = { true, {0.0} };
+    }
+    return result;
+}
+
+vector<Rate> ScenarioSimMarket::getAtmStrikes(const vector<Period>& optionTenors, const vector<Date>& optionDates,
+    const ext::shared_ptr<IborIndex>& irIndex, const CapFloorConventions& conv, const Period& rateCompPeriod,
+    const std::string& name, const string& configuration, const ext::shared_ptr<Market>& initMarket) const
+{
+    vector<Rate> result(optionTenors.size());
+
+    QL_REQUIRE(irIndex, "ScenarioSimMarket: expected ibor index for cap floor config " << name <<
+        " or a curve config for a ccy");
+
+    // Get the IR index from the initial market.
+    auto oreIndexName = IndexNameTranslator::instance().oreName(irIndex->name());
+    auto initMktIndex = *initMarket->iborIndex(oreIndexName, configuration);
+
+    // If using the term cap ATM rate is configured, caculate the ATM rates and return.
+    if (parameters_->capFloorVolUseCapAtm()) {
+        QL_REQUIRE(!conv.isOis, "ScenarioSimMarket: capFloorVolUseCapATM not supported for OIS indices (" <<
+            initMktIndex->name() << ")");
+        const auto& ccy = initMktIndex->currency().code();
+        const auto& discTs = **initMarket->discountCurve(ccy, configuration);
+        for (Size i = 0; i < optionTenors.size(); ++i) {
+            ext::shared_ptr<CapFloor> cap = MakeCapFloor(CapFloor::Cap, optionTenors[i], initMktIndex, 0.0, 0 * Days);
+            result[i] = cap->atmRate(discTs);
+        }
+        return result;
+    }
+
+    // If not an OIS index, the ATM rate is simple i.e. the Ibor index fixing on the optionlet date.
+    if (!conv.isOis) {
+        for (Size i = 0; i < optionTenors.size(); ++i)
+            result[i] = initMktIndex->fixing(optionDates[i]);
+        return result;
+    }
+
+    // Deal with the case now of ATM strikes for optionlet on OIS coupon.
+    ext::shared_ptr<OvernightIndex> onIndex = ext::static_pointer_cast<OvernightIndex>(initMktIndex);
+    for (Size i = 0; i < optionTenors.size(); ++i) {
+
+        Leg capFloor = MakeOISCapFloor(CapFloor::Cap, optionTenors[i], onIndex, rateCompPeriod, 0.0)
+            .withTelescopicValueDates(true)
+            .withSettlementDays(conv.onSettlementDays);
+
+        if (capFloor.empty()) {
+            result[i] = initMktIndex->fixing(optionDates[i]);
+        } else {
+            // Get the last coupon of the cap and use its fixing date as the optionlet pillar.
+            auto cpn = ext::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCoupon>(capFloor.back());
+            QL_REQUIRE(cpn, "ScenarioSimMarket: internal error, could not cast to "
+                "CappedFlooredOvernightIndexedCoupon when building optionlet vol for '" << name <<
+                "' with overnight index '" << onIndex->name() << "'");
+            result[i] = cpn->underlying()->rate();
+        }
+    }
+    return result;
+}
+
+vector<Real> ScenarioSimMarket::getProxyAdjustments(const vector<Period>& optionTenors, const vector<Date>& optionDates,
+    const ext::shared_ptr<ProxyOptionletVolatility>& proxy) const
+{
+    vector<Real> result(optionTenors.size());
+    for (Size i = 0; i < optionTenors.size(); ++i) {
+        Real base = proxy->getAtmLevel(optionDates[i], proxy->baseIndex(), proxy->baseRateComputationPeriod());
+        DLOG("Base ATM level from proxy for option tenor " << optionTenors[i] << " is " << base);
+        Real target = proxy->getAtmLevel(optionDates[i], proxy->targetIndex(), proxy->targetRateComputationPeriod());
+        DLOG("Target ATM level from proxy for option tenor " << optionTenors[i] << " is " << target);
+        result[i] = base - target;
+        DLOG("Adjusted strikes for option tenor " << optionTenors[i] << " by proxy adjustment of " << result[i]);
+    }
+    return result;
+}
+
+Handle<OptionletVolatilityStructure> ScenarioSimMarket::createNonSimulatedOptionletVol(
+    const ext::shared_ptr<OptionletVolatilityStructure>& baseOvs)
+{
+    ReactionToTimeDecay decayMode = parseDecayMode(parameters_->capFloorVolDecayMode());
+    return Handle<OptionletVolatilityStructure>(ext::make_shared<DynamicOptionletVolatilityStructure>(
+        baseOvs, 0, NullCalendar(), decayMode));
+}
+
+Handle<OptionletVolatilityStructure> ScenarioSimMarket::createNonSabrOptionletVol(RiskFactorKey::KeyType rfKeyType,
+    const string& name, bool& simDataWritten, const BuildContext& bc, const ext::shared_ptr<IborIndex>& irIndex,
+    const Handle<OptionletVolatilityStructure>& baseOvs, const Period& rateCompPeriod,
+    const ext::shared_ptr<QuantExt::ProxyOptionletVolatility>& proxy)
+{
+    // Some conventions to help with the creation of the cap floor volatility structure.
+    CapFloorConventions conventions = getCapFloorConventions(name, bc.curveConfigs, irIndex);
+
+    // Configured tenors and strikes.
+    vector<Period> optionTenors = parameters_->capFloorVolExpiries(name);
+    vector<Real> configuredStrikes = parameters_->capFloorVolStrikes(name);
+    auto nOptTenors = optionTenors.size();
+
+    // Configued strikes may be empty which indicates that an ATM curve has been configured.
+    auto [isAtm, strikes] = getStrikes(name, configuredStrikes);
+    auto nStrikes = strikes.size();
+
+    // Get the option dates for the configured tenors.
+    vector<Date> optionDates = getOptionDates(optionTenors, irIndex, conventions, *baseOvs, rateCompPeriod, name);
+
+    // Get the ATM strike for each tenor if necessary.
+    vector<Rate> atmStrikes;
+    if (isAtm) {
+        atmStrikes = getAtmStrikes(optionTenors, optionDates, irIndex, conventions, rateCompPeriod, name,
+            bc.configuration, bc.initMarket);
+    }
+
+    // If the initial market surface was a proxy volatility surface, calculate a proxy adjustment for each option tenor.
+    vector<Real> proxyAdjs;
+    if (proxy)
+        proxyAdjs = getProxyAdjustments(optionTenors, optionDates, proxy);
+
+    // Elements to be populated in the main loop below.
+    vector<vector<Real>> strikesProxyAdjusted(nOptTenors, strikes);
+    auto atmStrikesProxyAdjusted = atmStrikes;
+    vector<vector<Handle<Quote>>> quotes(nOptTenors, vector<Handle<Quote>>(nStrikes, Handle<Quote>()));
+    map<RiskFactorKey, ext::shared_ptr<SimpleQuote>> simDataTmp;
+    map<RiskFactorKey, Real> absoluteSimDataTmp;
+
+    // Main loop populating the SSM strikes and quotes.
+    for (Size i = 0, counter = 0; i < optionTenors.size(); ++i) {
+
+        // Add proxy adjustment, if any, to non-ATM strikes.
+        if (!proxyAdjs.empty()) {
+            for (Size j = 0; j < nStrikes; ++j) {
+                strikesProxyAdjusted[i][j] = strikes[j] + proxyAdjs[i];
+                if (!close_enough(proxyAdjs[i], 0.0))
+                    DLOG("  adjusted strike from " << strikes[j] << " to " << strikesProxyAdjusted[i][j]);
+            }
+        }
+
+        // Add proxy adjustment, if any, to ATM strike, if ATM strikes were configured.
+        if (isAtm && !proxyAdjs.empty()) {
+            atmStrikesProxyAdjusted[i] = atmStrikes[i] + proxyAdjs[i];
+            if (!close_enough(proxyAdjs[i], 0.0))
+                DLOG("  adjusted ATM strike from " << atmStrikes[i] << " to " << atmStrikesProxyAdjusted[i]);
+        }
+
+        // Populate the volatility quotes.
+        // Note: this loop deals with ATM or non ATM. nStrikes should be 1 if isAtm is true.
+        for (Size j = 0; j < nStrikes; ++j, ++counter) {
+            Real strike = isAtm ? atmStrikesProxyAdjusted[i] : strikesProxyAdjusted[i][j];
+            Real vol = baseOvs->volatility(optionDates[i], strike, true);
+            DLOG("Vol at [date, strike] pair [" << optionDates[i] << ", " << std::fixed
+                << std::setprecision(4) << strike << "] is " << std::setprecision(12) << vol);
+            auto quote = ext::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 0.0 : vol);
+
+            simDataTmp.emplace(RiskFactorKey{ rfKeyType, name, counter }, quote);
+            if (useSpreadedTermStructures_) {
+                absoluteSimDataTmp.emplace(RiskFactorKey{ rfKeyType, name, counter }, vol);
+            }
+
+            quotes[i][j] = Handle<Quote>(quote);
+        }
+    }
+
+    // Generate coordinates.
+    vector<vector<Real>> coordinates(2);
+    for (const auto& optTenor : optionTenors)
+        coordinates[0].push_back(baseOvs->timeFromReference(baseOvs->optionDateFromTenor(optTenor)));
+    if (isAtm) {
+        coordinates[1].push_back(atmStrikes.back());
+    } else {
+        coordinates[1] = strikes;
+    }
+
+    // Store the quotes and coordinates.
+    writeSimData(simDataTmp, absoluteSimDataTmp, rfKeyType, name, coordinates);
+    simDataWritten = true;
+
+    // Create the SSM optionlet volatility structure.
+    Handle<OptionletVolatilityStructure> hOvs;
+    if (useSpreadedTermStructures_) {
+        auto decayMode = parseDecayMode(parameters_->capFloorVolDecayMode());
+        if (proxy) {
+            // Use `AtmAdjustedSpreadedOptionletVolatility2` which adjusts strike level in the volSpread matrix
+            // according to difference in ATM levels when a smileSection is queried.
+            hOvs = Handle<OptionletVolatilityStructure>(ext::make_shared<AtmAdjustedSpreadedOptionletVolatility2>(
+                baseOvs, optionDates, strikes, quotes, proxy->baseIndex(), proxy->targetIndex(),
+                proxy->baseRateComputationPeriod(), proxy->targetRateComputationPeriod(), proxy->scalingFactor(),
+                decayMode));
+        } else {
+            hOvs = Handle<OptionletVolatilityStructure>(ext::make_shared<SpreadedOptionletVolatility2>(
+                baseOvs, optionDates, strikes, quotes, decayMode));
+        }
+    } else {
+        // FIXME: Works as of today only e.g. for sensitivity / scenario analysis.
+        // TODO: Build floating reference date StrippedOptionlet class for MC path generators.
+        auto optionlet = ext::make_shared<QuantLib::StrippedOptionlet>(conventions.settleDays, baseOvs->calendar(),
+            baseOvs->businessDayConvention(), irIndex, optionDates, strikesProxyAdjusted, quotes, baseOvs->dayCounter(),
+            baseOvs->volatilityType(), baseOvs->displacement());
+
+        hOvs = Handle<OptionletVolatilityStructure>(
+            ext::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, LinearFlat>>(optionlet));
+    }
+
+    // Wrap the structure if the original initial market structure was a proxy volatility structure.
+    if (proxy) {
+        hOvs = Handle<OptionletVolatilityStructure>(ext::make_shared<ProxyOptionletVolatility>(hOvs, proxy->baseIndex(),
+            proxy->targetIndex(), proxy->baseRateComputationPeriod(), proxy->targetRateComputationPeriod(),
+            proxy->scalingFactor()));
+    }
+
+    return hOvs;
+}
+
+//Handle<OptionletVolatilityStructure> ScenarioSimMarket::createSabrOptionletVol(RiskFactorKey::KeyType rfKeyType,
+//    const string& name, bool simulate, bool& simDataWritten, const BuildContext& bc) {
+//
+//    DLOG("ScenarioSimMarket: building SABR optionlet volatility for " << name);
+//
+//    RelinkableHandle<OptionletVolatilityStructure> wrapper;
+//    const auto& initMktOvs = *bc.initMarket->capFloorVol(name, bc.configuration);
+//    if (auto proxy = ext::dynamic_pointer_cast<ProxyOptionletVolatility>(initMktOvs)) {
+//        wrapper.linkTo(*proxy->baseVol());
+//    } else {
+//        wrapper.linkTo(initMktOvs);
+//    }
+//
+//    auto [iborIndexName, rateComputationPeriod] = bc.initMarket->capFloorVolIndexBase(name, bc.configuration);
+//    ext::shared_ptr<IborIndex> iborIndex;
+//    if (!iborIndexName.empty())
+//        iborIndex = parseIborIndex(iborIndexName);
+//
+//    Handle<OptionletVolatilityStructure> hCapletVol;
+//
+//    // Check if the risk factor is simulated before adding it
+//    if (param.second.first) {
+//        LOG("Simulating Cap/Floor Optionlet vols for key " << name);
+//
+//        // Try to get the ibor index that the cap floor structure relates to
+//        // We use this to convert Period to Date below to sample from `wrapper`
+//        Natural settleDays = 0;
+//        bool isOis = false;
+//        Calendar iborCalendar;
+//        Size onSettlementDays = 0;
+//
+//        // get the curve config for the index, or if not available for its ccy
+//        QuantLib::ext::shared_ptr<CapFloorVolatilityCurveConfig> config;
+//        if (curveConfigs.hasCapFloorVolCurveConfig(name)) {
+//            config = curveConfigs.capFloorVolCurveConfig(name);
+//        }
+//        else {
+//            if (iborIndex && curveConfigs.hasCapFloorVolCurveConfig(iborIndex->currency().code())) {
+//                config = curveConfigs.capFloorVolCurveConfig(iborIndex->currency().code());
+//            }
+//        }
+//
+//        // get info from the config if we have one
+//        if (config) {
+//            settleDays = config->settleDays();
+//            onSettlementDays = config->onCapSettlementDays();
+//        }
+//
+//        // derive info from the ibor index
+//        if (iborIndex) {
+//            iborCalendar = iborIndex->fixingCalendar();
+//            isOis = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(iborIndex) != nullptr;
+//        }
+//
+//        vector<Period> optionTenors = parameters->capFloorVolExpiries(name);
+//        vector<Date> optionDates(optionTenors.size());
+//
+//        vector<vector<Real>> strikesSabr;
+//        vector<vector<Handle<Quote>>> volSpreadsSabr;
+//
+//        vector<Real> strikes = parameters->capFloorVolStrikes(name);
+//        bool isAtm = false;
+//        if (stickySabr) {
+//            if (auto sabr = QuantLib::ext::dynamic_pointer_cast<SabrStrippedOptionletAdapter<Linear>>(*wrapper)) {
+//                strikesSabr = vector<vector<Real>>(optionTenors.size(), sabr->optionletBase()->optionletStrikes(0));
+//            }
+//            else if (auto sabr = QuantLib::ext::dynamic_pointer_cast<SabrStrippedOptionletAdapter<LinearFlat>>(*wrapper)) {
+//                strikesSabr = vector<vector<Real>>(optionTenors.size(), sabr->optionletBase()->optionletStrikes(0));
+//            }
+//            else if (auto sabr = QuantLib::ext::dynamic_pointer_cast<SabrStrippedOptionletAdapter<Cubic>>(*wrapper)) {
+//                strikesSabr = vector<vector<Real>>(optionTenors.size(), sabr->optionletBase()->optionletStrikes(0));
+//            }
+//            else if (auto sabr = QuantLib::ext::dynamic_pointer_cast<SabrStrippedOptionletAdapter<CubicFlat>>(*wrapper)) {
+//                strikesSabr = vector<vector<Real>>(optionTenors.size(), sabr->optionletBase()->optionletStrikes(0));
+//            }
+//            else if (auto sabr = QuantLib::ext::dynamic_pointer_cast<SabrStrippedOptionletAdapter<BackwardFlat>>(*wrapper)) {
+//                strikesSabr = vector<vector<Real>>(optionTenors.size(), sabr->optionletBase()->optionletStrikes(0));
+//            }
+//            else {
+//                QL_FAIL("SSM: expected SabrStrippedOptionletAdapter for stickySabr optionlet vol for key "
+//                    << name
+//                    << ". T0 cap/floor vol surface should be of a SABR variant"
+//                    << ". Supported time interpolators are: Linear, LinearFlat, Cubic, CubicFlat, BackwardFlat.");
+//            }
+//            volSpreadsSabr.resize(optionTenors.size(), vector<Handle<Quote>>(strikesSabr[0].size(), Handle<Quote>()));
+//            strikes = { 0.0 };
+//            isAtm = true;
+//        }
+//        // Strikes may be empty here which means that an ATM curve has been configured
+//        if (strikes.empty()) {
+//            QL_REQUIRE(
+//                parameters->capFloorVolIsAtm(name),
+//                "Strikes for "
+//                << name
+//                << " is empty in simulation parameters so expected its ATM flag to be true");
+//            strikes = { 0.0 };
+//            isAtm = true;
+//        }
+//
+//        vector<vector<Real>> strikesProxyAdjusted(optionTenors.size(), strikes);
+//        vector<vector<Handle<Quote>>> quotes(
+//            optionTenors.size(), vector<Handle<Quote>>(strikes.size(), Handle<Quote>()));
+//
+//        DLOG("cap floor use adjusted option pillars = " << std::boolalpha << parameters_->capFloorVolAdjustOptionletPillars());
+//        DLOG("have ibor index = " << std::boolalpha << (iborIndex != nullptr));
+//
+//        vector<Rate> atmStrikes(optionTenors.size(), Null<Rate>());
+//        auto atmStrikesProxyAdjusted = atmStrikes;
+//        vector<Rate> atmVols(optionTenors.size(), Null<Rate>());
+//        for (Size i = 0, index = 0; i < optionTenors.size(); ++i) {
+//
+//            if (parameters_->capFloorVolAdjustOptionletPillars() && iborIndex) {
+//                // If we ask for cap pillars at tenors t_i for i = 1,...,N, we should attempt to
+//                // place the optionlet pillars at the fixing date of the last optionlet in the cap
+//                // with tenor t_i, if capFloorVolAdjustOptionletPillars is true.
+//                if (isOis) {
+//                    Leg capFloor =
+//                        MakeOISCapFloor(
+//                            CapFloor::Cap, optionTenors[i],
+//                            QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndex>(iborIndex),
+//                            rateComputationPeriod, 0.0)
+//                        .withTelescopicValueDates(true)
+//                        .withSettlementDays(onSettlementDays);
+//                    if (capFloor.empty()) {
+//                        optionDates[i] = asof_ + 1;
+//                    }
+//                    else {
+//                        auto lastCoupon = QuantLib::ext::dynamic_pointer_cast<
+//                            QuantExt::CappedFlooredOvernightIndexedCoupon>(capFloor.back());
+//                        QL_REQUIRE(lastCoupon, "SSM internal error, could not cast to "
+//                            "CappedFlooredOvernightIndexedCoupon "
+//                            "when building optionlet vol for '"
+//                            << name << "' (index=" << iborIndex->name()
+//                            << ")");
+//                        optionDates[i] = std::max(
+//                            asof_ + 1, wrapper->useEffectiveVolatility()
+//                            ? lastCoupon->underlying()->fixingDateNoCutoff()
+//                            : lastCoupon->underlying()->fixingDates().front());
+//                    }
+//                }
+//                else {
+//                    QuantLib::ext::shared_ptr<CapFloor> capFloor =
+//                        MakeCapFloor(CapFloor::Cap, optionTenors[i], iborIndex, 0.0, 0 * Days);
+//                    if (capFloor->floatingLeg().empty()) {
+//                        optionDates[i] = asof_ + 1;
+//                    }
+//                    else {
+//                        optionDates[i] =
+//                            std::max(asof_ + 1, capFloor->lastFloatingRateCoupon()->fixingDate());
+//                    }
+//                }
+//                QL_REQUIRE(i == 0 || optionDates[i] > optionDates[i - 1],
+//                    "SSM: got non-increasing option dates "
+//                    << optionDates[i - 1] << ", " << optionDates[i] << " for tenors "
+//                    << optionTenors[i - 1] << ", " << optionTenors[i] << " for index "
+//                    << iborIndex->name());
+//            }
+//            else {
+//                // Otherwise, just place the optionlet pillars at the configured tenors.
+//                optionDates[i] = wrapper->optionDateFromTenor(optionTenors[i]);
+//                if (iborCalendar != Calendar()) {
+//                    // In case the original cap floor surface has the incorrect calendar configured.
+//                    optionDates[i] = iborCalendar.adjust(optionDates[i]);
+//                }
+//            }
+//
+//            DLOG("Option [tenor, date] pair is [" << optionTenors[i] << ", "
+//                << io::iso_date(optionDates[i]) << "]");
+//
+//            // If ATM, use initial market's discount curve and ibor index to calculate ATM rate
+//            if (isAtm) {
+//                QL_REQUIRE(iborIndex != nullptr,
+//                    "SSM: Expected ibor index for key "
+//                    << name << " from the key or a curve config for a ccy");
+//                auto t0_iborIndex = *initMarket->iborIndex(
+//                    IndexNameTranslator::instance().oreName(iborIndex->name()), configuration);
+//                if (parameters_->capFloorVolUseCapAtm()) {
+//                    QL_REQUIRE(!isOis, "SSM: capFloorVolUseCapATM not supported for OIS indices ("
+//                        << t0_iborIndex->name() << ")");
+//                    QuantLib::ext::shared_ptr<CapFloor> cap =
+//                        MakeCapFloor(CapFloor::Cap, optionTenors[i], t0_iborIndex, 0.0, 0 * Days);
+//                    atmStrikes[i] = cap->atmRate(**initMarket->discountCurve(name, configuration));
+//                }
+//                else {
+//                    if (isOis) {
+//                        Leg capFloor =
+//                            MakeOISCapFloor(CapFloor::Cap, optionTenors[i],
+//                                QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(t0_iborIndex),
+//                                rateComputationPeriod, 0.0)
+//                            .withTelescopicValueDates(true)
+//                            .withSettlementDays(onSettlementDays);
+//                        if (capFloor.empty()) {
+//                            atmStrikes[i] = t0_iborIndex->fixing(optionDates[i]);
+//                        }
+//                        else {
+//                            auto lastCoupon =
+//                                QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(
+//                                    capFloor.back());
+//                            QL_REQUIRE(lastCoupon, "SSM internal error, could not cast to "
+//                                "CappedFlooredOvernightIndexedCoupon "
+//                                "when building optionlet vol for '"
+//                                << name << "', index=" << t0_iborIndex->name());
+//                            atmStrikes[i] = lastCoupon->underlying()->rate();
+//                        }
+//                    }
+//                    else {
+//                        atmStrikes[i] = t0_iborIndex->fixing(optionDates[i]);
+//                    }
+//                }
+//            }
+//
+//            Real proxyAdjustment = 0.0;
+//            if (proxy) {
+//                Real baseAtmLevel = proxy->getAtmLevel(optionDates[i], proxy->baseIndex(),
+//                    proxy->baseRateComputationPeriod());
+//                DLOG("Base ATM level from proxy for option tenor " << optionTenors[i]
+//                    << " is " << baseAtmLevel);
+//                Real targetAtmLevel = proxy->getAtmLevel(optionDates[i], proxy->targetIndex(),
+//                    proxy->targetRateComputationPeriod());
+//                DLOG("Target ATM level from proxy for option tenor " << optionTenors[i]
+//                    << " is " << targetAtmLevel);
+//                proxyAdjustment = -(targetAtmLevel - baseAtmLevel);
+//                DLOG("Adjusted strikes for option tenor " << optionTenors[i]
+//                    << " by proxy adjustment of "
+//                    << proxyAdjustment);
+//            }
+//            for (Size j = 0; j < strikesProxyAdjusted[i].size(); ++j) {
+//                strikesProxyAdjusted[i][j] = strikes[j] + proxyAdjustment;
+//                if (!close_enough(proxyAdjustment, 0.0))
+//                    DLOG("  adjusted strike from " << strikes[j] << " to " << strikesProxyAdjusted[i][j]);
+//            }
+//            atmStrikesProxyAdjusted[i] = atmStrikes[i] + proxyAdjustment;
+//            if (!close_enough(proxyAdjustment, 0.0))
+//                DLOG("  adjusted ATM strike from " << atmStrikes[i] << " to " << atmStrikesProxyAdjusted[i]);
+//
+//            for (Size j = 0; j < strikesProxyAdjusted[i].size(); ++j, ++index) {
+//                Real strike = isAtm ? atmStrikesProxyAdjusted[i] : strikesProxyAdjusted[i][j];
+//                Real vol =
+//                    wrapper->volatility(optionDates[i], strike, true);
+//                if (isAtm)
+//                    atmVols[i] = vol;
+//                DLOG("Vol at [date, strike] pair [" << optionDates[i] << ", " << std::fixed
+//                    << std::setprecision(4) << strike << "] is "
+//                    << std::setprecision(12) << vol);
+//                QuantLib::ext::shared_ptr<SimpleQuote> q =
+//                    QuantLib::ext::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 0.0 : vol);
+//
+//                simDataTmp.emplace(std::piecewise_construct,
+//                    std::forward_as_tuple(param.first, name, index),
+//                    std::forward_as_tuple(q));
+//                if (useSpreadedTermStructures_) {
+//                    absoluteSimDataTmp.emplace(std::piecewise_construct,
+//                        std::forward_as_tuple(param.first, name, index),
+//                        std::forward_as_tuple(vol));
+//                }
+//                quotes[i][j] = Handle<Quote>(q);
+//            }
+//            if (!strikesSabr.empty()) {
+//                for (Size j = 0; j < strikesSabr[i].size(); ++j) {
+//                    QL_REQUIRE(quotes[i].size() == 1,
+//                        "SSM internal error: expected quotes size 1 for stickySabr");
+//                    Real strike = strikesSabr[i][j];
+//                    Real vol =
+//                        wrapper->volatility(optionDates[i], strike, true);
+//                    DLOG("Vol at [date, strike] pair [" << optionDates[i] << ", " << std::fixed
+//                        << std::setprecision(4) << strike << "] is "
+//                        << std::setprecision(12) << vol);
+//                    Real volSpread = vol - atmVols[i];
+//                    DLOG("VolSpread at [date, strike] pair [" << optionDates[i] << ", " << std::fixed
+//                        << std::setprecision(4) << strike << "] is "
+//                        << std::setprecision(12) << volSpread);
+//                    volSpreadsSabr[i][j] = Handle<Quote>(
+//                        QuantLib::ext::make_shared<SimpleQuote>(volSpread));
+//                }
+//            }
+//        }
+//
+//        std::vector<std::vector<Real>> coordinates(2);
+//        for (Size i = 0;i < optionTenors.size();++i) {
+//            coordinates[0].push_back(
+//                wrapper->timeFromReference(wrapper->optionDateFromTenor(optionTenors[i])));
+//        }
+//        for (Size j = 0;j < strikes.size();++j) {
+//            coordinates[1].push_back(isAtm ? atmStrikes.back() : strikes[j]);
+//        }
+//
+//        writeSimData(simDataTmp, absoluteSimDataTmp, param.first, name, coordinates);
+//        simDataWritten = true;
+//
+//        DayCounter dc = wrapper->dayCounter();
+//
+//        QuantLib::ext::shared_ptr<QuantLib::StrippedOptionlet> optionlet;
+//
+//        if (useSpreadedTermStructures_) {
+//
+//            if (proxy) {
+//                // Use AtmAdjustedSpreadedOptionletVolatility2 which adjusts strike level in the volSpread matrix
+//                // according to difference in ATM levels when a smileSection is queried
+//                hCapletVol = Handle<OptionletVolatilityStructure>(
+//                    QuantLib::ext::make_shared<AtmAdjustedSpreadedOptionletVolatility2>(
+//                        wrapper, optionDates, strikes, quotes, proxy->baseIndex(),
+//                        proxy->targetIndex(), proxy->baseRateComputationPeriod(),
+//                        proxy->targetRateComputationPeriod(), proxy->scalingFactor(),
+//                        parseDecayMode(parameters->capFloorVolDecayMode())));
+//                hCapletVol->setAdjustReferenceDate(false);
+//            }
+//            else {
+//                hCapletVol = Handle<OptionletVolatilityStructure>(
+//                    QuantLib::ext::make_shared<QuantExt::SpreadedOptionletVolatility2>(
+//                        wrapper, optionDates, strikes, quotes,
+//                        parseDecayMode(parameters->capFloorVolDecayMode())));
+//                hCapletVol->setAdjustReferenceDate(false);
+//            }
+//
+//            if (stickySabr) {
+//                auto strikeVec = vector<vector<Real>>(optionDates.size());
+//                auto optionletQuotes = vector<vector<Handle<Quote>>>(optionDates.size());
+//                for (Size i = 0; i < optionDates.size(); ++i) {
+//                    strikeVec[i].push_back(atmStrikesProxyAdjusted[i]);
+//                    optionletQuotes[i] = vector<Handle<Quote>>(1);
+//                    optionletQuotes[i][0] = Handle<Quote>(ext::make_shared<SimpleQuote>(0.0));
+//                }
+//                iborIndex = *initMarket->iborIndex(
+//                    IndexNameTranslator::instance().oreName(iborIndex->name()), configuration);
+//
+//                optionlet = QuantLib::ext::make_shared<QuantExt::StrippedOptionlet>(
+//                    settleDays, wrapper->calendar(), wrapper->businessDayConvention(), iborIndex,
+//                    optionDates, strikeVec, hCapletVol, optionletQuotes,
+//                    dc, wrapper->volatilityType(),
+//                    wrapper->displacement());
+//            }
+//        }
+//        else {
+//            // FIXME: Works as of today only, i.e. for sensitivity/scenario analysis.
+//            // TODO: Build floating reference date StrippedOptionlet class for MC path generators
+//
+//            // If StickySABR, we need initial market's discount curve in ibor index to calculate ATM rate
+//            // in SabrStrippedOptionletAdapter via optionletBase()->atmOptionletRates()
+//            if (stickySabr) {
+//                iborIndex = *initMarket->iborIndex(
+//                    IndexNameTranslator::instance().oreName(iborIndex->name()), configuration);
+//            }
+//            optionlet = QuantLib::ext::make_shared<QuantLib::StrippedOptionlet>(
+//                settleDays, wrapper->calendar(), wrapper->businessDayConvention(), iborIndex,
+//                optionDates, strikesProxyAdjusted, quotes, dc, wrapper->volatilityType(),
+//                wrapper->displacement());
+//            if (!stickySabr) {
+//                hCapletVol = Handle<OptionletVolatilityStructure>(
+//                    QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, LinearFlat>>(
+//                        optionlet));
+//            }
+//        }
+//        if (stickySabr) {
+//            RelinkableHandle<OptionletVolatilityStructure> tmpHandle;
+//            if (!createSabrAdapter<Linear>(tmpHandle, optionlet, strikesSabr, volSpreadsSabr, *wrapper) &&
+//                !createSabrAdapter<LinearFlat>(tmpHandle, optionlet, strikesSabr, volSpreadsSabr, *wrapper) &&
+//                !createSabrAdapter<Cubic>(tmpHandle, optionlet, strikesSabr, volSpreadsSabr, *wrapper) &&
+//                !createSabrAdapter<CubicFlat>(tmpHandle, optionlet, strikesSabr, volSpreadsSabr, *wrapper) &&
+//                !createSabrAdapter<BackwardFlat>(tmpHandle, optionlet, strikesSabr, volSpreadsSabr, *wrapper)) {
+//                QL_FAIL("SSM: expected SabrStrippedOptionletAdapter for stickySabr optionlet vol for key "
+//                    << name
+//                    << ". T0 cap/floor vol surface should be of a SABR variant"
+//                    << ". Supported time interpolators are: Linear, LinearFlat, Cubic, CubicFlat, BackwardFlat.");
+//            }
+//            hCapletVol = Handle<OptionletVolatilityStructure>(*tmpHandle);
+//        }
+//        if (proxy) {
+//            DLOG("Wrapping simulated vol structure with ProxyOptionletVolatility for " << name);
+//            hCapletVol = Handle<OptionletVolatilityStructure>(
+//                QuantLib::ext::make_shared<ProxyOptionletVolatility>(hCapletVol,
+//                    proxy->baseIndex(),
+//                    proxy->targetIndex(),
+//                    proxy->baseRateComputationPeriod(),
+//                    proxy->targetRateComputationPeriod(),
+//                    proxy->scalingFactor()));
+//        }
+//    }
+//    else {
+//        ReactionToTimeDecay decayMode = parseDecayMode(parameters->capFloorVolDecayMode());
+//        QuantLib::ext::shared_ptr<OptionletVolatilityStructure> capletVol =
+//            QuantLib::ext::make_shared<DynamicOptionletVolatilityStructure>(*wrapper, 0, NullCalendar(), decayMode);
+//
+//        hCapletVol = Handle<OptionletVolatilityStructure>(capletVol);
+//    }
+//    hCapletVol->setAdjustReferenceDate(false);
+//    hCapletVol->enableExtrapolation();
+//    capFloorCurves_.emplace(std::piecewise_construct,
+//        std::forward_as_tuple(Market::defaultConfiguration, name),
+//        std::forward_as_tuple(hCapletVol));
+//    capFloorIndexBase_.emplace(
+//        std::piecewise_construct, std::forward_as_tuple(Market::defaultConfiguration, name),
+//        std::forward_as_tuple(std::make_pair(iborIndexName, rateComputationPeriod)));
+//
+//    DLOG("ScenarioSimMarket: cap floor volatility built for " << name);
+//
+//    return hCapletVol;
+//}
 
 } // namespace analytics
 } // namespace ore
