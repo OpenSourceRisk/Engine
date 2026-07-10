@@ -39,8 +39,18 @@
 
 namespace QuantExt {
 
+class SabrStrippedOptionletAdapterBase {
+public:
+    using ModelParamData = std::vector<std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>;
+    virtual ~SabrStrippedOptionletAdapterBase() = default;
+
+    virtual std::vector<QuantLib::Real> optionletStrikes(QuantLib::Size i) const = 0;
+    virtual const ModelParamData& initialModelParameters() const = 0;
+};
+
 template <class TimeInterpolator>
-class SabrStrippedOptionletAdapter : public QuantLib::OptionletVolatilityStructure, public QuantLib::LazyObject {
+class SabrStrippedOptionletAdapter : public QuantLib::OptionletVolatilityStructure, public QuantLib::LazyObject,
+    public SabrStrippedOptionletAdapterBase {
 
 public:
     /*! Constructor that does not take a reference date. The settlement days is derived from \p sob and the term
@@ -104,6 +114,13 @@ public:
     void deepUpdate() override;
     //@}
 
+    //! \name SabrStrippedOptionletAdapterBase interface
+    //@{
+    std::vector<QuantLib::Real> optionletStrikes(QuantLib::Size i) const override {
+        return optionletBase_->optionletStrikes(i);
+    }
+    //@}
+
     //! \name Inspectors
     //@{
     QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase> optionletBase() const;
@@ -113,8 +130,7 @@ public:
     }
     QuantExt::SabrParametricVolatility::ModelVariant modelVariant() const { return modelVariant_; }
     QuantLib::Real modelDisplacement() const { return modelDisplacement_; }
-    const std::vector<std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>&
-        initialModelParameters() const { return initialModelParameters_; }
+    const ModelParamData& initialModelParameters() const override { return initialModelParameters_; }
     QuantLib::Size maxCalibrationAttempts() const { return maxCalibrationAttempts_; }
     QuantLib::Real exitEarlyErrorThreshold() const { return exitEarlyErrorThreshold_; }
     const std::vector<std::vector<Real>>& strikes() const { return strikes_; }
@@ -142,7 +158,7 @@ private:
     QuantLib::ext::optional<QuantLib::VolatilityType> outputVolatilityType_;
     QuantLib::Real outputDisplacement_;
     QuantLib::Real modelDisplacement_ = Null<Real>();
-    std::vector<std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>> initialModelParameters_;
+    ModelParamData initialModelParameters_;
     QuantLib::Size maxCalibrationAttempts_;
     QuantLib::Real exitEarlyErrorThreshold_;
     QuantLib::Real maxAcceptableError_;
