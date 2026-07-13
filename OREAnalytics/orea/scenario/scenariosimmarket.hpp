@@ -267,7 +267,7 @@ private:
         QuantExt::RiskFactorKey::KeyType rfKeyType, const std::string& name, bool& simDataWritten,
         const BuildContext& context, const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& irIndex,
         const QuantLib::Handle<QuantLib::OptionletVolatilityStructure>& baseOvs,
-        const QuantLib::Period& rateCompPeriod);
+        const QuantLib::Period& rateCompPeriod, QuantExt::Stickyness stickyness);
     QuantLib::Handle<QuantLib::OptionletVolatilityStructure> createStickySabrOptionletVol(
         QuantExt::RiskFactorKey::KeyType rfKeyType, const std::string& name, bool& simDataWritten,
         const BuildContext& context, const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& irIndex,

@@ -3915,7 +3915,7 @@ void ScenarioSimMarket::createOptionletVol(RiskFactorKey::KeyType rfKeyType, con
 
     } else {
         auto baseOvs = bc.initMarket->capFloorVol(name, bc.configuration);
-        ssmOvs = createOptionletVol(rfKeyType, name, simDataWritten, bc, irIndex, baseOvs, rateCompPeriod);
+        ssmOvs = createOptionletVol(rfKeyType, name, simDataWritten, bc, irIndex, baseOvs, rateCompPeriod, stickyness);
     }
 
     // Final steps common to all.
@@ -4102,7 +4102,7 @@ Handle<OptionletVolatilityStructure> ScenarioSimMarket::createNonSimulatedOption
 
 Handle<OptionletVolatilityStructure> ScenarioSimMarket::createOptionletVol(RiskFactorKey::KeyType rfKeyType,
     const string& name, bool& simDataWritten, const BuildContext& bc, const ext::shared_ptr<IborIndex>& irIndex,
-    const Handle<OptionletVolatilityStructure>& baseOvs, const Period& rateCompPeriod)
+    const Handle<OptionletVolatilityStructure>& baseOvs, const Period& rateCompPeriod, Stickyness stickyness)
 {
     DLOG("ScenarioSimMarket: building simulated optionlet volatility for " << name);
 
@@ -4173,12 +4173,21 @@ Handle<OptionletVolatilityStructure> ScenarioSimMarket::createOptionletVol(RiskF
     writeSimData(simDataTmp, absoluteSimDataTmp, rfKeyType, name, coordinates);
     simDataWritten = true;
 
+    // If we have sticky moneyness, we will need to pass in the initial market index and current SSM index below.
+    ext::shared_ptr<IborIndex> initMktIndex;
+    ext::shared_ptr<IborIndex> ssmIndex;
+    if (stickyness == StickyMoneyness) {
+        auto oreIndexName = IndexNameTranslator::instance().oreName(irIndex->name());
+        initMktIndex = *bc.initMarket->iborIndex(oreIndexName, bc.configuration);
+        ssmIndex = *iborIndex(oreIndexName, bc.configuration);
+    }
+
     // Create the SSM optionlet volatility structure.
     Handle<OptionletVolatilityStructure> hOvs;
     if (useSpreadedTermStructures_) {
         auto decayMode = parseDecayMode(parameters_->capFloorVolDecayMode());
         hOvs = Handle<OptionletVolatilityStructure>(ext::make_shared<SpreadedOptionletVolatility2>(
-            baseOvs, optionDates, strikes, quotes, decayMode));
+            baseOvs, optionDates, strikes, quotes, decayMode, stickyness, ssmIndex, initMktIndex));
     } else {
         // FIXME: Works as of today only e.g. for sensitivity / scenario analysis.
         // TODO: Build floating reference date StrippedOptionlet class for MC path generators.
@@ -4212,8 +4221,9 @@ Handle<OptionletVolatilityStructure> ScenarioSimMarket::createStickySabrOptionle
 
     // We ignore the strikes for sticky SABR. Log a warning if they are configured.
     vector<Real> configuredStrikes = parameters_->capFloorVolStrikes(name);
-    if (!configuredStrikes.empty()) {
-        WLOG("ScenarioSimMarket: ignoring configured strikes for sticky SABR optionlet volatility for " << name);
+    if (configuredStrikes.size() > 1 || (configuredStrikes.size() == 1 && !close(configuredStrikes[0], 0.0))) {
+        WLOG("ScenarioSimMarket: ignoring configured strikes for sticky SABR optionlet volatility for " << name <<
+            ". This will likely lead to missing / incorrect scenarios in the simulation.");
     }
 
     auto sabrSoab = ext::dynamic_pointer_cast<SabrStrippedOptionletAdapterBase>(*baseOvs);
@@ -4246,7 +4256,7 @@ Handle<OptionletVolatilityStructure> ScenarioSimMarket::createStickySabrOptionle
     QuoteMatrix sabrVolSpreads(nOptTenors, QuoteRow(nSabrStrikes, Handle<Quote>()));
 
     // Main loop populating the SSM strikes and quotes.
-    for (Size i = 0, counter = 0; i < optionTenors.size(); ++i) {
+    for (Size i = 0, counter = 0; i < optionTenors.size(); ++i, ++counter) {
         Real atmVol = baseOvs->volatility(optionDates[i], atmStrikes[i], true);
         DLOG("ATM vol at [date, strike] pair [" << optionDates[i] << ", " << std::fixed
             << std::setprecision(4) << atmStrikes[i] << "] is " << std::setprecision(12) << atmVol);

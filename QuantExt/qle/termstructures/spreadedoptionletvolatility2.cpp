@@ -28,18 +28,33 @@
 
 namespace QuantExt {
 
-SpreadedOptionletVolatility2::SpreadedOptionletVolatility2(const Handle<OptionletVolatilityStructure>& baseVol,
-                                                           const std::vector<Date>& optionDates,
-                                                           const std::vector<Real>& strikes,
-                                                           const std::vector<std::vector<Handle<Quote>>>& volSpreads,
-                                                           const ReactionToTimeDecay decayMode)
+using namespace QuantLib;
+using std::vector;
+
+SpreadedOptionletVolatility2::SpreadedOptionletVolatility2(
+    const Handle<OptionletVolatilityStructure>& baseVol,
+    const vector<Date>& optionDates,
+    const vector<Real>& strikes,
+    const vector<vector<Handle<Quote>>>& volSpreads,
+    const ReactionToTimeDecay decayMode,
+    Stickyness stickyness,
+    ext::shared_ptr<IborIndex> index,
+    ext::shared_ptr<IborIndex> initIndex)
     : OptionletVolatilityStructure(0, !baseVol->calendar().empty() ? baseVol->calendar() : NullCalendar(),
-                                   baseVol->businessDayConvention(), baseVol->dayCounter()),
-      baseVol_(baseVol), optionDates_(optionDates), strikes_(strikes), volSpreads_(volSpreads), decayMode_(decayMode) {
+        baseVol->businessDayConvention(), baseVol->dayCounter()),
+      baseVol_(baseVol), optionDates_(optionDates), strikes_(strikes), volSpreads_(volSpreads), decayMode_(decayMode),
+      stickyness_(stickyness), index_(index), initIndex_(initIndex), t0_(0.0) {
+
     registerWith(baseVol_);
 
-    QL_REQUIRE(!optionDates_.empty(), "SpreadedOptionletVolatility2(): optionDates are empty");
-    QL_REQUIRE(!strikes_.empty(), "SpreadedOptionletVolatility2(): strikes are empty");
+    QL_REQUIRE(!optionDates_.empty(), "SpreadedOptionletVolatility2: optionDates are empty");
+    QL_REQUIRE(!strikes_.empty(), "SpreadedOptionletVolatility2: strikes are empty");
+    QL_REQUIRE(stickyness_ == StickyStrike || stickyness_ == StickyMoneyness,
+        "SpreadedOptionletVolatility2: stickyness should be either StickyStrike or StickyMoneyness");
+    if (stickyness_ == StickyMoneyness) {
+        QL_REQUIRE(index_, "SpreadedOptionletVolatility2: index cannot be null for StickyMoneyness");
+        QL_REQUIRE(initIndex_, "SpreadedOptionletVolatility2: initial market index cannot be null for StickyMoneyness");
+    }
 
     // add an artificial option date if we only have one to ensure the interpolation is working
     if (optionDates_.size() == 1) {
@@ -70,18 +85,37 @@ Rate SpreadedOptionletVolatility2::maxStrike() const { return baseVol_->maxStrik
 VolatilityType SpreadedOptionletVolatility2::volatilityType() const { return baseVol_->volatilityType(); }
 Real SpreadedOptionletVolatility2::displacement() const { return baseVol_->displacement(); }
 
-QuantLib::ext::shared_ptr<SmileSection> SpreadedOptionletVolatility2::smileSectionImpl(Time optionTime) const {
+ext::shared_ptr<SmileSection> SpreadedOptionletVolatility2::smileSectionImpl(Time optionTime) const {
     calculate();
-    std::vector<Real> volSpreads(strikes_.size());
-    for (Size k = 0; k < strikes_.size(); ++k) {
+
+    vector<Real> volSpreads(strikes_.size());
+    for (Size k = 0; k < strikes_.size(); ++k)
         volSpreads[k] = volSpreadInterpolation_(optionTime, strikes_[k]);
+
+    // Populate variables to use in creation of SpreadedSmileSection2 below when we have sticky moneyness.
+    bool stickyMoneyness = stickyness_ == StickyMoneyness;
+    Real initAtm = Null<Real>();
+    Real atm = Null<Real>();
+    Real anchorInitAtm = Null<Real>();
+    Real anchorAtm = Null<Real>();
+    if (stickyMoneyness) {
+        Date fixingDate = dateFromTime(optionTime + t0_);
+        initAtm = initIndex_->fixing(fixingDate);
+        atm = index_->fixing(fixingDate);
+        if (originalRefDate_ != actualRefDate_ && decayMode_ != ConstantVariance) {
+            anchorInitAtm = initIndex_->fixing(actualRefDate_);
+            anchorAtm = index_->fixing(actualRefDate_);
+        }
     }
+
+    bool strikesRelativeToAtm = false;
     if (originalRefDate_ == actualRefDate_ || decayMode_ == ReactionToTimeDecay::ConstantVariance) {
-        return QuantLib::ext::make_shared<SpreadedSmileSection2>(baseVol_->smileSection(optionTime), volSpreads,
-                                                                 strikes_);
+        return ext::make_shared<SpreadedSmileSection2>(baseVol_->smileSection(optionTime), volSpreads, strikes_,
+            strikesRelativeToAtm, initAtm, atm, stickyMoneyness);
     } else {
-        return QuantLib::ext::make_shared<SpreadedSmileSection2>(baseVol_->smileSection(optionTime + t0_),
-                                                                 baseVol_->smileSection(t0_), volSpreads, strikes_);
+        return ext::make_shared<SpreadedSmileSection2>(baseVol_->smileSection(optionTime + t0_),
+            baseVol_->smileSection(t0_), volSpreads, strikes_, strikesRelativeToAtm, initAtm, anchorInitAtm,
+            atm, anchorAtm, stickyMoneyness);
     }
 }
 
@@ -97,8 +131,8 @@ void SpreadedOptionletVolatility2::performCalculations() const {
         optionTimes_[i] = timeFromReference(optionDates_[i]);
     for (Size k = 0; k < strikes_.size(); ++k) {
         for (Size i = 0; i < optionDates_.size(); ++i) {
-            QL_REQUIRE(!volSpreads_[i][k].empty(), "SpreadedOptionletVolatility2::performCalculations(): volSpread at "
-                                                       << i << ", " << k << " is empty");
+            QL_REQUIRE(!volSpreads_[i][k].empty(), "SpreadedOptionletVolatility2::performCalculations(): "
+                "volSpread at " << i << ", " << k << " is empty");
             volSpreadValues_(k, i) = volSpreads_[i][k]->value();
         }
     }
@@ -117,9 +151,34 @@ void SpreadedOptionletVolatility2::deepUpdate() {
     update();
 }
 
+Date SpreadedOptionletVolatility2::dateFromTime(Time optionTime) const {
+
+    const Date& refDate = referenceDate();
+
+    // Initial estimate assuming Actual 365 Fixed.
+    Date result = refDate + Period(optionTime * 365.0, Days);
+    Time resultTime = timeFromReference(result);
+    if (close(resultTime, optionTime))
+        return result;
+
+    // Adjust until result is the last date whose time is <= optionTime.
+    if (resultTime > optionTime) {
+        while (resultTime > optionTime)
+            resultTime = timeFromReference(--result);
+    } else {
+        while (timeFromReference(result + 1) <= optionTime)
+            ++result;
+    }
+
+    // Return the date whose time is closest to optionTime.
+    Time timeBelow = timeFromReference(result);
+    Time timeAbove = timeFromReference(result + 1);
+    return (optionTime - timeBelow <= timeAbove - optionTime) ? result : result + 1;
+}
+
 AtmAdjustedSpreadedOptionletVolatility2::AtmAdjustedSpreadedOptionletVolatility2(
-    const Handle<OptionletVolatilityStructure>& baseVol, const std::vector<Date>& optionDates,
-    const std::vector<Real>& strikes, const std::vector<std::vector<Handle<Quote>>>& volSpreads,
+    const Handle<OptionletVolatilityStructure>& baseVol, const vector<Date>& optionDates,
+    const vector<Real>& strikes, const vector<vector<Handle<Quote>>>& volSpreads,
     const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& baseIndex,
     const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& targetIndex,
     const QuantLib::Period& baseRateComputationPeriod, const QuantLib::Period& targetRateComputationPeriod,
@@ -148,7 +207,7 @@ QuantLib::ext::shared_ptr<SmileSection> AtmAdjustedSpreadedOptionletVolatility2:
         Interpolation2D volSpreadInterpolation = FlatExtrapolator2D(QuantLib::ext::make_shared<BilinearInterpolation>(
             optionTimes().begin(), optionTimes().end(), atmAdjustedStrikes.begin(), atmAdjustedStrikes.end(), volSpreadValues()));
         volSpreadInterpolation.enableExtrapolation();
-        std::vector<Real> volSpreads(atmAdjustedStrikes.size());
+        vector<Real> volSpreads(atmAdjustedStrikes.size());
         for (Size k = 0; k < atmAdjustedStrikes.size(); ++k) {
             volSpreads[k] = volSpreadInterpolation(t, atmAdjustedStrikes[k]);
         }
