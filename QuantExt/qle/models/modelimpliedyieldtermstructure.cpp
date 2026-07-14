@@ -20,7 +20,7 @@
 
 namespace QuantExt {
 
-ModelImpliedYieldTermStructure::ModelImpliedYieldTermStructure(const QuantLib::ext::shared_ptr<IrModel>& model,
+ModelImpliedYieldTermStructure::ModelImpliedYieldTermStructure(const QuantLib::Handle<IrModel>& model,
                                                                const DayCounter& dc, const bool purelyTimeBased)
     : YieldTermStructure(dc == DayCounter() ? model->termStructure()->dayCounter() : dc), model_(model),
       purelyTimeBased_(purelyTimeBased),
@@ -30,14 +30,14 @@ ModelImpliedYieldTermStructure::ModelImpliedYieldTermStructure(const QuantLib::e
     update();
 }
 
-ModelImpliedYtsFwdFwdCorrected::ModelImpliedYtsFwdFwdCorrected(const QuantLib::ext::shared_ptr<IrModel>& model,
+ModelImpliedYtsFwdFwdCorrected::ModelImpliedYtsFwdFwdCorrected(const QuantLib::Handle<IrModel>& model,
                                                                const Handle<YieldTermStructure> targetCurve,
                                                                const DayCounter& dc, const bool purelyTimeBased)
     : ModelImpliedYieldTermStructure(model, dc, purelyTimeBased), targetCurve_(targetCurve) {
     registerWith(targetCurve_);
 }
 
-ModelImpliedYtsSpotCorrected::ModelImpliedYtsSpotCorrected(const QuantLib::ext::shared_ptr<IrModel>& model,
+ModelImpliedYtsSpotCorrected::ModelImpliedYtsSpotCorrected(const QuantLib::Handle<IrModel>& model,
                                                            const Handle<YieldTermStructure> targetCurve,
                                                            const DayCounter& dc, const bool purelyTimeBased)
     : ModelImpliedYieldTermStructure(model, dc, purelyTimeBased), targetCurve_(targetCurve) {

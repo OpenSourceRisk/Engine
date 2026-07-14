@@ -154,6 +154,9 @@ public:
     /*! return global parameters */
     const std::map<std::string, std::string>& globalParameters() const { return globalParameters_; }
 
+    //! convenience function to evaluate global parameters w.r.t. generation of add results
+    bool generateAdditionalResults() const;
+
     //! return model builders
     EngineFactory* engineFactory() const;
 
@@ -161,7 +164,6 @@ protected:
     std::string getParameter(const std::map<std::string, std::string>& m, const std::string& p,
                              const std::vector<std::string>& qs, const bool mandatory,
                              const std::string& defaultValue) const;
-    bool generateAdditionalResults() const;
     string model_;
     string engine_;
     set<string> tradeTypes_;

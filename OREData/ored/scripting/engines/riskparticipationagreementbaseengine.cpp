@@ -74,7 +74,8 @@ std::vector<Date> RiskParticipationAgreementBaseEngine::buildDiscretisationGrid(
     std::vector<Date> accrualDates;
     for (auto const& l : underlying) {
         for (auto const& c : l) {
-            if (auto f = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
+            if (auto f = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c);
+                f != nullptr && f->accrualEndDate() > protectionStart) {
                 accrualDates.push_back(f->accrualEndDate());
             }
         }

@@ -86,7 +86,13 @@ const Date& InterpolatedDiscountCurve2::referenceDate() const {
 }
 
 void InterpolatedDiscountCurve2::performCalculations() const {
-    today_ = Settings::instance().evaluationDate();
+    if(today_ != Settings::instance().evaluationDate()) {
+        QL_REQUIRE(bases_.empty(),
+                   "InterpolatedDiscountCurve2: bases are only supported if eval date does not change, but it did ("
+                       << today_ << " -> " << Settings::instance().evaluationDate()
+                       << "). Can SpreadedDiscountCurve be used?");
+        today_ = Settings::instance().evaluationDate();
+    }
     for (Size i = 0; i < times_.size(); ++i) {
         data_[i] = quotes_[i]->value();
         QL_REQUIRE(data_[i] > 0, "InterpolatedDiscountCurve2: invalid value " << data_[i] << " at index " << i);

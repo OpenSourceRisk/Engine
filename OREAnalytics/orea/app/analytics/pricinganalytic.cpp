@@ -31,13 +31,11 @@ using namespace std::filesystem;
 namespace ore {
 namespace analytics {
 
-/*******************************************************************
- * PRICING Analytic: NPV, CASHFLOW, CASHFLOWNPV, SENSITIVITY, STRESS
- *******************************************************************/
+/****************************************************************************
+ * PRICING Analytic: NPV, CURVES, CASHFLOW, CASHFLOWNPV, SENSITIVITY, STRESS
+ ***************************************************************************/
 
  void PricingVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs){
-    inputs->loadParameter<bool>(computeTheta_, "sensitivity", "computeTheta", false, parseBool);
-    inputs->loadParameter<Period>(thetaPeriod_, "sensitivity", "thetaPeriod", false, parsePeriod);
     inputs->loadParameter<bool>(outputCurves_, "curves", "active", false,
                                 std::function<bool(const string&)>(parseBool));
     if (!outputCurves_)
@@ -46,7 +44,9 @@ namespace analytics {
     inputs->loadParameter<string>(curvesGrid_, "curves", "grid", false);
     inputs->loadParameter<string>(curvesMarketConfig_, "curves", "configuration", false);
     inputs->loadParameter<string>(curvesCalendar_, "curves", "calendar", false);
- }
+    inputs->loadParameter<bool>(computeTheta_, "sensitivity", "computeTheta", false, parseBool);
+    inputs->loadParameter<Period>(thetaPeriod_, "sensitivity", "thetaPeriod", false, parsePeriod);
+}
 
 void PricingAnalyticImpl::overwriteResultCurrency(const std::string& ccy) { overwriteResultCurrency_ = ccy; }
 
@@ -76,7 +76,17 @@ void PricingAnalyticImpl::runAnalytic(
     Settings::instance().evaluationDate() = inputs_->asof();
     ObservationMode::instance().setMode(inputs_->observationModel());
 
-    QL_REQUIRE(inputs_->portfolio(), "PricingAnalytic::run: No portfolio loaded.");
+    // CURVES only needs the market (see writeCurves below); the other pricing sub-analytics
+    // Only enforce the portfolio requirement if a portfolio-dependent sub-analytic is requested.
+    static const std::set<std::string> portfolioIndependentTypes{"CURVES"};
+    bool requiresPortfolio = false;
+    for (const auto& rt : runTypes) {
+        if (analytic()->analyticTypes().count(rt) > 0 && portfolioIndependentTypes.count(rt) == 0) {
+            requiresPortfolio = true;
+            break;
+        }
+    }
+    QL_REQUIRE(!requiresPortfolio || inputs_->portfolio(), "PricingAnalytic::run: No portfolio loaded.");
 
     CONSOLEW("Pricing: Build Market");
     analytic()->buildMarket(loader);
@@ -150,6 +160,24 @@ void PricingAnalyticImpl::runAnalytic(
                 CONSOLE("OK");
             }
             auto pVars = QuantLib::ext::dynamic_pointer_cast<PricingVariables>(inputVariables_);
+            // If the standalone CURVES analytic is also requested, let it emit the (single) curves
+            // report to avoid a duplicate "curves" report and the resulting disambiguated file names.
+            bool curvesHandledSeparately =
+                analytic()->analyticTypes().count("CURVES") > 0 && runTypes.count("CURVES") > 0;
+            if (pVars && pVars->outputCurves_ && !curvesHandledSeparately) {
+                CONSOLEW("Pricing: Curves Report");
+                LOG("Write curves report");
+                QuantLib::ext::shared_ptr<InMemoryReport> curvesReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                DateGrid grid(pVars->curvesGrid_, parseCalendar(pVars->curvesCalendar_));
+                std::string config = pVars->curvesMarketConfig_;
+                ReportWriter(inputs_->reportNaString())
+                    .writeCurves(*curvesReport, config, grid, *analytic()->configurations().todaysMarketParams,
+                                 analytic()->market(), inputs_->continueOnError());
+                analytic()->addReport(type, "curves", curvesReport);
+                CONSOLE("OK");
+            }
+        } else if (type == "CURVES") {
+            auto pVars = QuantLib::ext::dynamic_pointer_cast<PricingVariables>(inputVariables_);
             if (pVars && pVars->outputCurves_) {
                 CONSOLEW("Pricing: Curves Report");
                 LOG("Write curves report");
@@ -162,7 +190,6 @@ void PricingAnalyticImpl::runAnalytic(
                 analytic()->addReport(type, "curves", curvesReport);
                 CONSOLE("OK");
             }
-
         } else if (type == "CASHFLOW") {
             CONSOLEW("Pricing: Cashflow Report");
             ReportWriter(inputs_->reportNaString())
@@ -187,8 +214,6 @@ void PricingAnalyticImpl::runAnalytic(
             bool ccyConv = false;
             std::string configuration = inputs_->marketConfig("pricing");
             auto pVars = QuantLib::ext::dynamic_pointer_cast<PricingVariables>(inputVariables_);
-            bool computeTheta = pVars ? pVars->computeTheta_ : inputs_->computeTheta();
-            Period thetaPeriod = pVars ? pVars->thetaPeriod_ : inputs_->thetaPeriod();
             if (inputs_->nThreads() == 1) {
                 LOG("Single-threaded sensi analysis");
                 sensiAnalysis_ = QuantLib::ext::make_shared<SensitivityAnalysis>(
@@ -197,7 +222,7 @@ void PricingAnalyticImpl::runAnalytic(
                     inputs_->sensiRecalibrateModels(), inputs_->sensiLaxFxConversion(),
                     analytic()->configurations().curveConfig, analytic()->configurations().todaysMarketParams, ccyConv,
                     inputs_->refDataManager(), inputs_->iborFallbackConfig(), true, inputs_->dryRun(),
-                    inputs_->useAtParCouponsTrades(), computeTheta, thetaPeriod);
+                    inputs_->useAtParCouponsTrades());
                 LOG("Single-threaded sensi analysis created");
             }
             else {
@@ -209,7 +234,7 @@ void PricingAnalyticImpl::runAnalytic(
                     inputs_->sensiLaxFxConversion(), analytic()->configurations().curveConfig,
                     analytic()->configurations().todaysMarketParams, ccyConv, inputs_->refDataManager(),
                     inputs_->iborFallbackConfig(), true, inputs_->dryRun(), "sensi analysis",
-                    inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades(), computeTheta, thetaPeriod);
+                    inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades());
                 LOG("Multi-threaded sensi analysis created");
             }
 

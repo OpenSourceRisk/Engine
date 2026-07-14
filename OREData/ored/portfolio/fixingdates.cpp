@@ -30,6 +30,7 @@
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/cashflows/inflationcoupon.hpp>
 #include <ql/cashflows/overnightindexedcoupon.hpp>
+#include <ql/cashflows/rangeaccrual.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/cashflows/yoyinflationcoupon.hpp>
 #include <ql/experimental/coupons/cmsspreadcoupon.hpp>
@@ -47,6 +48,7 @@
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/cashflows/interpolatediborcoupon.hpp>
+#include <qle/cashflows/intradaypowercashflow.hpp>
 #include <qle/cashflows/nonstandardyoyinflationcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
@@ -886,6 +888,24 @@ void FixingDateGetter::visit(InterpolatedIborCoupon& c) {
     requiredFixings_.addFixingDate(c.fixingDate(),
                                    IndexNameTranslator::instance().oreName(c.interpolatedIborIndex()->longIndex()->name()),
                                    c.date(), true);
+}
+
+void FixingDateGetter::visit(RangeAccrualFloatersCoupon& c) {
+    auto oreIndexName = IndexNameTranslator::instance().oreName(c.index()->name());
+    requiredFixings_.addFixingDates(c.fixingDates(), oreIndexName, c.date());
+}
+
+void FixingDateGetter::visit(QuantExt::IntradayPowerCashFlow& c) {
+    auto indices = c.indices();
+    for (const auto& [pricingDate, index] : indices) {
+        // todays fixing is not mandatory, we will fallback to estimate it if its not there.
+        bool isTodaysFixing = Settings::instance().evaluationDate() == pricingDate;
+        for(const auto& name: index->intraDayIndexNames()){
+            Date obsDate = pricingDate <= index->deliveryDate() ? c.date() : index->deliveryDate();
+            // if the cashflow date is after the delivery date, we need the fixing for the delivery date as well
+            requiredFixings_.addFixingDate(index->deliveryDate(), name, obsDate, false, !isTodaysFixing);            
+        }
+    }
 }
 
 void addToRequiredFixings(const QuantLib::Leg& leg, const QuantLib::ext::shared_ptr<FixingDateGetter>& fixingDateGetter) {

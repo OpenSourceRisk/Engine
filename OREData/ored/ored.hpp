@@ -27,6 +27,7 @@
 #include <ored/configuration/iborfallbackconfig.hpp>
 #include <ored/configuration/inflationcapfloorvolcurveconfig.hpp>
 #include <ored/configuration/inflationcurveconfig.hpp>
+#include <ored/configuration/intradaypowercurveconfig.hpp>
 #include <ored/configuration/onedimsolverconfig.hpp>
 #include <ored/configuration/parametricsmileconfiguration.hpp>
 #include <ored/configuration/reportconfig.hpp>
@@ -65,6 +66,7 @@
 #include <ored/marketdata/inflationcapfloorvolcurve.hpp>
 #include <ored/marketdata/inflationcurve.hpp>
 #include <ored/marketdata/inmemoryloader.hpp>
+#include <ored/marketdata/intradaypowercurve.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/marketdatum.hpp>
@@ -217,6 +219,7 @@
 #include <ored/portfolio/builders/fxtouchoption.hpp>
 #include <ored/portfolio/builders/indexcreditdefaultswap.hpp>
 #include <ored/portfolio/builders/indexcreditdefaultswapoption.hpp>
+#include <ored/portfolio/builders/intradaypowerforward.hpp>
 #include <ored/portfolio/builders/pairwisevarianceswap.hpp>
 #include <ored/portfolio/builders/quantoequityoption.hpp>
 #include <ored/portfolio/builders/quantovanillaoption.hpp>
@@ -297,6 +300,7 @@
 #include <ored/portfolio/formulabasedlegdata.hpp>
 #include <ored/portfolio/forwardbond.hpp>
 #include <ored/portfolio/forwardrateagreement.hpp>
+#include <ored/portfolio/forwardvolatilityagreement.hpp>
 #include <ored/portfolio/fxaverageforward.hpp>
 #include <ored/portfolio/fxbarrieroption.hpp>
 #include <ored/portfolio/fxderivative.hpp>
@@ -317,6 +321,7 @@
 #include <ored/portfolio/indexing.hpp>
 #include <ored/portfolio/inflationswap.hpp>
 #include <ored/portfolio/instrumentwrapper.hpp>
+#include <ored/portfolio/intradaypowerforward.hpp>
 #include <ored/portfolio/knockoutswap.hpp>
 #include <ored/portfolio/legbuilders.hpp>
 #include <ored/portfolio/legdata.hpp>
@@ -332,6 +337,7 @@
 #include <ored/portfolio/pairwisevarianceswap.hpp>
 #include <ored/portfolio/performanceoption_01.hpp>
 #include <ored/portfolio/portfolio.hpp>
+#include <ored/portfolio/powerloadprofiledata.hpp>
 #include <ored/portfolio/premiumdata.hpp>
 #include <ored/portfolio/rainbowoption.hpp>
 #include <ored/portfolio/rangebound.hpp>
@@ -366,6 +372,7 @@
 #include <ored/portfolio/trswrapper.hpp>
 #include <ored/portfolio/types.hpp>
 #include <ored/portfolio/underlying.hpp>
+#include <ored/portfolio/utilities.hpp>
 #include <ored/portfolio/vanillaoption.hpp>
 #include <ored/portfolio/varianceswap.hpp>
 #include <ored/portfolio/windowbarrieroption.hpp>
@@ -390,6 +397,7 @@
 #include <ored/scripting/engines/analyticblackriskparticipationagreementengine.hpp>
 #include <ored/scripting/engines/analyticxccyblackriskparticipationagreementengine.hpp>
 #include <ored/scripting/engines/cliquetoptionmcscriptengine.hpp>
+#include <ored/scripting/engines/mccamrpaengine.hpp>
 #include <ored/scripting/engines/numericlgmriskparticipationagreementengine.hpp>
 #include <ored/scripting/engines/numericlgmriskparticipationagreementengine_tlock.hpp>
 #include <ored/scripting/engines/riskparticipationagreementbaseengine.hpp>

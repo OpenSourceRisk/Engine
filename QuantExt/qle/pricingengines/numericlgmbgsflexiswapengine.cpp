@@ -22,7 +22,7 @@
 
 namespace QuantExt {
 
-NumericLgmBgsFlexiSwapEngine::NumericLgmBgsFlexiSwapEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
+NumericLgmBgsFlexiSwapEngine::NumericLgmBgsFlexiSwapEngine(const QuantLib::Handle<LinearGaussMarkovModel>& model,
                                                            const Real sy, const Size ny, const Real sx, const Size nx,
                                                            const Handle<Quote>& minCpr, const Handle<Quote>& maxCpr,
                                                            const Handle<YieldTermStructure>& discountCurve,

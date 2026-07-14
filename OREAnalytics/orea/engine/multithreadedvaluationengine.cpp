@@ -18,6 +18,7 @@
 
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/cube/inmemorycube.hpp>
+#include <orea/engine/cpuaffinity.hpp>
 #include <orea/engine/multithreadedvaluationengine.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/scenario/clonedscenariogenerator.hpp>
@@ -31,50 +32,11 @@
 #include <boost/timer/timer.hpp>
 
 #include <future>
-#include <random>
-
-#ifdef ORE_MULTITHREADING_CPU_AFFINITY
-#include <pthread.h>
-#include <sched.h>
-#endif
 
 // #include <ctpl_stl.h>
 
 namespace ore {
 namespace analytics {
-
-namespace {
-
-#ifdef ORE_MULTITHREADING_CPU_AFFINITY
-std::vector<std::size_t> getCpuIds(std::size_t nThreads) {
-
-    std::size_t nCPU = std::max(1U, std::thread::hardware_concurrency());
-    WLOG("[MULTITHREADING] Number of CPUs found: " << nCPU);
-
-    std::vector<std::size_t> result(nThreads);
-
-    std::mt19937 gen{std::random_device{}()};
-    std::vector<std::size_t> availableCpus;
-
-    for (std::size_t i = 0; i < nThreads; ++i) {
-        if (availableCpus.empty()) {
-            availableCpus.resize(nCPU);
-            std::iota(availableCpus.begin(), availableCpus.end(), 0);
-        }
-        std::uniform_int_distribution<> distrib(0, availableCpus.size() - 1);
-        auto pos = std::next(availableCpus.begin(), distrib(gen));
-        result[i] = *pos;
-        availableCpus.erase(pos);
-    }
-
-    for (std::size_t i = 0; i < nThreads; ++i) {
-        WLOG("[MULTITHREADING] Assigning thread " << i << " to CPU #" << result[i]);
-    }
-    return result;
-}
-#endif
-
-} // namespace
 
 using QuantLib::Size;
 
@@ -101,6 +63,7 @@ MultiThreadedValuationEngine::MultiThreadedValuationEngine(
     const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(
         const QuantLib::Date&, const std::set<std::string>&, const std::vector<QuantLib::Date>&, const QuantLib::Size)>&
         cptyCubeFactory,
+    const QuantLib::ext::shared_ptr<FixingManager>& fixingManager, const bool resetAfterEachPath,
     const std::string& context, const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& offSetScenario,
     const bool useAtParCouponsCurves, const bool useAtParCouponsTrades)
     : nThreads_(nThreads), today_(today), dateGrid_(dateGrid), nSamples_(nSamples), loader_(loader),
@@ -111,7 +74,8 @@ MultiThreadedValuationEngine::MultiThreadedValuationEngine(
       handlePseudoCurrenciesTodaysMarket_(handlePseudoCurrenciesTodaysMarket),
       handlePseudoCurrenciesSimMarket_(handlePseudoCurrenciesSimMarket), recalibrateModels_(recalibrateModels),
       cubeFactory_(cubeFactory), nettingSetCubeFactory_(nettingSetCubeFactory), cptyCubeFactory_(cptyCubeFactory),
-      context_(context), offsetScenario_(offSetScenario), useAtParCouponsCurves_(useAtParCouponsCurves),
+      fixingManager_(fixingManager), resetAfterEachPath_(resetAfterEachPath), context_(context),
+      offsetScenario_(offSetScenario), useAtParCouponsCurves_(useAtParCouponsCurves),
       useAtParCouponsTrades_(useAtParCouponsTrades) {
 
     QL_REQUIRE(nThreads_ != 0, "MultiThreadedValuationEngine: nThreads must be > 0");
@@ -146,7 +110,8 @@ void MultiThreadedValuationEngine::setAggregationScenarioData(
 
 void MultiThreadedValuationEngine::buildCube(
     const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
-    const std::function<std::vector<QuantLib::ext::shared_ptr<ore::analytics::ValuationCalculator>>()>& calculators,
+    const std::function<std::vector<QuantLib::ext::shared_ptr<ore::analytics::ValuationCalculator>>(
+        const QuantLib::Size, const QuantLib::ext::shared_ptr<ore::data::Portfolio>&)>& calculators,
     const ValuationEngine::ErrorPolicy errorPolicy,
     const std::function<std::vector<QuantLib::ext::shared_ptr<ore::analytics::CounterpartyCalculator>>()>&
         cptyCalculators,
@@ -160,9 +125,13 @@ void MultiThreadedValuationEngine::buildCube(
 
     LOG("Extract pricing stats and clear them in the current portfolio");
 
-    std::map<std::string, std::pair<std::size_t, boost::timer::nanosecond_type>> pricingStats;
+    std::map<std::string, std::pair<std::size_t, unsigned long long>> pricingStats;
     for (auto const& [tid, t] : portfolio->trades())
         pricingStats[tid] = std::make_pair(t->getNumberOfPricings(), t->getCumulativePricingTime());
+
+    // make sure curve configs are read-only to avoid data races
+
+    curveConfigs_->parseAll();
 
     // build portfolio against init market and trigger single pricing to generate pricing stats
 
@@ -298,7 +267,7 @@ void MultiThreadedValuationEngine::buildCube(
     std::vector<std::thread> jobs; // not needed if thread pool is used
 
     // pricing stats accumulated in worker threads
-    std::vector<std::map<std::string, std::pair<std::size_t, boost::timer::nanosecond_type>>> workerPricingStats(
+    std::vector<std::map<std::string, std::pair<std::size_t, unsigned long long>>> workerPricingStats(
         eff_nThreads);
 
     // get obs mode of main thread, so that we can set this mode in the worker threads below
@@ -308,34 +277,15 @@ void MultiThreadedValuationEngine::buildCube(
     auto includeTodaysCashFlows = QuantLib::Settings::instance().includeTodaysCashFlows();
     auto localIncRefDateEvents = QuantLib::Settings::instance().includeReferenceDateEvents();
 
-    std::vector<std::size_t> cpuIds;
-#ifdef ORE_MULTITHREADING_CPU_AFFINITY
-    cpuIds = getCpuIds(eff_nThreads);
-#endif
+    std::vector<std::size_t> cpuIds = getCpuIds(eff_nThreads, "[MULTITHREADING]");
 
     for (Size i = 0; i < eff_nThreads; ++i) {
 
-        auto job = [this,
-#ifdef ORE_MULTITHREADING_CPU_AFFINITY
-                    &cpuIds,
-#endif
-                    obsMode, includeTodaysCashFlows, localIncRefDateEvents, dryRun, &calculators, errorPolicy,
-                    &cptyCalculators, mporStickyDate, &portfoliosAsString,
-                    &scenarioGenerators, &loaders, &workerPricingStats, &progressIndicator](int id) -> resultType {
+        auto job = [this, &cpuIds, obsMode, includeTodaysCashFlows, localIncRefDateEvents, dryRun, &calculators,
+                    errorPolicy, &cptyCalculators, mporStickyDate, &portfoliosAsString, &scenarioGenerators, &loaders,
+                    &workerPricingStats, &progressIndicator](int id) -> resultType {
 
-#ifdef ORE_MULTITHREADING_CPU_AFFINITY
-            pthread_t self = pthread_self();
-            cpu_set_t cpuset;
-            CPU_ZERO(&cpuset);
-            CPU_SET(cpuIds[id], &cpuset);
-            if (int rc = pthread_setaffinity_np(self, sizeof(cpu_set_t), &cpuset)) {
-                WLOG("[MULTITHREADING] Error while setting cpu affinity for thread "
-                     << id << " to cpu id " << cpuIds[id] << ": got return code " << rc);
-            } else {
-                WLOG("[MULTITHREADING] Setting cpu affinity for thread " << id << " to cpu id " << cpuIds[id]
-                                                                         << ", running on cpu " << sched_getcpu());
-            }
-#endif
+            setThreadCpuAffinity(id, cpuIds, "[MULTITHREADING]");
 
             // set thread local singletons
 
@@ -392,12 +342,14 @@ void MultiThreadedValuationEngine::buildCube(
                 // build valuation engine
 
                 auto valEngine = QuantLib::ext::make_shared<ore::analytics::ValuationEngine>(
-                    today_, dateGrid_, simMarket, engineFactory->modelBuilders(), recalibrateModels_);
+                    today_, dateGrid_, simMarket, engineFactory->modelBuilders(), recalibrateModels_,
+                    fixingManager_ ? QuantLib::ext::make_shared<FixingManager>(*fixingManager_) : nullptr,
+                    resetAfterEachPath_);
                 valEngine->registerProgressIndicator(progressIndicator);
 
                 // build mini-cube
 
-                valEngine->buildCube(portfolio, miniCubes_[id], calculators(), errorPolicy, mporStickyDate,
+                valEngine->buildCube(portfolio, miniCubes_[id], calculators(id, portfolio), errorPolicy, mporStickyDate,
                                      miniNettingSetCubes_[id], miniCptyCubes_[id],
                                      cptyCalculators ? cptyCalculators()
                                                      : std::vector<QuantLib::ext::shared_ptr<CounterpartyCalculator>>(),
@@ -466,7 +418,7 @@ void MultiThreadedValuationEngine::buildCube(
     for (auto const& [tid, t] : portfolio->trades()) {
         auto p = pricingStats[tid];
         std::size_t n = p.first;
-        boost::timer::nanosecond_type d = p.second;
+        unsigned long long d = p.second;
         for (auto const& w : workerPricingStats) {
             auto p = w.find(tid);
             if (p != w.end()) {

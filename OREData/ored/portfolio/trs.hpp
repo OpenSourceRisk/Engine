@@ -27,6 +27,7 @@
 #include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/tradefactory.hpp>
 #include <ored/portfolio/referencedata.hpp>
+#include <qle/time/dateutilities.hpp>
 
 #include <ql/optional.hpp>
 
@@ -48,7 +49,9 @@ public:
                    const std::vector<std::string>& paymentDates, const Real initialPrice,
                    const std::string& initialPriceCurrency, const std::vector<std::string>& fxTerms,
                    const QuantLib::ext::optional<bool> payUnderlyingCashFlowsImmediately,
-                   const QuantLib::ext::optional<FXConversion> fxConversion)
+                   const QuantLib::ext::optional<FXConversion> fxConversion,
+                   QuantLib::ext::optional<QuantExt::DateDeltaUnit> paymentLagUnit = QuantLib::ext::nullopt,
+                   QuantLib::ext::optional<QuantExt::DateDeltaAnchor> paymentLagAnchor = QuantLib::ext::nullopt)
             : payer_(payer), currency_(currency), scheduleData_(scheduleData), observationLag_(observationLag),
               observationCalendar_(observationCalendar), paymentLag_(paymentLag), paymentConvention_(paymentConvention),
               paymentCalendar_(paymentCalendar), paymentDates_(paymentDates), initialPrice_(initialPrice),
@@ -70,6 +73,9 @@ public:
         const std::vector<std::string>& fxTerms() const { return fxTerms_; }
         QuantLib::ext::optional<bool> payUnderlyingCashFlowsImmediately() const { return payUnderlyingCashFlowsImmediately_; }
         QuantLib::ext::optional<FXConversion> fxConversionAtPeriodEnd() const { return fxConversion_; }
+        const QuantLib::ext::optional<QuantExt::DateDeltaUnit>& paymentLagUnit() const { return paymentLagUnit_; }
+        const QuantLib::ext::optional<QuantExt::DateDeltaAnchor>& paymentLagAnchor() const { return paymentLagAnchor_; }
+
         void fromXML(XMLNode* node) override;
         XMLNode* toXML(XMLDocument& doc) const override;
         FXConversion parseFXConversion(string fxConv_);
@@ -86,6 +92,8 @@ public:
         std::vector<std::string> fxTerms_; // FX index strings
         QuantLib::ext::optional<bool> payUnderlyingCashFlowsImmediately_;
         QuantLib::ext::optional<FXConversion> fxConversion_;
+        QuantLib::ext::optional<QuantExt::DateDeltaUnit> paymentLagUnit_;
+        QuantLib::ext::optional<QuantExt::DateDeltaAnchor> paymentLagAnchor_;
     };
 
     class FundingData : public XMLSerializable {

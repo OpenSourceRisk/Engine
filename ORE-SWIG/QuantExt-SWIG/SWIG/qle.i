@@ -51,6 +51,8 @@
 %include qle_creditdefaultswap.i
 %include qle_averageoisratehelper.i
 %include qle_processes.i
+%include qle_time.i
+%include qle_math.i
 
 // CrossCcyFixFloatSwapHelper is intentionally not exposed yet.
 

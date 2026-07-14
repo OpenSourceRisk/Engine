@@ -24,6 +24,7 @@
 %include orea_scenario_ext.i
 %include orea_cube.i
 %include ored_portfolio.i
+%include ored_reports.i
 
 %{
 #include <sstream>
@@ -35,6 +36,8 @@
 #include <orea/engine/filteredsensitivitystream.hpp>
 #include <orea/engine/bufferedsensitivitystream.hpp>
 #include <orea/engine/sensitivityaggregator.hpp>
+#include <orea/engine/decomposedsensitivitystream.hpp>
+#include <orea/engine/sensitivityreportstream.hpp>
 %}
 
 // --- SensitivityRecord (value struct, no shared_ptr) ---
@@ -94,6 +97,32 @@ public:
     virtual ~SensitivityStream() {}
     virtual ore::analytics::SensitivityRecord next() = 0;
     virtual void reset() = 0;
+
+    %extend {
+        std::vector<ore::analytics::SensitivityRecord> readAll() {
+            std::vector<ore::analytics::SensitivityRecord> records;
+            $self->reset();
+            while (true) {
+                auto rec = $self->next();
+                if (!rec) break;
+                records.push_back(rec);
+            }
+            return records;
+        }
+    }
+
+    #if defined(SWIGPYTHON)
+    %pythoncode %{
+    def __iter__(self):
+        self.reset()
+        return self
+    def __next__(self):
+        r = self.next()
+        if not r:
+            raise StopIteration
+        return r
+    %}
+    #endif
 };
 
 }}
@@ -196,6 +225,42 @@ namespace ore { namespace analytics {
 class BufferedSensitivityStream : public ore::analytics::SensitivityStream {
 public:
     explicit BufferedSensitivityStream(const ext::shared_ptr<ore::analytics::SensitivityStream>& stream);
+    ore::analytics::SensitivityRecord next() override;
+    void reset() override;
+};
+
+}}
+
+// --- DecomposedSensitivityStream ---
+
+%shared_ptr(ore::analytics::DecomposedSensitivityStream)
+
+namespace ore { namespace analytics {
+
+class DecomposedSensitivityStream : public ore::analytics::SensitivityStream {
+public:
+    DecomposedSensitivityStream(
+        const ext::shared_ptr<ore::analytics::SensitivityStream>& ss, const std::string& baseCurrency,
+        const ext::shared_ptr<ore::data::Portfolio>& portfolio,
+        const ext::shared_ptr<ore::data::ReferenceDataManager>& refDataManager = ext::shared_ptr<ore::data::ReferenceDataManager>(),
+        const ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = ext::shared_ptr<ore::data::CurveConfigurations>(),
+        const ext::shared_ptr<ore::analytics::SensitivityScenarioData>& scenarioData = ext::shared_ptr<ore::analytics::SensitivityScenarioData>(),
+        const ext::shared_ptr<ore::data::Market>& todaysMarket = ext::shared_ptr<ore::data::Market>());
+    ore::analytics::SensitivityRecord next() override;
+    void reset() override;
+};
+
+}}
+
+// --- SensitivityReportStream ---
+
+%shared_ptr(ore::analytics::SensitivityReportStream)
+
+namespace ore { namespace analytics {
+
+class SensitivityReportStream : public ore::analytics::SensitivityStream {
+public:
+    SensitivityReportStream(const ext::shared_ptr<ore::data::InMemoryReport>& report);
     ore::analytics::SensitivityRecord next() override;
     void reset() override;
 };

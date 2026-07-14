@@ -28,12 +28,15 @@
 namespace QuantExt {
     class FutureExpiryCalculator;
     class EquityCouponPricer;
+    class EquityMarginCouponPricer;
     class CorrelationTermStructure;
 } // namespace QuantExt
 
 %{
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/equitycouponpricer.hpp>
+#include <qle/cashflows/equitymargincoupon.hpp>
+#include <qle/cashflows/equitymargincouponpricer.hpp>
 %}
 
 namespace QuantExt {
@@ -116,6 +119,63 @@ class EquityCouponPricer : public Observer, public Observable {
 };
 } // namespace QuantExt
 
+// QuantExt::EquityMarginCoupon – full wrapper
+%shared_ptr(QuantExt::EquityMarginCoupon)
+namespace QuantExt {
+class EquityMarginCoupon : public Coupon {
+  public:
+    EquityMarginCoupon(const Date& paymentDate, Real nominal, Rate rate, Real marginFactor,
+                       const Date& startDate, const Date& endDate, Natural fixingDays,
+                       const ext::shared_ptr<QuantExt::EquityIndex2>& equityCurve,
+                       const DayCounter& dayCounter,
+                       bool isTotalReturn = false, Real dividendFactor = 1.0,
+                       bool notionalReset = false,
+                       Real initialPrice = Null<Real>(), Real quantity = Null<Real>(),
+                       const Date& fixingStartDate = Date(),
+                       const Date& fixingEndDate = Date(),
+                       const Date& refPeriodStart = Date(),
+                       const Date& refPeriodEnd = Date(),
+                       const Date& exCouponDate = Date(), Real multiplier = Null<Real>(),
+                       const ext::shared_ptr<FxIndex>& fxIndex = nullptr,
+                       bool initialPriceIsInTargetCcy = false);
+
+    Real amount() const;
+    DayCounter dayCounter() const;
+    Real accruedAmount(const Date& d) const;
+    Rate rate() const;
+    Real nominal() const;
+
+    const ext::shared_ptr<QuantExt::EquityIndex2>& equityCurve() const;
+    const ext::shared_ptr<FxIndex>& fxIndex() const;
+    bool isTotalReturn() const;
+    Real dividendFactor() const;
+    Date fixingStartDate() const;
+    Date fixingEndDate() const;
+    std::vector<Date> fixingDates() const;
+    Real initialPrice() const;
+    bool initialPriceIsInTargetCcy() const;
+    Real quantity() const;
+    Real fxRate() const;
+    Real marginFactor() const;
+    InterestRate fixedRate() const;
+    Real multiplier() const;
+
+    void setPricer(const ext::shared_ptr<QuantExt::EquityMarginCouponPricer>&);
+    ext::shared_ptr<QuantExt::EquityMarginCouponPricer> pricer() const;
+};
+} // namespace QuantExt
+
+// QuantExt::EquityMarginCouponPricer – full wrapper
+%shared_ptr(QuantExt::EquityMarginCouponPricer)
+namespace QuantExt {
+class EquityMarginCouponPricer : public Observer, public Observable {
+  public:
+    EquityMarginCouponPricer();
+    Rate rate() const;
+    void initialize(const EquityMarginCoupon& coupon);
+};
+} // namespace QuantExt
+
 // QuantExt::EquityLeg builder using helper-function-with-kwargs pattern
 %{
 Leg _EquityLeg(
@@ -125,7 +185,7 @@ Leg _EquityLeg(
     const DayCounter& paymentDayCounter = DayCounter(),
     const BusinessDayConvention paymentConvention = Following,
     const Calendar& paymentCalendar = Calendar(),
-    Natural paymentLag = 0,
+    Integer paymentLag = 0,
     QuantExt::EquityReturnType returnType = QuantExt::EquityReturnType::Price,
     Real dividendFactor = 1.0,
     Real initialPrice = Null<Real>(),
@@ -166,7 +226,7 @@ Leg _EquityLeg(
     const DayCounter& paymentDayCounter = DayCounter(),
     const BusinessDayConvention paymentConvention = Following,
     const Calendar& paymentCalendar = Calendar(),
-    Natural paymentLag = 0,
+    Integer paymentLag = 0,
     QuantExt::EquityReturnType returnType = QuantExt::EquityReturnType::Price,
     Real dividendFactor = 1.0,
     Real initialPrice = Null<Real>(),
@@ -446,7 +506,7 @@ Leg _QLECPILeg(
     const DayCounter& paymentDayCounter = DayCounter(),
     const BusinessDayConvention paymentConvention = Following,
     const Calendar& paymentCalendar = Calendar(),
-    Natural paymentLag = 0,
+    Integer paymentLag = 0,
     CPI::InterpolationType observationInterpolation = CPI::AsIndex,
     bool subtractInflationNominal = false,
     const std::vector<Rate>& caps = {},
@@ -480,7 +540,7 @@ Leg _QLECPILeg(
     const DayCounter& paymentDayCounter = DayCounter(),
     const BusinessDayConvention paymentConvention = Following,
     const Calendar& paymentCalendar = Calendar(),
-    Natural paymentLag = 0,
+    Integer paymentLag = 0,
     CPI::InterpolationType observationInterpolation = CPI::AsIndex,
     bool subtractInflationNominal = false,
     const std::vector<Rate>& caps = {},

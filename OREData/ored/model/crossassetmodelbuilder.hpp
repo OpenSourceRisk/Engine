@@ -145,7 +145,9 @@ private:
     mutable std::map<QuantExt::CrossAssetModel::AssetType,
                      std::map<QuantLib::Size, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>>
         subBuilders_;
-    mutable Array params_;
+
+    mutable Date referenceDate_;
+    mutable std::map<Date, Array> params_;
 
     QuantLib::ObservableValue<QuantLib::ext::shared_ptr<ore::data::Market>> market_;
     QuantLib::ext::shared_ptr<CrossAssetModelData> config_;

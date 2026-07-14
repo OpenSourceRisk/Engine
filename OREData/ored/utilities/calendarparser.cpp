@@ -58,18 +58,6 @@ using namespace QuantExt;
 CalendarParser::CalendarParser() { reset(); }
 
 QuantLib::Calendar CalendarParser::parseCalendar(const std::string& name) const {
-    // Israel TASE transitioned from Fri/Sat to Sat/Sun weekends on Jan 5, 2026
-    // https://www.tase.co.il/en/content/about/tradingdays_change
-    static const std::set<std::string> israelTaseNames = {
-        "IL", "ISR", "ILS", "ILa", "ILX", "ILs", "ILA", "XTAE"
-    };
-    if (israelTaseNames.count(name)) {
-        Date asof = Settings::instance().evaluationDate();
-        if (asof >= Date(5, January, 2026))
-            return QuantLib::Israel(QuantLib::Israel::TASE_National);
-        else
-            return QuantLib::Israel(QuantLib::Israel::TASE);
-    }
 
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     auto it = calendars_.find(name);
@@ -351,17 +339,17 @@ void CalendarParser::reset() {
         {"MUR", AmendedCalendar(Mauritius(), "MUR")},
         {"MUS", AmendedCalendar(Mauritius(), "MUR")},
         // fallback to WeekendsOnly for these emerging ccys
-        {"BHD", AmendedCalendar(WeekendsOnly(), "BHD")},
+        {"BHD", AmendedCalendar(IslamicWeekendsOnly(), "BHD")},
         {"CLF", AmendedCalendar(WeekendsOnly(), "CLF")},
-        {"EGP", AmendedCalendar(WeekendsOnly(), "EGP")},
-        {"KWD", AmendedCalendar(WeekendsOnly(), "KWD")},
+        {"EGP", AmendedCalendar(IslamicWeekendsOnly(), "EGP")},
+        {"KWD", AmendedCalendar(IslamicWeekendsOnly(), "KWD")},
         {"KZT", AmendedCalendar(WeekendsOnly(), "KZT")},
         {"MAD", AmendedCalendar(WeekendsOnly(), "MAD")},
         {"MXV", AmendedCalendar(WeekendsOnly(), "MXV")},
         {"NGN", AmendedCalendar(WeekendsOnly(), "MGN")},
-        {"OMR", AmendedCalendar(WeekendsOnly(), "OMR")},
+        {"OMR", AmendedCalendar(IslamicWeekendsOnly(), "OMR")},
         {"PKR", AmendedCalendar(WeekendsOnly(), "PKR")},
-        {"QAR", AmendedCalendar(WeekendsOnly(), "QAR")},
+        {"QAR", AmendedCalendar(IslamicWeekendsOnly(), "QAR")},
         {"UYU", AmendedCalendar(WeekendsOnly(), "UYU")},
         {"TND", AmendedCalendar(WeekendsOnly(), "TND")},
         {"VND", AmendedCalendar(WeekendsOnly(), "VND")},
@@ -372,7 +360,7 @@ void CalendarParser::reset() {
         {"GEL", AmendedCalendar(WeekendsOnly(), "GEL")},
         {"GHS", AmendedCalendar(WeekendsOnly(), "GHS")},
         {"HRK", AmendedCalendar(WeekendsOnly(), "HRK")},
-        {"JOD", AmendedCalendar(WeekendsOnly(), "JOD")},
+        {"JOD", AmendedCalendar(IslamicWeekendsOnly(), "JOD")},
         {"KES", AmendedCalendar(WeekendsOnly(), "KES")},
         {"LKR", AmendedCalendar(WeekendsOnly(), "LKR")},
         {"RSD", AmendedCalendar(WeekendsOnly(), "RSD")},

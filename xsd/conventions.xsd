@@ -1,5 +1,7 @@
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
+  <xs:include schemaLocation="intradaypowerloaddata.xsd"/>
+
   <xs:element type="conventions" name="Conventions"/>
 
   <xs:complexType name="conventions">
@@ -29,6 +31,7 @@
       <xs:element type="fxOptionTimeWeighting" name="FxOptionTimeWeighting"/>
       <xs:element type="zeroInflationIndexType" name="ZeroInflationIndex"/>
       <xs:element type="bondYield" name="BondYield"/>
+      <xs:element type="intradayPowerLoad" name="IntradayPowerLoad"/>
     </xs:choice>
   </xs:complexType>
 
@@ -152,6 +155,8 @@
       <xs:element type="bool" name="SpreadOnRec" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="IncludeSpread" minOccurs="0" maxOccurs="1"/>
       <xs:element type="subPeriodsCouponType" name="SubPeriodsCouponType" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="PayIsAveraged" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="RecIsAveraged" minOccurs="0" maxOccurs="1"/>
       <!-- deprecated fields -->
       <xs:element type="xs:string" name="LongIndex" minOccurs="0" maxOccurs="1"/>
       <xs:element type="period" name="LongPayTenor" minOccurs="0" maxOccurs="1"/>

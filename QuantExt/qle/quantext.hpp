@@ -66,6 +66,7 @@
 #include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/cashflows/interpolatediborcoupon.hpp>
 #include <qle/cashflows/interpolatediborcouponpricer.hpp>
+#include <qle/cashflows/intradaypowercashflow.hpp>
 #include <qle/cashflows/jyyoyinflationcouponpricer.hpp>
 #include <qle/cashflows/lognormalcmsspreadpricer.hpp>
 #include <qle/cashflows/mcgaussianformulabasedcouponpricer.hpp>
@@ -179,6 +180,7 @@
 #include <qle/instruments/balanceguaranteedswap.hpp>
 #include <qle/instruments/bondbasket.hpp>
 #include <qle/instruments/bondfuture.hpp>
+#include <qle/instruments/bondfutureoption.hpp>
 #include <qle/instruments/bondoption.hpp>
 #include <qle/instruments/bondrepo.hpp>
 #include <qle/instruments/bondtotalreturnswap.hpp>
@@ -243,7 +245,6 @@
 #include <qle/math/compiledformula.hpp>
 #include <qle/math/computeenvironment.hpp>
 #include <qle/math/constantinterpolation.hpp>
-#include <qle/math/covariancesalvage.hpp>
 #include <qle/math/cudaenvironment.hpp>
 #include <qle/math/deltagammavar.hpp>
 #include <qle/math/differentialevolution_mt.hpp>
@@ -253,6 +254,7 @@
 #include <qle/math/flatextrapolation.hpp>
 #include <qle/math/flatextrapolation2d.hpp>
 #include <qle/math/gpucodegenerator.hpp>
+#include <qle/math/gpuqrsolve.hpp>
 #include <qle/math/kendallrankcorrelation.hpp>
 #include <qle/math/logquadraticinterpolation.hpp>
 #include <qle/math/matrixfunctions.hpp>
@@ -460,7 +462,7 @@
 #include <qle/pricingengines/mccamequityforwardengine.hpp>
 #include <qle/pricingengines/mccamfxforwardengine.hpp>
 #include <qle/pricingengines/mccamfxoptionengine.hpp>
-#include <qle/pricingengines/mccashflowinfo.hpp>
+#include <qle/pricingengines/mcenginecashflowinfo.hpp>
 #include <qle/pricingengines/mcengineregression.hpp>
 #include <qle/pricingengines/mclgmbondengine.hpp>
 #include <qle/pricingengines/mclgmfwdbondengine.hpp>
@@ -583,6 +585,9 @@
 #include <qle/termstructures/interpolateddiscountcurve2.hpp>
 #include <qle/termstructures/interpolatedhazardratecurve.hpp>
 #include <qle/termstructures/interpolatedyoycapfloortermpricesurface.hpp>
+#include <qle/termstructures/intradaypowerloadtermstructure.hpp>
+#include <qle/termstructures/intradaypowerpricetermstructure.hpp>
+#include <qle/termstructures/intradayshapetermstructure.hpp>
 #include <qle/termstructures/iterativebootstrap.hpp>
 #include <qle/termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp>
 #include <qle/termstructures/multisectiondefaultcurve.hpp>
@@ -624,7 +629,6 @@
 #include <qle/termstructures/spreadedsurvivalprobabilitytermstructure.hpp>
 #include <qle/termstructures/spreadedswaptionvolatility.hpp>
 #include <qle/termstructures/spreadedyoyvolsurface.hpp>
-#include <qle/termstructures/staticallycorrectedyieldtermstructure.hpp>
 #include <qle/termstructures/strippedcpivolatilitystructure.hpp>
 #include <qle/termstructures/strippedoptionlet.hpp>
 #include <qle/termstructures/strippedoptionletadapter.hpp>
@@ -662,6 +666,7 @@
 #include <qle/utilities/fairrate.hpp>
 #include <qle/utilities/inflation.hpp>
 #include <qle/utilities/interpolation.hpp>
+#include <qle/utilities/intradaypower.hpp>
 #include <qle/utilities/localiborcouponsettings.hpp>
 #include <qle/utilities/mcstats.hpp>
 #include <qle/utilities/ratehelpers.hpp>

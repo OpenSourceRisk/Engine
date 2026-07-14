@@ -148,9 +148,8 @@ The engine parameters have the following meaning:
 \item MesherMaxConcentrationPoints [Optional]: The maximum number of mesher concentration points to use, optional,
   defaults to 9999, in which all calibration strikes from a script are used. For 1 only the first strike from the list
   is used, for 2 the first two strikes, etc.
-\item MesherIsStatic [Optional]: If true, the mesher is built only once and reused under scenario / sensitivity
-  computations. If false, the mesher is rebuilt for each repricing. Optional, defaults to false. For sensitivity runs it
-  should be set to true. Defaults to false.
+\item MesherIsStatic [Optional]: If true, the mesher is built only once and reused under scenario computations, but only
+  for sensitivity runs. If false, the mesher is rebuilt for each repricing. Optional, defaults to false.
 \item RegressionOrder: The order of the polynomial basis to compute conditional expectations via regression
   analysis. Applies to MC only.
 \item SequenceType [Optional]: The sequence type used for pricing. Defaults to SobolBrownianBridge. Possible values
@@ -205,7 +204,7 @@ The engine parameters have the following meaning:
 \item ExternalComputeDevice [Optional]: The external compute device to use if UseExternalComputingDevice is effective.
 \item SalvagingAlgorithm [Optional]: If the correlation matrix is not positive semi definite, an approximation of the
   pseudo square root using asalvaging algorithm can be used.The SalvagingAlgorithm tag chooses this algorithm with the
-  following allowable values: None, Spectral, Hypersphere, LowerDiagonal or Highham. Defaults to Spectral.
+  following allowable values: None, Spectral, Hypersphere, LowerDiagonal, Highham, Principal. Defaults to Spectral.
 \item IndicatorSmoothingForValues [Optional]: smoothing parameter (according to Fries methodology, 2017, ``epsilon'')
   applied to indicator functions in cg-based runs for values calculation. Defaults to $0$.
 \item IndicatorSmoothingForDerivatives: as above, smoothing parameter for derivatives calculation. Defaults to $0.2$.

@@ -24,8 +24,11 @@
 #pragma once
 
 #include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/powerloadprofiledata.hpp>
 #include <qle/cashflows/commoditycashflow.hpp>
+#include <qle/cashflows/intradaypowercashflow.hpp>
 #include <qle/indexes/commodityindex.hpp>
+#include <optional>
 
 namespace ore {
 namespace data {
@@ -193,6 +196,79 @@ private:
     QuantLib::Natural avgPricePrecision_;
     std::string foreignCurrency_;
 };
+
+//! Serializable Intraday Power Floating Leg Data
+/*!
+  \ingroup tradedata
+*/
+class IntradayPowerFloatingLegData : public LegAdditionalData {
+public:
+    //! Default constructor
+    IntradayPowerFloatingLegData();
+
+    //! Constructor
+    IntradayPowerFloatingLegData(const std::string& name, const std::vector<QuantLib::Real>& quantities,
+                                 const std::vector<std::string>& quantityDates = {},
+                                 const std::vector<QuantLib::Real>& spreads = {},
+                                 const std::vector<std::string>& spreadDates = {},
+                                 const std::vector<QuantLib::Real>& gearings = {},
+                                 const std::vector<std::string>& gearingDates = {},
+                                 const std::string& pricingCalendar = std::string(), bool includePeriodStart = true,
+                                 bool includePeriodEnd = false, bool businessDays = true,
+                                 const std::optional<PowerLoadProfileData>& loadProfileData = std::nullopt,
+                                 const std::string& fxIndex = std::string(),
+                                 QuantLib::Natural avgPricePrecision = QuantLib::Null<QuantLib::Natural>(),
+                                 QuantExt::IntradayPowerQuantityMode quantityMode = QuantExt::IntradayPowerQuantityMode::TotalEnergy);
+
+    //! \name Inspectors
+    //@{
+    const std::string& name() const { return name_; }
+    const std::vector<QuantLib::Real>& quantities() const { return quantities_; }
+    const std::vector<std::string>& quantityDates() const { return quantityDates_; }
+    const std::vector<QuantLib::Real>& spreads() const { return spreads_; }
+    const std::vector<std::string>& spreadDates() const { return spreadDates_; }
+    const std::vector<QuantLib::Real>& gearings() const { return gearings_; }
+    const std::vector<std::string>& gearingDates() const { return gearingDates_; }
+    const std::string& pricingCalendar() const { return pricingCalendar_; }
+    bool includePeriodStart() const { return includePeriodStart_; }
+    bool includePeriodEnd() const { return includePeriodEnd_; }
+    bool businessDays() const { return businessDays_; }
+    const std::optional<PowerLoadProfileData>& loadProfileData() const { return loadProfileData_; }
+    const std::string& fxIndex() const { return fxIndex_; }
+    QuantLib::Natural avgPricePrecision() const { return avgPricePrecision_; }
+    const std::string& priceCurrency() const { return priceCurrency_; }
+    const std::string& tag() const { return tag_; }
+    QuantExt::IntradayPowerQuantityMode quantityMode() const { return quantityMode_; }
+    //@}
+
+    //! \name Serialisation
+    //@{
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    //@}
+
+private:
+    std::string name_;
+    std::vector<QuantLib::Real> quantities_;
+    std::vector<std::string> quantityDates_;
+    std::vector<QuantLib::Real> spreads_;
+    std::vector<std::string> spreadDates_;
+    std::vector<QuantLib::Real> gearings_;
+    std::vector<std::string> gearingDates_;
+    std::string pricingCalendar_;
+    bool includePeriodStart_;
+    bool includePeriodEnd_;
+    bool businessDays_;
+    std::string powerLoadProfileReference_;
+    std::optional<PowerLoadProfileData> loadProfileData_ = std::nullopt;
+    std::string fxIndex_;
+    QuantLib::Natural avgPricePrecision_;
+    std::string priceCurrency_;
+    std::string tag_;
+    QuantExt::IntradayPowerQuantityMode quantityMode_;
+};
+
+
 
 } // namespace data
 } // namespace ore

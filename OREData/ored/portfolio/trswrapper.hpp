@@ -21,13 +21,15 @@
 */
 
 #pragma once
-
 #include <ored/portfolio/trs.hpp>
-
 #include <ored/portfolio/trade.hpp>
-
+#include <qle/cashflows/overnightindexedcouponbase.hpp>
+#include <qle/cashflows/zerofixedcoupon.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/genericindex.hpp>
+#include <qle/instruments/cashflowresults.hpp>
+#include <ql/cashflows/fixedratecoupon.hpp>
+#include <ql/cashflows/iborcoupon.hpp>
 
 namespace ore {
 namespace data {
@@ -85,6 +87,11 @@ public:
     bool isExpired() const override;
     void setupArguments(QuantLib::PricingEngine::arguments*) const override;
     void fetchResults(const QuantLib::PricingEngine::results*) const override;
+    // The reason for overriding this method is that the underlyings, i.e. either trades or index constituents, may 
+    // be a bond future option. We then hit the issue outlined in https://github.com/lballabio/QuantLib/issues/2340. 
+    // The solution here is the same as that taken in commit 8dfdce7cde for bond option, bond TRS and bond forward.
+    // See `qle/instruments/bondfutureoption.hpp` for an explanation.
+    void calculate() const override;
     //@}
 
 private:
@@ -114,6 +121,7 @@ private:
     QuantLib::Real indexQuantity_;
     bool pricePerIndexUnit_;
     QuantLib::ext::shared_ptr<QuantExt::GenericIndex> basketIndex_;
+    bool isBespokeIndex_ = false;
 
     Date lastDate_;
 };
@@ -147,6 +155,7 @@ public:
     QuantLib::Real indexQuantity_;
     bool pricePerIndexUnit_;
     QuantLib::ext::shared_ptr<QuantExt::GenericIndex> basketIndex_;
+    bool isBespokeIndex_ = false;
     void validate() const override;
 };
 
@@ -163,7 +172,48 @@ public:
     void calculate() const override;
 
 private:
+    // A leg number that is used to identify the leg in the results.
+    mutable QuantLib::Size legNumber_ = 0;
     Handle<YieldTermStructure> additionalCashflowCurrencyDiscountCurve_;
+
+    // `calculate` delegates to this method when the underlying is a basket index and price per unit is specified.
+    void calculateForIndex() const;
+
+    // Build the additional-results / cash-flow suffix used to distinguish underlyings and "nth current" periods,
+    // e.g. "_2", "_nth(1)" or "_2_nth(1)". An empty string is returned for a single underlying and nth == 0.
+    std::string underlyingSuffix(QuantLib::Size i, QuantLib::Size nth) const;
+
+    QuantLib::Real assetLegValue(std::vector<QuantExt::CashFlowResults>& cfResults,
+        std::vector<QuantLib::Real>& underlyingStartValue, std::vector<QuantLib::Real>& fxConversionFactor,
+        QuantLib::Date& startDate) const;
+
+    QuantLib::Real fundingLegValue(std::vector<QuantExt::CashFlowResults>& cfResults) const;
+
+    QuantLib::Real fundingLegPeriodResetNotionalFactor(QuantLib::Size currentIdx, const std::string& resultSuffix,
+        QuantLib::Size nthCpn) const;
+    QuantLib::Real fundingLegDailyResetNotionalFactor(const QuantLib::ext::shared_ptr<QuantLib::Coupon>& cpn,
+        QuantLib::Real localFundingLegNpv, const std::string& resultSuffix, QuantLib::Size nthCpn) const;
+
+    void finalizeResults(const std::vector<QuantExt::CashFlowResults>& cfResults,
+        const std::vector<QuantLib::Real>& underlyingStartValue,
+        const std::vector<QuantLib::Real>& fxConversionFactor, const QuantLib::Date& startDate,
+        QuantLib::Real fxAssetToPnlCcy) const;
+
+    QuantLib::Real additionalCashflowLegValue(std::vector<QuantExt::CashFlowResults>& cfResults,
+        QuantLib::Size legNumber) const;
+
+    void propagateUnderlyingAdditionalResults() const;
+
+    // Compute asset leg value when the underlying is a basket index and price per unit is specified.
+    QuantLib::Real assetLegValueForIndex(std::vector<QuantExt::CashFlowResults>& cfResults,
+        QuantLib::ext::optional<std::pair<QuantLib::Real, QuantLib::Real>>& outS0Fx0) const;
+
+    // Compute funding leg value when the underlying is a basket index and price per unit is specified.
+    QuantLib::Real fundingLegValueForIndex(std::vector<QuantExt::CashFlowResults>& cfResults) const;
+
+    // Compute additional cashflow leg value when the underlying is a basket index and price per unit is specified.
+    QuantLib::Real additionalCashflowLegValueForIndex(std::vector<QuantExt::CashFlowResults>& cfResults) const;
+
     /* Computes underlying value, fx conversion for each underlying and the start date of the nth current
        valuation period. Notice there might be more than one "current" valuation period, if a payment lag
        is present and nth refers to the nth such period in order the associated valuation periods are
@@ -179,9 +229,19 @@ private:
     bool computeStartValue(std::vector<QuantLib::Real>& underlyingStartValue,
                            std::vector<QuantLib::Real>& fxConversionFactor, QuantLib::Date& startDate,
                            QuantLib::Date& endDate, bool& usingInitialPrice, const Size nth) const;
+
+    // Analogue of the above method used when the underlying is a basket index and price per unit is specified.
+    bool computeStartValueForIndex(QuantLib::Real& s0, QuantLib::Real& fx0, QuantLib::Date& startDate,
+        QuantLib::Date& endDate, QuantLib::Size nth, QuantLib::Date& pmtDate) const;
+
     // return conversion rate from source to target on date, today's fixing projection is enforced
     QuantLib::Real getFxConversionRate(const QuantLib::Date& date, const QuantLib::Currency& source,
                                        const QuantLib::Currency& target, const bool enforceProjection) const;
+
+    // return the conversion factor from ccy to the funding currency on date, looking the currency up in the asset,
+    // return and additional cashflow fx indices; returns 1.0 if ccy is the funding currency
+    QuantLib::Real fxLegFactor(const QuantLib::Currency& ccy, const QuantLib::Date& date,
+                               const bool enforceProjection) const;
 
     // return underlying #i fixing on date < today
     Real getUnderlyingFixing(const Size i, const QuantLib::Date& date, const bool enforceProjection) const;
@@ -194,6 +254,30 @@ private:
 
     // additional inspectors
     QuantLib::Real currentNotional() const;
+
+    // For a bespoke basket index where price is per unit, return the basket value in the initial price currency 
+    // on the given `fixingDate`. The `fixingDate` must be a date in the past or today.
+    QuantLib::Real basketValue(const QuantLib::Date& fixingDate, const QuantLib::Date& fxDate,
+        bool enforceProjection) const;
+
+    // Helpers for funding leg coupon calculations when the underlying is a basket index and price per unit is 
+    // specified. The `outNtl` parameter is set to the appropriate funding leg notional in funding leg currency during 
+    // the calculation.
+    QuantLib::Real fixedNtlCpnVal(const QuantLib::ext::shared_ptr<QuantLib::Coupon>& cpn,
+        const QuantLib::Date& today, const std::string& cpnSuffix, QuantLib::Real& outNtl) const;
+    QuantLib::Real periodResetCpnVal(const QuantLib::ext::shared_ptr<QuantLib::Coupon>& cpn,
+        const QuantLib::Date& today, const std::string& cpnSuffix, QuantLib::Size valIdx, QuantLib::Real& outNtl) const;
+    QuantLib::Real dailyResetCpnVal(const QuantLib::ext::shared_ptr<QuantLib::FixedRateCoupon>& cpn,
+        const QuantLib::Date& today, const std::string& cpnSuffix, QuantLib::Real& outNtl) const;
+    QuantLib::Real dailyResetCpnVal(const QuantLib::ext::shared_ptr<QuantLib::IborCoupon>& cpn,
+        const QuantLib::Date& today, const std::string& cpnSuffix, QuantLib::Real& outNtl) const;
+    QuantLib::Real dailyResetCpnVal(const QuantLib::ext::shared_ptr<QuantExt::OvernightIndexedCouponBase>& cpn,
+        const QuantLib::Date& today, const std::string& cpnSuffix, QuantLib::Real& outNtl) const;
+
+    // Last available fixing used in daily reset coupon valuation for a bespoke basket index where price is per unit.
+    // This allows some flexibility in the dates on which we require basket fixings to be available.
+    std::pair<QuantLib::Real, QuantLib::Date> lastAvailableFixing(const QuantLib::Date& fixingDate,
+        const QuantLib::Date& earliestDate = {}, QuantLib::Natural gracePeriod = 5) const;
 };
 
 } // namespace data

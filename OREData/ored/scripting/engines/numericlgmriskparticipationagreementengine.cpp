@@ -36,7 +36,7 @@ using namespace QuantExt;
 
 NumericLgmRiskParticipationAgreementEngine::NumericLgmRiskParticipationAgreementEngine(
     const std::string& baseCcy, const std::map<std::string, Handle<YieldTermStructure>>& discountCurves,
-    const std::map<std::string, Handle<Quote>>& fxSpots, const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
+    const std::map<std::string, Handle<Quote>>& fxSpots, const QuantLib::Handle<LinearGaussMarkovModel>& model,
     const Real sy, const Size ny, const Real sx, const Size nx,
     const Handle<DefaultProbabilityTermStructure>& defaultCurve, const Handle<Quote>& recoveryRate,
     const Size maxGapDays, const Size maxDiscretisationPoints, const OptionExpiryPosition optionExpiryPosition)

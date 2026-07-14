@@ -67,7 +67,7 @@ const std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>& InstrumentWr
 
 const std::vector<Real>& InstrumentWrapper::additionalMultipliers() const { return additionalMultipliers_; }
 
-boost::timer::nanosecond_type InstrumentWrapper::getCumulativePricingTime() const { return cumulativePricingTime_; }
+unsigned long long InstrumentWrapper::getCumulativePricingTime() const { return cumulativePricingTime_; }
 
 std::size_t InstrumentWrapper::getNumberOfPricings() const { return numberOfPricings_; }
 

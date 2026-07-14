@@ -251,6 +251,8 @@ void XvaEngineCG::buildCam() {
         indices, indexCurrencies, simulationDates_, iborFallbackConfig_, std::vector<std::string>(),
         stickyCloseOutDates_, timeStepsPerYear, enableCgOptimization_);
 
+    model_->calculate();
+
     timing_parta_ = timer.elapsed().wall;
     DLOG("XvaEngineCG: build cam cg model done - graph size is " << model_->computationGraph()->size());
 }
@@ -1434,11 +1436,11 @@ void XvaEngineCG::calculateDynamicIM() {
                                 [this](const Date& d) { return model_->actualTimeFromReference(d); });
 
         irVegaConverter[ccyIndex] = LgmSwaptionVegaParConverter(
-            model_->cam()->lgm(ccyIndex), irVegaTerms, irVegaUnderlyingTerms,
+            Handle<LGM>(model_->cam()->lgm(ccyIndex)), irVegaTerms, irVegaUnderlyingTerms,
             *initMarket_->swapIndex(initMarket_->swapIndexBase(model_->currencies()[ccyIndex])));
 
         if (ccyIndex > 0) {
-            fxVegaConverter[ccyIndex - 1] = CcLgmFxOptionVegaParConverter(*model_->cam(), ccyIndex - 1, fxVegaTerms);
+            fxVegaConverter[ccyIndex - 1] = CcLgmFxOptionVegaParConverter(model_->cam(), ccyIndex - 1, fxVegaTerms);
         }
     }
 
@@ -1896,8 +1898,8 @@ void XvaEngineCG::calculateSensitivities() {
             // update sim market to next scenario
 
             simMarket_->preUpdate();
-            simMarket_->updateScenario(asof_);
-            simMarket_->postUpdate(asof_);
+            simMarket_->updateScenario();
+            simMarket_->postUpdate();
 
             // recalibrate the model
 
@@ -1960,6 +1962,8 @@ void XvaEngineCG::calculateSensitivities() {
 
             sensiResultCube_->set(cva + sensi, 0, 0, sample, 0);
         }
+
+        simMarket_->reset();
 
         timing_sensi_ = timer.elapsed().wall - timing_bwd_;
 

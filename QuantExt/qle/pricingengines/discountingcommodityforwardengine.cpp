@@ -42,9 +42,7 @@ void DiscountingCommodityForwardEngine::calculate() const {
     const auto& index = arguments_.index;
     Date npvDate = npvDate_;
     if (npvDate == Null<Date>()) {
-        const auto& priceCurve = index->priceCurve();
-        QL_REQUIRE(!priceCurve.empty(), "DiscountingCommodityForwardEngine: need a non-empty price curve.");
-        npvDate = priceCurve->referenceDate();
+        npvDate = discountCurve_->referenceDate();
     }
 
     const Date& maturity = arguments_.maturityDate;

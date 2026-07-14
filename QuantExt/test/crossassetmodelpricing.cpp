@@ -356,8 +356,8 @@ BOOST_AUTO_TEST_CASE(testLgmCalibrationPricing) {
     std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper> > basketEur3, basketEur4;
     QuantLib::ext::shared_ptr<IborIndex> euribor6m = QuantLib::ext::make_shared<Euribor>(6 * Months, d1.eurYts);
 
-    QuantLib::ext::shared_ptr<PricingEngine> eurSwEng1 = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(d1.ccLgmExact, 0);
-    QuantLib::ext::shared_ptr<PricingEngine> eurSwEng2 = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(d2.ccLgmExact, 0);
+    QuantLib::ext::shared_ptr<PricingEngine> eurSwEng1 = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(Handle<CrossAssetModel>(d1.ccLgmExact), 0);
+    QuantLib::ext::shared_ptr<PricingEngine> eurSwEng2 = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(Handle<CrossAssetModel>(d2.ccLgmExact), 0);
 
     for (double strike = 0.00; strike <=0.06;strike+=0.02)
     {

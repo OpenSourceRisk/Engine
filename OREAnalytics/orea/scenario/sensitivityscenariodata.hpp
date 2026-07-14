@@ -71,6 +71,14 @@ public:
         vector<ScenarioCurvePillar> shiftTenors;
     };
 
+    // Have and own data type, later add shape profile buckets, at moment
+    // parallel shift off the intraday shape
+    struct IntradayPowerShiftData : ShiftData {
+        IntradayPowerShiftData() : ShiftData() {}
+        IntradayPowerShiftData(const ShiftData& d) : ShiftData(d) {}
+        vector<Period> shiftTenors;
+    };
+
     using SpotShiftData = ShiftData;
 
     struct CdsVolShiftData : ShiftData {
@@ -143,10 +151,11 @@ public:
 
     //! Default constructor
     SensitivityScenarioData(bool parConversion = true, std::string parConversionExcludeFixings = ".*",
-                            ore::data::ParConversionMatrixRegularisation parConversionMatrixRegularisation = ore::data::ParConversionMatrixRegularisation::Silent)
-        : computeGamma_(true),
-          useSpreadedTermStructures_(false), parConversion_(parConversion), 
-          parConversionExcludeFixings_(parConversionExcludeFixings), parConversionMatrixRegularisation_(parConversionMatrixRegularisation){};
+                            ore::data::ParConversionMatrixRegularisation parConversionMatrixRegularisation =
+                                ore::data::ParConversionMatrixRegularisation::Silent)
+        : computeGamma_(true), thetaPeriod_(Period()), useSpreadedTermStructures_(false), parConversion_(parConversion),
+          parConversionExcludeFixings_(parConversionExcludeFixings),
+          parConversionMatrixRegularisation_(parConversionMatrixRegularisation) {};
 
     //! \name Inspectors
     //@{
@@ -187,6 +196,9 @@ public:
     const map<string, QuantLib::ext::shared_ptr<CurveShiftData>>& commodityCurveShiftData() const {
         return commodityCurveShiftData_;
     }
+    const map<string, QuantLib::ext::shared_ptr<IntradayPowerShiftData>>& intradayPowerCurveShiftData() const {
+        return intradayPowerCurveShiftData_;
+    }
     const map<string, QuantLib::ext::shared_ptr<VolShiftData>>& commodityVolShiftData() const {
         return commodityVolShiftData_;
     }
@@ -201,6 +213,7 @@ public:
 
     const vector<pair<string, string>>& crossGammaFilter() const { return crossGammaFilter_; }
     const bool computeGamma() const { return computeGamma_; }
+    const QuantLib::Period& thetaPeriod() const { return thetaPeriod_; }
     const bool useSpreadedTermStructures() const { return useSpreadedTermStructures_; }
 
     //! Give back the shift data for the given risk factor type, \p keyType, with the given \p name
@@ -243,6 +256,9 @@ public:
     map<string, QuantLib::ext::shared_ptr<VolShiftData>>& equityVolShiftData() { return equityVolShiftData_; }
     map<string, string>& commodityCurrencies() { return commodityCurrencies_; }
     map<string, QuantLib::ext::shared_ptr<CurveShiftData>>& commodityCurveShiftData() { return commodityCurveShiftData_; }
+    map<string, QuantLib::ext::shared_ptr<IntradayPowerShiftData>>& intradayPowerCurveShiftData() {
+        return intradayPowerCurveShiftData_;
+    }
     map<string, QuantLib::ext::shared_ptr<VolShiftData>>& commodityVolShiftData() { return commodityVolShiftData_; }
     map<string, QuantLib::ext::shared_ptr<VolShiftData>>& correlationShiftData() { return correlationShiftData_; }
     map<string, QuantLib::ext::shared_ptr<SpotShiftData>>& securityShiftData() { return securityShiftData_; }
@@ -252,6 +268,7 @@ public:
 
     vector<pair<string, string>>& crossGammaFilter() { return crossGammaFilter_; }
     bool& computeGamma() { return computeGamma_; }
+    QuantLib::Period& thetaPeriod() { return thetaPeriod_; }
     bool& useSpreadedTermStructures() { return useSpreadedTermStructures_; }
 
     void setParConversion(const bool b) { parConversion_ = b; }
@@ -304,6 +321,9 @@ public:
     void addCommodityCurveShiftData(const string& s, const QuantLib::ext::shared_ptr<CurveShiftData>& d) {
         commodityCurveShiftData_[s] = d;
     }
+    void addIntradayPowerCurveShiftData(const string& s, const QuantLib::ext::shared_ptr<IntradayPowerShiftData>& d) {
+        intradayPowerCurveShiftData_[s] = d;
+    }
     void addCommodityVolShiftData(const string& s, const QuantLib::ext::shared_ptr<VolShiftData>& d) { commodityVolShiftData_[s] = d; }
     void addCorrelationShiftData(const string& s, const QuantLib::ext::shared_ptr<VolShiftData>& d) { correlationShiftData_[s] = d; }
     void addSecurityShiftData(const string& s, const QuantLib::ext::shared_ptr<SpotShiftData>& d) { securityShiftData_[s] = d; }
@@ -313,6 +333,7 @@ public:
 
     void setCrossGammaFilter(const vector<pair<string, string>>& d) { crossGammaFilter_ = d; }
     void setComputeGamma(const bool b) { computeGamma_ = b; }
+    void setThetaPeriod(const QuantLib::Period& p) { thetaPeriod_ = p; }
     void setUseSpreadedTermStructures(const bool b) { useSpreadedTermStructures_ = b; }
     void setParConversionExcludeFixings(const std::string b) { parConversionExcludeFixings_ = b; }
 
@@ -338,12 +359,15 @@ public:
 protected:
     void shiftDataFromXML(XMLNode* child, ShiftData& data);
     void curveShiftDataFromXML(XMLNode* child, CurveShiftData& data);
+    void intradayPowerShiftDataFromXML(XMLNode* child, IntradayPowerShiftData& data);
     void volShiftDataFromXML(XMLNode* child, VolShiftData& data, const bool requireShiftStrikes = true);
 
     //! toXML helper methods
     //@{
     void shiftDataToXML(ore::data::XMLDocument& doc, XMLNode* node, const ShiftData& data) const;
     void curveShiftDataToXML(ore::data::XMLDocument& doc, XMLNode* node, const CurveShiftData& data) const;
+    void intradayPowerShiftDataToXML(ore::data::XMLDocument& doc, XMLNode* node,
+                                     const IntradayPowerShiftData& data) const;
     void volShiftDataToXML(ore::data::XMLDocument& doc, XMLNode* node, const VolShiftData& data) const;
     //@}
 
@@ -369,6 +393,7 @@ protected:
     map<string, QuantLib::ext::shared_ptr<CurveShiftData>> dividendYieldShiftData_; // key: equity name
     map<string, std::string> commodityCurrencies_;
     map<string, QuantLib::ext::shared_ptr<CurveShiftData>> commodityCurveShiftData_;
+    map<string, QuantLib::ext::shared_ptr<IntradayPowerShiftData>> intradayPowerCurveShiftData_;
     map<string, QuantLib::ext::shared_ptr<VolShiftData>> correlationShiftData_;
     map<string, QuantLib::ext::shared_ptr<VolShiftData>> commodityVolShiftData_;
     map<string, QuantLib::ext::shared_ptr<SpotShiftData>> securityShiftData_; // key: security name
@@ -376,6 +401,7 @@ protected:
 
     vector<pair<string, string>> crossGammaFilter_;
     bool computeGamma_;
+    Period thetaPeriod_;
     bool useSpreadedTermStructures_;
     bool parConversion_;
     set<ore::analytics::RiskFactorKey::KeyType> parConversionExcludes_;

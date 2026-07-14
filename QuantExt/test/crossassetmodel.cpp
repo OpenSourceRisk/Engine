@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(testBermudanLgm1fGsr) {
         QuantLib::ext::make_shared<Gaussian1dSwaptionEngine>(lgm_g1d, 64, 7.0, true, false);
 
     QuantLib::ext::shared_ptr<PricingEngine> swaptionEngineLgm2 =
-        QuantLib::ext::make_shared<NumericLgmSwaptionEngine>(lgm, 7.0, 16, 7.0, 32);
+        QuantLib::ext::make_shared<NumericLgmSwaptionEngine>(Handle<LGM>(lgm), 7.0, 16, 7.0, 32);
 
     d.swaption->setPricingEngine(swaptionEngineGsr);
     Real npvGsr = d.swaption->NPV();
@@ -285,9 +285,9 @@ BOOST_AUTO_TEST_CASE(testNonstandardBermudanSwaption) {
 
     QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm = QuantLib::ext::make_shared<LinearGaussMarkovModel>(lgm_p);
 
-    QuantLib::ext::shared_ptr<PricingEngine> engine = QuantLib::ext::make_shared<NumericLgmSwaptionEngine>(lgm, 7.0, 16, 7.0, 32);
+    QuantLib::ext::shared_ptr<PricingEngine> engine = QuantLib::ext::make_shared<NumericLgmSwaptionEngine>(Handle<LGM>(lgm), 7.0, 16, 7.0, 32);
     QuantLib::ext::shared_ptr<PricingEngine> ns_engine =
-        QuantLib::ext::make_shared<NumericLgmNonstandardSwaptionEngine>(lgm, 7.0, 16, 7.0, 32);
+        QuantLib::ext::make_shared<NumericLgmNonstandardSwaptionEngine>(Handle<LGM>(lgm), 7.0, 16, 7.0, 32);
 
     d.swaption->setPricingEngine(engine);
     ns_swaption->setPricingEngine(ns_engine);
@@ -358,7 +358,8 @@ BOOST_AUTO_TEST_CASE(testLgm1fCalibration) {
     QuantLib::ext::shared_ptr<PricingEngine> swaptionEngineGsr =
         QuantLib::ext::make_shared<Gaussian1dSwaptionEngine>(gsr, 64, 7.0, true, false);
 
-    QuantLib::ext::shared_ptr<PricingEngine> swaptionEngineLgm = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(lgm);
+    QuantLib::ext::shared_ptr<PricingEngine> swaptionEngineLgm =
+        QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(Handle<LGM>(lgm));
 
     // calibrate GSR
 
@@ -421,8 +422,8 @@ BOOST_AUTO_TEST_CASE(testLgm1fCalibration) {
     parametrizations.push_back(fx_p);
     Matrix rho(3, 3, 0.0);
     rho[0][0] = rho[1][1] = rho[2][2] = 1.0;
-    QuantLib::ext::shared_ptr<CrossAssetModel> xmodel =
-        QuantLib::ext::make_shared<CrossAssetModel>(parametrizations, rho, SalvagingAlgorithm::None);
+    QuantLib::Handle<CrossAssetModel> xmodel(
+        QuantLib::ext::make_shared<CrossAssetModel>(parametrizations, rho, SalvagingAlgorithm::None));
 
     // .. whose EUR component we calibrate as before and compare the
     // result against the 1d case and as well check that the USD
@@ -543,7 +544,7 @@ BOOST_AUTO_TEST_CASE(testCcyLgm3fForeignPayouts) {
     singleModels.push_back(usdLgmParam);
     singleModels.push_back(fxUsdEurBsParam);
 
-    QuantLib::ext::shared_ptr<CrossAssetModel> ccLgm = QuantLib::ext::make_shared<CrossAssetModel>(singleModels);
+    QuantLib::Handle<CrossAssetModel> ccLgm(QuantLib::ext::make_shared<CrossAssetModel>(singleModels));
 
     Size eurIdx = ccLgm->ccyIndex(EURCurrency());
     Size usdIdx = ccLgm->ccyIndex(USDCurrency());
@@ -758,10 +759,10 @@ struct Lgm5fTestData {
         c[4][0] = 0.3; c[4][1] = -0.1; c[4][2] = 0.1; c[4][3] = 0.3;  c[4][4] = 1.0;  // FX GBP-EUR
         // clang-format on
 
-        ccLgmExact = QuantLib::ext::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
-                                                         IrModel::Measure::LGM, CrossAssetModel::Discretization::Exact);
-        ccLgmEuler = QuantLib::ext::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
-                                                         IrModel::Measure::LGM, CrossAssetModel::Discretization::Euler);
+        ccLgmExact = Handle<CrossAssetModel>(QuantLib::ext::make_shared<CrossAssetModel>(
+            singleModels, c, SalvagingAlgorithm::None, IrModel::Measure::LGM, CrossAssetModel::Discretization::Exact));
+        ccLgmEuler = Handle<CrossAssetModel>(QuantLib::ext::make_shared<CrossAssetModel>(
+            singleModels, c, SalvagingAlgorithm::None, IrModel::Measure::LGM, CrossAssetModel::Discretization::Euler));
     }
 
     SavedSettings backup;
@@ -777,7 +778,7 @@ struct Lgm5fTestData {
     QuantLib::ext::shared_ptr<FxBsParametrization> fxUsd_p, fxGbp_p;
     std::vector<QuantLib::ext::shared_ptr<Parametrization> > singleModels;
     Matrix c;
-    QuantLib::ext::shared_ptr<CrossAssetModel> ccLgmExact, ccLgmEuler;
+    QuantLib::Handle<CrossAssetModel> ccLgmExact, ccLgmEuler;
 }; // LGM5FTestData
 
 struct IrFxCrModelTestData {
@@ -925,16 +926,16 @@ struct IrFxCrModelTestData {
         // evolve method can be ignored
         BOOST_TEST_MESSAGE("salvaged correlation matrix is\n" << cs);
         if (includeCirr)
-            modelExact = modelEuler =
-                QuantLib::ext::make_shared<CrossAssetModel>(singleModels, cs, SalvagingAlgorithm::None, IrModel::Measure::LGM,
-                                                    CrossAssetModel::Discretization::Euler);
+            modelExact = modelEuler = Handle<CrossAssetModel>(QuantLib::ext::make_shared<CrossAssetModel>(
+                singleModels, cs, SalvagingAlgorithm::None, IrModel::Measure::LGM,
+                CrossAssetModel::Discretization::Euler));
         else {
-            modelExact =
-                QuantLib::ext::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None, IrModel::Measure::LGM,
-                                                    CrossAssetModel::Discretization::Exact);
-            modelEuler =
-                QuantLib::ext::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None, IrModel::Measure::LGM,
-                                                    CrossAssetModel::Discretization::Euler);
+            modelExact = Handle<CrossAssetModel>(QuantLib::ext::make_shared<CrossAssetModel>(
+                singleModels, c, SalvagingAlgorithm::None, IrModel::Measure::LGM,
+                CrossAssetModel::Discretization::Exact));
+            modelEuler = Handle<CrossAssetModel>(QuantLib::ext::make_shared<CrossAssetModel>(
+                singleModels, c, SalvagingAlgorithm::None, IrModel::Measure::LGM,
+                CrossAssetModel::Discretization::Euler));
         }
         BOOST_TEST_MESSAGE("cam+ model built.");
     }
@@ -963,7 +964,7 @@ struct IrFxCrModelTestData {
     // model
     std::vector<QuantLib::ext::shared_ptr<Parametrization> > singleModels;
     Matrix c;
-    QuantLib::ext::shared_ptr<CrossAssetModel> modelExact, modelEuler;
+    QuantLib::Handle<CrossAssetModel> modelExact, modelEuler;
 }; // IrFxCrModelTestData
 
 } // anonymous namespace
@@ -991,8 +992,8 @@ BOOST_AUTO_TEST_CASE(testLgm5fFxCalibration) {
         }
     }
 
-    QuantLib::ext::shared_ptr<CrossAssetModel> ccLgmProjected =
-        QuantLib::ext::make_shared<CrossAssetModel>(singleModelsProjected, cProjected, SalvagingAlgorithm::None);
+    auto ccLgmProjected = Handle<CrossAssetModel>(
+        QuantLib::ext::make_shared<CrossAssetModel>(singleModelsProjected, cProjected, SalvagingAlgorithm::None));
 
     QuantLib::ext::shared_ptr<AnalyticCcLgmFxOptionEngine> ccLgmFxOptionEngineUsd =
         QuantLib::ext::make_shared<AnalyticCcLgmFxOptionEngine>(d.ccLgmExact, 0);
@@ -2127,11 +2128,11 @@ struct IrFxInfCrComModelTestData {
         BOOST_TEST_MESSAGE("correlation matrix is\n" << c);
 
         BOOST_TEST_MESSAGE("creating CAM with exact discretization");
-        modelExact = QuantLib::ext::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
-                                                         IrModel::Measure::LGM, CrossAssetModel::Discretization::Exact);
+        modelExact = QuantLib::Handle<CrossAssetModel>(ext::make_shared<CrossAssetModel>(
+            singleModels, c, SalvagingAlgorithm::None, IrModel::Measure::LGM, CrossAssetModel::Discretization::Exact));
         BOOST_TEST_MESSAGE("creating CAM with Euler discretization");
-        modelEuler = QuantLib::ext::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
-                                                         IrModel::Measure::LGM, CrossAssetModel::Discretization::Euler);
+        modelEuler = QuantLib::Handle<CrossAssetModel>(ext::make_shared<CrossAssetModel>(
+            singleModels, c, SalvagingAlgorithm::None, IrModel::Measure::LGM, CrossAssetModel::Discretization::Euler));
         BOOST_TEST_MESSAGE("test date done");
     }
 
@@ -2307,7 +2308,7 @@ struct IrFxInfCrComModelTestData {
     QuantLib::ext::shared_ptr<CommoditySchwartzStateProcess> comProcessA, comProcessB;
 
     // Model
-    QuantLib::ext::shared_ptr<CrossAssetModel> modelExact, modelEuler;
+    QuantLib::Handle<CrossAssetModel> modelExact, modelEuler;
 
 }; // IrFxInfCrModelTestData
 
@@ -2416,7 +2417,7 @@ BOOST_DATA_TEST_CASE(testZeroInflationMartingaleTest,
             auto tauSim = infDc.yearFraction(BaseDateT1, inflationObsDate);
             BOOST_TEST_MESSAGE("tauSim " << tauSim);
             auto zeroRate =
-                std::pow(inflationGrowth(model, 0, T, T2_index, zeur1, infeurz1), 1.0 / tauSim) -
+                std::pow(inflationGrowth(*model, 0, T, T2_index, zeur1, infeurz1), 1.0 / tauSim) -
                 1.0;
             infeur1(seasonalizeCPI(inflationObsDate, exp(infeury1) * std::pow(1.0 + zeroRate, tauSim), d.infEurTs) * model->discountBond(0, T, T2_discount, zeur1) /
                     model->numeraire(0, T, zeur1));
@@ -2433,7 +2434,7 @@ BOOST_DATA_TEST_CASE(testZeroInflationMartingaleTest,
             auto baseCPI = seasonalizeCPI(BaseDateT1, exp(infgbpy1), d.infGbpTs);
             auto tauSim = infDc.yearFraction(BaseDateT1, inflationObsDate);
             auto zeroRate =
-                std::pow(inflationGrowth(model, 1, T, T2_index, zgbp1, infgbpz1), 1.0 / tauSim) -
+                std::pow(inflationGrowth(*model, 1, T, T2_index, zgbp1, infgbpz1), 1.0 / tauSim) -
                 1.0;
             auto adjZeroRate = continuousSeasonalityAdjustment(BaseDateT1, inflationObsDate, zeroRate, tauSim,
                                                                d.infGbpTs.currentLink());
@@ -2596,7 +2597,7 @@ BOOST_DATA_TEST_CASE(testZeroInflationMartingaleTestWithModelTermstructures,
         }
         for (Size i = 0; i < inflationObsDates.size(); ++i) {
             auto T2_discount = d.dc.yearFraction(d.referenceDate, simDate + inflationTenors[i]);
-            auto cpi = scenarioBaseCpi(infeury1, infeurz1, simDate, model, 0, d.dc, inflationIndex);
+            auto cpi = scenarioBaseCpi(infeury1, infeurz1, simDate, *model, 0, d.dc, inflationIndex);
             cpiQuote->setValue(seasonalizeCPI(simulatedZeroCurve->baseDate(), cpi, d.infEurTs));
             auto zeroRate = scenarioInflationZeroRateFromModelTs(simDate, inflationTenors[i], infObsLag, inflationIndex,
                 infModelTs, (infIsDK ? CrossAssetModel::ModelType::DK : CrossAssetModel::ModelType::JY), d.dc);
@@ -2721,7 +2722,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
             infeur1(sinfeur1.first * sinfeur1.second * d.modelExact->discountBond(0, T, T2, zeur1) /
                 d.modelExact->numeraire(0, T, zeur1));
         } else {
-            infeur1(exp(infeury1) * inflationGrowth(d.modelExact, 0, T, T2, zeur1, infeurz1) *
+            infeur1(exp(infeury1) * inflationGrowth(*d.modelExact, 0, T, T2, zeur1, infeurz1) *
                     d.modelExact->discountBond(0, T, T2, zeur1) / d.modelExact->numeraire(0, T, zeur1));
         }
         // GBP CPI indexed bond
@@ -2730,7 +2731,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
             infgbp1(sinfgbp1.first * sinfgbp1.second * d.modelExact->discountBond(2, T, T2, zgbp1) * fxgbp1 /
                 d.modelExact->numeraire(0, T, zeur1));
         } else {
-            infgbp1(exp(infgbpy1) * inflationGrowth(d.modelExact, 1, T, T2, zgbp1, infgbpz1) *
+            infgbp1(exp(infgbpy1) * inflationGrowth(*d.modelExact, 1, T, T2, zgbp1, infgbpz1) *
                 d.modelExact->discountBond(2, T, T2, zgbp1) * fxgbp1 / d.modelExact->numeraire(0, T, zeur1));
         }
         // EUR defaultable zerobond
@@ -2749,7 +2750,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
             infeur2(sinfeur2.first * sinfeur2.second * d.modelExact->discountBond(0, T, T2, zeur2) /
                 d.modelExact->numeraire(0, T, zeur2));
         } else {
-            infeur2(exp(infeury2) * inflationGrowth(d.modelExact, 0, T, T2, zeur2, infeurz2) *
+            infeur2(exp(infeury2) * inflationGrowth(*d.modelExact, 0, T, T2, zeur2, infeurz2) *
                     d.modelExact->discountBond(0, T, T2, zeur2) / d.modelExact->numeraire(0, T, zeur2));
         }
         // GBP CPI indexed bond
@@ -2758,7 +2759,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
             infgbp2(sinfgbp2.first * sinfgbp2.second * d.modelExact->discountBond(2, T, T2, zgbp2) * fxgbp2 /
                 d.modelExact->numeraire(0, T, zeur2));
         } else {
-            infgbp2(exp(infgbpy2) * inflationGrowth(d.modelExact, 1, T, T2, zgbp2, infgbpz2) *
+            infgbp2(exp(infgbpy2) * inflationGrowth(*d.modelExact, 1, T, T2, zgbp2, infgbpz2) *
                     d.modelExact->discountBond(2, T, T2, zgbp2) * fxgbp2 / d.modelExact->numeraire(0, T, zeur2));
         }
         // EUR defaultable zerobond
@@ -3788,10 +3789,12 @@ struct IrFxEqModelTestData {
         singleModels.push_back(eqSpBsParam);
         singleModels.push_back(eqLhBsParam);
 
-        ccLgmEuler = QuantLib::ext::make_shared<CrossAssetModel>(singleModels, Matrix(), SalvagingAlgorithm::None,
-                                                         IrModel::Measure::LGM, CrossAssetModel::Discretization::Exact);
-        ccLgmExact = QuantLib::ext::make_shared<CrossAssetModel>(singleModels, Matrix(), SalvagingAlgorithm::None,
-                                                         IrModel::Measure::LGM, CrossAssetModel::Discretization::Exact);
+        ccLgmEuler = Handle<CrossAssetModel>(
+            QuantLib::ext::make_shared<CrossAssetModel>(singleModels, Matrix(), SalvagingAlgorithm::None,
+                                                        IrModel::Measure::LGM, CrossAssetModel::Discretization::Exact));
+        ccLgmExact = Handle<CrossAssetModel>(
+            QuantLib::ext::make_shared<CrossAssetModel>(singleModels, Matrix(), SalvagingAlgorithm::None,
+                                                        IrModel::Measure::LGM, CrossAssetModel::Discretization::Exact));
 
         eurIdx = ccLgmEuler->ccyIndex(EURCurrency());
         usdIdx = ccLgmEuler->ccyIndex(USDCurrency());
@@ -3823,7 +3826,7 @@ struct IrFxEqModelTestData {
     Handle<Quote> usdEurSpotToday, eurEurSpotToday, spSpotToday, lhSpotToday;
     Handle<EquityIndex2> eqIndSp, eqIndLh;
     std::vector<QuantLib::ext::shared_ptr<Parametrization> > singleModels;
-    QuantLib::ext::shared_ptr<CrossAssetModel> ccLgmExact, ccLgmEuler;
+    QuantLib::Handle<CrossAssetModel> ccLgmExact, ccLgmEuler;
     Size eurIdx, usdIdx, eurUsdIdx, eqSpIdx, eqLhIdx;
     std::vector<Date> volstepdatesEqSp, volstepdatesEqLh;
 }; // IrFxEqModelTestData
@@ -4801,8 +4804,8 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByAlpha) {
     parametrizations.push_back(ireur_p);
     parametrizations.push_back(infeur_p);
 
-    QuantLib::ext::shared_ptr<CrossAssetModel> model =
-        QuantLib::ext::make_shared<CrossAssetModel>(parametrizations, Matrix(), SalvagingAlgorithm::None);
+    auto model = Handle<CrossAssetModel>(
+        QuantLib::ext::make_shared<CrossAssetModel>(parametrizations, Matrix(), SalvagingAlgorithm::None));
 
     model->setCorrelation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::INF, 0, 0.33);
 
@@ -4939,8 +4942,8 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByH) {
     parametrizations.push_back(ireur_p);
     parametrizations.push_back(infeur_p);
 
-    QuantLib::ext::shared_ptr<CrossAssetModel> model =
-        QuantLib::ext::make_shared<CrossAssetModel>(parametrizations, Matrix(), SalvagingAlgorithm::None);
+    QuantLib::Handle<CrossAssetModel> model(
+        QuantLib::ext::make_shared<CrossAssetModel>(parametrizations, Matrix(), SalvagingAlgorithm::None));
 
     model->setCorrelation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::INF, 0, 0.33);
 
@@ -5073,8 +5076,8 @@ BOOST_AUTO_TEST_CASE(testCrCalibration) {
     parametrizations.push_back(ireur_p);
     parametrizations.push_back(creur_p);
 
-    QuantLib::ext::shared_ptr<CrossAssetModel> model =
-        QuantLib::ext::make_shared<CrossAssetModel>(parametrizations, Matrix(), SalvagingAlgorithm::None);
+    QuantLib::Handle<CrossAssetModel> model(
+        QuantLib::ext::make_shared<CrossAssetModel>(parametrizations, Matrix(), SalvagingAlgorithm::None));
 
     model->setCorrelation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::CR, 0, 0.33);
 
@@ -5136,7 +5139,7 @@ BOOST_AUTO_TEST_CASE(testCrCalibration) {
     QuantLib::ext::shared_ptr<LgmImpliedDefaultTermStructure> probMc =
         QuantLib::ext::make_shared<LgmImpliedDefaultTermStructure>(model, 0, 0);
     QuantLib::ext::shared_ptr<LgmImpliedYieldTermStructure> ytsMc =
-        QuantLib::ext::make_shared<LgmImpliedYieldTermStructure>(model->lgm(0));
+        QuantLib::ext::make_shared<LgmImpliedYieldTermStructure>(Handle<LGM>(model->lgm(0)));
     QuantLib::ext::shared_ptr<QuantExt::MidPointCdsEngine> dynamicEngine = QuantLib::ext::make_shared<QuantExt::MidPointCdsEngine>(
         Handle<DefaultProbabilityTermStructure>(probMc), 0.4, Handle<YieldTermStructure>(ytsMc));
     underlying->setPricingEngine(dynamicEngine);

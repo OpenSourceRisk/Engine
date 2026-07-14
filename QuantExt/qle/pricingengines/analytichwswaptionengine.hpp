@@ -32,7 +32,7 @@ namespace QuantExt {
 class AnalyticHwSwaptionEngine : public GenericEngine<Swaption::arguments, Swaption::results> {
 
 public:
-    AnalyticHwSwaptionEngine(const QuantLib::ext::shared_ptr<HwModel>& model,
+    AnalyticHwSwaptionEngine(const QuantLib::Handle<HwModel>& model,
                              const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
 
     void calculate() const;
@@ -41,7 +41,7 @@ private:
     double time(const QuantLib::Date& d) const;
     Array q(const QuantLib::Time t) const;
 
-    QuantLib::ext::shared_ptr<HwModel> model_;
+    QuantLib::Handle<HwModel> model_;
     QuantLib::ext::shared_ptr<IrHwParametrization> p_;
     Handle<YieldTermStructure> c_;
 

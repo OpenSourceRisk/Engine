@@ -1,0 +1,37 @@
+<Simulation>
+	<Market>
+		<BaseCurrency>USD</BaseCurrency>
+		<Currencies>
+			<Currency>USD</Currency>
+		</Currencies>
+		<YieldCurves>
+			<Configuration curve="">
+				<Tenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</Tenors>
+				<Interpolation>LogLinear</Interpolation>
+				<Extrapolation>FlatZero</Extrapolation>
+				<RollDown>ForwardForward</RollDown>
+			</Configuration>
+		</YieldCurves>
+		<Indices>
+			<Index>USD-FedFunds</Index>
+		</Indices>
+		<BenchmarkCurves />
+		<IntradayPowerCurves>
+			<Simulate>true</Simulate>
+			<Names>
+				<Name>PJM_WH_RT_PK</Name>
+				<Name>PJM_WH_RT_PK_15MIN</Name>
+			</Names>
+			<Interpolation name="">Linear</Interpolation>
+			<Interpolation name="PJM_WH_RT_PK">BackwardFlat</Interpolation>
+			<Interpolation name="PJM_WH_RT_PK_15MIN">BackwardFlat</Interpolation>
+			<Tenors name="" />
+		</IntradayPowerCurves>
+		<CreditStates>
+			<NumberOfFactors>0</NumberOfFactors>
+		</CreditStates>
+		<AggregationScenarioDataCreditStates>
+			<NumberOfFactors>0</NumberOfFactors>
+		</AggregationScenarioDataCreditStates>
+	</Market>
+</Simulation>

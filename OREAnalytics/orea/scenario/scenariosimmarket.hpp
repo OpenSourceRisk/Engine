@@ -87,19 +87,6 @@ public:
                       const bool handlePseudoCurrencies = true,
                       const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr);
 
-    ScenarioSimMarket(const QuantLib::ext::shared_ptr<Market>& initMarket,
-                      const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& parameters,
-                      const QuantLib::ext::shared_ptr<FixingManager>& fixingManager,
-                      const std::string& configuration = Market::defaultConfiguration,
-                      const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
-                      const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
-                      const bool continueOnError = false, const bool useSpreadedTermStructures = false,
-                      const bool cacheSimData = false, const bool allowPartialScenarios = false,
-                      const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
-                          QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
-                      const bool handlePseudoCurrencies = true,
-                      const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr);
-
     //! Set scenario generator
     virtual QuantLib::ext::shared_ptr<ScenarioGenerator>& scenarioGenerator() { return scenarioGenerator_; }
     //! Get scenario generator
@@ -116,12 +103,12 @@ public:
     virtual const QuantLib::ext::shared_ptr<ScenarioFilter>& filter() const { return filter_; }
 
     //! Update
-    // virtual void update(const Date&) override;
-    virtual void preUpdate() override;
-    virtual void updateScenario(const Date&) override;
-    virtual void updateDate(const Date&) override;
-    virtual void postUpdate(const Date& d) override;
-    virtual void updateAsd(const Date&) override;
+    void preUpdate() override;
+    void updateDate(const Date&) override;
+    Date loadNextScenario(const Date&) override;
+    void applyLoadedScenario() override;
+    void postUpdate() override;
+    void updateAsd() override;
 
     //! Reset sim market to initial state
     virtual void reset() override;
@@ -143,12 +130,10 @@ public:
     /*! Return true if this instance uses spreaded term structures */
     bool useSpreadedTermStructures() const { return useSpreadedTermStructures_; }
 
-    //! Return the fixing manager
-    const QuantLib::ext::shared_ptr<FixingManager>& fixingManager() const override { return fixingManager_; }
-
     //! is risk factor key simulated by this sim market instance?
     virtual bool isSimulated(const RiskFactorKey::KeyType& factor) const;
 
+    //! apply scenario, update numeraire and label of current scenario
     void applyScenario(const QuantLib::ext::shared_ptr<Scenario>& scenario);
 
 protected:
@@ -167,6 +152,7 @@ protected:
     void applyCurveAlgebra();
     void applyCurveAlgebraSpreadedYieldCurve(const ScenarioSimMarketParameters::CurveAlgebraData::Curve& a);
     void applyCurveAlgebraCommodityPriceCurve(const ScenarioSimMarketParameters::CurveAlgebraData::Curve& a);
+    void applyCurveAlgebraIntradayPowerPriceCurve(const ScenarioSimMarketParameters::CurveAlgebraData::Curve& a);
 
     /*! Given a yield curve spec ID, \p yieldSpecId, return the corresponding yield term structure
     from the \p market. If \p market is `nullptr`, then the yield term structure is taken from
@@ -185,7 +171,6 @@ protected:
     const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> parameters_;
     QuantLib::ext::shared_ptr<ScenarioGenerator> scenarioGenerator_;
     QuantLib::ext::shared_ptr<AggregationScenarioData> asd_;
-    QuantLib::ext::shared_ptr<FixingManager> fixingManager_;
     QuantLib::ext::shared_ptr<ScenarioFilter> filter_;
 
     std::map<RiskFactorKey, QuantLib::ext::shared_ptr<SimpleQuote>> simData_;
@@ -214,6 +199,7 @@ protected:
     std::set<ore::analytics::RiskFactorKey> diffToBaseKeys_;
 
     mutable QuantLib::ext::shared_ptr<Scenario> currentScenario_;
+    mutable QuantLib::ext::shared_ptr<Scenario> loadedScenario_;
     QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
     QuantLib::ext::shared_ptr<QuantExt::ScenarioInformationSetter> scenarioInformationSetter_;
 

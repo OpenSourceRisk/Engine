@@ -140,7 +140,7 @@ void runTest(const std::vector<Real>& nominals, const bool isPayer, const Real e
         EURCurrency(), dsc, stepTimes, Array(stepTimes.size() + 1, 0.0050), stepTimes,
         Array(stepTimes.size() + 1, 0.0));
     lgm_p->shift() = -lgm_p->H(20.0);
-    auto lgm = QuantLib::ext::make_shared<LGM>(lgm_p);
+    auto lgm = Handle<LGM>(QuantLib::ext::make_shared<LGM>(lgm_p));
 
     auto rpaEngine = QuantLib::ext::make_shared<NumericLgmRiskParticipationAgreementEngine>(
         "EUR", std::map<std::string, Handle<YieldTermStructure>>{{"EUR", dsc}}, std::map<std::string, Handle<Quote>>(),
@@ -409,8 +409,8 @@ Real computeUnderlyingNpv(const bool underlyingIsPayer, const Real cap, const Re
 
     // create lgm engine
 
-    auto lgm =
-        QuantLib::ext::make_shared<LGM>(QuantLib::ext::make_shared<IrLgm1fConstantParametrization>(EURCurrency(), dsc, 0.0040, 0.01));
+    auto lgm = Handle<LGM>(QuantLib::ext::make_shared<LGM>(
+        QuantLib::ext::make_shared<IrLgm1fConstantParametrization>(EURCurrency(), dsc, 0.0040, 0.01)));
     auto engine = QuantLib::ext::make_shared<NumericLgmRiskParticipationAgreementEngine>(
         "EUR", std::map<std::string, Handle<YieldTermStructure>>{{"EUR", dsc}}, std::map<std::string, Handle<Quote>>(),
         lgm, 3.0, 10, 3.0, 10, def, Handle<Quote>());

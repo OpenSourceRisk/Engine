@@ -18,7 +18,6 @@
 */
 
 /*! \file ored/utilities/parsers.cpp
-    \brief
     \ingroup utilities
 */
 
@@ -678,10 +677,10 @@ Month parseMonth(const string& s) {
 
 PaymentLag parsePaymentLag(const string& s) {
     Period p;
-    Natural n;
+    Integer n;
     if (tryParse<Period>(s, p, parsePeriod))
         return p;
-    else if (tryParse<Natural>(s, n, parseInteger))
+    else if (tryParse<Integer>(s, n, parseInteger))
         return n;
     else
         return 0;
@@ -1808,7 +1807,8 @@ SalvagingAlgorithm::Type parseSalvagingAlgorithmType(const std::string& s) {
                                                       {"Spectral", SalvagingAlgorithm::Spectral},
                                                       {"Hypersphere", SalvagingAlgorithm::Hypersphere},
                                                       {"LowerDiagonal", SalvagingAlgorithm::LowerDiagonal},
-                                                      {"Higham", SalvagingAlgorithm::Higham}};
+                                                      {"Higham", SalvagingAlgorithm::Higham},
+                                                      {"Principal", SalvagingAlgorithm::Principal}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -1830,10 +1830,12 @@ std::ostream& operator<<(std::ostream& os, SalvagingAlgorithm::Type type) {
         os << "LowerDiagonal";
     } else if (type == SalvagingAlgorithm::Higham) {
         os << "Higham";
+    } else if (type == SalvagingAlgorithm::Principal) {
+        os << "Principal";
     } else {
         QL_FAIL("SalvagingAlgorithm::Type ("
                 << static_cast<int>(type)
-                << " not recognized. Expected 'None', 'Spectral', 'Hypersphere', 'LowerDiagonal', or 'Higham'.");
+                << " not recognized. Expected 'None', 'Spectral', 'Hypersphere', 'LowerDiagonal', 'Higham', 'Principal'.");
     }
 
     return os;
@@ -1950,6 +1952,25 @@ std::ostream& operator<<(std::ostream& os, HestonProcess::Discretization dis) {
     return os;
 }
 
-  
+DateDeltaUnit parseDateDeltaUnit(const string& s) {
+    if (s == "BusinessDays") {
+        return DateDeltaUnit::BusinessDays;
+    } else if (s == "CalendarDays") {
+        return DateDeltaUnit::CalendarDays;
+    } else {
+        QL_FAIL("Invalid DateDeltaUnit: " << s << ". Valid values are: BusinessDays, CalendarDays.");
+    }
+}
+
+DateDeltaAnchor parseDateDeltaAnchor(const string& s) {
+    if (s == "Adjusted") {
+        return DateDeltaAnchor::Adjusted;
+    } else if (s == "Unadjusted") {
+        return DateDeltaAnchor::Unadjusted;
+    } else {
+        QL_FAIL("Invalid DateDeltaAnchor: " << s << ". Valid values are: Adjusted, Unadjusted.");
+    }
+}
+
 } // namespace data
 } // namespace ore

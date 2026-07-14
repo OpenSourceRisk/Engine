@@ -25,8 +25,8 @@ namespace QuantExt {
 
 using namespace CrossAssetAnalytics;
 
-AnalyticXAssetLgmEquityOptionEngine::AnalyticXAssetLgmEquityOptionEngine(
-    const QuantLib::ext::shared_ptr<CrossAssetModel>& model, const Size eqName, const Size EqCcy)
+AnalyticXAssetLgmEquityOptionEngine::AnalyticXAssetLgmEquityOptionEngine(const QuantLib::Handle<CrossAssetModel>& model,
+                                                                         const Size eqName, const Size EqCcy)
     : model_(model), eqIdx_(eqName), ccyIdx_(EqCcy) {}
 
 Real AnalyticXAssetLgmEquityOptionEngine::value(const Time t0, const Time t,
@@ -36,18 +36,18 @@ Real AnalyticXAssetLgmEquityOptionEngine::value(const Time t0, const Time t,
     const Size& k = eqIdx_;
     const Size& i = ccyIdx_;
 
-    Real Hi_t = Hz(i).eval(*model_, t);
+    Real Hi_t = Hz(i).eval(**model_, t);
 
     // calculate the full variance. This is the equity analogy to eqn: 12.18 in Lichters,Stamm,Gallagher
     Real variance = 0;
-    variance += (vs(k).eval(*model_, t) - vs(k).eval(*model_, t0));
+    variance += (vs(k).eval(**model_, t) - vs(k).eval(**model_, t0));
 
-    variance += Hi_t * Hi_t * (zetaz(i).eval(*model_, t) - zetaz(i).eval(*model_, t0));
-    variance -= 2.0 * Hi_t * integral(*model_, P(Hz(i), az(i), az(i)), t0, t);
-    variance += integral(*model_, P(Hz(i), Hz(i), az(i), az(i)), t0, t);
+    variance += Hi_t * Hi_t * (zetaz(i).eval(**model_, t) - zetaz(i).eval(**model_, t0));
+    variance -= 2.0 * Hi_t * integral(**model_, P(Hz(i), az(i), az(i)), t0, t);
+    variance += integral(**model_, P(Hz(i), Hz(i), az(i), az(i)), t0, t);
 
-    variance += 2.0 * Hi_t * integral(*model_, P(rzs(i, k), ss(k), az(i)), t0, t);
-    variance -= 2.0 * integral(*model_, P(Hz(i), rzs(i, k), ss(k), az(i)), t0, t);
+    variance += 2.0 * Hi_t * integral(**model_, P(rzs(i, k), ss(k), az(i)), t0, t);
+    variance -= 2.0 * integral(**model_, P(Hz(i), rzs(i, k), ss(k), az(i)), t0, t);
 
     Real stdev = sqrt(variance);
     BlackCalculator black(payoff, eqForward, stdev, discount);

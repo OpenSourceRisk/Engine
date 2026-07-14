@@ -155,7 +155,14 @@ void ScenarioSimMarketParameters::setDefaults() {
     // Default interpolation for yield curves
     interpolation_ = "LogLinear";
     extrapolation_ = "FlatFwd";
+    yieldCurveRollDown_ = "ForwardForward";
+    yieldVolDecayMode_ = "ForwardVariance";
+    swapVolDecayMode_ = "ForwardVariance";
     defaultCurveExtrapolation_ = "FlatFwd";
+    defaultCurveRollDown_ = "ForwardForward";
+    commodityCurveRollDown_ = "Forward";
+    commodityCurveInterpolation_[""] = "Linear";
+    intradayPowerCurveInterpolation_[""] = "Linear";
 }
 
 void ScenarioSimMarketParameters::reset() {
@@ -271,6 +278,10 @@ bool ScenarioSimMarketParameters::hasCommodityCurveTenors(const string& commodit
     return commodityCurveTenors_.count(commodityName) > 0;
 }
 
+const string& ScenarioSimMarketParameters::commodityCurveInterpolation(const string& commodityName) const {
+    return lookup(commodityCurveInterpolation_, commodityName);
+}
+
 const vector<Period>& ScenarioSimMarketParameters::commodityVolExpiries(const string& commodityName) const {
     return lookup(commodityVolExpiries_, commodityName);
 }
@@ -315,6 +326,22 @@ const vector<Real>& ScenarioSimMarketParameters::bondFutureVolMoneyness(const st
     } else {
         QL_FAIL("no strikes for bond future \"" << contractName << "\" found.");
     }
+}
+
+vector<string> ScenarioSimMarketParameters::intradayPowerCurveNames() const {
+    return paramsLookup(RiskFactorKey::KeyType::IntradayPowerCurve);
+}
+
+const vector<Period>& ScenarioSimMarketParameters::intradayPowerCurveTenors(const string& intradayPowerName) const {
+    return lookup(intradayPowerCurveTenors_, intradayPowerName);
+}
+
+bool ScenarioSimMarketParameters::hasIntradayPowerCurveTenors(const string& intradayPowerName) const {
+    return intradayPowerCurveTenors_.count(intradayPowerName) > 0;
+}
+
+const string& ScenarioSimMarketParameters::intradayPowerCurveInterpolation(const string& intradayPowerName) const {
+    return lookup(intradayPowerCurveInterpolation_, intradayPowerName);
 }
 
 void ScenarioSimMarketParameters::setYieldCurveTenors(const string& key, const std::vector<Period>& p) {
@@ -441,6 +468,15 @@ void ScenarioSimMarketParameters::setCommodityNames(vector<string> names) { setC
 void ScenarioSimMarketParameters::setCommodityCurveTenors(const string& commodityName, const vector<Period>& p) {
     commodityCurveTenors_[commodityName] = p;
 }
+
+void ScenarioSimMarketParameters::setCommodityCurveRollDown(const string& r) {
+    commodityCurveRollDown_ = r;
+}
+
+void ScenarioSimMarketParameters::setCommodityCurveInterpolation(const string& commodityName, const string& interpolation) {
+    commodityCurveInterpolation_[commodityName] = interpolation;
+}
+
 
 void ScenarioSimMarketParameters::setDiscountCurveNames(vector<string> names) {
     ccys_ = names;
@@ -682,22 +718,44 @@ const vector<Real>& ScenarioSimMarketParameters::equityVolStandardDevs(const str
     return lookup(equityStandardDevs_, key);
 }
 
+void ScenarioSimMarketParameters::setIntradayPowerCurveNames(vector<string> names) {
+    addParamsName(RiskFactorKey::KeyType::IntradayPowerCurve, names);
+}
+
+void ScenarioSimMarketParameters::setIntradayPowerCurveSimulate(bool simulate) {
+    setParamsSimulate(RiskFactorKey::KeyType::IntradayPowerCurve, simulate);
+}
+
+void ScenarioSimMarketParameters::setIntradayPowerCurveInterpolation(const string& intradayPowerName, const string& interpolation) {
+    intradayPowerCurveInterpolation_[intradayPowerName] = interpolation;
+}
+
+void ScenarioSimMarketParameters::setIntradayPowerCurves(vector<string> names) {
+    addParamsName(RiskFactorKey::KeyType::IntradayPowerCurve, names);
+}
+
+void ScenarioSimMarketParameters::setIntradayPowerCurveTenors(const string& intradayPowerName,
+                                                              const vector<Period>& p) {
+    intradayPowerCurveTenors_[intradayPowerName] = p;
+}
+
 bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& rhs) {
 
     if (baseCcy_ != rhs.baseCcy_ || ccys_ != rhs.ccys_ || params_ != rhs.params_ ||
         yieldCurveCurrencies_ != rhs.yieldCurveCurrencies_ || yieldCurveTenors_ != rhs.yieldCurveTenors_ ||
         swapIndices_ != rhs.swapIndices_ || interpolation_ != rhs.interpolation_ ||
-        extrapolation_ != rhs.extrapolation_ || swapVolTerms_ != rhs.swapVolTerms_ ||
-        swapVolIsCube_ != rhs.swapVolIsCube_ || swapVolSimulateATMOnly_ != rhs.swapVolSimulateATMOnly_ ||
-        swapVolExpiries_ != rhs.swapVolExpiries_ || swapVolStrikeSpreads_ != rhs.swapVolStrikeSpreads_ ||
-        swapVolDecayMode_ != rhs.swapVolDecayMode_ || capFloorVolExpiries_ != rhs.capFloorVolExpiries_ ||
-        capFloorVolStrikes_ != rhs.capFloorVolStrikes_ ||
+        extrapolation_ != rhs.extrapolation_ || yieldCurveRollDown_ != rhs.yieldCurveRollDown_ ||
+        swapVolTerms_ != rhs.swapVolTerms_ || swapVolIsCube_ != rhs.swapVolIsCube_ ||
+        swapVolSimulateATMOnly_ != rhs.swapVolSimulateATMOnly_ || swapVolExpiries_ != rhs.swapVolExpiries_ ||
+        swapVolStrikeSpreads_ != rhs.swapVolStrikeSpreads_ || swapVolDecayMode_ != rhs.swapVolDecayMode_ ||
+        capFloorVolExpiries_ != rhs.capFloorVolExpiries_ || capFloorVolStrikes_ != rhs.capFloorVolStrikes_ ||
         zeroInflationCapFloorVolExpiries_ != rhs.zeroInflationCapFloorVolExpiries_ ||
         zeroInflationCapFloorVolStrikes_ != rhs.zeroInflationCapFloorVolStrikes_ ||
         zeroInflationCapFloorVolDecayMode_ != rhs.zeroInflationCapFloorVolDecayMode_ ||
         capFloorVolIsAtm_ != rhs.capFloorVolIsAtm_ || capFloorVolDecayMode_ != rhs.capFloorVolDecayMode_ ||
         defaultCurveCalendars_ != rhs.defaultCurveCalendars_ || defaultTenors_ != rhs.defaultTenors_ ||
-        defaultCurveExtrapolation_ != rhs.defaultCurveExtrapolation_ || cdsVolExpiries_ != rhs.cdsVolExpiries_ ||
+        defaultCurveExtrapolation_ != rhs.defaultCurveExtrapolation_ ||
+        defaultCurveRollDown_ != rhs.defaultCurveRollDown_ || cdsVolExpiries_ != rhs.cdsVolExpiries_ ||
         cdsVolDecayMode_ != rhs.cdsVolDecayMode_ || cdsVolSimulateATMOnly_ != rhs.cdsVolSimulateATMOnly_ ||
         equityDividendTenors_ != rhs.equityDividendTenors_ || fxVolIsSurface_ != rhs.fxVolIsSurface_ ||
         fxVolExpiries_ != rhs.fxVolExpiries_ || fxVolDecayMode_ != rhs.fxVolDecayMode_ ||
@@ -719,9 +777,12 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         bondFutureVolMoneyness_ != rhs.bondFutureVolMoneyness_ ||
         bondFutureVolSimulateATMOnly_ != rhs.bondFutureVolSimulateATMOnly_ ||
         correlationIsSurface_ != rhs.correlationIsSurface_ || correlationExpiries_ != rhs.correlationExpiries_ ||
-        correlationStrikes_ != rhs.correlationStrikes_ || cprSimulate_ != rhs.cprSimulate_ || cprs_ != rhs.cprs_ || conversionFactors_ != rhs.conversionFactors_ ||
-        yieldVolTerms_ != rhs.yieldVolTerms_ || yieldVolExpiries_ != rhs.yieldVolExpiries_ ||
-        yieldVolDecayMode_ != rhs.yieldVolDecayMode_) {
+        correlationStrikes_ != rhs.correlationStrikes_ || cprSimulate_ != rhs.cprSimulate_ || cprs_ != rhs.cprs_ ||
+        conversionFactors_ != rhs.conversionFactors_ || yieldVolTerms_ != rhs.yieldVolTerms_ ||
+        yieldVolExpiries_ != rhs.yieldVolExpiries_ || yieldVolDecayMode_ != rhs.yieldVolDecayMode_ ||
+        commodityCurveInterpolation_ != rhs.commodityCurveInterpolation_ ||
+        intradayPowerCurveInterpolation_ != rhs.intradayPowerCurveInterpolation_ ||
+        intradayPowerCurveTenors_ != rhs.intradayPowerCurveTenors_) {
         return false;
     } else {
         return true;
@@ -774,6 +835,9 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                 }
                 if (auto n = XMLUtils::getChildNode(child, "Extrapolation")) {
                     extrapolation_ = XMLUtils::getNodeValue(n);
+                }
+                if(auto n=XMLUtils::getChildNode(child, "RollDown")) {
+                    yieldCurveRollDown_ = XMLUtils::getNodeValue(n);
                 }
                 // for backwards compatibility, map an extrapolation value that parses to bool to FlatFwd
                 bool dummy;
@@ -1263,6 +1327,9 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         if (auto n = XMLUtils::getChildNode(nodeChild, "Extrapolation")) {
             defaultCurveExtrapolation_ = XMLUtils::getNodeValue(n);
         }
+        if (auto n = XMLUtils::getChildNode(nodeChild, "RollDown")) {
+            defaultCurveRollDown_ = XMLUtils::getNodeValue(n);
+        }
     }
 
     DLOG("Loading Equities Rates");
@@ -1493,7 +1560,14 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     if (nodeChild && XMLUtils::getChildNode(nodeChild)) {
         XMLNode* commoditySimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
         setCommodityCurveSimulate(commoditySimNode ? parseBool(XMLUtils::getNodeValue(commoditySimNode)) : false);
-
+        commodityCurveRollDown_ = XMLUtils::getChildValue(nodeChild, "RollDown", false, "Forward");
+        // Interpolation can be specified per commodity name via the optional name attribute:
+        // - <Interpolation name="NAME">method</Interpolation> for a commodity specific interpolation
+        // - <Interpolation>method</Interpolation> or <Interpolation name="">method</Interpolation> as the default
+        for (XMLNode* interpolationNode : XMLUtils::getChildrenNodes(nodeChild, "Interpolation")) {
+            string name = XMLUtils::getAttribute(interpolationNode, "name");
+            commodityCurveInterpolation_[name] = XMLUtils::getNodeValue(interpolationNode);
+        }
         vector<string> commodityNames = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
         setCommodityNames(commodityNames);
 
@@ -1597,6 +1671,48 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         }
     }
 
+    DLOG("Loading intraday power curve data");
+    nodeChild = XMLUtils::getChildNode(node, "IntradayPowerCurves");
+    if (nodeChild && XMLUtils::getChildNode(nodeChild)) {
+        XMLNode* intradayPowerCurveSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
+        setIntradayPowerCurveSimulate(
+            intradayPowerCurveSimNode ? parseBool(XMLUtils::getNodeValue(intradayPowerCurveSimNode)) : false);
+
+        // Interpolation can be specified per intraday power curve name via the optional name attribute
+        for (XMLNode* interpolationNode : XMLUtils::getChildrenNodes(nodeChild, "Interpolation")) {
+            string name = XMLUtils::getAttribute(interpolationNode, "name");
+            intradayPowerCurveInterpolation_[name] = XMLUtils::getNodeValue(interpolationNode);
+        }
+
+        vector<string> intradayPowerCurveNames = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
+        setIntradayPowerCurveNames(intradayPowerCurveNames);
+
+        set<string> names = params_.find(RiskFactorKey::KeyType::IntradayPowerCurve)->second.second;
+        QL_REQUIRE(names.size() > 0, "Intraday power curves need at least one name");
+
+        vector<XMLNode*> tenorNodes = XMLUtils::getChildrenNodes(nodeChild, "Tenors");
+        QL_REQUIRE(tenorNodes.size() > 0, "Commodities needs at least one Tenors node");
+        set<string> namesCheck = names;
+        bool defaultProvided = false;
+        for (XMLNode* tenorNode : tenorNodes) {
+            string name = XMLUtils::getAttribute(tenorNode, "name");
+
+            vector<Period> tenors;
+            string strTenorList = XMLUtils::getNodeValue(tenorNode);
+            if (!strTenorList.empty()) {
+                tenors = parseListOfValues<Period>(XMLUtils::getNodeValue(tenorNode), &parsePeriod);
+            }
+
+            QL_REQUIRE(intradayPowerCurveTenors_.insert(make_pair(name, tenors)).second,
+                       "Intraday power curves has duplicate expiries for key '" << name << "'");
+            namesCheck.erase(name);
+            defaultProvided = name == "";
+        }
+        QL_REQUIRE(defaultProvided || namesCheck.size() == 0, "Intraday power curves has no tenors for "
+                                                                  << "names '" << join(namesCheck, ",")
+                                                                  << "' and no default tenor set has been given");
+    }
+
     DLOG("Loading credit states data");
     nodeChild = XMLUtils::getChildNode(node, "CreditStates");
     numberOfCreditStates_ = 0;
@@ -1652,6 +1768,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) const {
         if (key == "") {
             XMLUtils::addChild(doc, configNode, "Interpolation", interpolation_);
             XMLUtils::addChild(doc, configNode, "Extrapolation", extrapolation_);
+            XMLUtils::addChild(doc, configNode, "RollDown", yieldCurveRollDown_);
         }
         XMLUtils::appendNode(yieldCurvesNode, configNode);
     }
@@ -1700,6 +1817,9 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) const {
 
         if (!defaultCurveExtrapolation_.empty()) {
             XMLUtils::addChild(doc, defaultCurvesNode, "Extrapolation", defaultCurveExtrapolation_);
+        }
+        if (!defaultCurveRollDown_.empty()) {
+            XMLUtils::addChild(doc, defaultCurvesNode, "RollDown", defaultCurveRollDown_);
         }
     }
 
@@ -1982,7 +2102,15 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) const {
         DLOG("Writing commodity price curves");
         XMLNode* commodityPriceNode = XMLUtils::addChild(doc, marketNode, "Commodities");
         XMLUtils::addChild(doc, commodityPriceNode, "Simulate", commodityCurveSimulate());
+        XMLUtils::addChild(doc, commodityPriceNode, "RollDown", commodityCurveRollDown());
         XMLUtils::addChildren(doc, commodityPriceNode, "Names", "Name", commodityNames());
+
+        // Write out interpolation node for each commodity name (key "" is the default for all names)
+        for (auto kv : commodityCurveInterpolation_) {
+            XMLNode* interpolationNode = doc.allocNode("Interpolation", kv.second);
+            XMLUtils::addAttribute(doc, interpolationNode, "name", kv.first);
+            XMLUtils::appendNode(commodityPriceNode, interpolationNode);
+        }
 
         // Write out tenors node for each commodity name
         for (auto kv : commodityCurveTenors_) {
@@ -1992,6 +2120,31 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) const {
             XMLNode* tenorsNode = doc.allocNode("Tenors", nodeValue);
             XMLUtils::addAttribute(doc, tenorsNode, "name", kv.first);
             XMLUtils::appendNode(commodityPriceNode, tenorsNode);
+        }
+    }
+
+    // Intraday power curves
+    if (!intradayPowerCurveNames().empty()) {
+        DLOG("Writing intraday power curves");
+        XMLNode* intradayPowerCurveNode = XMLUtils::addChild(doc, marketNode, "IntradayPowerCurves");
+        XMLUtils::addChild(doc, intradayPowerCurveNode, "Simulate", intradayPowerCurveSimulate());
+        XMLUtils::addChildren(doc, intradayPowerCurveNode, "Names", "Name", intradayPowerCurveNames());
+
+        // Write out interpolation node for each intraday power curve name (key "" is the default for all names)
+        for (auto kv : intradayPowerCurveInterpolation_) {
+            XMLNode* interpolationNode = doc.allocNode("Interpolation", kv.second);
+            XMLUtils::addAttribute(doc, interpolationNode, "name", kv.first);
+            XMLUtils::appendNode(intradayPowerCurveNode, interpolationNode);
+        }
+
+        // Write out tenors node for each intraday power curve name
+        for (auto kv : intradayPowerCurveTenors_) {
+            // Single bar here is a boost range adaptor. Documented here:
+            // https://www.boost.org/doc/libs/1_71_0/libs/range/doc/html/range/reference/adaptors/introduction.html
+            string nodeValue = join(kv.second | transformed([](Period p) { return ore::data::to_string(p); }), ",");
+            XMLNode* tenorsNode = doc.allocNode("Tenors", nodeValue);
+            XMLUtils::addAttribute(doc, tenorsNode, "name", kv.first);
+            XMLUtils::appendNode(intradayPowerCurveNode, tenorsNode);
         }
     }
 

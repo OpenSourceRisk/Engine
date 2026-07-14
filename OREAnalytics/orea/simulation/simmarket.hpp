@@ -24,7 +24,6 @@
 #pragma once
 
 #include <orea/scenario/aggregationscenariodata.hpp>
-#include <orea/simulation/fixingmanager.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 
@@ -45,30 +44,30 @@ class SimMarket : public ore::data::MarketImpl {
 public:
     explicit SimMarket(const bool handlePseudoCurrencies) : MarketImpl(handlePseudoCurrencies), numeraire_(1.0) {}
 
-    //! Generate or retrieve market scenario, update market, notify termstructures and update fixings
-    virtual void update(const Date& d) {
-        preUpdate();
-        updateDate(d);
-        updateScenario(d);
-        postUpdate(d);
-        fixingManager()->update(d);
-        updateAsd(d);
-    }
+    /*! Generate or retrieve next market scenario, update market, notify termstructures and update fixings.
+        Some scenario generators require the date input (e.g. CrossAssetModelScenarioGenerator) */
+    void update(const QuantLib::Date& d = QuantLib::Date());
 
-    //! Observable settings depending on selected mode, before we update the market
+    //! 1  Observable settings depending on selected mode, before we update the market
     virtual void preUpdate() = 0;
 
-    //! Update to the given date
+    //! 2  Update eval date to the given date
     virtual void updateDate(const Date&) = 0;
 
-    //! Retrieve next market scenario and apply this, but don't update date
-    virtual void updateScenario(const Date&) = 0;
+    //! 3a Get next scenario without applying it and return the scenario date.
+    virtual Date loadNextScenario(const QuantLib::Date& d = QuantLib::Date()) = 0;
 
-    //! Observable reset depending on selected mode, instrument updates
-    virtual void postUpdate(const Date&) = 0;
+    //! 3b Apply scenario from 3a
+    virtual void applyLoadedScenario() = 0;
+
+    /*! 3  loadNextScenario() then applyLoadedScenario() */
+    void updateScenario(const QuantLib::Date& d = QuantLib::Date());
+
+    //! 4  Observable reset depending on selected mode, instrument updates
+    virtual void postUpdate() = 0;
 
     //! Update aggregation scenario data
-    virtual void updateAsd(const Date&) = 0;
+    virtual void updateAsd() = 0;
 
     //! Return current numeraire value
     Real numeraire() { return numeraire_; }
@@ -78,9 +77,6 @@ public:
 
     //! Reset sim market to initial state
     virtual void reset() = 0;
-
-    //! Get the fixing manager
-    virtual const QuantLib::ext::shared_ptr<FixingManager>& fixingManager() const = 0;
 
 protected:
     Real numeraire_;

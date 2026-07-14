@@ -23,6 +23,7 @@
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/simplescenario.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
+#include <orea/simulation/fixingmanager.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/model/calibrationinstruments/cpicapfloor.hpp>
@@ -329,7 +330,7 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
     QuantLib::ext::shared_ptr<DateGrid> grid = QuantLib::ext::make_shared<DateGrid>(tenorGrid);
 
     // Model
-    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
+    QuantLib::Handle<QuantExt::CrossAssetModel> model(d.ccLgm);
 
     // State process
     QuantLib::ext::shared_ptr<StochasticProcess> stateProcess = model->stateProcess();
@@ -487,7 +488,7 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket) {
     QuantLib::ext::shared_ptr<DateGrid> grid = QuantLib::ext::make_shared<DateGrid>(tenorGrid);
 
     // Model
-    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
+    QuantLib::Handle<QuantExt::CrossAssetModel> model(d.ccLgm);
 
     // State process
     QuantLib::ext::shared_ptr<StochasticProcess> stateProcess = model->stateProcess();
@@ -628,7 +629,7 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket2) {
     QuantLib::ext::shared_ptr<DateGrid> grid = QuantLib::ext::make_shared<DateGrid>(tenorGrid);
 
     // Model
-    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
+    QuantLib::Handle<QuantExt::CrossAssetModel> model(d.ccLgm);
 
     // State process
     QuantLib::ext::shared_ptr<StochasticProcess> stateProcess = model->stateProcess();
@@ -771,7 +772,7 @@ BOOST_AUTO_TEST_CASE(testVanillaSwapExposure) {
     QuantLib::ext::shared_ptr<DateGrid> grid = QuantLib::ext::make_shared<DateGrid>(tenorGrid);
 
     // Model
-    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
+    QuantLib::Handle<QuantExt::CrossAssetModel> model(d.ccLgm);
     model->irlgm1f(0)->shift() = 20.0;
 
     Size samples = 5000;
@@ -909,7 +910,7 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposure) {
     QuantLib::ext::shared_ptr<DateGrid> grid = QuantLib::ext::make_shared<DateGrid>(tenorGrid);
 
     // Model
-    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
+    QuantLib::Handle<QuantExt::CrossAssetModel> model(d.ccLgm);
 
     // Simulation market parameters
     BOOST_TEST_MESSAGE("set up sim market parameters");
@@ -1024,7 +1025,7 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposureZeroIrVol) {
     QuantLib::ext::shared_ptr<DateGrid> grid = QuantLib::ext::make_shared<DateGrid>(tenorGrid);
 
     // Model
-    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
+    QuantLib::Handle<QuantExt::CrossAssetModel> model(d.ccLgm);
 
     // set ir vols to zero
     for (Size j = 0; j < 3; ++j) {
@@ -1140,7 +1141,7 @@ BOOST_AUTO_TEST_CASE(testCpiSwapExposure) {
     QuantLib::ext::shared_ptr<DateGrid> grid = QuantLib::ext::make_shared<DateGrid>(tenorGrid);
 
     // Model
-    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
+    QuantLib::Handle<QuantExt::CrossAssetModel> model(d.ccLgm);
 
     // set ir vols to zero
     for (Size j = 0; j < 3; ++j) {
@@ -1187,6 +1188,7 @@ BOOST_AUTO_TEST_CASE(testCpiSwapExposure) {
     BOOST_TEST_MESSAGE("set up scenario sim market");
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(d.market, simMarketConfig);
     simMarket->scenarioGenerator() = sg;
+    auto fixingManager = QuantLib::ext::make_shared<FixingManager>(d.referenceDate, FixingManager::Mode::BackwardFlat);
 
     Size samples = 5000;
 
@@ -1229,13 +1231,12 @@ BOOST_AUTO_TEST_CASE(testCpiSwapExposure) {
     BOOST_TEST_MESSAGE("running " << samples << " samples simulation over " << grid->dates().size() << " time steps");
     for (Size i = 0; i < samples; i++) {
         simMarket->update(grid->dates().back());
+        fixingManager->update(grid->dates().back());
         // we do not use the valuation engine, so in case updates are disabled we need to
         // take care of the instrument update ourselves
         cpiSwap->update();
         Real numeraire = simMarket->numeraire();
         cpiSwap_epe += std::max(cpiSwap->NPV(), 0.0) / numeraire;
-
-        simMarket->fixingManager()->reset();
     }
     BOOST_TEST_MESSAGE("Simulation time " << timer.format(default_places, "%w"));
 

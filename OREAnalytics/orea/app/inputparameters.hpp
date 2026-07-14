@@ -102,6 +102,7 @@ struct SetupVariables : public InputVariables {
     bool allFixings_ = false;
     bool eomInflationFixings_ = true;
     bool useMarketDataFixings_ = true;
+    Size gzipCompressionLevel_ = 6;
 
     QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio_;
     QuantLib::ext::shared_ptr<ore::data::BasicReferenceDataManager> refDataManager_;
@@ -761,7 +762,6 @@ public:
     void setSensitivityStressScenarioDataFromFile(const std::string& s);
     void setSensitivityStressSensitivityScenarioData(const std::string& xml);
     void setSensitivityStressSensitivityScenarioDataFromFile(const std::string& fileName);
-    void setSensitivityStressCalculateBaseScenario(const bool calcBaseScenario) { sensitivityStressCalcBaseScenario_ = calcBaseScenario; }
 
     // Setters for xvaSensi
     void setXvaSensiSimMarketParams(const std::string& xml);
@@ -942,6 +942,7 @@ public:
   
     QuantLib::Size maxRetries() const { return maxRetries_; }
     QuantLib::Size nThreads() const { return setupVariables_.nThreads_; }
+    Size gzipCompressionLevel() const { return setupVariables_.gzipCompressionLevel_; }
     bool entireMarket() const { return setupVariables_.entireMarket_; }
     bool allFixings() const { return setupVariables_.allFixings_; }
     bool eomInflationFixings() const { return setupVariables_.eomInflationFixings_; }
@@ -1072,7 +1073,6 @@ public:
     sensitivityStressSensitivityScenarioData() const {
         return sensitivityStressSensitivityScenarioData_;
     }
-    bool sensitivityStressCalcBaseScenario() const { return sensitivityStressCalcBaseScenario_; }
     bool xvaStressWriteCubes() const { return xvaStressWriteCubes_; }
 
     // Getters for XVA Explain
@@ -1372,7 +1372,6 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> sensitivityStressSimMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> sensitivityStressScenarioData_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensitivityStressSensitivityScenarioData_;
-    bool sensitivityStressCalcBaseScenario_ = false;
 
     /*****************
      * XVA Sensitivity analytic

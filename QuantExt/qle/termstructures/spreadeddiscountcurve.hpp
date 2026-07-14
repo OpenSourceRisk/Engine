@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <qle/termstructures/dynamicstype.hpp>
+
 #include <ql/math/interpolation.hpp>
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
@@ -36,7 +38,7 @@ using namespace QuantLib;
   curve with a spread. The quotes are interpolated loglinearly. The spread curve is given in terms of
   times relative to the reference date, which means that the spread will float with a changing reference
   date in the reference curve. */
-class SpreadedDiscountCurve : public YieldTermStructure, public LazyObject {
+class SpreadedDiscountCurve final : public YieldTermStructure, public LazyObject {
 public:
     enum class Interpolation { logLinear, linearZero };
     enum class Extrapolation { flatFwd, flatZero };
@@ -44,33 +46,37 @@ public:
     SpreadedDiscountCurve(const Handle<YieldTermStructure>& referenceCurve, const std::vector<Time>& times,
                           const std::vector<Handle<Quote>>& quotes,
                           const Interpolation interpolation = Interpolation::logLinear,
-                          const Extrapolation extrapolation = Extrapolation::flatFwd);
+                          const Extrapolation extrapolation = Extrapolation::flatFwd,
+                          const YieldCurveRollDown = YieldCurveRollDown::ForwardForward);
 
     Date maxDate() const override;
     void update() override;
-    const Date& referenceDate() const override;
-
-    Calendar calendar() const override;
-    Natural settlementDays() const override;
 
     void makeThisCurveSpreaded(const std::vector<Handle<YieldTermStructure>>& bases,
                                const std::vector<double>& multiplier);
 
-protected:
-    void performCalculations() const override;
-    DiscountFactor discountImpl(Time t) const override;
+    Real discountWithoutSpread(Time t) const;
 
 private:
+    void performCalculations() const override;
+    DiscountFactor discountImpl(Time t) const override;
+    void updateBasesOffsets() const;
+    Real getDiscount(Time t, bool includeSpread) const;
+
     Handle<YieldTermStructure> referenceCurve_;
     std::vector<Time> times_;
     std::vector<Handle<Quote>> quotes_;
     Interpolation interpolation_;
     Extrapolation extrapolation_;
-    mutable std::vector<Real> data_;
+    YieldCurveRollDown yieldCurveRollDown_;
+
     QuantLib::ext::shared_ptr<QuantLib::Interpolation> dataInterpolation_;
+    mutable std::vector<Real> data_;
+
     std::vector<Handle<YieldTermStructure>> bases_;
     std::vector<double> multiplier_;
-    std::vector<std::vector<Real>> basesOffset_;
+    mutable Date basesReferenceDate_;
+    mutable std::vector<std::vector<Real>> basesOffset_;
 };
 
 } // namespace QuantExt

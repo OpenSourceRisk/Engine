@@ -66,13 +66,14 @@ using namespace QuantExt;
 class CrossAssetModelScenarioGenerator : public ScenarioPathGenerator {
 public:
     //! Constructor
-    CrossAssetModelScenarioGenerator(QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model,
+    CrossAssetModelScenarioGenerator(QuantLib::Handle<QuantExt::CrossAssetModel> model,
                                      QuantLib::ext::shared_ptr<QuantExt::MultiPathGeneratorBase> multiPathGenerator,
                                      QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketConfig,
                                      QuantLib::Date today, QuantLib::ext::shared_ptr<DateGrid> grid,
                                      QuantLib::ext::shared_ptr<ore::data::Market> initMarket,
                                      const std::string& configuration = Market::defaultConfiguration,
-                                     const std::string& amcPathDataOutput = std::string(), QuantLib::Size samples = QuantLib::Null<QuantLib::Size>());
+                                     const std::string& amcPathDataOutput = std::string(),
+                                     QuantLib::Size samples = QuantLib::Null<QuantLib::Size>());
     //! Default destructor
     ~CrossAssetModelScenarioGenerator() {};
     std::vector<QuantLib::ext::shared_ptr<Scenario>> nextPath() override;
@@ -81,7 +82,7 @@ public:
 
 private:
     void init();
-    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model_;
+    QuantLib::Handle<QuantExt::CrossAssetModel> model_;
     QuantLib::ext::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGenerator_;
     QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory_;
     QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketConfig_;

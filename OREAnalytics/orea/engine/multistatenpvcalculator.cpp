@@ -24,6 +24,7 @@
 #include <orea/engine/multistatenpvcalculator.hpp>
 
 #include <ored/utilities/log.hpp>
+#include <ored/portfolio/trade.hpp>
 
 namespace ore {
 namespace analytics {

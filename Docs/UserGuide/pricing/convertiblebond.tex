@@ -126,7 +126,7 @@ calibration time $t_i$. The Fokker-Planck equation for the transition density $p
         \left( r + h(s,e^y) + h_y(s,e^y) \right) p = 0
 \end{eqnarray}
 
-also compare {\cite{Andersen_Buffum_2002}, equation 11, where we assume $\sigma$ independent of $y$ in our setup (at
+also compare \cite{Andersen_Buffum_2002}, equation 11, where we assume $\sigma$ independent of $y$ in our setup (at
   least for the time being). For our parametrisation
 
 \begin{equation}
@@ -286,9 +286,7 @@ There are some pricing engine parameters that control the model behaviour on a f
     discounting term, but the equity drift is not corrected upwards accordingly. The default value is true. \\ \hline
 
     AdjustEquityVolatility & If false, the market equity volatility input is not adjusted, but directly used in the
-    pricing model. This setting is only possible if $p=0$. It will then set the weighting with the market survival
-    probability $S(0,t_i)$ in the context of formula \ref{formula:convertible_equitymatch_p0} to zero, i.e. $V$ is taken
-    as the market implied volatility without adjustment. The default value is true. \\ \hline
+    pricing model. The default value is true. \\ \hline
 
     AdjustDiscounting & If false, the adjustment of the discounting rate $r$ to the benchmark curve $b$ is suppressed,
     i.e. the change of the PDE \ref{formula:convertible_bond_pde} to

@@ -140,7 +140,7 @@ time discretization scheme which has numerical error and requires small time ste
 testing purposes or if more sophisticated component models are used). If {\em Euler} is used, you should consider
 setting TimeStepsPerYear (see above) to a large enough value.
 
-The SalvagingAlgorithm tag specifies the preprocessing of the input correlation matrix (None, Spectral, Hypersphere, LowerDiagonal, Higham). Optional, defaults to None.
+The SalvagingAlgorithm tag specifies the preprocessing of the input correlation matrix (None, Spectral, Hypersphere, LowerDiagonal, Higham, Principal). Optional, defaults to None.
 
 \medskip
 
@@ -692,6 +692,7 @@ For Yield Curves, there are several choices for the interpolation and extrapolat
 \begin{itemize}
 \item Interpolation: This can be LogLinear or LinearZero. If not given, the value defaults to LogLinear.
 \item Extrapolation: This can be FlatFwd or FlatZero. If not given, the value defaults to FlatFwd.
+\item RollDown: This can be ForwardForward or ConstantDiscounts. If not given, the value defaults to ForwardForward.
 \end{itemize}
 
 For Default Curve, there is a similar choice for the extrapolation:
@@ -720,6 +721,10 @@ except for $\alpha$ fixed.
 \label{lst:smile_dynamics_configuration}
 \end{listing}
 
+\input{parameterisation/simulation_intradaypowercurves}
+
+\subsubsection{Curve Algebra}\label{sec:sim_curve_algebra}
+
 We can specify a CurveAlgebra node as a subnode of Market to link curves in the scenario sim market to other curves
 using predefined operations. Listing \ref{lst:curve_algebra_configuration} shows an example for a spread declaration,
 where the instantaneous forward rate of the EUR discount curve is linked to both EURIBOR-1M and 3M index curves with
@@ -744,6 +749,9 @@ multipliers $1$ and $-2$, respectively.
 \label{lst:curve_algebra_configuration}
 \end{listing}
 
+For intraday power use cases, CurveAlgebra can also be used to map an intraday power curve key to the underlying
+commodity curve key, e.g. for consolidated sensitivity reporting.
+
 
 \begin{longlisting}
 %\hrule\medskip
@@ -759,6 +767,7 @@ multipliers $1$ and $-2$, respectively.
       <Tenors>3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y</Tenors>
       <Interpolation>LogLinear</Interpolation>
       <Extrapolation>FlatFwd</Extrapolation>
+      <RollDown>ForwardForward</RollDown>
       <DayCounter>ACT/ACT</DayCounter> <!-- Sets a new default for all yieldCurves -->
     </Configuration>
   </YieldCurves>

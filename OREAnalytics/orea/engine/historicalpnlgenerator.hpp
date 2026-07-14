@@ -178,7 +178,9 @@ private:
     bool dryRun_;
     std::string context_;
 
-    std::function<std::vector<QuantLib::ext::shared_ptr<ValuationCalculator>>()> npvCalculator_;
+    std::function<std::vector<QuantLib::ext::shared_ptr<ValuationCalculator>>(
+        const QuantLib::Size, const QuantLib::ext::shared_ptr<ore::data::Portfolio>&)>
+        npvCalculator_;
 
     //! Get the index of the as of date in the cube.
     QuantLib::Size indexAsof() const;

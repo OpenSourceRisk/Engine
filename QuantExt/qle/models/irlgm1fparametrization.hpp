@@ -29,6 +29,8 @@
 #include <ql/experimental/math/piecewiseintegral.hpp>
 #include <ql/handle.hpp>
 #include <ql/math/integrals/integral.hpp>
+#include <ql/math/integrals/simpsonintegral.hpp>
+#include <ql/math/integrals/segmentintegral.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <map>
 

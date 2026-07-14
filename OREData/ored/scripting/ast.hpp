@@ -25,15 +25,13 @@
 
 #include <ored/scripting/value.hpp>
 
-#include <ql/patterns/visitor.hpp>
 #include <ql/types.hpp>
 #include <ql/utilities/null.hpp>
+#include <ql/shared_ptr.hpp>
 
 #include <boost/fusion/container/vector.hpp>
 #include <boost/fusion/include/at_c.hpp>
-#include <ql/shared_ptr.hpp>
 
-#include <iostream>
 #include <string>
 #include <vector>
 
@@ -42,7 +40,9 @@ namespace data {
 
 using namespace QuantLib;
 
+struct StAstVisitor;
 struct ASTNode;
+
 using ASTNodePtr = QuantLib::ext::shared_ptr<ASTNode>;
 
 struct LocationInfo {
@@ -59,184 +59,184 @@ struct ASTNode {
     ASTNode(){};
     virtual ~ASTNode() {}
     ASTNode(const std::vector<ASTNodePtr>& args, const Size minArgs, const Size maxArgs = Null<Size>());
-    virtual void accept(AcyclicVisitor&);
+    virtual void accept(StAstVisitor&);
     LocationInfo locationInfo;
     std::vector<ASTNodePtr> args;
 };
 
 struct OperatorPlusNode : public ASTNode {
     OperatorPlusNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 2, 2) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct OperatorMinusNode : public ASTNode {
     OperatorMinusNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 2, 2) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct OperatorMultiplyNode : public ASTNode {
     OperatorMultiplyNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 2, 2) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct OperatorDivideNode : public ASTNode {
     OperatorDivideNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 2, 2) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct NegateNode : public ASTNode {
     NegateNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 1, 1) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct FunctionAbsNode : public ASTNode {
     FunctionAbsNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 1, 1) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct FunctionExpNode : public ASTNode {
     FunctionExpNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 1, 1) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct FunctionLogNode : public ASTNode {
     FunctionLogNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 1, 1) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct FunctionSqrtNode : public ASTNode {
     FunctionSqrtNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 1, 1) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct FunctionNormalCdfNode : public ASTNode {
     FunctionNormalCdfNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 1, 1) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct FunctionNormalPdfNode : public ASTNode {
     FunctionNormalPdfNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 1, 1) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct FunctionMaxNode : public ASTNode {
     FunctionMaxNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 2, 2) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct FunctionMinNode : public ASTNode {
     FunctionMinNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 2, 2) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct FunctionFractionNode : public ASTNode {
     FunctionFractionNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 1, 1) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct FunctionRoundNode : public ASTNode {
     FunctionRoundNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 2, 2) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct FunctionPowNode : public ASTNode {
     FunctionPowNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 2, 2) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct FunctionBlackNode : public ASTNode {
     FunctionBlackNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 6, 6) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct FunctionDcfNode : public ASTNode {
     FunctionDcfNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 3, 3) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct FunctionDaysNode : public ASTNode {
     FunctionDaysNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 3, 3) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct FunctionPayNode : public ASTNode {
     FunctionPayNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 4, 4) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct FunctionLogPayNode : public ASTNode {
     FunctionLogPayNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 4, 7) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct FunctionNpvNode : public ASTNode {
     FunctionNpvNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 2, 5) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct FunctionNpvMemNode : public ASTNode {
     FunctionNpvMemNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 3, 6) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct HistFixingNode : public ASTNode {
     HistFixingNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 2, 2) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct FunctionDiscountNode : public ASTNode {
     FunctionDiscountNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 3, 3) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct FunctionFwdCompNode : public ASTNode {
     FunctionFwdCompNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 4, 14) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct FunctionFwdAvgNode : public ASTNode {
     FunctionFwdAvgNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 4, 14) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct FunctionAboveProbNode : public ASTNode {
     FunctionAboveProbNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 4, 4) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct FunctionBelowProbNode : public ASTNode {
     FunctionBelowProbNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 4, 4) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct FunctionDateIndexNode : public ASTNode {
     FunctionDateIndexNode(const boost::fusion::vector<std::string, std::string>& params,
                           const std::vector<ASTNodePtr>& args)
         : ASTNode(args, 1, 1), name(boost::fusion::at_c<0>(params)), op(boost::fusion::at_c<1>(params)) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
     std::string name, op;
 };
 
 struct SortNode : public ASTNode {
     SortNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 1, 3) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct PermuteNode : public ASTNode {
     PermuteNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 2, 3) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct ConstantNumberNode : public ASTNode {
     ConstantNumberNode(const double value, const std::vector<ASTNodePtr>& args = {})
         : ASTNode(args, 0, 0), value(value) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
     const double value;
 };
 
 struct VariableNode : public ASTNode {
     VariableNode(const std::string& name, const std::vector<ASTNodePtr>& args = {}) : ASTNode(args, 0, 1), name(name) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
     const std::string name;
     // cache for optimised variable reference retrieval
     bool isCached = false, isScalar = false;
@@ -246,89 +246,145 @@ struct VariableNode : public ASTNode {
 
 struct SizeOpNode : public ASTNode {
     SizeOpNode(const std::string& name, const std::vector<ASTNodePtr>& args = {}) : ASTNode(args, 0, 0), name(name) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
     const std::string name;
 };
 
 struct VarEvaluationNode : public ASTNode {
     VarEvaluationNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 2, 3) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct AssignmentNode : public ASTNode {
     AssignmentNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 2, 2) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct RequireNode : public ASTNode {
     RequireNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 1, 1) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct DeclarationNumberNode : public ASTNode {
     DeclarationNumberNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 1) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct SequenceNode : public ASTNode {
     SequenceNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 1) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct ConditionEqNode : public ASTNode {
     ConditionEqNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 2, 2){};
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct ConditionNeqNode : public ASTNode {
     ConditionNeqNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 2, 2){};
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct ConditionLtNode : public ASTNode {
     ConditionLtNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 2, 2){};
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct ConditionLeqNode : public ASTNode {
     ConditionLeqNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 2, 2){};
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct ConditionGtNode : public ASTNode {
     ConditionGtNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 2, 2){};
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct ConditionGeqNode : public ASTNode {
     ConditionGeqNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 2, 2){};
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct ConditionNotNode : public ASTNode {
     ConditionNotNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 1, 1){};
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct ConditionAndNode : public ASTNode {
     ConditionAndNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 2, 2){};
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct ConditionOrNode : public ASTNode {
     ConditionOrNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 2, 2){};
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct IfThenElseNode : public ASTNode {
     IfThenElseNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 2, 3) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
 };
 
 struct LoopNode : public ASTNode {
     LoopNode(const std::string& name, const std::vector<ASTNodePtr>& args) : ASTNode(args, 4, 4), name(name) {}
-    void accept(AcyclicVisitor&) override;
+    void accept(StAstVisitor&) override;
     const std::string name;
+};
+
+struct StAstVisitor {
+    virtual ~StAstVisitor() {}
+    virtual void visit(ASTNode&) = 0;
+    virtual void visit(OperatorPlusNode& n) { visit(static_cast<ASTNode&>(n)); }
+    virtual void visit(OperatorMinusNode& n) { visit(static_cast<ASTNode&>(n)); }
+    virtual void visit(OperatorMultiplyNode& n) { visit(static_cast<ASTNode&>(n)); }
+    virtual void visit(OperatorDivideNode& n) { visit(static_cast<ASTNode&>(n)); }
+    virtual void visit(NegateNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(FunctionAbsNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(FunctionExpNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(FunctionLogNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(FunctionSqrtNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(FunctionNormalCdfNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(FunctionNormalPdfNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(FunctionMaxNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(FunctionMinNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(FunctionFractionNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(FunctionRoundNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(FunctionPowNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(FunctionBlackNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(FunctionDcfNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(FunctionDaysNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(FunctionPayNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(FunctionLogPayNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(FunctionNpvNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(FunctionNpvMemNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(HistFixingNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(FunctionDiscountNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(FunctionFwdCompNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(FunctionFwdAvgNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(FunctionAboveProbNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(FunctionBelowProbNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(FunctionDateIndexNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(SortNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(PermuteNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(ConstantNumberNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(VariableNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(SizeOpNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(VarEvaluationNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(AssignmentNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(RequireNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(DeclarationNumberNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(SequenceNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(ConditionEqNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(ConditionNeqNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(ConditionLtNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(ConditionLeqNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(ConditionGtNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(ConditionGeqNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(ConditionNotNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(ConditionAndNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(ConditionOrNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(IfThenElseNode& n) { visit(static_cast<ASTNode&>(n)); };
+    virtual void visit(LoopNode& n) { visit(static_cast<ASTNode&>(n)); };
 };
 
 } // namespace data

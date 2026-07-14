@@ -83,9 +83,7 @@ public:
 private:
     // ModelImpl interface implementation
     RandomVariable getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
-                                        const RandomVariable& barrier, const bool above) const override {
-        QL_FAIL("getFutureBarrierProb not implemented by GaussianCam");
-    }
+                                        const RandomVariable& barrier, const bool above) const override;
     // ModelImpl interface implementation
     void performCalculations() const override;
     RandomVariable getIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>()) const override;

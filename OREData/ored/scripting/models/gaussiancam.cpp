@@ -497,7 +497,7 @@ RandomVariable GaussianCam::getInfIndexValue(const Size indexNo, const Date& d, 
     if (fwd != Null<Date>())
         fixingDate = fwd;
     const auto& index = infIndices_[indexNo].second;
-    const auto& zits = index->zeroInflationTermStructure().currentLink();
+    const auto zits = index->zeroInflationTermStructure().currentLink();
     auto lag = simulationLag(zits);
     // we have an simulation lag when simulating inf indices, we need to adjust the observation date accordingly,
     // (see scriptedtrade.cpp, when compiling the inflation simulation dates).
@@ -808,6 +808,111 @@ void GaussianCam::populateAdditionalResultsPathLevel() const {
     }
 
     additionalResultsPathLevel_["gaussiancam_results_pathlevel"] = pathLevelResults;
+}
+
+RandomVariable GaussianCam::getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
+                                                  const RandomVariable& barrier, const bool above) const {
+
+    // This is a modified version of BlackScholes::getFutureBarrierProb(), adapted for the CAM parametrisation.
+
+    // get path values at the two endpoints
+    RandomVariable v1 = eval(index, obsdate1, Null<Date>());
+    RandomVariable v2 = eval(index, obsdate2, Null<Date>());
+
+    // check barrier at endpoints
+    Filter barrierHit(barrier.size(), false);
+    if (above) {
+        barrierHit = barrierHit || v1 >= barrier;
+        barrierHit = barrierHit || v2 >= barrier;
+    } else {
+        barrierHit = barrierHit || v1 <= barrier;
+        barrierHit = barrierHit || v2 <= barrier;
+    }
+
+    RandomVariable result(barrierHit, 1.0, 0.0);
+
+    // IR/INF indices are not supported for the continuous barrier probability computation
+    auto ir = std::find_if(irIndices_.begin(), irIndices_.end(),
+                           [&index](const std::pair<IndexInfo, QuantLib::ext::shared_ptr<InterestRateIndex>>& p) {
+                               return p.first.name() == index;
+                           });
+    auto inf = std::find_if(infIndices_.begin(), infIndices_.end(),
+                            [&index](const std::pair<IndexInfo, QuantLib::ext::shared_ptr<ZeroInflationIndex>>& p) {
+                                return p.first.name() == index;
+                            });
+    QL_REQUIRE(ir == irIndices_.end() && inf == infIndices_.end(),
+               "GaussianCam::getFutureBarrierProb(): index '"
+                   << index << "' is an IR or INF index, which is not supported");
+
+    // resolve FX index to GENERIC form (same as in ModelImpl::eval())
+    IndexInfo indexInfo(index);
+    if (indexInfo.isFx())
+        indexInfo = IndexInfo("FX-GENERIC-" + indexInfo.fx()->sourceCurrency().code() + "-" +
+                              indexInfo.fx()->targetCurrency().code());
+
+    // look for the index directly in indices_; if not found, try to triangulate an FX index
+    // (see also BlackScholes::getFutureBarrierProb())
+    Size ind1 = Null<Size>(), ind2 = Null<Size>();
+    auto it = std::find(indices_.begin(), indices_.end(), indexInfo);
+    if (it != indices_.end()) {
+        ind1 = std::distance(indices_.begin(), it);
+    } else {
+        QL_REQUIRE(indexInfo.isFx(),
+                   "GaussianCam::getFutureBarrierProb(): index '" << index << "' not found in model");
+        if (indexInfo.fx()->sourceCurrency() != indexInfo.fx()->targetCurrency()) {
+            for (Size i = 0; i < indexCurrencies_.size(); ++i) {
+                if (indices_[i].isFx()) {
+                    if (indexInfo.fx()->sourceCurrency().code() == indexCurrencies_[i])
+                        ind1 = i;
+                    if (indexInfo.fx()->targetCurrency().code() == indexCurrencies_[i])
+                        ind2 = i;
+                }
+            }
+        }
+    }
+
+    // get the integrated variance of log(S) over [obsdate1, obsdate2] from the CAM parametrisation
+    Real t1 = timeFromReference(obsdate1);
+    Real t2 = timeFromReference(obsdate2);
+    Real variance = 0.0;
+
+    if (ind1 != Null<Size>() && ind2 == Null<Size>()) {
+        // index found directly in indices_
+        if (indices_[ind1].isFx()) {
+            Size ccyIdx = cam_->ccyIndex(parseCurrency(indexCurrencies_[ind1]));
+            QL_REQUIRE(ccyIdx > 0, "GaussianCam::getFutureBarrierProb(): FX index is base currency");
+            variance = cam_->fxbs(ccyIdx - 1)->variance(t2) - cam_->fxbs(ccyIdx - 1)->variance(t1);
+        } else if (eqIndexInCam_[ind1] != Null<Size>()) {
+            variance = cam_->eqbs(eqIndexInCam_[ind1])->variance(t2) -
+                       cam_->eqbs(eqIndexInCam_[ind1])->variance(t1);
+        } else {
+            QL_FAIL("GaussianCam::getFutureBarrierProb(): index '" << index << "' is not FX or EQ");
+        }
+    } else if (ind1 != Null<Size>() && ind2 != Null<Size>()) {
+        // triangulated FX: log(S1/S2) = log(S1/base) - log(S2/base)
+        // variance = var1 + var2 - 2 * corr * sqrt(var1 * var2)
+        Size ccyIdx1 = cam_->ccyIndex(parseCurrency(indexCurrencies_[ind1]));
+        Size ccyIdx2 = cam_->ccyIndex(parseCurrency(indexCurrencies_[ind2]));
+        QL_REQUIRE(ccyIdx1 > 0 && ccyIdx2 > 0,
+                   "GaussianCam::getFutureBarrierProb(): triangulated FX index leg is base currency");
+        Real var1 = cam_->fxbs(ccyIdx1 - 1)->variance(t2) - cam_->fxbs(ccyIdx1 - 1)->variance(t1);
+        Real var2 = cam_->fxbs(ccyIdx2 - 1)->variance(t2) - cam_->fxbs(ccyIdx2 - 1)->variance(t1);
+        Real corr = cam_->correlation(CrossAssetModel::AssetType::FX, ccyIdx1 - 1,
+                                      CrossAssetModel::AssetType::FX, ccyIdx2 - 1);
+        variance = var1 + var2 - 2.0 * corr * std::sqrt(var1 * var2);
+    }
+    // if both ind1 and ind2 are null (trivial CCY-CCY FX), variance stays zero
+
+    // apply the reflection principle to estimate the continuous barrier hit probability
+    // see e.g. formulas 2, 4 in Emmanuel Gobet, Advanced Monte Carlo methods for barrier and related exotic options
+    if (!QuantLib::close_enough(variance, 0.0)) {
+        RandomVariable eps(barrier.size(), 1E-14);
+        RandomVariable hitProb = exp(RandomVariable(barrier.size(), -2.0 / variance) *
+                                     log(v1 / max(barrier, eps)) * log(v2 / max(barrier, eps)));
+        result = result + applyInverseFilter(hitProb, barrierHit);
+    }
+
+    return result;
 }
 
 } // namespace data

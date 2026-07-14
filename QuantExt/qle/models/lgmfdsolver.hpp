@@ -35,7 +35,7 @@ namespace QuantExt {
 //! Numerical FD solver for the LGM model
 class LgmFdSolver : public LgmBackwardSolver {
 public:
-    LgmFdSolver(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime = 50.0,
+    LgmFdSolver(const QuantLib::Handle<LinearGaussMarkovModel>& model, const Real maxTime = 50.0,
                 const QuantLib::FdmSchemeDesc scheme = QuantLib::FdmSchemeDesc::Douglas(),
                 const Size stateGridPoints = 64, const Size timeStepsPerYear = 24, const Real mesherEpsilon = 1E-4);
     Size gridSize() const override;
@@ -43,11 +43,11 @@ public:
     // if steps are not given, the time steps per year specified in the constructor
     RandomVariable rollback(const RandomVariable& v, const Real t1, const Real t0,
                             Size steps = Null<Size>()) const override;
-    const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model() const override;
+    const QuantLib::Handle<LinearGaussMarkovModel>& model() const override;
     Size timeStepsPerYear() const override { return timeStepsPerYear_; }
 
 private:
-    QuantLib::ext::shared_ptr<LinearGaussMarkovModel> model_;
+    QuantLib::Handle<LinearGaussMarkovModel> model_;
     Real maxTime_;
     QuantLib::FdmSchemeDesc scheme_;
     Size stateGridPoints_;

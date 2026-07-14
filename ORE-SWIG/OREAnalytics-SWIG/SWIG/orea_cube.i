@@ -22,15 +22,23 @@
 %include stl.i
 %include types.i
 
+%{
+#include <orea/cube/sensitivitycube.hpp>
+%}
+
 %shared_ptr(ore::analytics::NPVCube)
 %shared_ptr(ore::analytics::SensitivityCube)
 %nodefaultctor ore::analytics::SensitivityCube;
+%feature("flatnested") ore::analytics::SensitivityCube::FactorData;
+%rename(SensitivityCubeFactorData) ore::analytics::SensitivityCube::FactorData;
 %shared_ptr(ore::analytics::CubeWriter)
 %rename(CubeReader) ore::analytics::CubeCsvReader;
 %shared_ptr(ore::analytics::CubeCsvReader)
 %shared_ptr(ore::analytics::AggregationScenarioData)
 %shared_ptr(ore::analytics::InMemoryCubeOpt<float>);
 %shared_ptr(ore::analytics::InMemoryCubeOpt<double>);
+%feature("notabstract") ore::analytics::InMemoryCubeOpt<float>;
+%feature("notabstract") ore::analytics::InMemoryCubeOpt<double>;
 %shared_ptr(ore::analytics::JointNPVCube)
 
 namespace ore {
@@ -62,8 +70,66 @@ class NPVCube {
 
 class SensitivityCube {
     public:
+        typedef std::pair<QuantExt::RiskFactorKey, QuantExt::RiskFactorKey> crossPair;
+
+        struct FactorData {
+            QuantLib::Size index;
+            QuantLib::Real targetShiftSize;
+            QuantLib::Real actualShiftSize;
+            QuantExt::RiskFactorKey rfkey;
+            std::string factorDesc;
+        };
+
         bool hasTrade(const std::string& tradeId) const;
         QuantLib::Real npv(const std::string& tradeId) const;
+        QuantLib::Real npv(QuantLib::Size id) const;
+
+        QuantLib::Real delta(const std::string& tradeId, const QuantExt::RiskFactorKey& riskFactorKey) const;
+        QuantLib::Real delta(const QuantLib::Size tradeIdx, const QuantExt::RiskFactorKey& riskFactorKey) const;
+        QuantLib::Real gamma(const std::string& tradeId, const QuantExt::RiskFactorKey& riskFactorKey) const;
+        QuantLib::Real gamma(const QuantLib::Size tradeIdx, const QuantExt::RiskFactorKey& riskFactorKey) const;
+        QuantLib::Real crossGamma(const std::string& tradeId, const crossPair& riskFactorKeyPair) const;
+        QuantLib::Real crossGamma(const QuantLib::Size tradeIdx, const crossPair& riskFactorKeyPair) const;
+        std::pair<QuantLib::Real, QuantLib::Period> theta(const std::string& tradeId) const;
+
+        QuantLib::Real targetShiftSize(const QuantExt::RiskFactorKey& riskFactorKey) const;
+        QuantLib::Real actualShiftSize(const QuantExt::RiskFactorKey& riskFactorKey) const;
+        QuantExt::ShiftScheme shiftScheme(const QuantExt::RiskFactorKey& riskFactorKey) const;
+
+        const std::set<QuantExt::RiskFactorKey>& factors() const;
+        const std::map<QuantExt::RiskFactorKey, ore::analytics::SensitivityCube::FactorData>& upFactors() const;
+        const std::map<QuantExt::RiskFactorKey, ore::analytics::SensitivityCube::FactorData>& downFactors() const;
+        const std::map<std::string, QuantLib::Size>& tradeIdx() const;
+        std::set<QuantExt::RiskFactorKey> relevantRiskFactors() const;
+        std::string factorDescription(const QuantExt::RiskFactorKey& riskFactorKey) const;
+
+        %extend {
+            std::map<std::string, QuantLib::Real> allDeltas(const std::string& tradeId) {
+                std::map<std::string, QuantLib::Real> result;
+                for (const auto& key : $self->factors()) {
+                    try {
+                        QuantLib::Real d = $self->delta(tradeId, key);
+                        if (d != 0.0) {
+                            result[$self->factorDescription(key)] = d;
+                        }
+                    } catch (...) {}
+                }
+                return result;
+            }
+
+            std::map<std::string, QuantLib::Real> allGammas(const std::string& tradeId) {
+                std::map<std::string, QuantLib::Real> result;
+                for (const auto& key : $self->factors()) {
+                    try {
+                        QuantLib::Real g = $self->gamma(tradeId, key);
+                        if (g != 0.0) {
+                            result[$self->factorDescription(key)] = g;
+                        }
+                    } catch (...) {}
+                }
+                return result;
+            }
+        }
 };
 
 class CubeWriter {
@@ -259,5 +325,11 @@ public:
 
 } // namespace analytics
 } // namespace ore
+
+// Template instantiations for SensitivityCube types
+%template(RiskFactorKeyCrossPair) std::pair<QuantExt::RiskFactorKey, QuantExt::RiskFactorKey>;
+%template(RiskFactorKeySet) std::set<QuantExt::RiskFactorKey>;
+%template(RiskFactorKeyFactorDataMap) std::map<QuantExt::RiskFactorKey, ore::analytics::SensitivityCube::FactorData>;
+%template(SensitivityCubeVector) std::vector<QuantLib::ext::shared_ptr<ore::analytics::SensitivityCube>>;
 
 #endif

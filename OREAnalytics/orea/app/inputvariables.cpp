@@ -17,6 +17,8 @@
 */
 
 #include <orea/app/inputvariables.hpp>
+#include <orea/app/inputparameters.hpp>
+#include <ored/portfolio/enginedata.hpp>
 #include <ql/errors.hpp>
 
 namespace ore {
@@ -27,6 +29,17 @@ void InputVariables::loadVariables(const QuantLib::ext::weak_ptr<InputParameters
         loadVariablesImpl(s);
     else
         QL_FAIL("Internal error: could not lock inputParameters_ in InputVariables::loadVariables. Contact dev.");
+}
+
+void InputVariables::applyEngineDataOverride(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                                             QuantLib::ext::shared_ptr<ore::data::EngineData>& engine,
+                                             const std::string& analytic, const std::string& param) {
+    QuantLib::ext::shared_ptr<ore::data::EngineData> engineOverride;
+    inputs->loadParameterXML<ore::data::EngineData>(engineOverride, analytic, param);
+    if (engine && engineOverride) {
+        engine = QuantLib::ext::make_shared<ore::data::EngineData>(*engine);
+        engine->setEngineDataOverride(engineOverride);
+    }
 }
 
 } // namespace analytics

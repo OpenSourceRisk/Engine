@@ -34,11 +34,18 @@ For FX volatility shifts, the configuration can be specified either explicitly o
 In the explicit approach, exact shift values for each expiry and tenor can be provided, as demonstrated in listing \ref{lst:stress_config_fxvol_explicit}}. 
 If only one tenor and shift value are provided, a parallel shift will be applied across all other tenors.
 
+FX volatility stress test only works for ATM curves and not with FX surfaces in the simulation market.
+If in simulation market the pair is set up to simulate a surface, an error message will be shown and the shifts will be ignored.
+
 Two weighting schemas are supported for FX volatility shifts: 
 \begin{itemize} 
 \item {\tt Unadjusted}: The shift is applied solely to the specified tenor, leaving all other tenors unchanged. 
 \item {\tt Weighted}: The given shift $s_i$ is applied to the specified tenor $i$, while shifts for other tenors are determined using the formula $s_j = s_i \frac{w_j}{w_i}$, where $w_j$ and $w_i$ represent the weights for tenors $j$ and $i$, respectively. 
 \end{itemize}
+
+A date shift or target date can be specified in the optional ``Date'' field. In case of a shift (e.g. 1D ,3M , ...) the
+evaluation date is shifted using the given period, no calendar adjustment is applied. In case of a date, the evaluation
+date is set to the given target date.
 
 \begin{listing}
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -100,6 +107,8 @@ improve the alignment of the scenario sim market and t0 curves.
 <StressTesting>
   <UseSpreadedTermStructures>false</UseSpreadedTermStructures>
   <StressTest id="parallel_rates">
+    <Date>1D</Date>
+    <!-- <Date>2026-06-06</Date> -->
     <DiscountCurves>
       <DiscountCurve ccy="EUR">
         <ShiftType>Absolute</ShiftType>
@@ -221,3 +230,5 @@ improve the alignment of the scenario sim market and t0 curves.
 \caption{Stress configuration}
 \label{lst:stress_config}
 \end{longlisting}
+
+\input{parameterisation/stressconfig_intradaypowercurves}

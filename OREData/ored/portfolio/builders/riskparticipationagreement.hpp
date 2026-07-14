@@ -28,6 +28,8 @@
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 
+#include <qle/instruments/riskparticipationagreement.hpp>
+
 #include <boost/make_shared.hpp>
 
 namespace ore {
@@ -55,7 +57,7 @@ public:
 
 protected:
     QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id,
-                                                          RiskParticipationAgreement* rpa) override;
+                                                                  RiskParticipationAgreement* rpa) override;
 };
 
 //! RPA XCcy Black engine builder
@@ -67,7 +69,7 @@ public:
 
 protected:
     QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id,
-                                                          RiskParticipationAgreement* rpa) override;
+                                                                  RiskParticipationAgreement* rpa) override;
 };
 
 //! RPA Numeric LGM base builder
@@ -75,11 +77,6 @@ class RiskParticipationAgreementLGMGridEngineBuilder : public RiskParticipationA
 public:
     explicit RiskParticipationAgreementLGMGridEngineBuilder(const std::set<std::string>& tradeTypes)
         : RiskParticipationAgreementEngineBuilderBase("LGM", "Grid", tradeTypes) {}
-
-protected:
-    QuantLib::ext::shared_ptr<QuantExt::IrModel> model(const string& id, const string& key,
-                                                       const std::vector<Date>& expiries, const Date& maturity,
-                                                       const std::vector<Real>& strikes);
 };
 
 //! RPA Numeric LGM engine builder for swap underlyings
@@ -90,8 +87,12 @@ public:
               {"RiskParticipationAgreement_Vanilla", "RiskParticipationAgreement_Structured"}) {}
 
 protected:
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::Swaption>>
+    buildRepresentativeSwaptions(const EngineFactory* engineFactory, const std::string& qualifier,
+                                 const QuantExt::RiskParticipationAgreement* rpa,
+                                 const std::vector<Date>& expiries) const;
     QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id,
-                                                          RiskParticipationAgreement* rpa) override;
+                                                                  RiskParticipationAgreement* rpa) override;
 };
 
 //! RPA Numeric LGM engine builder for tlock underlyings
@@ -102,7 +103,35 @@ public:
 
 protected:
     QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id,
-                                                          RiskParticipationAgreement* rpa) override;
+                                                                  RiskParticipationAgreement* rpa) override;
+};
+
+//! RPA AMC engine builder (all underlyings except t-lock)
+class CamAmcRiskParticipationAgreementEngineBuilder : public RiskParticipationAgreementEngineBuilderBase {
+public:
+    CamAmcRiskParticipationAgreementEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
+                                                  const std::vector<Date>& simulationDates,
+                                                  const std::vector<Date>& stickyCloseOutDates)
+        : RiskParticipationAgreementEngineBuilderBase("CrossAssetModel", "AMC",
+                                                      {"RiskParticipationAgreement_Vanilla",
+                                                       "RiskParticipationAgreement_Vanilla_XCcy",
+                                                       "RiskParticipationAgreement_Structured"}),
+          cam_(cam), simulationDates_(simulationDates), stickyCloseOutDates_(stickyCloseOutDates) {}
+
+protected:
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id,
+                                                                  RiskParticipationAgreement* rpa) override;
+
+private:
+    QuantLib::ext::shared_ptr<PricingEngine>
+    buildMcEngine(const QuantLib::Handle<QuantExt::CrossAssetModel>& model, const std::vector<QuantLib::Currency>& ccys,
+                  const Currency& base, const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve,
+                  const QuantLib::Handle<QuantLib::Quote>& recoveryRate,
+                  const std::vector<QuantLib::Size>& externalModelIndices);
+
+    const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
+    const std::vector<Date> simulationDates_;
+    const std::vector<Date> stickyCloseOutDates_;
 };
 
 } // namespace data

@@ -343,8 +343,8 @@ BOOST_AUTO_TEST_CASE(testBermudanEngines) {
         ext::shared_ptr<MultiLegOption> swaptionMulti= ext::make_shared<MultiLegOption> (legs, payer, currency, exercise);
 
         QuantLib::ext::shared_ptr<Integrator> inte=QuantLib::ext::make_shared<SimpsonIntegral>(1.0E-8, 100);
-        QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm = QuantLib::ext::make_shared<LinearGaussMarkovModel>(model, QuantExt::HwModel::Measure::LGM, 
-            LinearGaussMarkovModel::Discretization::Euler, true, inte);
+        auto lgm = Handle<LinearGaussMarkovModel>(QuantLib::ext::make_shared<LinearGaussMarkovModel>(
+            model, QuantExt::HwModel::Measure::LGM, LinearGaussMarkovModel::Discretization::Euler, true, inte));
 
         QuantLib::ext::shared_ptr<PricingEngine> engineBermudanFD =             
              QuantLib::ext::make_shared<NumericLgmMultiLegOptionEngine>(lgm, 50, QuantLib::FdmSchemeDesc::Douglas(), 64, 24, 1e-4, eurYtsHandle, 10);
@@ -401,8 +401,8 @@ BOOST_AUTO_TEST_CASE(testBermudanEngines) {
         ext::shared_ptr<MultiLegOption> swaptionMulti= ext::make_shared<MultiLegOption> (legs, payer, currency, exercise);
 
         QuantLib::ext::shared_ptr<Integrator> inte=QuantLib::ext::make_shared<SimpsonIntegral>(1.0E-8, 100);
-        QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm = QuantLib::ext::make_shared<LinearGaussMarkovModel>(model, QuantExt::HwModel::Measure::LGM, 
-            LinearGaussMarkovModel::Discretization::Euler, true, inte);
+        auto lgm = Handle<LinearGaussMarkovModel>(QuantLib::ext::make_shared<LinearGaussMarkovModel>(
+            model, QuantExt::HwModel::Measure::LGM, LinearGaussMarkovModel::Discretization::Euler, true, inte));
 
         QuantLib::ext::shared_ptr<PricingEngine> engineBermudanFD = 
              QuantLib::ext::make_shared<NumericLgmMultiLegOptionEngine>(lgm, 50, QuantLib::FdmSchemeDesc::Douglas(), 64, 24, 1e-4, eurYtsHandle, 10);
@@ -515,14 +515,15 @@ BOOST_AUTO_TEST_CASE(testBermudanEnginesEdgeCase) {
         ext::shared_ptr<MultiLegOption> swaptionMulti= ext::make_shared<MultiLegOption> (legs, payer, currency, exercise);
 
         QuantLib::ext::shared_ptr<Integrator> inte=QuantLib::ext::make_shared<SimpsonIntegral>(1.0E-8, 100);
-        QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm = QuantLib::ext::make_shared<LinearGaussMarkovModel>(model, QuantExt::HwModel::Measure::LGM, 
-            LinearGaussMarkovModel::Discretization::Euler, true, inte);
+        auto lgm = Handle<LGM>(QuantLib::ext::make_shared<LinearGaussMarkovModel>(
+            model, QuantExt::HwModel::Measure::LGM, LinearGaussMarkovModel::Discretization::Euler, true, inte));
 
-        QuantLib::ext::shared_ptr<PricingEngine> engineBermudanFD =             
-             QuantLib::ext::make_shared<NumericLgmMultiLegOptionEngine>(lgm, 50, QuantLib::FdmSchemeDesc::Douglas(), 64, 24, 1e-4, eurYtsHandle, 10);
+        QuantLib::ext::shared_ptr<PricingEngine> engineBermudanFD =
+            QuantLib::ext::make_shared<NumericLgmMultiLegOptionEngine>(lgm, 50, QuantLib::FdmSchemeDesc::Douglas(), 64,
+                                                                       24, 1e-4, eurYtsHandle, 10);
 
-         swaptionMulti->setPricingEngine(engineBermudanFD);
-         Real bermPriceFD = swaptionMulti->NPV();  
+        swaptionMulti->setPricingEngine(engineBermudanFD);
+        Real bermPriceFD = swaptionMulti->NPV();  
 
         auto engineBermudanMC = QuantLib::ext::make_shared<McMultiLegOptionEngine>(
             lgm, SobolBrownianBridge, SobolBrownianBridge, 100000, 100000, 42, 42, 4, LsmBasisSystem::Monomial);
@@ -576,8 +577,8 @@ BOOST_AUTO_TEST_CASE(testBermudanEnginesEdgeCase) {
         ext::shared_ptr<MultiLegOption> swaptionMulti= ext::make_shared<MultiLegOption> (legs, payer, currency, exercise);
 
         QuantLib::ext::shared_ptr<Integrator> inte=QuantLib::ext::make_shared<SimpsonIntegral>(1.0E-8, 100);
-        QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm = QuantLib::ext::make_shared<LinearGaussMarkovModel>(model, QuantExt::HwModel::Measure::LGM, 
-            LinearGaussMarkovModel::Discretization::Euler, true, inte);
+        auto lgm = Handle<LGM>(QuantLib::ext::make_shared<LinearGaussMarkovModel>(
+            model, QuantExt::HwModel::Measure::LGM, LinearGaussMarkovModel::Discretization::Euler, true, inte));
 
         QuantLib::ext::shared_ptr<PricingEngine> engineBermudanFD = 
              QuantLib::ext::make_shared<NumericLgmMultiLegOptionEngine>(lgm, 50, QuantLib::FdmSchemeDesc::Douglas(), 64, 24, 1e-4, eurYtsHandle, 10);

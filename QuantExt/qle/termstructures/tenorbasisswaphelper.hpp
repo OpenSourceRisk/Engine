@@ -45,7 +45,8 @@ public:
                          const Period& recFrequency = Period(), const bool telescopicValueDates = false,
                          const QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding,
                          QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::Choice::LastRelevantDate,
-                         const QuantLib::Date& customPillarDate = QuantLib::Date());
+                         const QuantLib::Date& customPillarDate = QuantLib::Date(),
+                         bool payIsAveraged = false, bool recIsAveraged = false);
 
     //! \name RateHelper interface
     //@{
@@ -78,6 +79,9 @@ protected:
     bool telescopicValueDates_;
     QuantExt::SubPeriodsCoupon1::Type type_;
     QuantLib::Pillar::Choice pillarChoice_;
+
+    bool payIsAveraged_;
+    bool recIsAveraged_;
 
     bool automaticDiscountRelinkableHandle_;
 

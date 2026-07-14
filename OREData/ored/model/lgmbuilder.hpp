@@ -43,6 +43,8 @@ public:
         const bool allowChangingFallbacksUnderScenarios = false, const bool allowModelFallbacks = false,
         const bool dontCalibrate = false);
 
+    QuantLib::Handle<QuantExt::LGM> modelAsLgm() const;
+
 private:
     void initParametrization() const override;
     void calibrate() const override;
@@ -50,7 +52,8 @@ private:
 
     bool setCalibrationInfo_ = false;
 
-    mutable bool parametrizationInitialized_ = false;
+    mutable Date parametrizationInitializedOnAnchorDate_;
+    mutable QuantLib::RelinkableHandle<QuantExt::LGM> modelLgm_;
 };
 
 } // namespace data

@@ -72,8 +72,8 @@ namespace data {
 Convention::Convention(const string& id, Type type) : type_(type), id_(id) {}
 
 const QuantLib::ext::shared_ptr<ore::data::Conventions>& InstrumentConventions::conventions(QuantLib::Date d) const {
-    QL_REQUIRE(!conventions_.empty(), "InstrumentConventions: No conventions provided.");
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    QL_REQUIRE(!conventions_.empty(), "InstrumentConventions: No conventions provided.");
     Date dt = d == Date() ? Settings::instance().evaluationDate() : d;
     auto it = conventions_.lower_bound(dt);
     if(it != conventions_.end() && it->first == dt)
@@ -95,9 +95,14 @@ const QuantLib::ext::shared_ptr<ore::data::Conventions>& InstrumentConventions::
 }
 
 void InstrumentConventions::setConventions(
-    const QuantLib::ext::shared_ptr<ore::data::Conventions>& conventions, QuantLib::Date d) {
+    const QuantLib::ext::shared_ptr<ore::data::Conventions>& conventions, QuantLib::Date d) const {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
     conventions_[d] = conventions;
+}
+
+void InstrumentConventions::clear() const {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    conventions_[Date()] = QuantLib::ext::make_shared<ore::data::Conventions>();
 }
 
 ZeroRateConvention::ZeroRateConvention(const string& id, const string& dayCounter, const string& compounding,
@@ -654,10 +659,12 @@ QuantLib::ext::shared_ptr<OvernightIndex> AverageOisConvention::index() const {
 TenorBasisSwapConvention::TenorBasisSwapConvention(const string& id, const string& payIndex, const string& receiveIndex,
                                                    const string& receiveFrequency, const string& payFrequency,
                                                    const string& spreadOnRec, const string& includeSpread, 
-                                                   const string& subPeriodsCouponType)
+                                                   const string& subPeriodsCouponType, const string& strPayIsAveraged,
+                                                   const string& strRecIsAveraged)
     : Convention(id, Type::TenorBasisSwap), strPayIndex_(payIndex), strReceiveIndex_(receiveIndex),
       strReceiveFrequency_(receiveFrequency), strPayFrequency_(payFrequency), strSpreadOnRec_(spreadOnRec),
-      strIncludeSpread_(includeSpread), strSubPeriodsCouponType_(subPeriodsCouponType) {
+      strIncludeSpread_(includeSpread), strSubPeriodsCouponType_(subPeriodsCouponType),
+      strPayIsAveraged_(strPayIsAveraged), strRecIsAveraged_(strRecIsAveraged) {
     build();
 }
 
@@ -697,6 +704,10 @@ void TenorBasisSwapConvention::build() {
 
     subPeriodsCouponType_ = strSubPeriodsCouponType_.empty() ? SubPeriodsCoupon1::Compounding
                                                              : parseSubPeriodsCouponType(strSubPeriodsCouponType_);
+    if (!strPayIsAveraged_.empty())
+        isPayAveraged_ = parseBool(strPayIsAveraged_);
+    if (!strRecIsAveraged_.empty())
+        isRecAveraged_ = parseBool(strRecIsAveraged_);
 }
 
 void TenorBasisSwapConvention::fromXML(XMLNode* node) {
@@ -713,6 +724,8 @@ void TenorBasisSwapConvention::fromXML(XMLNode* node) {
     strSpreadOnRec_ = XMLUtils::getChildValue(node, "SpreadOnRec", false);
     strIncludeSpread_ = XMLUtils::getChildValue(node, "IncludeSpread", false);
     strSubPeriodsCouponType_ = XMLUtils::getChildValue(node, "SubPeriodsCouponType", false);
+    strPayIsAveraged_ = XMLUtils::getChildValue(node, "PayIsAveraged", false);
+    strRecIsAveraged_ = XMLUtils::getChildValue(node, "RecIsAveraged", false);
 
     // handle deprecated fields...
     if (strPayIndex_.empty()) {
@@ -773,6 +786,10 @@ XMLNode* TenorBasisSwapConvention::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "IncludeSpread", strIncludeSpread_);
     if (!strSubPeriodsCouponType_.empty())
         XMLUtils::addChild(doc, node, "SubPeriodsCouponType", strSubPeriodsCouponType_);
+    if (!strPayIsAveraged_.empty())
+        XMLUtils::addChild(doc, node, "SpreadIsAveraged", strPayIsAveraged_);
+    if (!strRecIsAveraged_.empty())
+        XMLUtils::addChild(doc, node, "FlatIsAveraged", strRecIsAveraged_);
     return node;
 }
 
@@ -2968,6 +2985,8 @@ QuantLib::ext::shared_ptr<Convention> Conventions::get(const string& id) const {
         convention = QuantLib::ext::make_shared<ZeroInflationIndexConvention>();
     } else if (type == "BondYield") {
         convention = QuantLib::ext::make_shared<BondYieldConvention>();
+    } else if (type == "IntradayPowerLoad") {
+        convention = QuantLib::ext::make_shared<IntradayPowerLoadConvention>();
     } else {
         QL_FAIL("Convention '" << id << "' has unknown type '" + type + "' not recognized.");
     }
@@ -3060,6 +3079,33 @@ void Conventions::add(const QuantLib::ext::shared_ptr<Convention>& convention) c
     data_[id] = convention;
 }
 
+void IntradayPowerLoadConvention::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "IntradayPowerLoad");
+    type_ = Type::IntradayPowerLoad;
+    id_ = XMLUtils::getChildValue(node, "Id", true);
+
+    // Parse the PowerLoadProfileData from the XML node
+    XMLNode* dataNode = XMLUtils::getChildNode(node, "PowerLoadProfileData");
+    if (dataNode) {
+        data_.fromXML(dataNode);
+    }
+    build();
+}
+
+XMLNode* IntradayPowerLoadConvention::toXML(XMLDocument& doc) const {
+    XMLNode* node = doc.allocNode("IntradayPowerLoad");
+    XMLUtils::addChild(doc, node, "Id", id_);
+
+    XMLNode* dataNode = data_.toXML(doc);
+    XMLUtils::appendNode(node, dataNode);
+
+    return node;
+}
+
+void IntradayPowerLoadConvention::build() {
+    // No additional building needed, PowerLoadProfileData is already built
+}
+
 std::ostream& operator<<(std::ostream& out, Convention::Type type) {
     switch (type) {
     case Convention::Type::Zero:
@@ -3114,6 +3160,8 @@ std::ostream& operator<<(std::ostream& out, Convention::Type type) {
         return out << "FxOptionTimeWeighting";        
     case Convention::Type::BondYield:
         return out << "BondYield";
+    case Convention::Type::IntradayPowerLoad:
+        return out << "IntradayPowerLoad";
     default:
         return out << "unknown convention type (" << static_cast<int>(type) << ")";
     }

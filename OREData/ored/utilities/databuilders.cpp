@@ -105,6 +105,7 @@
 #include <ored/portfolio/builders/fxtouchoption.hpp>
 #include <ored/portfolio/builders/indexcreditdefaultswap.hpp>
 #include <ored/portfolio/builders/indexcreditdefaultswapoption.hpp>
+#include <ored/portfolio/builders/intradaypowerforward.hpp>
 #include <ored/portfolio/builders/pairwisevarianceswap.hpp>
 #include <ored/portfolio/builders/quantoequityoption.hpp>
 #include <ored/portfolio/builders/quantovanillaoption.hpp>
@@ -165,6 +166,7 @@
 #include <ored/portfolio/formulabasedlegbuilder.hpp>
 #include <ored/portfolio/formulabasedlegdata.hpp>
 #include <ored/portfolio/forwardbond.hpp>
+#include <ored/portfolio/forwardvolatilityagreement.hpp>
 #include <ored/portfolio/forwardrateagreement.hpp>
 #include <ored/portfolio/fxaverageforward.hpp>
 #include <ored/portfolio/fxbarrieroption.hpp>
@@ -185,6 +187,7 @@
 #include <ored/portfolio/indexing.hpp>
 #include <ored/portfolio/inflationswap.hpp>
 #include <ored/portfolio/instrumentwrapper.hpp>
+#include <ored/portfolio/intradaypowerforward.hpp>
 #include <ored/portfolio/legbuilders.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/legdatafactory.hpp>
@@ -260,6 +263,7 @@ void dataBuilders() {
     ORE_REGISTER_LEG_DATA("DurationAdjustedCMS", DurationAdjustedCmsLegData, false)
     ORE_REGISTER_LEG_DATA("EquityMargin", EquityMarginLegData, false)
     ORE_REGISTER_LEG_DATA("FormulaBased", FormulaBasedLegData, false)
+    ORE_REGISTER_LEG_DATA("IntradayPowerFloating", IntradayPowerFloatingLegData, false)
     ORE_REGISTER_LEG_DATA("RangeAccrual", RangeAccrualLegData, false)
 
     ORE_REGISTER_CALIBRATION_INSTRUMENT("CpiCapFloor", CpiCapFloor, false)
@@ -295,6 +299,9 @@ void dataBuilders() {
     ORE_REGISTER_TRADE_BUILDER("CommoditySwaption", CommoditySwaption, false)
     ORE_REGISTER_TRADE_BUILDER("FxDigitalBarrierOption", FxDigitalBarrierOption, false)
     ORE_REGISTER_TRADE_BUILDER("ForwardRateAgreement", ForwardRateAgreement, false)
+    ORE_REGISTER_TRADE_BUILDER("FxForwardVolatilityAgreement", FxForwardVolatilityAgreement, false)
+    ORE_REGISTER_TRADE_BUILDER("EquityForwardVolatilityAgreement", EquityForwardVolatilityAgreement, false)
+    ORE_REGISTER_TRADE_BUILDER("CommodityForwardVolatilityAgreement", CommodityForwardVolatilityAgreement, false)
     ORE_REGISTER_TRADE_BUILDER("CommodityDigitalAveragePriceOption", CommodityDigitalAveragePriceOption, false)
     ORE_REGISTER_TRADE_BUILDER("CommoditySwap", CommoditySwap, false)
     ORE_REGISTER_TRADE_BUILDER("EquitySwap", EquitySwap, false)
@@ -398,6 +405,7 @@ void dataBuilders() {
     ORE_REGISTER_TRADE_BUILDER("EquityStrikeResettableOption", EquityStrikeResettableOption, false)
     ORE_REGISTER_TRADE_BUILDER("FxStrikeResettableOption", FxStrikeResettableOption, false)
     ORE_REGISTER_TRADE_BUILDER("CommodityStrikeResettableOption", CommodityStrikeResettableOption, false)
+    ORE_REGISTER_TRADE_BUILDER("IntradayPowerForward", IntradayPowerForward, false)
 
     ORE_REGISTER_TRADE_BUILDER("BalanceGuaranteedSwap", BalanceGuaranteedSwap, false)
     ORE_REGISTER_TRADE_BUILDER("CallableSwap", CallableSwap, false)
@@ -422,6 +430,7 @@ void dataBuilders() {
     ORE_REGISTER_LEGBUILDER("EquityMarginLegBuilder", EquityMarginLegBuilder, false)
     ORE_REGISTER_LEGBUILDER("FormulaBasedLegBuilder", FormulaBasedLegBuilder, false)
     ORE_REGISTER_LEGBUILDER("RangeAccrualLegBuilder", RangeAccrualLegBuilder, false)
+    ORE_REGISTER_LEGBUILDER("IntradayPowerFloatingLegBuilder", IntradayPowerFloatingLegBuilder, false)
 
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcCurrencySwapEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(AmcSwaptionEngineBuilder, false)
@@ -435,6 +444,7 @@ void dataBuilders() {
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcEquityForwardEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(ScriptedTradeEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(CallableBondCamAmcEngineBuilder, false)
+    ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcRiskParticipationAgreementEngineBuilder, false)
 
     ORE_REGISTER_AMCCG_ENGINE_BUILDER(AmcCgCurrencySwapEngineBuilder, false)
     ORE_REGISTER_AMCCG_ENGINE_BUILDER(AmcCgSwaptionEngineBuilder, false)
@@ -602,6 +612,8 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(BondFutureEuropeanOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(BondFutureAmericanFDOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(BondFutureAmericanBAWOptionEngineBuilder, false)
+
+    ORE_REGISTER_ENGINE_BUILDER(IntradayPowerForwardEngineBuilder, false)
 
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("Bond", BondTrsUnderlyingBuilder, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("BondFuture", BondFutureTrsUnderlyingBuilder, false)

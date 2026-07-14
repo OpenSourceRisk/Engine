@@ -128,7 +128,7 @@
           }
         ]
       },
-      "simm_sensitivity_config\\.csv": {
+      ".*sensitivity_config\\.csv": {
         "keys": [
           "Key"
         ],
@@ -1341,6 +1341,44 @@
               "Base XVA",
               "Delta",
               "Gamma"
+            ],
+            "abs_tol": 0.01,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "stress_sensitivity.*\\.csv": {
+        "keys": [
+          "Scenario",
+          "TradeId",
+          "IsPar",
+          "Factor_1",
+          "ShiftSize_1",
+          "Factor_2",
+          "ShiftSize_2",
+          "Currency"
+        ],
+        "use_cols": [
+          "Base NPV",
+          "Delta",
+          "Gamma"
+        ],
+        "optional_cols": [
+          "Currency(Trade)",
+          "Base NPV(Trade)",
+          "Delta(Trade)",
+          "Gamma(Trade)"
+        ],
+        "require_equal_optional_cols": false,
+        "column_settings": [
+          {
+            "names": [
+              "Base NPV",
+              "Delta",
+              "Gamma",
+              "Base NPV(Trade)",
+              "Delta(Trade)",
+              "Gamma(Trade)"
             ],
             "abs_tol": 0.01,
             "rel_tol": 1e-12

@@ -79,9 +79,9 @@ void FdGaussianCam::performCalculations() const {
 
     // build solver
 
-    solver_ = std::unique_ptr<LgmBackwardSolver>(
-        new LgmFdSolver(cam_->lgm(0), timeFromReference(*simulationDates_.rbegin()), QuantLib::FdmSchemeDesc::Douglas(),
-                        stateGridPoints_, timeStepsPerYear_, params_.mesherEpsilon));
+    solver_ = std::unique_ptr<LgmBackwardSolver>(new LgmFdSolver(
+        Handle<LGM>(cam_->lgm(0)), timeFromReference(*simulationDates_.rbegin()), QuantLib::FdmSchemeDesc::Douglas(),
+        stateGridPoints_, timeStepsPerYear_, params_.mesherEpsilon));
 
     // set up eff sim dates
 

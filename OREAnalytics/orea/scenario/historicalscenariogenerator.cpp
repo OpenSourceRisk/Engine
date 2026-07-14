@@ -38,11 +38,13 @@ HistoricalScenarioGenerator::HistoricalScenarioGenerator(
     const QuantLib::ext::shared_ptr<ScenarioFactory>& scenarioFactory,
     const QuantLib::ext::shared_ptr<ReturnConfiguration>& returnConfiguration, const QuantLib::Calendar& cal,
     const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors, const Size mporDays,
-    const bool overlapping, const std::string& labelPrefix, const bool generateDifferenceScenarios, const bool riskFactorBreakdown)
+    const bool overlapping, const std::string& labelPrefix, const bool generateDifferenceScenarios,
+    const bool riskFactorBreakdown, const bool includeTheta)
     : i_(0), historicalScenarioLoader_(historicalScenarioLoader), scenarioFactory_(scenarioFactory), cal_(cal),
       mporDays_(mporDays), adjFactors_(adjFactors), overlapping_(overlapping),
       returnConfiguration_(returnConfiguration), labelPrefix_(labelPrefix),
-      generateDifferenceScenarios_(generateDifferenceScenarios), riskFactorBreakdown_(riskFactorBreakdown) {
+      generateDifferenceScenarios_(generateDifferenceScenarios), riskFactorBreakdown_(riskFactorBreakdown),
+      includeTheta_(includeTheta) {
 
     QL_REQUIRE(mporDays > 0, "Invalid mpor days of 0");
     QL_REQUIRE(historicalScenarioLoader_->numScenarios() > 1,
@@ -143,8 +145,9 @@ QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGenerator::next(const Date
     QuantLib::ext::shared_ptr<Scenario> s2 = scens.second;
 
     // build the scenarios
-    QL_REQUIRE(d >= baseScenario_->asof(), "Cannot generate a scenario in the past");
-    QuantLib::ext::shared_ptr<Scenario> scen = scenarioFactory_->buildScenario(d, !generateDifferenceScenarios_, false, std::string(), 1.0);
+    Date scenarioDate = includeTheta_ ? cal_.advance(d, mporDays_ * Days, Following) : d;
+    QuantLib::ext::shared_ptr<Scenario> scen =
+        scenarioFactory_->buildScenario(scenarioDate, !generateDifferenceScenarios_, false, std::string(), 1.0);
 
     // loop over one key or all keys
     calcDetailsCounter_ = 0;
@@ -449,12 +452,14 @@ QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGenerator::nextKey(const D
     return scen;
 }
 
-QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGenerator(
-    const QuantLib::ext::shared_ptr<ScenarioReader>& hsr,
-    const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors, const TimePeriod& period,
-    Calendar calendar, Size mporDays, const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParams,
-    const QuantLib::ext::shared_ptr<TodaysMarketParameters>& marketParams,
-    const QuantLib::ext::shared_ptr<ReturnConfiguration>& returnConfiguration, const bool overlapping, const bool riskFactorKey) {
+QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>
+buildHistoricalScenarioGenerator(const QuantLib::ext::shared_ptr<ScenarioReader>& hsr,
+                                 const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors,
+                                 const TimePeriod& period, Calendar calendar, Size mporDays,
+                                 const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParams,
+                                 const QuantLib::ext::shared_ptr<TodaysMarketParameters>& marketParams,
+                                 const QuantLib::ext::shared_ptr<ReturnConfiguration>& returnConfiguration,
+                                 const bool overlapping, const bool riskFactorKey, const bool includeTheta) {
 
     hsr->load(simParams, marketParams);
     QuantLib::ext::shared_ptr<SimpleScenarioFactory> scenarioFactory;
@@ -468,10 +473,10 @@ QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGe
                                                              period.endDates().back(), calendar);
     // Create the historical scenario generator
     // Propagate risk factor breakdown to the generator; use absolute scenarios by default
-    return QuantLib::ext::make_shared<HistoricalScenarioGenerator>(scenarioLoader, scenarioFactory, returnConfiguration,
-                                                                   calendar, adjFactors, mporDays, overlapping, "hs_",
-                                                                   false, /* generateDifferenceScenarios */
-                                                                   riskFactorKey /* treat flag as risk factor breakdown */);
+    return QuantLib::ext::make_shared<HistoricalScenarioGenerator>(
+        scenarioLoader, scenarioFactory, returnConfiguration, calendar, adjFactors, mporDays, overlapping, "hs_",
+        false, /* generateDifferenceScenarios */
+        riskFactorKey /* treat flag as risk factor breakdown */, includeTheta);
 }
 
 QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>

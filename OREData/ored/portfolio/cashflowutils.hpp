@@ -105,5 +105,11 @@ void populateReportDataFromAdditionalResults(
     const QuantLib::Handle<QuantLib::YieldTermStructure>& specificDiscountCurve, const std::string& configuration,
     const bool includePastCashflows);
 
+// get the aggregated trade flows paid in [d0, d1], converted to baseCurrency using the given market and market configuration
+Real getAggregateTradeFlows(const Date& d0, const Date& d1,
+                            const std::vector<ore::data::TradeCashflowReportData>& cashflows,
+                            const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+                            const std::string& configuration, const std::string& baseCurrency);
+
 } // namespace data
 } // namespace ore

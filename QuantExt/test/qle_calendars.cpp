@@ -297,11 +297,11 @@ BOOST_AUTO_TEST_CASE(testIsraelTelAviv) {
 
     BOOST_TEST_MESSAGE("Testing Israel TelAviv weekends");
 
-    Calendar c = QuantLib::Israel(QuantLib::Israel::Settlement);
+    Calendar c = QuantLib::Israel(QuantLib::Israel::TASE);
 
-    BOOST_CHECK(c.isWeekend(Friday));
+    BOOST_CHECK(!c.isWeekend(Friday));
     BOOST_CHECK(c.isWeekend(Saturday));
-    BOOST_CHECK(!c.isWeekend(Sunday));
+    BOOST_CHECK(c.isWeekend(Sunday));
 }
 
 BOOST_AUTO_TEST_CASE(testAustrianCalendar) {

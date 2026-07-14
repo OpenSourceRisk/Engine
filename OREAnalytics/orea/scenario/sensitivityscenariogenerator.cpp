@@ -23,10 +23,12 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 
+#include <qle/termstructures/swaptionvolconstantspread.hpp>
+#include <qle/utilities/time.hpp>
+
 #include <ql/math/comparison.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <qle/termstructures/swaptionvolconstantspread.hpp>
 
 #include <algorithm>
 #include <ostream>
@@ -92,10 +94,6 @@ bool vectorSubset(const vector<Real>& v_1, const vector<Real>& v_2) {
 
 void SensitivityScenarioGenerator::generateScenarios() {
     Date asof = baseScenario_->asof();
-
-    QL_REQUIRE(sensitivityData_->crossGammaFilter().empty() || sensitivityData_->computeGamma(),
-               "SensitivityScenarioGenerator::generateScenarios(): if gamma computation is disabled, the cross gamma "
-               "filter must be empty");
 
     generateDiscountCurveScenarios(true);
     generateDiscountCurveScenarios(false);
@@ -180,6 +178,11 @@ void SensitivityScenarioGenerator::generateScenarios() {
         generateCommodityCurveScenarios(false);
     }
 
+    if (simMarketData_->intradayPowerCurveSimulate()) {
+        generateIntradayPowerCurveScenarios(true);
+        generateIntradayPowerCurveScenarios(false);
+    }
+
     if (simMarketData_->commodityVolSimulate()) {
         generateCommodityVolScenarios(true);
         generateCommodityVolScenarios(false);
@@ -215,46 +218,66 @@ void SensitivityScenarioGenerator::generateScenarios() {
 
     // add simultaneous up-moves in two risk factors for cross gamma calculation
 
-    for (Size i = 0; i < scenarios_.size(); ++i) {
-        ScenarioDescription iDesc = scenarioDescriptions_[i];
-        if (iDesc.type() != ScenarioDescription::Type::Up)
-            continue;
-        string iKeyName = iDesc.keyName1();
-
-        // check if iKey matches filter
-        if (find_if(sensitivityData_->crossGammaFilter().begin(), sensitivityData_->crossGammaFilter().end(),
-                    findFactor(iKeyName)) == sensitivityData_->crossGammaFilter().end())
-            continue;
-
-        for (Size j = i + 1; j < scenarios_.size(); ++j) {
-            ScenarioDescription jDesc = scenarioDescriptions_[j];
-            if (jDesc.type() != ScenarioDescription::Type::Up)
+    if (sensitivityData_->computeGamma()) {
+        for (Size i = 0; i < scenarios_.size(); ++i) {
+            ScenarioDescription iDesc = scenarioDescriptions_[i];
+            if (iDesc.type() != ScenarioDescription::Type::Up)
                 continue;
-            string jKeyName = jDesc.keyName1();
+            string iKeyName = iDesc.keyName1();
 
-            // check if jKey matches filter
+            // check if iKey matches filter
             if (find_if(sensitivityData_->crossGammaFilter().begin(), sensitivityData_->crossGammaFilter().end(),
-                        findPair(iKeyName, jKeyName)) == sensitivityData_->crossGammaFilter().end())
+                        findFactor(iKeyName)) == sensitivityData_->crossGammaFilter().end())
                 continue;
 
-            // build cross scenario
-            QuantLib::ext::shared_ptr<Scenario> crossScenario =
-                sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
+            for (Size j = i + 1; j < scenarios_.size(); ++j) {
+                ScenarioDescription jDesc = scenarioDescriptions_[j];
+                if (jDesc.type() != ScenarioDescription::Type::Up)
+                    continue;
+                string jKeyName = jDesc.keyName1();
 
-            for (auto const& k : baseScenario_->keys()) {
-                Real v1 = scenarios_[i]->get(k);
-                Real v2 = scenarios_[j]->get(k);
-                Real b = baseScenario_->get(k);
-                if (!close_enough(v1, b) || !close_enough(v2, b))
-                    // this is correct for both absolute and relative shifts
-                    crossScenario->add(k, v1 + v2 - b);
+                // check if jKey matches filter
+                if (find_if(sensitivityData_->crossGammaFilter().begin(), sensitivityData_->crossGammaFilter().end(),
+                            findPair(iKeyName, jKeyName)) == sensitivityData_->crossGammaFilter().end())
+                    continue;
+
+                // build cross scenario
+                QuantLib::ext::shared_ptr<Scenario> crossScenario =
+                    sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
+
+                for (auto const& k : baseScenario_->keys()) {
+                    Real v1 = scenarios_[i]->get(k);
+                    Real v2 = scenarios_[j]->get(k);
+                    Real b = baseScenario_->get(k);
+                    if (!close_enough(v1, b) || !close_enough(v2, b))
+                        // this is correct for both absolute and relative shifts
+                        crossScenario->add(k, v1 + v2 - b);
+                }
+
+                scenarioDescriptions_.push_back(ScenarioDescription(iDesc, jDesc));
+                crossScenario->label(to_string(scenarioDescriptions_.back()));
+                scenarios_.push_back(crossScenario);
+                DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << crossScenario->label()
+                                               << " created");
             }
-
-            scenarioDescriptions_.push_back(ScenarioDescription(iDesc, jDesc));
-            crossScenario->label(to_string(scenarioDescriptions_.back()));
-            scenarios_.push_back(crossScenario);
-            DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << crossScenario->label() << " created");
         }
+    }
+
+    // add theta scenario, if enabled
+
+    if (sensitivityData_->thetaPeriod() != Period()) {
+        auto thetaScenario = sensiScenarioFactory_->buildScenario(asof + sensitivityData_->thetaPeriod(),
+                                                                  !sensitivityData_->useSpreadedTermStructures());
+        for (auto const& k : baseScenario_->keys()) {
+            thetaScenario->add(k, baseScenario_->get(k));
+        }
+        scenarioDescriptions_.push_back(ScenarioDescription(ScenarioDescription::Type::Theta,
+                                                            RiskFactorKey(RiskFactorKey::KeyType::Theta, std::string()),
+                                                            to_string(sensitivityData_->thetaPeriod())));
+        thetaScenario->label(to_string(scenarioDescriptions_.back()));
+        scenarios_.push_back(thetaScenario);
+        shiftSizes_[RiskFactorKey(RiskFactorKey::KeyType::Theta, std::string())] =
+            QuantExt::periodToTime(sensitivityData_->thetaPeriod());
     }
 
     LOG("sensitivity scenario generator finished generating scenarios.");
@@ -277,25 +300,25 @@ bool tryGetBaseScenarioValue(const QuantLib::ext::shared_ptr<Scenario> baseScena
 }
 } // namespace
 
-ShiftType SensitivityScenarioGenerator::getShiftType(SensitivityScenarioData::ShiftData& data) const {
+ShiftType SensitivityScenarioGenerator::getShiftType(const SensitivityScenarioData::ShiftData& data) const {
     if (auto it = data.keyedShiftType.find(sensitivityTemplate_); it != data.keyedShiftType.end())
         return it->second;
     return data.shiftType;
 }
 
-Real SensitivityScenarioGenerator::getShiftSize(SensitivityScenarioData::ShiftData& data) const {
+Real SensitivityScenarioGenerator::getShiftSize(const SensitivityScenarioData::ShiftData& data) const {
     if (auto it = data.keyedShiftSize.find(sensitivityTemplate_); it != data.keyedShiftSize.end())
         return it->second;
     return data.shiftSize;
 }
 
-ShiftScheme SensitivityScenarioGenerator::getShiftScheme(SensitivityScenarioData::ShiftData& data) const {
+ShiftScheme SensitivityScenarioGenerator::getShiftScheme(const SensitivityScenarioData::ShiftData& data) const {
     if (auto it = data.keyedShiftScheme.find(sensitivityTemplate_); it != data.keyedShiftScheme.end())
         return it->second;
     return data.shiftScheme;
 }
 
-bool SensitivityScenarioGenerator::isScenarioRelevant(bool up, SensitivityScenarioData::ShiftData& data) const {
+bool SensitivityScenarioGenerator::isScenarioRelevant(bool up, const SensitivityScenarioData::ShiftData& data) const {
     ShiftScheme scheme = getShiftScheme(data);
     return sensitivityData_->computeGamma() || (up && (scheme == ShiftScheme::Forward)) ||
            (!up && scheme == ShiftScheme::Backward) || scheme == ShiftScheme::Central;
@@ -309,7 +332,9 @@ void SensitivityScenarioGenerator::storeShiftData(const RiskFactorKey& key, cons
 }
 
 void SensitivityScenarioGenerator::generateFxScenarios(bool up) {
-    Date asof = baseScenario_->asof();
+
+    const auto& fxShiftData = sensitivityData_->fxShiftData();
+
     // We can choose to shift fewer FX risk factors than listed in the market
     // Is this too strict?
     // - implemented to avoid cases where input cross FX rates are not consistent
@@ -321,49 +346,101 @@ void SensitivityScenarioGenerator::generateFxScenarios(bool up) {
     // - (a) the value of the trade changes
     // - (b) the value of the GBPUSD trade stays the same
     // - in light of the above we restrict the universe of FX pairs that we support here for the time being
-    string baseCcy = simMarketData_->baseCcy();
-    for (auto sensi_fx : sensitivityData_->fxShiftData()) {
-        string foreign = sensi_fx.first.substr(0, 3);
-        string domestic = sensi_fx.first.substr(3);
-        QL_REQUIRE((domestic == baseCcy) || (foreign == baseCcy),
-                   "SensitivityScenarioGenerator does not support cross FX pairs("
-                       << sensi_fx.first << ", but base currency is " << baseCcy << ")");
+    const string& baseCcy = simMarketData_->baseCcy();
+    map<string, pair<string, string>> ccyPairToCcy;
+    for (const auto& [ccyPair, _] : fxShiftData) {
+        string foreign = ccyPair.substr(0, 3);
+        string domestic = ccyPair.substr(3);
+        ccyPairToCcy[ccyPair] = {foreign, domestic};
+        QL_REQUIRE((domestic == baseCcy) || (foreign == baseCcy), "SensitivityScenarioGenerator does not support "
+            "cross FX pairs(" << ccyPair << ", but base currency is " << baseCcy << ")");
     }
+
     // Log an ALERT if some currencies in simmarket are excluded from the list
-    for (auto sim_fx : simMarketData_->fxCcyPairs()) {
-        if (sensitivityData_->fxShiftData().find(sim_fx) == sensitivityData_->fxShiftData().end()) {
-            WLOG("FX pair " << sim_fx << " in simmarket is not included in sensitivities analysis");
-        }
+    for (const auto& simCcyPair : simMarketData_->fxCcyPairs()) {
+        if (fxShiftData.find(simCcyPair) == fxShiftData.end())
+            WLOG("FX pair " << simCcyPair << " in sim market is not included in sensitivities analysis");
     }
-    for (auto sensi_fx : sensitivityData_->fxShiftData()) {
-        string ccypair = sensi_fx.first; // foreign + domestic;
-        SensitivityScenarioData::SpotShiftData data = *sensi_fx.second;
-        if (!isScenarioRelevant(up, data))
+
+    Date asof = baseScenario_->asof();
+    for (const auto& [ccyPair, fxShiftDatumPtr] : fxShiftData) {
+        // ccyPair is foreign + domestic
+        // For example, USDEUR would imply number of units of EUR (domestic) per unit of USD (foreign).
+        const auto& fxShiftDatum = *fxShiftDatumPtr;
+        if (!isScenarioRelevant(up, fxShiftDatum))
             continue;
-        ShiftType type = getShiftType(data);
-        Real size = (up ? 1.0 : -1.0) * getShiftSize(data);
-        bool relShift = (type == ShiftType::Relative);
 
-        Real rate;
-        Real offset;
-        RiskFactorKey key(RiskFactorKey::KeyType::FXSpot, ccypair);
-        if (!tryGetBaseScenarioValue(baseScenarioAbsolute_, key, rate, continueOnError_))
-            continue;
-        if (!tryGetBaseScenarioValue(baseScenario_, key, offset, continueOnError_))
-            continue;
-        QuantLib::ext::shared_ptr<Scenario> scenario =
-            sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
+        RiskFactorKey key(RiskFactorKey::KeyType::FXSpot, ccyPair);
+        // If FX scenario is specified using currency pair in scenario, everything is fine. For example, the shifts 
+        // in `data` are given as `USDEUR`, `GBPEUR`, etc. and this matches the scenario FX keys i.e. they are also 
+        // `USDEUR`, `GBPEUR`, etc.
+        // However, want to support the case where the shifts in `data` are specified using the inverse currency pair, 
+        // e.g. `USDEUR` is provided in `data` but the scenario FX key is `EURUSD`. In this case, we need to check if 
+        // the inverse pair is present in the scenario. We then use `usingInverse` below to apply the shift on 
+        // `USDEUR` while keeping the scenario key as `EURUSD`.
+        string inversePair = ccyPairToCcy.at(ccyPair).second + ccyPairToCcy.at(ccyPair).first;
+        RiskFactorKey inverseKey(RiskFactorKey::KeyType::FXSpot, inversePair);
 
-        Real newRate = relShift ? rate * (1.0 + size) : (rate + size);
-        scenario->add(key, sensitivityData_->useSpreadedTermStructures() ? newRate / rate * offset : newRate);
-        storeShiftData(key, rate, newRate);
+        // Check that `key` or `inverseKey` is in both base scenarios.
+        auto checkScenarioHasKey = [&](const auto& scenario, const std::string& scenarioName) {
+            if (!scenario->has(key) && !scenario->has(inverseKey)) {
+                if (continueOnError_) {
+                    ALOG("SensitivityScenarioGenerator: skip scenario generation for key "
+                        << key << " since it does not exist in the " << scenarioName);
+                } else {
+                    QL_FAIL("SensitivityScenarioGenerator: key " << key << " does not exist in the " << scenarioName);
+                }
+            }
+        };
+        checkScenarioHasKey(baseScenarioAbsolute_, "absolute base scenario");
+        checkScenarioHasKey(baseScenario_, "base scenario");
 
+        // If base scenario contains the inverse pair, we need to update the shifts below.
+        bool usingInverse = !baseScenarioAbsolute_->has(key) && baseScenarioAbsolute_->has(inverseKey);
 
+        // `scenRate` is in the units of the pair in the scenario keys. For example, if `USDEUR` is in the scenario
+        // keys, then `scenRate` is in units of EUR per USD.
+        Real scenRate = usingInverse ? baseScenarioAbsolute_->get(inverseKey) : baseScenarioAbsolute_->get(key);
+
+        // `baseRate` and `shiftedRate` are in the units of the shift `data`. For example, `USDEUR` could be in the 
+        // scenario keys but `USDEUR` or `EURUSD` can be in the shift `data`.
+        Real baseRate = usingInverse ? 1 / scenRate : scenRate;
+        Real shiftedRate;
+        // const auto& fxShiftDatum = *fxShiftDatumPtr;
+        ShiftType shiftType = getShiftType(fxShiftDatum);
+        Real shiftSize = (up ? 1.0 : -1.0) * getShiftSize(fxShiftDatum);
+        if (shiftType == ShiftType::Relative) {
+            shiftedRate = baseRate * (1.0 + shiftSize);
+        } else if (shiftType == ShiftType::Absolute) {
+            shiftedRate = baseRate + shiftSize;
+        } else {
+            QL_FAIL("SensitivityScenarioGenerator::generateFxScenarios: unexpected shift type provided.");
+        }
+
+        // Switch back to the units of the pair in the scenario keys, if necessary.
+        Real scenShiftedRate = usingInverse ? 1 / shiftedRate : shiftedRate;
+
+        // Create the scenario and add the relevant key and shift.
+        auto scenario = sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
+        RiskFactorKey scenKey = usingInverse ? inverseKey : key;
+        if (sensitivityData_->useSpreadedTermStructures()) {
+            Real scenOffset = usingInverse ? baseScenario_->get(inverseKey) : baseScenario_->get(key);
+            scenario->add(scenKey, scenShiftedRate / scenRate * scenOffset);
+        } else {
+            scenario->add(scenKey, scenShiftedRate);
+        }
         scenarios_.push_back(scenario);
-        scenarioDescriptions_.push_back(fxScenarioDescription(ccypair, up, getShiftScheme(data)));
-        scenario->label(to_string(scenarioDescriptions_.back()));
-        DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label()
-                                       << " created: " << newRate);
+        storeShiftData(scenKey, scenRate, scenShiftedRate);
+
+        // Scenario description. Need to be careful if using the inverse pair.
+        string descPair = usingInverse ? inversePair : ccyPair;
+        bool dir = usingInverse ? !up : up;
+        auto desc = fxScenarioDescription(descPair, dir, getShiftScheme(fxShiftDatum));
+        scenarioDescriptions_.push_back(desc);
+        scenario->label(to_string(desc));
+
+        DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() <<
+            " created: " << scenShiftedRate);
     }
     DLOG("FX scenarios done");
 }
@@ -2322,6 +2399,101 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
     DLOG("Commodity curve scenarios done");
 }
 
+void SensitivityScenarioGenerator::generateIntradayPowerCurveScenarios(bool up) {
+
+    Date asof = baseScenario_->asof();
+
+    for (const string& name : simMarketData_->intradayPowerCurveNames()) {
+        if (sensitivityData_->intradayPowerCurveShiftData().find(name) ==
+            sensitivityData_->intradayPowerCurveShiftData().end()) {
+            ALOG("Intraday power curve " << name
+                                         << " in simulation market is not "
+                                            "included in intraday power sensitivity analysis");
+        }
+    }
+
+    for (const auto& c : sensitivityData_->intradayPowerCurveShiftData()) {
+        string name = c.first;
+
+        vector<Period> simMarketTenors;
+        try {
+            simMarketTenors = simMarketData_->intradayPowerCurveTenors(name);
+        } catch (const std::exception& e) {
+            ALOG("skip scenario generation for intraday power curve " << name << ": " << e.what());
+            continue;
+        }
+
+        DayCounter dc = Actual365Fixed();
+        try {
+            if (auto s = simMarket_.lock()) {
+                dc = s->intradayPowerPriceCurve(name)->dayCounter();
+            } else {
+                QL_FAIL("Internal error: could not lock simMarket. Contact dev.");
+            }
+        } catch (const std::exception&) {
+            WLOG("Day counter lookup in simulation market failed for intraday power price curve " << name
+                                                                                                     << ", using default A365");
+        }
+
+        vector<Real> times(simMarketTenors.size());
+        vector<Real> basePrices(times.size());
+        vector<Real> shiftedPrices(times.size());
+        vector<Real> offsets(times.size());
+
+        bool valid = true;
+        for (Size j = 0; j < times.size(); ++j) {
+            times[j] = dc.yearFraction(asof, asof + simMarketTenors[j]);
+            RiskFactorKey key(RiskFactorKey::KeyType::IntradayPowerCurve, name, j);
+            valid = valid && tryGetBaseScenarioValue(baseScenarioAbsolute_, key, basePrices[j], continueOnError_);
+            valid = valid && tryGetBaseScenarioValue(baseScenario_, key, offsets[j], continueOnError_);
+        }
+        if (!valid)
+            continue;
+
+        SensitivityScenarioData::IntradayPowerShiftData data = *c.second;
+        if (!isScenarioRelevant(up, data))
+            continue;
+        ShiftType shiftType = getShiftType(data);
+        Real shiftSize = getShiftSize(data);
+
+        QL_REQUIRE(!data.shiftTenors.empty(), "Intraday power curve shift tenors have not been given");
+        vector<Time> shiftTimes(data.shiftTenors.size());
+        for (Size j = 0; j < data.shiftTenors.size(); ++j) {
+            shiftTimes[j] = dc.yearFraction(asof, asof + data.shiftTenors[j]);
+        }
+
+        bool validShiftSize = vectorSubset(times, shiftTimes);
+
+        for (Size j = 0; j < data.shiftTenors.size(); ++j) {
+
+            QuantLib::ext::shared_ptr<Scenario> scenario =
+                sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
+
+            applyShift(j, shiftSize, up, shiftType, shiftTimes, basePrices, times, shiftedPrices, true);
+
+            for (Size k = 0; k < times.size(); ++k) {
+                RiskFactorKey key(RFType::IntradayPowerCurve, name, k);
+                if (sensitivityData_->useSpreadedTermStructures()) {
+                    scenario->add(key, shiftedPrices[k] - basePrices[k] + offsets[k]);
+                } else {
+                    scenario->add(key, shiftedPrices[k]);
+                }
+
+                if (validShiftSize && shiftTimes[j] == times[k]) {
+                    RiskFactorKey key(RFType::IntradayPowerCurve, name, j);
+                    storeShiftData(key, basePrices[k], shiftedPrices[k]);
+                }
+            }
+
+            scenarios_.push_back(scenario);
+            scenarioDescriptions_.push_back(intradayPowerCurveScenarioDescription(name, j, up, getShiftScheme(data)));
+            scenario->label(to_string(scenarioDescriptions_.back()));
+            DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
+        }
+    }
+    DLOG("Intraday power curve scenarios done");
+}
+
 void SensitivityScenarioGenerator::generateCommodityVolScenarios(bool up) {
 
     // Log an ALERT if some commodity vol names in simulation market are not in the list
@@ -3076,6 +3248,24 @@ SensitivityScenarioGenerator::commodityCurveScenarioDescription(const string& co
     QL_REQUIRE(bucket < shiftTenors.size(), "bucket " << bucket << " out of commodity curve bucket range");
 
     RiskFactorKey key(RiskFactorKey::KeyType::CommodityCurve, commodityName, bucket);
+    ostringstream oss;
+    oss << shiftTenors[bucket];
+    ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
+    shiftSchemes_[key] = shiftScheme;
+    storeShiftData(key, 0.0, 0.0); // default, only used if not popoulated before
+    return ScenarioDescription(type, key, oss.str());
+}
+
+SensitivityScenarioGenerator::ScenarioDescription
+SensitivityScenarioGenerator::intradayPowerCurveScenarioDescription(const string& curveName, Size bucket, bool up,
+                                                                    ShiftScheme shiftScheme) {
+
+    QL_REQUIRE(sensitivityData_->intradayPowerCurveShiftData().count(curveName) > 0,
+               "Name " << curveName << " not found in intraday power curve shift data");
+    auto& shiftTenors = sensitivityData_->intradayPowerCurveShiftData()[curveName]->shiftTenors;
+    QL_REQUIRE(bucket < shiftTenors.size(), "bucket " << bucket << " out of intraday power curve bucket range");
+
+    RiskFactorKey key(RiskFactorKey::KeyType::IntradayPowerCurve, curveName, bucket);
     ostringstream oss;
     oss << shiftTenors[bucket];
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;

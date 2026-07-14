@@ -92,16 +92,20 @@ BlackScholesCG::BlackScholesCG(
 
     // populate volTimesStrikes, and curve times
 
-    volTimesStrikes_.clear();
-    curveTimes_.clear();
+    volTimesStrikes_ = [this](const TimeGrid&) {
+        return std::vector<std::set<std::pair<Real, Real>>>(indices_.size());
+    };
 
-    volTimesStrikes_.resize(indices_.size());
-    curveTimes_.insert(timeGrid_.begin() + 1, timeGrid_.end());
-    for (auto const& d : addDates_) {
-        if (d > curves_.front()->referenceDate()) {
-            curveTimes_.insert(curves_.front()->timeFromReference(d));
+    curveTimes_ = [this](const TimeGrid&) {
+        std::set<Real> curveTimes;
+        for (auto const& d : addDates_) {
+            if (d > curves_.front()->referenceDate()) {
+                curveTimes.insert(curves_.front()->timeFromReference(d));
+            }
         }
-    }
+        return curveTimes;
+    };
+
 } // BlackScholesBase ctor
 
 namespace {
@@ -289,6 +293,13 @@ struct SqrtCovCalculator : public QuantLib::LazyObject {
 
 } // namespace
 
+const std::function<std::set<Real>(const TimeGrid&)> BlackScholesCG::curveTimes() const { return curveTimes_; }
+
+const std::function<std::vector<std::set<std::pair<Real, Real>>>(const TimeGrid&)>
+BlackScholesCG::volTimesStrikes() const {
+    return volTimesStrikes_;
+};
+
 void BlackScholesCG::setModel(const Handle<AssetModelWrapper>& model) {
     unregisterWith(model_);
     model_ = model;
@@ -300,11 +311,6 @@ void BlackScholesCG::setupDatesAndTimes() const {
     effectiveSimulationDates_ = std::set<Date>(simulationDates_.lower_bound(referenceDate), simulationDates_.end());
     effectiveSimulationDates_.insert(referenceDate);
     timeGrid_ = buildTimeGrid(referenceDate, curves_.front()->dayCounter(), simulationDates_, timeStepsPerYear_);
-}
-
-const Date& BlackScholesCG::referenceDate() const {
-    calculate();
-    return referenceDate_;
 }
 
 void BlackScholesCG::performCalculations() const {
@@ -347,6 +353,8 @@ void BlackScholesCG::performCalculations() const {
 
         underlyingPaths_.clear();
         underlyingPathsCgVersion_ = cgVersion();
+
+        effectiveCalibrationStrikes_.clear();
     }
 
     // nothing to do if we do not have any indices or if underlying paths are populated already
@@ -354,16 +362,26 @@ void BlackScholesCG::performCalculations() const {
     if (indices_.empty() || !underlyingPaths_.empty())
         return;
 
-    // exit if there are no future simulation dates (i.e. only the reference date)
-
-    if (effectiveSimulationDates_.size() == 1)
-        return;
-
     // init underlying path where we map a date to a randomvariable representing the path values
 
     for (auto const& d : effectiveSimulationDates_) {
         underlyingPaths_[d] =
             std::vector<std::size_t>(model_->generalizedBlackScholesProcesses().size(), ComputationGraph::nan);
+    }
+
+    std::vector<std::size_t> logState(indices_.size());
+    for (Size j = 0; j < indices_.size(); ++j) {
+        auto p = model_->generalizedBlackScholesProcesses().at(j);
+        logState[j] =
+            addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::logX0, {}, {}, {}, {}, {}, j),
+                              [p] { return std::log(p->x0()); });
+        underlyingPaths_[*effectiveSimulationDates_.begin()][j] = cg_exp(*g_, logState[j]);
+    }
+
+    // exit if there are no future simulation dates (i.e. only the reference date)
+
+    if (effectiveSimulationDates_.size() == 1) {
+        return;
     }
 
     // determine calibration strikes
@@ -469,15 +487,6 @@ void BlackScholesCG::performCalculations() const {
     }
 
     // evolve the process using correlated normal variates and set the underlying path values
-
-    std::vector<std::size_t> logState(indices_.size());
-    for (Size j = 0; j < indices_.size(); ++j) {
-        auto p = model_->generalizedBlackScholesProcesses().at(j);
-        logState[j] =
-            addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::logX0, {}, {}, {}, {}, {}, j),
-                              [p] { return std::log(p->x0()); });
-        underlyingPaths_[*effectiveSimulationDates_.begin()][j] = cg_exp(*g_, logState[j]);
-    }
 
     date = effectiveSimulationDates_.begin();
     for (Size i = 0; i < effectiveSimulationDates_.size() - 1; ++i) {
@@ -840,6 +849,8 @@ std::size_t BlackScholesCG::getDiscount(const Size idx, const Date& s, const Dat
 std::size_t BlackScholesCG::numeraire(const Date& s, const std::string& currency,
                                       const std::string& localBaseCurrency) const {
 
+    calculate();
+
     QL_REQUIRE(localBaseCurrency.empty() || localBaseCurrency == baseCurrency(),
                "BlackScholesCG::numeraire(): localBaseCurrency ("
                    << localBaseCurrency << ") not allowed, must be empty or equal to global base ccy ("
@@ -888,6 +899,8 @@ std::set<std::size_t> BlackScholesCG::npvRegressors(const Date& obsdate,
                                                     const std::optional<std::set<std::string>>& relevantCurrencies,
                                                     const std::string& localBaseCurrency,
                                                     const std::string& localBaseCurrencyPaths) const {
+
+    calculate();
 
     QL_REQUIRE(localBaseCurrency.empty() || localBaseCurrency == baseCurrency(),
                "BlackScholesCG::npvRegressors: localBaseCurrency ("

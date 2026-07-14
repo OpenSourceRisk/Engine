@@ -1,0 +1,7 @@
+# Jupyter artefacts
+.ipynb_checkpoints/
+
+# Analytics output (regenerated each run)
+Output/*.csv
+Output/*.txt
+Output/*.json

@@ -29,6 +29,7 @@
 #include <qle/cashflows/cappedflooredaveragebmacoupon.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
+#include <qle/cashflows/intradaypowercashflow.hpp>
 #include <qle/cashflows/durationadjustedcmscoupon.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
@@ -258,6 +259,7 @@ TradeCashflowReportData getCashflowReportData(
     auto ptrCommIndAvgCf = ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(ptrFlow);
     auto ptrFxlCf = ext::dynamic_pointer_cast<FXLinkedCashFlow>(ptrFlow);
     auto ptrEqCp = ext::dynamic_pointer_cast<EquityCoupon>(ptrFlow);
+    auto ptrIntradayPowerCf = ext::dynamic_pointer_cast<QuantExt::IntradayPowerCashFlow>(ptrFlow);
 
     Date fixingDate;
     Real fixingValue = Null<Real>();
@@ -335,6 +337,11 @@ TradeCashflowReportData getCashflowReportData(
     } else if (ptrCommCf) {
         fixingDate = ptrCommCf->lastPricingDate();
         fixingValue = ptrCommCf->fixing();
+    } else if (ptrIntradayPowerCf) {
+        fixingDate = ptrIntradayPowerCf->lastPricingDate();
+        fixingValue = ptrIntradayPowerCf->fixing();
+        notional = ptrIntradayPowerCf->periodQuantity();
+        flowType = "Notional (MWh)";
     } else {
         fixingDate = Null<Date>();
         fixingValue = Null<Real>();
@@ -533,6 +540,21 @@ std::vector<TradeCashflowReportData> getCashflowReportData(
         }
     }
     return result;
+}
+
+Real getAggregateTradeFlows(const Date& d0, const Date& d1,
+                            const std::vector<ore::data::TradeCashflowReportData>& cashflows,
+                            const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+                            const std::string& configuration, const std::string& baseCurrency) {
+    Real flow = 0.0;
+    for (const auto& cf : cashflows) {
+        if (cf.payDate <= d0 || cf.payDate > d1)
+            continue;
+        flow +=
+            cf.amount *
+            (cf.currency == baseCurrency ? 1.0 : market->fxRate(cf.currency + baseCurrency, configuration)->value());
+    }
+    return flow;
 }
 
 } // namespace data

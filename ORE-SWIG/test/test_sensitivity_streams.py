@@ -131,6 +131,26 @@ class TestSensitivityInMemoryStream(unittest.TestCase):
         rec = stream.next()
         self.assertEqual(rec.tradeId, "t1")
 
+    def test_iterator_protocol(self):
+        """SensitivityStream supports Python iterator protocol (for-in, next())."""
+        stream = ORE.SensitivityInMemoryStream()
+        stream.add(self._make_record("t1", 1.0))
+        stream.add(self._make_record("t2", 2.0))
+
+        records = [r.tradeId for r in stream]
+        self.assertEqual(records, ["t1", "t2"])
+
+    def test_read_all(self):
+        """readAll() returns all records in a list."""
+        stream = ORE.SensitivityInMemoryStream()
+        stream.add(self._make_record("t1", 1.0))
+        stream.add(self._make_record("t2", 2.0))
+
+        records = stream.readAll()
+        self.assertEqual(len(records), 2)
+        self.assertEqual(records[0].tradeId, "t1")
+        self.assertEqual(records[1].tradeId, "t2")
+
 
 class TestSensitivityBufferStream(unittest.TestCase):
     """Tests for SensitivityBufferStream (in-memory CSV parsing)."""
@@ -349,6 +369,29 @@ class TestSensitivityAggregator(unittest.TestCase):
         deltas2, gammas2 = res2.first, res2.second
         self.assertAlmostEqual(deltas2[key1], 1.5)
         self.assertAlmostEqual(deltas2[key2], 2.5)
+
+
+class TestDecomposedSensitivityStream(unittest.TestCase):
+    """Tests for DecomposedSensitivityStream."""
+
+    def test_instantiation(self):
+        """Verify that DecomposedSensitivityStream can be instantiated."""
+        stream = ORE.SensitivityInMemoryStream()
+        portfolio = ORE.Portfolio()
+        decomposed = ORE.DecomposedSensitivityStream(stream, "USD", portfolio)
+        self.assertTrue(hasattr(decomposed, "next"))
+        self.assertTrue(hasattr(decomposed, "reset"))
+
+
+class TestSensitivityReportStream(unittest.TestCase):
+    """Tests for SensitivityReportStream."""
+
+    def test_instantiation(self):
+        """Verify that SensitivityReportStream can be instantiated."""
+        report = ORE.InMemoryReport()
+        report_stream = ORE.SensitivityReportStream(report)
+        self.assertTrue(hasattr(report_stream, "next"))
+        self.assertTrue(hasattr(report_stream, "reset"))
 
 
 if __name__ == "__main__":

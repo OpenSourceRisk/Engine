@@ -1,18 +1,16 @@
 import platform
 import subprocess
 import shutil
-
 import matplotlib
 import os
 import sys
-
 matplotlib.use('Agg')
-
 import matplotlib.pyplot as plt
 import matplotlib.ticker
 import pandas as pd
 from datetime import datetime
 from math import log
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 skip_examples = [
     "Example_54",
@@ -151,8 +149,7 @@ class OreExample(object):
             elif os.path.isfile("/ore/App/ore"):
                 self.ore_exe = "/ore/App/ore"
             else:
-                print_on_console("ORE executable not found.")
-                quit()
+                self.ore_exe = "ore3"
         ore_exe_path = os.path.abspath(self.ore_exe)
         print_on_console("Using ORE executable " + ore_exe_path)
         # Only write details of the ORE exe when running a CI build.
@@ -216,7 +213,7 @@ class OreExample(object):
         yMin = pow(float(yTmp[0]), exponent) / yScale
         for i in range(0, len(xTmp)-1):
             try :
-                tmp = pow(float(yTmp[i]), exponent) / yScale;
+                tmp = pow(float(yTmp[i]), exponent) / yScale
                 y.append(tmp)
                 yMax = max(tmp, yMax)
                 yMin = min(tmp, yMin)
@@ -355,39 +352,94 @@ class OreExample(object):
         print_on_console("Saving plot...." + file)
         plt.close()
 
-    def run(self, xml):
-        if not self.dry:
-            if(self.use_python):
-                if(os.path.isfile(os.path.join(os.pardir, "ore_wrapper.py"))):
-                    res = subprocess.call([sys.executable, os.path.join(os.pardir, "ore_wrapper.py"), xml])
-                elif(os.path.isfile(os.path.join(os.pardir, "..", "ore_wrapper.py"))):
-                    res = subprocess.call([sys.executable, os.path.join(os.pardir, "..", "ore_wrapper.py"), xml])
+    def run(self, xml, timeout=None):
+        if self.dry:
+            return 0
+
+        if timeout is None:
+            timeout = os.getenv("ORE_EXAMPLE_TIMEOUT")
+            timeout = int(timeout) if timeout is not None else None
+
+        if self.use_python:
+            if os.path.isfile(os.path.join(os.pardir, "ore_wrapper.py")):
+                cmd = [sys.executable, os.path.join(os.pardir, "ore_wrapper.py"), xml]
+            elif os.path.isfile(os.path.join(os.pardir, "..", "ore_wrapper.py")):
+                cmd = [sys.executable, os.path.join(os.pardir, "..", "ore_wrapper.py"), xml]
             else:
-                res = subprocess.call([self.ore_exe, xml])
-            if res != 0:
-                raise Exception("Return Code was not Null.")
+                raise RuntimeError("ORE Python wrapper not found.")
+        else:
+            cmd = [self.ore_exe, xml]
+
+        try:
+            completed = subprocess.run(cmd, timeout=timeout, check=False)
+        except subprocess.TimeoutExpired as e:
+            raise RuntimeError(f"ORE timed out after {timeout}s: {' '.join(cmd)}") from e
+
+        if completed.returncode != 0:
+            raise RuntimeError(f"ORE failed with return code {completed.returncode}: {' '.join(cmd)}")
+
+        return completed.returncode
 
     def run_plus(self, xml):
         if not self.dry:
             if subprocess.call([self.ore_plus_exe, xml]) != 0:
                 raise Exception("Return Code was not Null.")
 
-def run_example(example):
+def run_example(example_name, timeout=None):
     current_dir = os.getcwd()
-    print_on_console("Running: " + example)
+    print_on_console(f"Running: {example_name}")
     try:
-        os.chdir(os.path.join(os.getcwd(), example))
-        filename = "run.py"
-        sys.argv = [filename, 0]
-        exit_code = subprocess.call([sys.executable, filename])
-        os.chdir(os.path.dirname(os.getcwd()))
-        print_on_console('-' * 50)
-        print_on_console('')
-    except:
-        print_on_console("Error running " + example)
+        os.chdir(os.path.join(current_dir, example_name))
+        completed = subprocess.run([sys.executable, "run.py"], timeout=timeout, check=False)
+
+        if completed.returncode != 0:
+            raise RuntimeError(f"{example_name}/run.py failed with return code {completed.returncode}")
+
+        return completed.returncode
     finally:
         os.chdir(current_dir)
-    return exit_code
+
+
+def run_script(script_name, timeout=None):
+    if timeout is None:
+        timeout = os.getenv("ORE_EXAMPLE_TIMEOUT")
+        timeout = int(timeout) if timeout is not None else None
+
+    cmd = [sys.executable, script_name]
+    print_on_console("Calling: " + " ".join(cmd))
+
+    completed = subprocess.run(cmd, timeout=timeout, check=False)
+    return completed.returncode
+
+
+def run_scripts(cases, max_parallel=None, timeout=None):
+    if max_parallel is None:
+        max_parallel = int(os.getenv("EXAMPLES_PARALLEL", "1"))
+
+    failed = False
+
+    with ThreadPoolExecutor(max_workers=max_parallel) as executor:
+        futures = {
+            executor.submit(run_script, case, timeout): case
+            for case in cases
+        }
+
+        for future in as_completed(futures):
+            case = futures[future]
+
+            try:
+                result = future.result()
+            except Exception as e:
+                print_on_console(f"{case} failed with exception: {e}")
+                failed = True
+                continue
+
+            print_on_console(f"{case} finished with exit code: {result}")
+
+            if result != 0:
+                failed = True
+
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":

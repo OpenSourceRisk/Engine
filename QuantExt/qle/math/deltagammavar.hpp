@@ -24,8 +24,6 @@
 #ifndef quantext_deltagammavar_hpp
 #define quantext_deltagammavar_hpp
 
-#include <qle/math/covariancesalvage.hpp>
-
 #include <ql/math/comparison.hpp>
 #include <ql/math/array.hpp>
 #include <ql/math/matrix.hpp>
@@ -49,14 +47,14 @@ using namespace QuantLib;
 /*! For a given covariance matrix and a delta vector this function computes a parametric var w.r.t. a given
  * confidence level for multivariate normal risk factors. */
 Real deltaVar(const Matrix& omega, const Array& delta, const Real p,
-              const CovarianceSalvage& sal = NoCovarianceSalvage());
+              const SalvagingAlgorithm::Type sal = SalvagingAlgorithm::Type::None);
 
 //! function that computes a delta-gamma normal VaR
 /*! For a given a covariance matrix, a delta vector and a gamma matrix this function computes a parametric var
  * w.r.t. a given confidence level. The gamma matrix is taken into account when computing the variance of the PL
  * distribution, but the PL distribution is still assumed to be normal. */
 Real deltaGammaVarNormal(const Matrix& omega, const Array& delta, const Matrix& gamma, const Real p,
-                         const CovarianceSalvage& sal = NoCovarianceSalvage());
+                         const SalvagingAlgorithm::Type sal = SalvagingAlgorithm::Type::None);
 
 //! function that computes a delta-gamma VaR using Monte Carlo (single quantile)
 /*! For a given a covariance matrix, a delta vector and a gamma matrix this function computes a parametric var
@@ -64,7 +62,7 @@ Real deltaGammaVarNormal(const Matrix& omega, const Array& delta, const Matrix& 
  * sensitivity based PL. */
 template <class RNG>
 Real deltaGammaVarMc(const Matrix& omega, const Array& delta, const Matrix& gamma, const Real p, const Size paths,
-                     const Size seed, const CovarianceSalvage& sal = NoCovarianceSalvage());
+                     const Size seed, const SalvagingAlgorithm::Type sal = SalvagingAlgorithm::Type::None);
 
 //! function that computes a delta-gamma VaR using Monte Carlo (multiple quantiles)
 /*! For a given a covariance matrix, a delta vector and a gamma matrix this function computes a parametric var
@@ -72,8 +70,8 @@ Real deltaGammaVarMc(const Matrix& omega, const Array& delta, const Matrix& gamm
  * order sensitivity based PL. */
 template <class RNG>
 std::vector<Real> deltaGammaVarMc(const Matrix& omega, const Array& delta, const Matrix& gamma,
-				  const std::vector<Real>& p, const Size paths, const Size seed,
-				  const CovarianceSalvage& sal = NoCovarianceSalvage());
+                                  const std::vector<Real>& p, const Size paths, const Size seed,
+                                  const SalvagingAlgorithm::Type sal = SalvagingAlgorithm::Type::None);
 
 namespace detail {
 void check(const Real p);
@@ -93,10 +91,13 @@ template <typename A> Real absMax(const A& a) {
 
 template <class RNG>
 std::vector<Real> deltaGammaVarMc(const Matrix& omega, const Array& delta, const Matrix& gamma,
-				  const std::vector<Real>& p, const Size paths, const Size seed,
-				  const CovarianceSalvage& sal) {
+                                  const std::vector<Real>& p, const Size paths, const Size seed,
+                                  const SalvagingAlgorithm::Type sal) {
     BOOST_FOREACH (Real q, p) { detail::check(q); }
     detail::check(omega, delta, gamma);
+
+    if (delta.size() == 0)
+        return std::vector<Real>(p.size(), 0.0);
 
     Real num = std::max(detail::absMax(delta), detail::absMax(gamma));
     if (QuantLib::close_enough(num, 0.0)) {
@@ -104,10 +105,7 @@ std::vector<Real> deltaGammaVarMc(const Matrix& omega, const Array& delta, const
         return res;
     }
 
-    Matrix L = sal.salvage(omega).second;
-    if (L.rows() == 0) {
-        L = CholeskyDecomposition(omega, true);
-    }
+    Matrix L = pseudoSqrt(omega, sal);
 
     Real pmin = QL_MAX_REAL;
     BOOST_FOREACH (Real q, p) { pmin = std::min(pmin, q); }
@@ -136,7 +134,7 @@ std::vector<Real> deltaGammaVarMc(const Matrix& omega, const Array& delta, const
 
 template <class RNG>
 Real deltaGammaVarMc(const Matrix& omega, const Array& delta, const Matrix& gamma, const Real p, const Size paths,
-                     const Size seed, const CovarianceSalvage& sal) {
+                     const Size seed, const SalvagingAlgorithm::Type sal) {
 
     std::vector<Real> pv(1, p);
     return deltaGammaVarMc<RNG>(omega, delta, gamma, pv, paths, seed, sal).front();
@@ -144,11 +142,11 @@ Real deltaGammaVarMc(const Matrix& omega, const Array& delta, const Matrix& gamm
 
 /* delta-gamma VaR using Cornish-Fisher extrapolation (or normal delta-gamma VaR) */
 Real deltaGammaVarCornishFisher(const Matrix& omega, const Array& delta, const Matrix& gamma, const Real p,
-                                const CovarianceSalvage& sal = NoCovarianceSalvage());
+                                const SalvagingAlgorithm::Type sal = SalvagingAlgorithm::Type::None);
 
 /* delta-gamma VaR using Saddlepoint approximation */
 Real deltaGammaVarSaddlepoint(const Matrix& omega, const Array& delta, const Matrix& gamma, const Real p,
-                              const CovarianceSalvage& sal = NoCovarianceSalvage());
+                              const SalvagingAlgorithm::Type sal = SalvagingAlgorithm::Type::None);
 
 } // namespace QuantExt
 
