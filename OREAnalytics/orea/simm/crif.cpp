@@ -23,13 +23,19 @@
 #include <algorithm>
 #include <boost/range/adaptor/filtered.hpp>
 #include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/adaptor/map.hpp>
+#include <boost/range/adaptor/indexed.hpp>
+#include <boost/range/algorithm/max_element.hpp>
 #include <boost/range/algorithm_ext.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
+#include <boost/algorithm/string.hpp>
 #include <boost/assign.hpp>
 #include <boost/bimap.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/simm/crifrecord.hpp>
 #include <orea/simm/crif.hpp>
+#include <orea/simm/simmconfiguration.hpp>
+#include <orea/simm/simmbucketmapper.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/portfolio/structuredtradewarning.hpp>
 #include <ored/utilities/log.hpp>
@@ -61,6 +67,444 @@ struct string_cmp {
 // Ease the notation below
 template <typename T> using bm = boost::bimap<T, boost::bimaps::set_of<std::string, string_cmp>>;
 
+// clang-format off
+// Required headers
+std::map<QuantLib::Size, std::set<std::string>> Crif::requiredHeaders = {
+    {1,  {"portfolioid", "portfolio_id"}},
+    {3,  {"risktype", "risk_type"}}};
+
+// Optional headers
+std::map<QuantLib::Size, std::set<std::string>> Crif::optionalHeaders = {
+    {0,  {"tradeid", "trade_id"}},
+    {2,  {"productclass", "product_class"}},
+    {4,  {"qualifier"}},
+    {5,  {"bucket"}},
+    {6,  {"label1"}},
+    {7,  {"label2"}},
+    {8,  {"amountcurrency", "currency", "amount_currency"}},
+    {9,  {"amount"}},
+    {10, {"amountusd", "amount_usd"}},
+    {11, {"agreementtype", "agreement_type"}},
+    {12, {"calltype", "call_type"}},
+    {13, {"initialmargintype", "initial_margin_type"}},
+    {14, {"legalentityid", "legal_entity_id"}},
+    {15, {"tradetype", "trade_type"}},
+    {16, {"immodel", "im_model"}},
+    {17, {"post_regulations"}},
+    {18, {"collect_regulations"}},
+    {19, {"end_date", "enddate"}},
+    {20, {"label_3", "label3"}},
+    {21, {"creditquality"}},
+    {22, {"longshortind"}},
+    {23, {"coveredbonind", "coveredbondind"}},
+    {24, {"tranchethickness"}},
+    {25, {"bb_rw"}},
+    {26, {"use_cp_trade"}}
+};
+// clang-format on
+
+using RiskType = CrifRecord::RiskType;
+using ProductClass = CrifRecord::ProductClass;
+using IMModel = CrifRecord::IMModel;
+
+Crif::Crif(const QuantLib::ext::shared_ptr<SimmConfiguration>& configuration,
+           const std::vector<std::set<std::string>>& additionalHeaders, bool updateMapper, bool aggregateTrades,
+           bool allowUseCounterpartyTrade, char eol, char delim, char quoteChar, char escapeChar,
+           const std::string& nullString) {
+    setCsvLoaderConfig(configuration, additionalHeaders, updateMapper, aggregateTrades, allowUseCounterpartyTrade, eol,
+                       delim, quoteChar, escapeChar, nullString);
+}
+
+void Crif::setCsvLoaderConfig(const QuantLib::ext::shared_ptr<SimmConfiguration>& configuration,
+                              const std::vector<std::set<std::string>>& additionalHeaders, bool updateMapper,
+                              bool aggregateTrades, bool allowUseCounterpartyTrade, char eol, char delim, char quoteChar,
+                              char escapeChar, const std::string& nullString) {
+    configuration_ = configuration;
+    additionalHeaders_ = additionalHeaders;
+    updateMapper_ = updateMapper;
+    aggregateTrades_ = aggregateTrades;
+    allowUseCounterpartyTrade_ = allowUseCounterpartyTrade;
+    eol_ = eol;
+    delim_ = delim;
+    quoteChar_ = quoteChar;
+    escapeChar_ = escapeChar;
+    nullString_ = nullString;
+
+    size_t maxIndexRequired = *boost::max_element(requiredHeaders | boost::adaptors::map_keys);
+    size_t maxIndexOptional = *boost::max_element(optionalHeaders | boost::adaptors::map_keys);
+    size_t maxIndex = std::max(maxIndexRequired, maxIndexOptional);
+
+    additionalHeadersIndexMap_.clear();
+    size_t i = 1;
+    for (const auto& addHeader : additionalHeaders_) {
+        additionalHeadersIndexMap_[maxIndex + i] = addHeader;
+        i++;
+    }
+}
+
+void Crif::addRecordToCrif(CrifRecord&& recordToAdd) {
+    bool add = recordToAdd.type() != CrifRecord::RecordType::Generic;
+    if (recordToAdd.type() == CrifRecord::RecordType::SIMM) {
+        validateSimmRecord(recordToAdd);
+        currencyOverrides(recordToAdd);
+        add = configuration_->isValidRiskType(recordToAdd.riskType);
+    }
+    if (aggregateTrades_) {
+        recordToAdd.tradeId.clear();
+    }
+    if (add) {
+        addRecord(recordToAdd);
+    } else {
+        QL_FAIL("Risk type string " << recordToAdd.riskType
+                                    << " does not correspond to a valid SimmConfiguration::RiskType");
+    }
+}
+
+void Crif::validateSimmRecord(const CrifRecord& cr) const {
+    switch (cr.riskType) {
+    case RiskType::AddOnFixedAmount:
+    case RiskType::AddOnNotionalFactor:
+        QL_REQUIRE(cr.productClass == ProductClass::Empty,
+                   "Expected product class " << ProductClass::Empty << " for risk type " << cr.riskType);
+        break;
+    case RiskType::ProductClassMultiplier: {
+        QL_REQUIRE(cr.productClass == ProductClass::Empty,
+                   "Expected product class " << ProductClass::Empty << " for risk type " << cr.riskType);
+        // Check that the qualifier is a valid Product class
+        auto pc = parseProductClass(cr.qualifier);
+        QL_REQUIRE(pc != ProductClass::Empty,
+                   "The qualifier " << cr.qualifier << " should parse to a valid product class for risk type "
+                                    << cr.riskType);
+        // Check that the amount is a number >= 1.0
+        QL_REQUIRE(cr.amount >= 0.0, "Expected an amount greater than or equal to 0 "
+                                         << "for risk type " << cr.riskType << " and qualifier " << cr.qualifier
+                                         << " but got " << cr.amount);
+        break;
+    }
+    case RiskType::Notional:
+    case RiskType::PV:
+        if (cr.imModel == IMModel::Schedule)
+            QL_REQUIRE(!cr.endDate.empty(),
+                       "Expected end date for risk type " << cr.riskType << " and im_model=\'Schedule\'");
+        break;
+    default:
+        break;
+    }
+}
+
+void Crif::currencyOverrides(CrifRecord& cr) const {
+    switch (cr.riskType) {
+    case RiskType::IRCurve:
+    case RiskType::IRVol:
+    case RiskType::Inflation:
+    case RiskType::InflationVol:
+    case RiskType::XCcyBasis:
+    case RiskType::FX:
+        // TODO: Do we really need to switch CNH to CNY here?
+        //       How many more are like this?
+        if (cr.qualifier == "CNH")
+            cr.qualifier = "CNY";
+        QL_REQUIRE(ore::data::checkCurrency(cr.qualifier),
+                   "currency code '" << cr.qualifier << "' is not a supported currency code");
+        break;
+    case RiskType::FXVol: {
+        // Normalise the qualifier i.e. XXXYYY and YYYXXX are the same
+        QL_REQUIRE(cr.qualifier.size() == 6,
+                   "Expected a string of length 6 for FXVol qualifier but got " << cr.qualifier);
+        auto ccy_1 = cr.qualifier.substr(0, 3);
+        auto ccy_2 = cr.qualifier.substr(3);
+        if (ccy_1 == "CNH")
+            ccy_1 = "CNY";
+        if (ccy_2 == "CNH")
+            ccy_2 = "CNY";
+        QL_REQUIRE(ore::data::checkCurrency(ccy_1), "currency code 1 in pair '" << cr.qualifier << "' (" << ccy_1
+                                                                                << ") is not a supported currency code");
+        QL_REQUIRE(ore::data::checkCurrency(ccy_2), "currency code 2 in pair '" << cr.qualifier << "' (" << ccy_2
+                                                                                << ") is not a supported currency code");
+        if (ccy_1 > ccy_2)
+            ccy_1.swap(ccy_2);
+        cr.qualifier = ccy_1 + ccy_2;
+        break;
+    }
+    default:
+        break;
+    }
+}
+
+void Crif::updateMapping(const CrifRecord& cr) const {
+    // Update the SIMM configuration's bucket mapper if the loader has set this flag
+    if (updateMapper_ && !cr.isSimmParameter()) {
+        const auto& bm = configuration_->bucketMapper();
+        if (bm->hasBuckets(cr.riskType)) {
+            bm->addMapping(cr.riskType, cr.qualifier, cr.bucket);
+        }
+    }
+}
+
+void Crif::processHeader(const std::vector<std::string>& headers) {
+    columnIndex_.clear();
+
+    // Get mapping for all required headers in to column index in the file
+    std::string header;
+    for (const auto& kv : requiredHeaders) {
+        for (QuantLib::Size i = 0; i < headers.size(); ++i) {
+            header = boost::to_lower_copy(headers[i]);
+            if (kv.second.count(header) > 0) {
+                columnIndex_[kv.first] = i;
+            }
+        }
+        // Some headers are allowed to be missing (under certain circumstances)
+        // trade_id, portfolioid and productclass arent required for frtb crif
+        if (kv.first == 0 || kv.first == 1 || kv.first == 2) {
+            // Portfolio ID header is allowed to be missing
+            if (columnIndex_.count(kv.first) == 0) {
+                WLOG("Did not find a header for portfolioid in the CRIF file so using a default value");
+            }
+        } else if (kv.first == 10) {
+            // Allow either amount_usd missing or amount and amount_currency, but not all three.
+            if (columnIndex_.count(10) == 0)
+                QL_REQUIRE(columnIndex_.count(8) > 0 && columnIndex_.count(9) > 0,
+                           "Must provide either amount and amount_currency, or amount_usd");
+        } else {
+            // All other headers should be there
+            QL_REQUIRE(columnIndex_.count(kv.first) > 0,
+                       "Could not find a header in the CRIF file for " << *kv.second.begin());
+        }
+    }
+
+    for (const auto& kv : optionalHeaders) {
+        for (QuantLib::Size i = 0; i < headers.size(); ++i) {
+            header = boost::to_lower_copy(headers[i]);
+            if (kv.second.count(header) > 0) {
+                columnIndex_[kv.first] = i;
+            }
+        }
+    }
+
+    for (const auto& kv : additionalHeadersIndexMap_) {
+        for (QuantLib::Size columnPos = 0; columnPos < headers.size(); ++columnPos) {
+            header = boost::to_lower_copy(headers[columnPos]);
+            if (kv.second.count(header) > 0) {
+                columnIndex_[kv.first] = columnPos;
+            }
+        }
+    }
+}
+
+bool Crif::process(const std::vector<std::string>& entries, QuantLib::Size maxIndex, QuantLib::Size currentLine,
+                   std::vector<std::tuple<std::string, std::string, std::string, std::string>>& structuredErrors) {
+    CrifRecord cr;
+    // Return early if there are not enough entries in the line
+    if (entries.size() <= maxIndex) {
+        WLOG("Line number: " << currentLine << ". Expected at least " << maxIndex + 1 << " entries but got only "
+                             << entries.size());
+        return false;
+    }
+
+    auto loadOptionalString = [&entries, this](int column) {
+        return columnIndex_.count(column) == 0 ? "" : entries[columnIndex_[column]];
+    };
+    auto loadOptionalBool = [&entries, this](int column, bool defaultValue) -> bool {
+        if (columnIndex_.count(column) == 0) {
+            return defaultValue;
+        } else {
+            bool res = defaultValue;
+            const std::string& value = entries[columnIndex_[column]];
+            if (value.empty())
+                return res;
+            try {
+                res = ore::data::parseBool(value);
+            } catch (...) {
+            }
+            return res;
+        }
+    };
+    auto loadOptionalReal = [&entries, this](int column) -> QuantLib::Real {
+        if (columnIndex_.count(column) == 0) {
+            return QuantLib::Null<QuantLib::Real>();
+        } else {
+            const std::string& value = entries[columnIndex_[column]];
+            return value.empty() || value == nullString_ ? QuantLib::Null<QuantLib::Real>()
+                                                          : ore::data::parseReal(value);
+        }
+    };
+
+    std::string tradeId, tradeType, imModel;
+    try {
+        tradeId = loadOptionalString(0);
+        tradeType = loadOptionalString(15);
+        bool useCpTrade = loadOptionalBool(26, false);
+        if (useCpTrade) {
+            if (allowUseCounterpartyTrade_) {
+                ore::data::StructuredTradeWarningMessage(tradeId, tradeType, "JSON CRIF loading",
+                                                         "Skipping over CRIF record with use_cp_trade=true")
+                    .log();
+                return false;
+            } else {
+                QL_FAIL("IM exposure cannot be calculated because one or more trades is picking Counterparty "
+                        "sensitivities.");
+            }
+        }
+
+        imModel = loadOptionalString(16);
+
+        cr.tradeId = tradeId;
+        cr.tradeType = tradeType;
+        cr.imModel = parseIMModel(imModel);
+
+        // Populate netting set details
+        std::string portfolioId = columnIndex_.count(1) == 0 ? "DummyPortfolio" : entries[columnIndex_.at(1)];
+        std::string agreementType = loadOptionalString(11);
+        std::string callType = loadOptionalString(12);
+        std::string initialMarginType = loadOptionalString(13);
+        std::string legalEntityId = loadOptionalString(14);
+        cr.nettingSetDetails =
+            NettingSetDetails(portfolioId, agreementType, callType, initialMarginType, legalEntityId);
+        cr.productClass = parseProductClass(loadOptionalString(2));
+        cr.riskType = parseRiskType(entries[columnIndex_.at(3)]);
+
+        // Qualifier
+        cr.qualifier = loadOptionalString(4);
+        if ((cr.riskType == RiskType::IRCurve || cr.riskType == RiskType::IRVol || cr.riskType == RiskType::FX) &&
+            cr.qualifier.size() == 3) {
+            std::string ccyUpper = boost::to_upper_copy(cr.qualifier);
+            if (!ore::data::checkCurrency(cr.qualifier) && ore::data::checkCurrency(ccyUpper))
+                cr.qualifier = ccyUpper;
+        } else if (cr.riskType == RiskType::FXVol && (cr.qualifier.size() == 6 || cr.qualifier.size() == 7)) {
+            const std::string ccyPairDelimiters = "/.,-_|;: ";
+            auto ccyPair = ore::data::parseCurrencyPair(boost::to_upper_copy(cr.qualifier), ccyPairDelimiters);
+            std::string ccy1Upper = ccyPair.first.code();
+            std::string ccy2Upper = ccyPair.second.code();
+            cr.qualifier = ccy1Upper + ccy2Upper;
+        }
+
+        // Bucket
+        cr.bucket = loadOptionalString(5);
+        if (boost::to_lower_copy(cr.bucket) == "residual")
+            cr.bucket = "Residual";
+
+        // Label1
+        cr.label1 = loadOptionalString(6);
+        if (configuration_->isValidRiskType(cr.riskType)) {
+            for (const std::string& l : configuration_->labels1(cr.riskType)) {
+                if (boost::to_lower_copy(cr.label1) == boost::to_lower_copy(l))
+                    cr.label1 = l;
+            }
+        }
+        // Label2
+        cr.label2 = loadOptionalString(7);
+        if (configuration_->isValidRiskType(cr.riskType)) {
+            for (const std::string& l : configuration_->labels2(cr.riskType)) {
+                if (boost::to_lower_copy(cr.label2) == boost::to_lower_copy(l))
+                    cr.label2 = l;
+            }
+        }
+
+        if (cr.riskType != CrifRecord::RiskType::ProductClassMultiplier &&
+            cr.riskType != CrifRecord::RiskType::AddOnNotionalFactor) {
+            cr.amountCurrency = loadOptionalString(8);
+            std::string amountCcyUpper = boost::to_upper_copy(cr.amountCurrency);
+            if (!amountCcyUpper.empty() && !ore::data::checkCurrency(cr.amountCurrency) &&
+                ore::data::checkCurrency(amountCcyUpper))
+                cr.amountCurrency = amountCcyUpper;
+        }
+
+        cr.amount = loadOptionalReal(9);
+        cr.amountUsd = loadOptionalReal(10);
+        cr.postRegulations = parseRegulationString(loadOptionalString(17));
+        cr.collectRegulations = parseRegulationString(loadOptionalString(18));
+        cr.endDate = loadOptionalString(19);
+        cr.label3 = loadOptionalString(20);
+        cr.creditQuality = loadOptionalString(21);
+        cr.longShortInd = loadOptionalString(22);
+        cr.coveredBondInd = loadOptionalString(23);
+        cr.trancheThickness = loadOptionalString(24);
+        cr.bb_rw = loadOptionalString(25);
+
+        // Store additional data that matches the defined additional headers in the additional fields map
+        for (auto& additionalField : additionalHeadersIndexMap_) {
+            std::string value = loadOptionalString(additionalField.first);
+            if (!value.empty())
+                cr.additionalFields[*additionalField.second.begin()] = value;
+        }
+
+        // Add the CRIF record to the net records
+        addRecordToCrif(std::move(cr));
+    } catch (const std::exception& e) {
+        std::tuple<std::string, std::string, std::string, std::string> msg =
+            make_tuple(tradeId, tradeType, std::string("CRIF loading"),
+                       "Line number: " + ore::data::to_string(currentLine) +
+                           ". Error processing CRIF line, so skipping it. Error: " + ore::data::to_string(e.what()));
+        structuredErrors.push_back(msg);
+        return false;
+    }
+
+    return true;
+}
+
+void Crif::fromCSV(std::istream& stream) {
+    QL_REQUIRE(configuration_, "Crif::fromCSV() : SIMM configuration not set, call setCsvLoaderConfig() first");
+    LOG("Starting Crif::fromCSV()");
+    std::string line;
+    std::vector<std::string> entries;
+    bool headerProcessed = false;
+    QuantLib::Size emptyLines = 0;
+    QuantLib::Size validLines = 0;
+    QuantLib::Size blankLines = 0;
+    QuantLib::Size invalidLines = 0;
+    QuantLib::Size maxIndex = 0;
+    QuantLib::Size currentLine = 0;
+    std::vector<std::tuple<std::string, std::string, std::string, std::string>> structuredErrors;
+    while (std::getline(stream, line, eol_)) {
+        // Keep track of current line number for messages
+        ++currentLine;
+
+        // Trim leading and trailing space
+        boost::trim(line);
+
+        // Skip empty lines
+        if (line.empty()) {
+            ++emptyLines;
+            continue;
+        }
+
+        // Break line up in to its elements.
+        entries = ore::data::parseListOfValues(line, escapeChar_, delim_, quoteChar_);
+
+        if (headerProcessed) {
+            // Process a regular line of the CRIF file
+            if (process(entries, maxIndex, currentLine, structuredErrors)) {
+                ++validLines;
+            } else {
+                ++invalidLines;
+                if (std::all_of(entries.begin(), entries.end(), [](const std::string& val) { return val.empty(); }))
+                    ++blankLines;
+            }
+        } else {
+            // Process the header line of the CRIF file
+            processHeader(entries);
+            headerProcessed = true;
+            auto maxPair = std::max_element(
+                columnIndex_.begin(), columnIndex_.end(),
+                [](const pair<QuantLib::Size, QuantLib::Size>& p1, const pair<QuantLib::Size, QuantLib::Size>& p2) {
+                    return p1.second < p2.second;
+                });
+            maxIndex = maxPair->second;
+        }
+    }
+
+    if (blankLines != (currentLine - 1)) {
+        for (const auto& [tradeId, tradeType, exceptionType, exceptionMsg] : structuredErrors)
+            ore::data::StructuredTradeErrorMessage(tradeId, tradeType, exceptionType, exceptionMsg).log();
+    }
+
+    if (updateMapper_ && configuration_->bucketMapper() != nullptr) {
+        configuration_->bucketMapper()->updateFromCrif(shared_from_this());
+    }
+
+    LOG("Out of " << currentLine << " lines, there were " << validLines << " valid lines, " << invalidLines
+                  << " invalid lines and " << emptyLines << " empty lines.");
+}
 
 SlimCrifRecord::SlimCrifRecord(const QuantLib::ext::weak_ptr<Crif>& crif) {
     crif_ = crif;
@@ -218,7 +662,8 @@ void Crif::addRecords(const Crif& crif, bool aggregateDifferentAmountCurrencies,
     }
 }
 
-void Crif::addRecords(const QuantLib::ext::shared_ptr<Crif>& crif, bool aggregateDifferentAmountCurrencies, bool sortFxVolQualifer) {
+void Crif::addRecords(const QuantLib::ext::shared_ptr<Crif>& crif, bool aggregateDifferentAmountCurrencies,
+                      bool sortFxVolQualifer) {
     if (crif) {
         addRecords(*crif);
     }
@@ -226,12 +671,12 @@ void Crif::addRecords(const QuantLib::ext::shared_ptr<Crif>& crif, bool aggregat
 
 QuantLib::ext::shared_ptr<Crif> Crif::aggregate(bool aggregateDifferentAmountCurrencies) const {
     MEM_LOG_USING_LEVEL(ORE_WARNING, "Calling Crif::aggregate()");
-    
+
     auto result = QuantLib::ext::make_shared<Crif>();
     result->setAggregate(true);
     for (const auto& cr : records_)
         result->addRecord(cr, aggregateDifferentAmountCurrencies);
-    
+
     MEM_LOG_USING_LEVEL(ORE_WARNING, "Finished Crif::aggregate()");
 
     return result;
@@ -258,12 +703,13 @@ QuantLib::ext::shared_ptr<Crif> Crif::simmParameters() const {
     }
     return results;
 }
+
 //! Find first element
 pair<SlimCrifRecordContainer::nth_index<1>::type::const_iterator,
      SlimCrifRecordContainer::nth_index<1>::type::const_iterator>
 Crif::findBy(const NettingSetDetails nsd, CrifRecord::ProductClass pc, const CrifRecord::RiskType rt,
              const std::string& qualifier) const {
-    
+
     auto& idx = records_.get<QualifierTag>();
 
     auto nsdIt = nettingSetDetailsIndex_.right.find(nsd);
@@ -408,7 +854,7 @@ void Crif::setSimmParameters(const QuantLib::ext::shared_ptr<Crif>& crif) {
 void Crif::setCrifRecords(const QuantLib::ext::shared_ptr<Crif>& crif) {
     if (!crif)
         return;
-    
+
     auto backup = records_;
     records_.clear();
     for (auto& r : backup) {
@@ -870,39 +1316,6 @@ void SlimCrifRecord::updateFromCrifRecord(const CrifRecord& cr) {
     }
 }
 
-//void SlimCrifRecord::updateFromSlimCrifRecord(const SlimCrifRecord& cr) {
-//    // Update all fields whose
-//    setTradeId(cr.getTradeId());
-//    setTradeType(cr.getTradeType());
-//    setNettingSetDetails(cr.getNettingSetDetails());
-//    setQualifier(cr.getQualifier());
-//    setBucket(cr.getBucket());
-//    setLabel1(cr.getLabel1());
-//    setLabel2(cr.getLabel2());
-//    setResultCurrency(cr.getResultCurrency());
-//    setEndDate(cr.getEndDate());
-//    setCurrency(cr.getCurrency());
-//
-//    productClass_ = cr.productClass();
-//    riskType_ = cr.riskType();
-//    imModel_ = cr.imModel();
-//    collectRegulations_ = cr.collectRegulations();
-//    postRegulations_ = cr.postRegulations();
-//    amount_ = cr.amount();
-//    amountUsd_ = cr.amountUsd();
-//    amountResultCcy_ = cr.amountResultCurrency();
-//    additionalFields_ = cr.additionalFields();
-//
-//    if (type() == CrifRecord::RecordType::FRTB) {
-//        setLabel3(cr.getLabel3());
-//        setCreditQuality(cr.getCreditQuality());
-//        setLongShortInd(cr.getLongShortInd());
-//        setCoveredBondInd(cr.getCoveredBondInd());
-//        setTrancheThickness(cr.getTrancheThickness());
-//        setBbRw(cr.getBbRw());
-//    }
-//}
-
 SlimCrifRecord::SlimCrifRecord(const QuantLib::ext::weak_ptr<Crif>& crif, const CrifRecord& cr) : SlimCrifRecord(crif) {
     updateFromCrifRecord(cr);
 }
@@ -1154,7 +1567,6 @@ CrifRecord SlimCrifRecord::toCrifRecord() const {
 
     return cr;
 }
-
 
 } // namespace analytics
 } // namespace ore

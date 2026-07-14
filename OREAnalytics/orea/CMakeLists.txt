@@ -169,7 +169,6 @@ scenario/zerotoparscenariogenerator.cpp
 simm/crif.cpp
 simm/crifconfiguration.cpp
 simm/crifgenerator.cpp
-simm/crifloader.cpp
 simm/crifmarket.cpp
 simm/crifrecord.cpp
 simm/crifrecordgenerator.cpp
@@ -406,7 +405,6 @@ scenario/zerotoparscenariogenerator.hpp
 simm/crif.hpp
 simm/crifconfiguration.hpp
 simm/crifgenerator.hpp
-simm/crifloader.hpp
 simm/crifmarket.hpp
 simm/crifrecord.hpp
 simm/crifrecordgenerator.hpp
