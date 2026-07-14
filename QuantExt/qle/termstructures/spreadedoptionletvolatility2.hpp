@@ -39,7 +39,8 @@ public:
         ReactionToTimeDecay decayMode,
         Stickyness stickyness = StickyStrike,
         QuantLib::ext::shared_ptr<QuantLib::IborIndex> index = nullptr,
-        QuantLib::ext::shared_ptr<QuantLib::IborIndex> initIndex = nullptr);
+        QuantLib::ext::shared_ptr<QuantLib::IborIndex> initIndex = nullptr,
+        QuantLib::Period rateComputationPeriod = 0 * QuantLib::Days);
 
     QuantLib::BusinessDayConvention businessDayConvention() const override;
     QuantLib::Rate minStrike() const override;
@@ -68,6 +69,7 @@ protected:
     Stickyness stickyness_;
     QuantLib::ext::shared_ptr<QuantLib::IborIndex> index_;
     QuantLib::ext::shared_ptr<QuantLib::IborIndex> initIndex_;
+    QuantLib::Period rateComputationPeriod_;
 
     mutable std::vector<QuantLib::Real> optionTimes_;
     mutable QuantLib::Matrix volSpreadValues_;
@@ -77,6 +79,8 @@ protected:
 
 private:
     QuantLib::Date dateFromTime(QuantLib::Time optionTime) const;
+    QuantLib::Rate getAtmRate(const QuantLib::Date& fixingDate,
+        const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index) const;
 };
 
 class AtmAdjustedSpreadedOptionletVolatility2 : public SpreadedOptionletVolatility2 {

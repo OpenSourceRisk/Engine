@@ -61,13 +61,9 @@ using std::vector;
                         const vector<Real>& atmOptionletRates = {});
 
     private:
-      vector<vector<Handle<Quote>>> createEmptyQuotesMatrix(const vector<Date>& optionletDates,
-                                                            const vector<vector<Rate>>& strikes);
       void performCalculations() const override;
-      
       Handle<OptionletVolatilityStructure> baseVol_;
       vector<vector<Handle<Quote>>> quotes_;
-      
   };
 
 } // namespace QuantExt

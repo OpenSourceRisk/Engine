@@ -3890,9 +3890,9 @@ void ScenarioSimMarket::createOptionletVol(RiskFactorKey::KeyType rfKeyType, con
     // Get IR index name and rate tenor.
     auto indexNameRateCompPeriod = bc.initMarket->capFloorVolIndexBase(name, bc.configuration);
     const auto& [indexName, rateCompPeriod] = indexNameRateCompPeriod;
-    ext::shared_ptr<IborIndex> irIndex;
+    ext::shared_ptr<IborIndex> index;
     if (!indexName.empty())
-        irIndex = parseIborIndex(indexName);
+        index = parseIborIndex(indexName);
 
     // Delegate to helper methods depending on what we are looking for.
     Handle<OptionletVolatilityStructure> ssmOvs;
@@ -3911,11 +3911,11 @@ void ScenarioSimMarket::createOptionletVol(RiskFactorKey::KeyType rfKeyType, con
             baseOvs.linkTo(initMktOvs);
 
         ssmOvs = createStickySabrOptionletVol(rfKeyType, name, simDataWritten, bc,
-            irIndex, baseOvs, rateCompPeriod, proxy);
+            index, baseOvs, rateCompPeriod, proxy);
 
     } else {
         auto baseOvs = bc.initMarket->capFloorVol(name, bc.configuration);
-        ssmOvs = createOptionletVol(rfKeyType, name, simDataWritten, bc, irIndex, baseOvs, rateCompPeriod, stickyness);
+        ssmOvs = createOptionletVol(rfKeyType, name, simDataWritten, bc, index, baseOvs, rateCompPeriod, stickyness);
     }
 
     // Final steps common to all.
@@ -3928,7 +3928,7 @@ void ScenarioSimMarket::createOptionletVol(RiskFactorKey::KeyType rfKeyType, con
 }
 
 ScenarioSimMarket::CapFloorConventions ScenarioSimMarket::getCapFloorConventions(const string& name,
-    const CurveConfigurations& curveConfigs, const ext::shared_ptr<IborIndex>& irIndex) const
+    const CurveConfigurations& curveConfigs, const ext::shared_ptr<IborIndex>& index) const
 {
     CapFloorConventions result;
 
@@ -3936,8 +3936,8 @@ ScenarioSimMarket::CapFloorConventions ScenarioSimMarket::getCapFloorConventions
     ext::shared_ptr<CapFloorVolatilityCurveConfig> config;
     if (curveConfigs.hasCapFloorVolCurveConfig(name)) {
         config = curveConfigs.capFloorVolCurveConfig(name);
-    } else if (irIndex) {
-        const auto& ccy = irIndex->currency().code();
+    } else if (index) {
+        const auto& ccy = index->currency().code();
         if (curveConfigs.hasCapFloorVolCurveConfig(ccy))
             config = curveConfigs.capFloorVolCurveConfig(ccy);
     }
@@ -3949,27 +3949,27 @@ ScenarioSimMarket::CapFloorConventions ScenarioSimMarket::getCapFloorConventions
     }
 
     // If we have an IR index, populate some information from it.
-    if (irIndex) {
-        result.irIndexCalendar = irIndex->fixingCalendar();
-        result.isOis = ext::dynamic_pointer_cast<OvernightIndex>(irIndex) != nullptr;
+    if (index) {
+        result.indexCalendar = index->fixingCalendar();
+        result.isOis = ext::dynamic_pointer_cast<OvernightIndex>(index) != nullptr;
     }
 
     return result;
 }
 
 vector<Date> ScenarioSimMarket::getOptionDates(const vector<Period>& optionTenors,
-    const ext::shared_ptr<IborIndex>& irIndex, const CapFloorConventions& conv,
+    const ext::shared_ptr<IborIndex>& index, const CapFloorConventions& conv,
     const ext::shared_ptr<OptionletVolatilityStructure>& baseOvs, const Period& rateCompPeriod,
     const std::string& name) const
 {
     vector<Date> optionDates(optionTenors.size());
 
     // Deal with the simple case first and return.
-    if (!parameters_->capFloorVolAdjustOptionletPillars() || !irIndex) {
+    if (!parameters_->capFloorVolAdjustOptionletPillars() || !index) {
         for (Size i = 0; i < optionTenors.size(); ++i) {
             optionDates[i] = baseOvs->optionDateFromTenor(optionTenors[i]);
-            if (!conv.irIndexCalendar.empty())
-                optionDates[i] = conv.irIndexCalendar.adjust(optionDates[i]);
+            if (!conv.indexCalendar.empty())
+                optionDates[i] = conv.indexCalendar.adjust(optionDates[i]);
             DLOG("Option [tenor, date] pair is [" << optionTenors[i] << ", " << io::iso_date(optionDates[i]) << "]");
         }
         return optionDates;
@@ -3978,7 +3978,7 @@ vector<Date> ScenarioSimMarket::getOptionDates(const vector<Period>& optionTenor
     // More involved case where we need to adjust the optionlet pillars.
     ext::shared_ptr<OvernightIndex> onIndex;
     if (conv.isOis)
-        onIndex = ext::static_pointer_cast<OvernightIndex>(irIndex);
+        onIndex = ext::static_pointer_cast<OvernightIndex>(index);
 
     for (Size i = 0; i < optionTenors.size(); ++i) {
         if (conv.isOis) {
@@ -4002,7 +4002,7 @@ vector<Date> ScenarioSimMarket::getOptionDates(const vector<Period>& optionTenor
         } else {
             // Create a cap, on ibor coupons, with the relevant option tenor.
             // Use the fixing date of the last coupon as the optionlet pillar.
-            ext::shared_ptr<CapFloor> capFloor = MakeCapFloor(CapFloor::Cap, optionTenors[i], irIndex, 0.0, 0 * Days);
+            ext::shared_ptr<CapFloor> capFloor = MakeCapFloor(CapFloor::Cap, optionTenors[i], index, 0.0, 0 * Days);
             if (capFloor->floatingLeg().empty()) {
                 optionDates[i] = asof_ + 1;
             } else {
@@ -4013,7 +4013,7 @@ vector<Date> ScenarioSimMarket::getOptionDates(const vector<Period>& optionTenor
         // Check that the option dates are increasing.
         QL_REQUIRE(i == 0 || optionDates[i] > optionDates[i - 1], "ScenarioSimMarket: got non-increasing option dates "
             << optionDates[i - 1] << ", " << optionDates[i] << " for tenors " << optionTenors[i - 1] << ", " <<
-            optionTenors[i] << " for index " << irIndex->name());
+            optionTenors[i] << " for index " << index->name());
 
         DLOG("Option [tenor, date] pair is [" << optionTenors[i] << ", " << io::iso_date(optionDates[i]) << "]");
     }
@@ -4022,16 +4022,16 @@ vector<Date> ScenarioSimMarket::getOptionDates(const vector<Period>& optionTenor
 }
 
 vector<Rate> ScenarioSimMarket::getAtmStrikes(const vector<Period>& optionTenors, const vector<Date>& optionDates,
-    const ext::shared_ptr<IborIndex>& irIndex, const CapFloorConventions& conv, const Period& rateCompPeriod,
+    const ext::shared_ptr<IborIndex>& index, const CapFloorConventions& conv, const Period& rateCompPeriod,
     const std::string& name, const string& configuration, const ext::shared_ptr<Market>& initMarket) const
 {
     vector<Rate> result(optionTenors.size());
 
-    QL_REQUIRE(irIndex, "ScenarioSimMarket: expected ibor index for cap floor config " << name <<
+    QL_REQUIRE(index, "ScenarioSimMarket: expected ibor index for cap floor config " << name <<
         " or a curve config for a ccy");
 
     // Get the IR index from the initial market.
-    auto oreIndexName = IndexNameTranslator::instance().oreName(irIndex->name());
+    auto oreIndexName = IndexNameTranslator::instance().oreName(index->name());
     auto initMktIndex = *initMarket->iborIndex(oreIndexName, configuration);
 
     // If using the term cap ATM rate is configured, caculate the ATM rates and return.
@@ -4101,13 +4101,13 @@ Handle<OptionletVolatilityStructure> ScenarioSimMarket::createNonSimulatedOption
 }
 
 Handle<OptionletVolatilityStructure> ScenarioSimMarket::createOptionletVol(RiskFactorKey::KeyType rfKeyType,
-    const string& name, bool& simDataWritten, const BuildContext& bc, const ext::shared_ptr<IborIndex>& irIndex,
+    const string& name, bool& simDataWritten, const BuildContext& bc, const ext::shared_ptr<IborIndex>& index,
     const Handle<OptionletVolatilityStructure>& baseOvs, const Period& rateCompPeriod, Stickyness stickyness)
 {
     DLOG("ScenarioSimMarket: building simulated optionlet volatility for " << name);
 
     // Some conventions to help with the creation of the cap floor volatility structure.
-    CapFloorConventions conventions = getCapFloorConventions(name, bc.curveConfigs, irIndex);
+    CapFloorConventions conventions = getCapFloorConventions(name, bc.curveConfigs, index);
 
     // Configured tenors and strikes.
     vector<Period> optionTenors = parameters_->capFloorVolExpiries(name);
@@ -4126,12 +4126,12 @@ Handle<OptionletVolatilityStructure> ScenarioSimMarket::createOptionletVol(RiskF
     auto nStrikes = strikes.size();
 
     // Get the option dates for the configured tenors.
-    vector<Date> optionDates = getOptionDates(optionTenors, irIndex, conventions, *baseOvs, rateCompPeriod, name);
+    vector<Date> optionDates = getOptionDates(optionTenors, index, conventions, *baseOvs, rateCompPeriod, name);
 
     // Get the ATM strike for each tenor if necessary.
     vector<Rate> atmStrikes;
     if (isAtm) {
-        atmStrikes = getAtmStrikes(optionTenors, optionDates, irIndex, conventions, rateCompPeriod, name,
+        atmStrikes = getAtmStrikes(optionTenors, optionDates, index, conventions, rateCompPeriod, name,
             bc.configuration, bc.initMarket);
     }
 
@@ -4177,7 +4177,7 @@ Handle<OptionletVolatilityStructure> ScenarioSimMarket::createOptionletVol(RiskF
     ext::shared_ptr<IborIndex> initMktIndex;
     ext::shared_ptr<IborIndex> ssmIndex;
     if (stickyness == StickyMoneyness) {
-        auto oreIndexName = IndexNameTranslator::instance().oreName(irIndex->name());
+        auto oreIndexName = IndexNameTranslator::instance().oreName(index->name());
         initMktIndex = *bc.initMarket->iborIndex(oreIndexName, bc.configuration);
         ssmIndex = *iborIndex(oreIndexName, bc.configuration);
     }
@@ -4192,7 +4192,7 @@ Handle<OptionletVolatilityStructure> ScenarioSimMarket::createOptionletVol(RiskF
         // FIXME: Works as of today only e.g. for sensitivity / scenario analysis.
         // TODO: Build floating reference date StrippedOptionlet class for MC path generators.
         auto optionlet = ext::make_shared<QuantLib::StrippedOptionlet>(conventions.settleDays, baseOvs->calendar(),
-            baseOvs->businessDayConvention(), irIndex, optionDates, strikes, quotes, baseOvs->dayCounter(),
+            baseOvs->businessDayConvention(), index, optionDates, strikes, quotes, baseOvs->dayCounter(),
             baseOvs->volatilityType(), baseOvs->displacement());
 
         hOvs = Handle<OptionletVolatilityStructure>(
@@ -4203,7 +4203,7 @@ Handle<OptionletVolatilityStructure> ScenarioSimMarket::createOptionletVol(RiskF
 }
 
 Handle<OptionletVolatilityStructure> ScenarioSimMarket::createStickySabrOptionletVol(RiskFactorKey::KeyType rfKeyType,
-    const string& name, bool& simDataWritten, const BuildContext& bc, const ext::shared_ptr<IborIndex>& irIndex,
+    const string& name, bool& simDataWritten, const BuildContext& bc, const ext::shared_ptr<IborIndex>& index,
     const Handle<OptionletVolatilityStructure>& baseOvs, const Period& rateCompPeriod,
     const ext::shared_ptr<ProxyOptionletVolatility>& proxy) {
 
@@ -4232,13 +4232,13 @@ Handle<OptionletVolatilityStructure> ScenarioSimMarket::createStickySabrOptionle
     auto nSabrStrikes = sabrStrikes[0].size();
 
     // Some conventions to help with the creation of the cap floor volatility structure.
-    CapFloorConventions conventions = getCapFloorConventions(name, bc.curveConfigs, irIndex);
+    CapFloorConventions conventions = getCapFloorConventions(name, bc.curveConfigs, index);
 
     // Get the option dates for the configured tenors.
-    vector<Date> optionDates = getOptionDates(optionTenors, irIndex, conventions, *baseOvs, rateCompPeriod, name);
+    vector<Date> optionDates = getOptionDates(optionTenors, index, conventions, *baseOvs, rateCompPeriod, name);
 
     // Get the ATM strike for each tenor.
-    vector<Rate> atmStrikes = getAtmStrikes(optionTenors, optionDates, irIndex, conventions, rateCompPeriod, name,
+    vector<Rate> atmStrikes = getAtmStrikes(optionTenors, optionDates, index, conventions, rateCompPeriod, name,
         bc.configuration, bc.initMarket);
 
     // If the initial market surface was a proxy volatility surface, calculate a proxy adjustment for each option tenor
@@ -4291,7 +4291,7 @@ Handle<OptionletVolatilityStructure> ScenarioSimMarket::createStickySabrOptionle
 
     // In the structures below, we want to use the initial market index and its yield term structures to calculate 
     // the ATM rate in SabrStrippedOptionletAdapter via optionletBase()->atmOptionletRates().
-    auto oreIndexName = IndexNameTranslator::instance().oreName(irIndex->name());
+    auto oreIndexName = IndexNameTranslator::instance().oreName(index->name());
     auto initMktIndex = *bc.initMarket->iborIndex(oreIndexName, bc.configuration);
 
     // Create the SSM optionlet volatility structure.

@@ -242,18 +242,18 @@ private:
     struct CapFloorConventions {
         QuantLib::Natural settleDays = 0;
         bool isOis = false;
-        QuantLib::Calendar irIndexCalendar;
+        QuantLib::Calendar indexCalendar;
         QuantLib::Size onSettlementDays = 0;
     };
     CapFloorConventions getCapFloorConventions(const std::string& name,
         const ore::data::CurveConfigurations& curveConfigs,
-        const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& irIndex) const;
+        const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index) const;
     std::vector<QuantLib::Date> getOptionDates(const std::vector<QuantLib::Period>& optionTenors,
-        const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& irIndex, const CapFloorConventions& conv,
+        const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index, const CapFloorConventions& conv,
         const QuantLib::ext::shared_ptr<QuantLib::OptionletVolatilityStructure>& baseOvs,
         const QuantLib::Period& rateCompPeriod, const std::string& name) const;
     std::vector<QuantLib::Rate> getAtmStrikes(const std::vector<QuantLib::Period>& optionTenors,
-        const std::vector<QuantLib::Date>& optionDates, const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& irIndex,
+        const std::vector<QuantLib::Date>& optionDates, const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
         const CapFloorConventions& conv, const QuantLib::Period& rateCompPeriod, const std::string& name,
         const std::string& configuration, const QuantLib::ext::shared_ptr<ore::data::Market>& initMarket) const;
     std::vector<QuantLib::Real> getProxyAdjustments(const std::vector<QuantLib::Period>& optionTenors,
@@ -265,12 +265,12 @@ private:
         const QuantLib::ext::shared_ptr<QuantLib::OptionletVolatilityStructure>& baseOvs, const std::string& name);
     QuantLib::Handle<QuantLib::OptionletVolatilityStructure> createOptionletVol(
         QuantExt::RiskFactorKey::KeyType rfKeyType, const std::string& name, bool& simDataWritten,
-        const BuildContext& context, const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& irIndex,
+        const BuildContext& context, const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
         const QuantLib::Handle<QuantLib::OptionletVolatilityStructure>& baseOvs,
         const QuantLib::Period& rateCompPeriod, QuantExt::Stickyness stickyness);
     QuantLib::Handle<QuantLib::OptionletVolatilityStructure> createStickySabrOptionletVol(
         QuantExt::RiskFactorKey::KeyType rfKeyType, const std::string& name, bool& simDataWritten,
-        const BuildContext& context, const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& irIndex,
+        const BuildContext& context, const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
         const QuantLib::Handle<QuantLib::OptionletVolatilityStructure>& baseOvs, const QuantLib::Period& rateCompPeriod,
         const QuantLib::ext::shared_ptr<QuantExt::ProxyOptionletVolatility>& proxy);
 };
