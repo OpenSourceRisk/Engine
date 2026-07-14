@@ -4250,12 +4250,13 @@ Handle<OptionletVolatilityStructure> ScenarioSimMarket::createStickySabrOptionle
     }
 
     // Elements to be populated in the main loop below.
+    // Note that the SSM quotes is a single column of ATM quotes at the configured tenors.
     QuoteMatrix quotes(nOptTenors, QuoteRow(1, Handle<Quote>()));
     map<RiskFactorKey, ext::shared_ptr<SimpleQuote>> simDataTmp;
     map<RiskFactorKey, Real> absoluteSimDataTmp;
     QuoteMatrix sabrVolSpreads(nOptTenors, QuoteRow(nSabrStrikes, Handle<Quote>()));
 
-    // Main loop populating the SSM strikes and quotes.
+    // Main loop populating the SSM quotes.
     for (Size i = 0, counter = 0; i < optionTenors.size(); ++i, ++counter) {
         Real atmVol = baseOvs->volatility(optionDates[i], atmStrikes[i], true);
         DLOG("ATM vol at [date, strike] pair [" << optionDates[i] << ", " << std::fixed
@@ -4292,7 +4293,7 @@ Handle<OptionletVolatilityStructure> ScenarioSimMarket::createStickySabrOptionle
     // In the structures below, we want to use the initial market index and its yield term structures to calculate 
     // the ATM rate in SabrStrippedOptionletAdapter via optionletBase()->atmOptionletRates().
     auto oreIndexName = IndexNameTranslator::instance().oreName(index->name());
-    auto initMktIndex = *bc.initMarket->iborIndex(oreIndexName, bc.configuration);
+    const auto& initMktIndex = *bc.initMarket->iborIndex(oreIndexName, bc.configuration);
 
     // Create the SSM optionlet volatility structure.
     Handle<OptionletVolatilityStructure> hOvs;
