@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(testLowercaseMonthCode) {
 
 BOOST_AUTO_TEST_CASE(testMonthPadding) {
     // Verify month is zero-padded to 2 digits
-    BOOST_CHECK_EQUAL(normaliseDeliveryCode("F24"), "2024-02");
+    BOOST_CHECK_EQUAL(normaliseDeliveryCode("G24"), "2024-02");
     BOOST_CHECK_EQUAL(normaliseDeliveryCode("V24"), "2024-10");
 }
 

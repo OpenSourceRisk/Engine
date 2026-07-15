@@ -192,7 +192,7 @@ std::string normaliseDeliveryCode(const string& code) {
     if (!code.empty()) {
         char deliveryMonthCode = code.front();
         std::unordered_map<char, int> deliveryMonthhMap = {
-            {'J', 1}, {'G', 2}, {'H', 3}, {'J', 4}, {'K', 5},
+            {'F', 1}, {'G', 2}, {'H', 3}, {'J', 4}, {'K', 5},
             {'M', 6}, {'N', 7}, {'Q', 8}, {'U', 9}, {'V', 10},
             {'X', 11}, {'Z', 12},
         };
