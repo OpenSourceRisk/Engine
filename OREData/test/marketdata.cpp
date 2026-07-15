@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(testValidSingleDigitYear) {
     std::string expectedYear5 = std::to_string(currentYearDecade + 5);
     std::string expectedYear9 = std::to_string(currentYearDecade + 9);
 
-    BOOST_CHECK_EQUAL(normaliseDeliveryCode("F5"), expectedYear5 + "-02");
+    BOOST_CHECK_EQUAL(normaliseDeliveryCode("F5"), expectedYear5 + "-01");
     BOOST_CHECK_EQUAL(normaliseDeliveryCode("Z9"), expectedYear9 + "-12");
 }
 

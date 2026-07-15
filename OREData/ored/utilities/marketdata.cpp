@@ -191,7 +191,7 @@ std::string prettyPrintInternalCurveName(std::string name) {
 std::string normaliseDeliveryCode(const string& code) {
     if (!code.empty()) {
         char deliveryMonthCode = code.front();
-        std::unordered_map<char, int> deliveryMonthhMap = {
+        static const std::unordered_map<char, int> deliveryMonthhMap = {
             {'F', 1}, {'G', 2}, {'H', 3}, {'J', 4}, {'K', 5},
             {'M', 6}, {'N', 7}, {'Q', 8}, {'U', 9}, {'V', 10},
             {'X', 11}, {'Z', 12},
@@ -200,15 +200,21 @@ std::string normaliseDeliveryCode(const string& code) {
         if (it != deliveryMonthhMap.end()) {
             int month = it->second;
             std::string yearStr = code.substr(1);
+            if (yearStr.empty() || !std::all_of(yearStr.begin(), yearStr.end(), ::isdigit))
+                return code;
+
             int year = std::stoi(yearStr);
-            if (year < 10) {
+            if (yearStr.size() == 1) {
                 auto today = std::chrono::year_month_day(
                     std::chrono::floor<std::chrono::days>(std::chrono::system_clock::now()));
                 int currentYear = static_cast<int>(today.year());
                 int currentYearDecade = (currentYear / 10) * 10;
                 year += currentYearDecade; // current decade
-            } else if (year < 100) {
+            } else if (yearStr.size() == 2) {
                 year += 2000; // current century
+            }
+            else {
+                return code; // invalid format
             }
             return std::to_string(year) + "-" + std::format("{:02}", month);
         }
