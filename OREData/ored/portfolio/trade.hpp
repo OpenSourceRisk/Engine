@@ -230,6 +230,9 @@ public:
     /* get build status */
     bool isBuilt() const { return isBuilt_; }
 
+    // default returns the generic maturity wording; derived trades may override to add trade-specific reasons
+    virtual std::string maturityMessage(const QuantLib::Date& asof) const;
+
 protected:
     string tradeType_; // class name of the derived class
     QuantLib::ext::shared_ptr<InstrumentWrapper> instrument_;

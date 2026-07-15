@@ -267,6 +267,9 @@ void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
         expiryDate = barrierOptionWrapper->exerciseDate();
         additionalData_["exerciseDate"] = expiryDate;
 
+        maturityTriggerDate_ = expiryDate;
+        maturityPayoffTiming_ = payoffAtExpiry ? "expiry" : "touch/exercise";
+
         if (!payoffAtExpiry && type_ == "One-Touch") {
             payDate = payCalendar.advance(expiryDate, payLag, Days, payConvention);
             barrierOptionWrapper = buildBarrierOptionWrapperInstr(expiryDate, payDate);
@@ -277,6 +280,22 @@ void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     instrument_ = barrierOptionWrapper;
 
     // maturity_ is set in buildBarrierOptionWrapperInstr()
+}
+
+void FxTouchOption::reset() {
+    Trade::reset();
+    maturityTriggerDate_ = QuantLib::Date();
+    maturityPayoffTiming_.clear();
+}
+
+std::string FxTouchOption::maturityMessage(const QuantLib::Date& asof) const {
+    if (maturityTriggerDate_ != QuantLib::Date()) {
+        std::string timing = maturityPayoffTiming_.empty() ? "touch/exercise" : maturityPayoffTiming_;
+        return "Trade is Matured. The barrier was touched on [" + ore::data::to_string(maturityTriggerDate_) +
+               "] and the payoff is at " + timing + ", which settles on [" + ore::data::to_string(maturity_) +
+               "], on or before the valuation date [" + ore::data::to_string(asof) + "].";
+    }
+    return Trade::maturityMessage(asof);
 }
 
 Real FxTouchOption::strike() const {
