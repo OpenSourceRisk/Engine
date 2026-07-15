@@ -18,7 +18,7 @@
 
 /*! \file qle/quotes/bondfuturequote.hpp
     \brief Bond future quote that relies on a bond future index
-    \ingroup tradedata
+    \ingroup quotes
 */
 #pragma once
 

@@ -216,6 +216,7 @@
 #include <orea/simm/simmconcentrationisdav2_6_5.hpp>
 #include <orea/simm/simmconcentrationisdav2_7_2412.hpp>
 #include <orea/simm/simmconcentrationisdav2_8_2506.hpp>
+#include <orea/simm/simmconcentrationisdav2_8_2512.hpp>
 #include <orea/simm/simmconfiguration.hpp>
 #include <orea/simm/simmconfigurationbase.hpp>
 #include <orea/simm/simmconfigurationcalibration.hpp>
@@ -233,6 +234,7 @@
 #include <orea/simm/simmconfigurationisdav2_6_5.hpp>
 #include <orea/simm/simmconfigurationisdav2_7_2412.hpp>
 #include <orea/simm/simmconfigurationisdav2_8_2506.hpp>
+#include <orea/simm/simmconfigurationisdav2_8_2512.hpp>
 #include <orea/simm/simmnamemapper.hpp>
 #include <orea/simm/simmresults.hpp>
 #include <orea/simm/simmtradedata.hpp>
