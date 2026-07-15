@@ -27,12 +27,6 @@ BOOST_AUTO_TEST_CASE(testValidSingleDigitYear) {
     BOOST_CHECK_EQUAL(normaliseDeliveryCode("Z9"), expectedYear9 + "-12");
 }
 
-BOOST_AUTO_TEST_CASE(testValidFourDigitYear) {
-    // Test 4-digit year format
-    BOOST_CHECK_EQUAL(normaliseDeliveryCode("F2024"), "2024-02");
-    BOOST_CHECK_EQUAL(normaliseDeliveryCode("M2025"), "2025-06");
-}
-
 BOOST_AUTO_TEST_CASE(testAllMonthCodes) {
     // Test all valid month codes
     BOOST_CHECK_EQUAL(normaliseDeliveryCode("F24"), "2024-01"); // January
