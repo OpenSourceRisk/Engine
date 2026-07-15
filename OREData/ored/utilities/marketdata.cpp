@@ -15,7 +15,6 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-
 #include <ored/configuration/conventions.hpp>
 
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
@@ -40,6 +39,8 @@
 #include <ql/time/calendars/jointcalendar.hpp>
 
 #include <boost/algorithm/string.hpp>
+
+#include <chrono>
 
 using QuantLib::DefaultProbabilityTermStructure;
 using QuantLib::Handle;
@@ -185,6 +186,34 @@ std::string prettyPrintInternalCurveName(std::string name) {
         }
     } while (found);
     return name;
+}
+
+std::string normaliseDeliveryCode(const string& code) {
+    if (!code.empty()) {
+        char deliveryMonthCode = code.front();
+        std::unordered_map<char, int> deliveryMonthhMap = {
+            {'J', 1}, {'G', 2}, {'H', 3}, {'J', 4}, {'K', 5},
+            {'M', 6}, {'N', 7}, {'Q', 8}, {'U', 9}, {'V', 10},
+            {'X', 11}, {'Z', 12},
+        };
+        auto it = deliveryMonthhMap.find(deliveryMonthCode);
+        if (it != deliveryMonthhMap.end()) {
+            int month = it->second;
+            std::string yearStr = code.substr(1);
+            int year = std::stoi(yearStr);
+            if (year < 10) {
+                auto today = std::chrono::year_month_day(
+                    std::chrono::floor<std::chrono::days>(std::chrono::system_clock::now()));
+                int currentYear = static_cast<int>(today.year());
+                int currentYearDecade = (currentYear / 10) * 10;
+                year += currentYearDecade; // current decade
+            } else if (year < 100) {
+                year += 2000; // current century
+            }
+            return std::to_string(year) + "-" + std::format("{:02}", month);
+        }
+    }
+    return code;
 }
 
 QuantLib::ext::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, const string& foreign,
