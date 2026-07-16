@@ -320,20 +320,23 @@ indexTrancheBaseCorrelationCurve(const QuantLib::ext::shared_ptr<Market>& market
     return market->baseCorrelation(p.first, configuration);
 }
 
-// will have to split the date into month and year in caller.  are there any utilities to do this?
-// Is the FutureConvention rule available from caller?
-std::pair<Date, Date> getOiFutureStartEndDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear, QuantLib::Period tenor,
+std::pair<QuantLib::Month, QuantLib::Natural> getMonthYear(const std::string& expiry) {
+    Date d = parseDate(expiry + "-01");
+    return std::make_pair(d.month(), d.year());
+}
+
+std::pair<Date, Date> getOiFutureStartEndDate(QuantLib::Month contractMonth, QuantLib::Natural contractYear, QuantLib::Period tenor,
                                               FutureConvention::DateGenerationRule rule, const Calendar& calendar) {
     // Create a Overnight index future helper
     Date startDate, endDate;
     if (rule == FutureConvention::DateGenerationRule::IMM) {
-        Date refEnd = Date(1, expiryMonth, expiryYear);
-        Date refStart = refEnd - tenor;
+        Date refStart = Date(1, contractMonth, contractYear);
+        Date refEnd = refStart + tenor;
         startDate = IMM::nextDate(refStart, false);
         endDate = IMM::nextDate(refEnd, false);
     } else if (rule  == FutureConvention::DateGenerationRule::FirstDayOfMonth) {
-        endDate = calendar.adjust(Date(1, expiryMonth, expiryYear) + 1 * Months, Following);
-        startDate = calendar.adjust(Date(1, expiryMonth, expiryYear) + 1 * Months - tenor, Following);
+        startDate = calendar.adjust(Date(1, contractMonth, contractYear), Following);
+        endDate = calendar.adjust(Date(1, contractMonth, contractYear) + tenor, Following);
     }
     return std::make_pair(startDate, endDate);
 }
