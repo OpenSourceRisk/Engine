@@ -4193,7 +4193,7 @@ Handle<OptionletVolatilityStructure> ScenarioSimMarket::createOptionletVol(RiskF
         // TODO: Build floating reference date StrippedOptionlet class for MC path generators.
         auto optionlet = ext::make_shared<QuantLib::StrippedOptionlet>(conventions.settleDays, baseOvs->calendar(),
             baseOvs->businessDayConvention(), index, optionDates, strikes, quotes, baseOvs->dayCounter(),
-            baseOvs->volatilityType(), baseOvs->displacement());
+            baseOvs->volatilityType(), baseOvs->displacement(), baseOvs->useEffectiveVolatility());
 
         hOvs = Handle<OptionletVolatilityStructure>(
             ext::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, LinearFlat>>(optionlet));
@@ -4322,12 +4322,13 @@ Handle<OptionletVolatilityStructure> ScenarioSimMarket::createStickySabrOptionle
         }
         optionlet = ext::make_shared<QuantExt::StrippedOptionlet>(conventions.settleDays, baseOvs->calendar(),
             baseOvs->businessDayConvention(), initMktIndex, optionDates, optionletStrikes, hOvs, optionletQuotes,
-            baseOvs->dayCounter(), baseOvs->volatilityType(), baseOvs->displacement());
+            baseOvs->dayCounter(), baseOvs->volatilityType(), baseOvs->displacement(),
+            baseOvs->useEffectiveVolatility());
 
     } else {
         optionlet = ext::make_shared<QuantLib::StrippedOptionlet>(conventions.settleDays, baseOvs->calendar(),
             baseOvs->businessDayConvention(), initMktIndex, optionDates, ovsStrikes, quotes, baseOvs->dayCounter(),
-            baseOvs->volatilityType(), baseOvs->displacement());
+            baseOvs->volatilityType(), baseOvs->displacement(), baseOvs->useEffectiveVolatility());
     }
 
     // Try to create a SabrStrippedOptionletAdapter for the optionlet above.

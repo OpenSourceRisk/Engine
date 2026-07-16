@@ -88,6 +88,7 @@ Rate SpreadedOptionletVolatility2::minStrike() const { return baseVol_->minStrik
 Rate SpreadedOptionletVolatility2::maxStrike() const { return baseVol_->maxStrike(); }
 VolatilityType SpreadedOptionletVolatility2::volatilityType() const { return baseVol_->volatilityType(); }
 Real SpreadedOptionletVolatility2::displacement() const { return baseVol_->displacement(); }
+bool SpreadedOptionletVolatility2::useEffectiveVolatility() const { return baseVol_->useEffectiveVolatility(); }
 
 ext::shared_ptr<SmileSection> SpreadedOptionletVolatility2::smileSectionImpl(Time optionTime) const {
     calculate();

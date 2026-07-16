@@ -101,6 +101,7 @@ public:
     //@{
     QuantLib::VolatilityType volatilityType() const override;
     QuantLib::Real displacement() const override;
+    bool useEffectiveVolatility() const override;
     //@}
 
     //! \name LazyObject interface
@@ -287,6 +288,11 @@ inline QuantLib::VolatilityType SabrStrippedOptionletAdapter<TimeInterpolator>::
 template <class TimeInterpolator>
 inline QuantLib::Real SabrStrippedOptionletAdapter<TimeInterpolator>::displacement() const {
     return outputDisplacement_ != Null<Real>() ? outputDisplacement_ : optionletBase_->displacement();
+}
+
+template <class TimeInterpolator>
+inline bool SabrStrippedOptionletAdapter<TimeInterpolator>::useEffectiveVolatility() const {
+    return optionletBase_->useEffectiveVolatility();
 }
 
 template <class TimeInterpolator> inline void SabrStrippedOptionletAdapter<TimeInterpolator>::update() {

@@ -48,6 +48,7 @@ public:
                                         ReactionToTimeDecay decayMode = ConstantVariance);
     
     QuantLib::ext::shared_ptr<OptionletVolatilityStructure> getSource() { return source_; }
+    bool useEffectiveVolatility() const override { return source_->useEffectiveVolatility(); }
 
 protected:
     //! \name OptionletVolatilityStructure interface

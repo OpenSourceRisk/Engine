@@ -194,6 +194,11 @@ void Trade::reset() {
     
 const std::map<std::string, QuantLib::ext::any>& Trade::additionalData() const { return additionalData_; }
 
+std::string Trade::maturityMessage(const QuantLib::Date& asof) const {
+    std::string maturityType = maturityType_.empty() ? "" : maturityType_;
+    return "Trade is Matured. " + maturityType + " [" + ore::data::to_string(maturity_) + "]" + " is On or Before Valuation Date.";
+}
+
 void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
     if (legs_.size() < i + 1)
         return;
