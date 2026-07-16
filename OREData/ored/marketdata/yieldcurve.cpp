@@ -2326,7 +2326,7 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
                 // Create a Overnight index future helper
                 Date startDate, endDate;
                 std::pair<Date, Date> startEndDate;
-                auto [m, y] = getMonthYear(futureQuote->contractMonth());
+                auto [m, y] = getMonthYear(normaliseDeliveryCode(futureQuote->contractMonth()));
                 startEndDate = getOiFutureStartEndDate(
                     m, y, futureQuote->tenor(), futureConvention->dateGenerationRule(), futureConvention->calendar());
                 startDate = startEndDate.first;
@@ -2391,7 +2391,7 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
                     "For MM Futures only 'IMM', 'IMMEUR' (2 bd before ThirdWednesday), 'IMMAUD' (alias 'SecondThursday'), 'IMMNZD', or 'IMMCAD' are allowed "
                     "as date generation rules, check the future convention '"
                         << segment->conventionsID() << "'");
-                auto [m, y] = getMonthYear(futureQuote->expiry());
+                auto [m, y] = getMonthYear(normaliseDeliveryCode(futureQuote->expiry()));
                 Date immDate = getMmFutureExpiryDate(m, y, futureConvention->dateGenerationRule());
 
                 if (immDate < asofDate_) {

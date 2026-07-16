@@ -15,7 +15,6 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-
 #include <ored/configuration/conventions.hpp>
 
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
@@ -185,6 +184,39 @@ std::string prettyPrintInternalCurveName(std::string name) {
         }
     } while (found);
     return name;
+}
+
+std::string normaliseDeliveryCode(const string& code) {
+    if (!code.empty()) {
+        char deliveryMonthCode = code.front();
+        static const std::unordered_map<char, int> deliveryMonthhMap = {
+            {'F', 1}, {'G', 2}, {'H', 3}, {'J', 4}, {'K', 5},
+            {'M', 6}, {'N', 7}, {'Q', 8}, {'U', 9}, {'V', 10},
+            {'X', 11}, {'Z', 12},
+        };
+        auto it = deliveryMonthhMap.find(deliveryMonthCode);
+        if (it != deliveryMonthhMap.end()) {
+            int month = it->second;
+            std::string yearStr = code.substr(1);
+            if (yearStr.empty() || !std::all_of(yearStr.begin(), yearStr.end(), ::isdigit))
+                return code;
+
+            int year = std::stoi(yearStr);
+            if (yearStr.size() == 1) {
+                Date today = Settings::instance().evaluationDate();
+                int currentYear = static_cast<int>(today.year());
+                int currentYearDecade = (currentYear / 10) * 10;
+                year += currentYearDecade; // current decade
+            } else if (yearStr.size() == 2) {
+                year += 2000; // current century
+            }
+            else {
+                return code; // invalid format
+            }
+            return std::to_string(year) + "-" + std::format("{:02}", month);
+        }
+    }
+    return code;
 }
 
 QuantLib::ext::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, const string& foreign,

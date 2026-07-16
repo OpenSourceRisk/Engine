@@ -102,6 +102,9 @@ indexTrancheBaseCorrelationCurve(const QuantLib::ext::shared_ptr<Market>& market
 /*! Pretty print an internal curve name occuring (once or several times) in a string (e.g. in a risk factor name). */
 std::string prettyPrintInternalCurveName(std::string name);
 
+/*! Takes in a delivery code and normalizes it to YYYY-MM format. */
+std::string normaliseDeliveryCode(const std::string& code);
+
 /*! Build an Fx Index given a market. Note: sold==domestic, bought==foreign */
 QuantLib::ext::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, const string& foreign,
                                                   const QuantLib::ext::shared_ptr<Market>& market, const string& configuration,
