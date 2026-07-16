@@ -205,8 +205,7 @@ std::string normaliseDeliveryCode(const string& code) {
 
             int year = std::stoi(yearStr);
             if (yearStr.size() == 1) {
-                auto today = std::chrono::year_month_day(
-                    std::chrono::floor<std::chrono::days>(std::chrono::system_clock::now()));
+                Date today = Settings::instance().evaluationDate();
                 int currentYear = static_cast<int>(today.year());
                 int currentYearDecade = (currentYear / 10) * 10;
                 year += currentYearDecade; // current decade

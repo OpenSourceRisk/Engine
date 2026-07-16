@@ -2313,6 +2313,19 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
                            "Market quote not of type Overnight Index Future.");
                 futureQuote = QuantLib::ext::dynamic_pointer_cast<OIFutureQuote>(marketQuote);
 
+                std::string normalizedCode = normaliseDeliveryCode(futureQuote->contract());
+                Month expiryMonth;
+                Year expiryYear;
+
+                if (normalizedCode.find('-') != std::string::npos) {
+                    size_t pos = normalizedCode.find('-');
+                    expiryYear = std::stoi(normalizedCode.substr(0, pos));
+                    expiryMonth = static_cast<Month>(std::stoi(normalizedCode.substr(pos + 1)));
+                } else { // fallback to the expiry month and year in the quote if no contract code is provided
+                    expiryMonth = futureQuote->expiryMonth();
+                    expiryYear = futureQuote->expiryYear();
+                }
+
                 // check that the tenor of the quote is expressed in months or years, otherwise the date calculations
                 // below do not make sense
                 QL_REQUIRE(futureQuote->tenor().units() == Months || futureQuote->tenor().units() == Years,
@@ -2327,7 +2340,7 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
                 Date startDate, endDate;
                 std::pair<Date, Date> startEndDate;
                 startEndDate =
-                    getOiFutureStartEndDate(futureQuote->expiryMonth(), futureQuote->expiryYear(), futureQuote->tenor(),
+                    getOiFutureStartEndDate(expiryMonth, expiryYear, futureQuote->tenor(),
                                             futureConvention->dateGenerationRule(), futureConvention->calendar());
                 startDate = startEndDate.first;
                 endDate = startEndDate.second;
@@ -2381,6 +2394,19 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
                            "Market quote not of type Money Market Future.");
                 futureQuote = QuantLib::ext::dynamic_pointer_cast<MMFutureQuote>(marketQuote);
 
+                std::string normalizedCode = normaliseDeliveryCode(futureQuote->contract());
+                Month expiryMonth;
+                Year expiryYear;
+
+                if (normalizedCode.find('-') != std::string::npos) {
+                    size_t pos = normalizedCode.find('-');
+                    expiryYear = std::stoi(normalizedCode.substr(0, pos));
+                    expiryMonth = static_cast<Month>(std::stoi(normalizedCode.substr(pos + 1)));
+                } else { // fallback to the expiry month and year in the quote if no contract code is provided
+                    expiryMonth = futureQuote->expiryMonth();
+                    expiryYear = futureQuote->expiryYear();
+                }
+
                 // Create a MM future helper
                 QL_REQUIRE(
                     futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMM ||
@@ -2391,7 +2417,7 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
                     "For MM Futures only 'IMM', 'IMMEUR' (2 bd before ThirdWednesday), 'IMMAUD' (alias 'SecondThursday'), 'IMMNZD', or 'IMMCAD' are allowed "
                     "as date generation rules, check the future convention '"
                         << segment->conventionsID() << "'");
-                Date immDate = getMmFutureExpiryDate(futureQuote->expiryMonth(), futureQuote->expiryYear(),
+                Date immDate = getMmFutureExpiryDate(expiryMonth, expiryYear,
                                                      futureConvention->dateGenerationRule());
 
                 if (immDate < asofDate_) {
