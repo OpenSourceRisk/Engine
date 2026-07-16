@@ -655,7 +655,7 @@ std::string OREAppInputParameters::loadParameterString(const std::string& analyt
     return params_->getString(analytic, param, mandatory);
 }
 
-std::vector<std::string> constructFilePaths(const string& rawString) {
+std::vector<std::string> OREAppInputParameters::constructFilePaths(const string& rawString) {
     if (rawString.empty())
         return {rawString};
     vector<string> fileNames;

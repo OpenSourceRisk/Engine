@@ -152,6 +152,7 @@ public:
     std::string loadParameterString(const std::string& analytic, const std::string& param, bool mandatory) override;
     std::vector<std::string> loadParameterXMLString(const std::string& rawString) override;
     std::vector<std::string> loadParameterCSVString(const std::string& rawString) override;
+    std::vector<std::string> constructFilePaths(const std::string& rawString);
 
 protected:
     QuantLib::ext::shared_ptr<Parameters> params_;
