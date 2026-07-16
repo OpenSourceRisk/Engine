@@ -44,6 +44,7 @@
 #include <qle/indexes/inflationindexobserver.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/instruments/makeoiscapfloor.hpp>
+#include <qle/quotes/commoditypricequote.hpp>
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
 #include <qle/termstructures/blackvariancecurve3.hpp>
 #include <qle/termstructures/blackvariancesurfacestddevs.hpp>
@@ -1554,9 +1555,9 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                                     optionlet = QuantLib::ext::make_shared<QuantExt::StrippedOptionlet>(
                                         settleDays, wrapper->calendar(), wrapper->businessDayConvention(), iborIndex,
-                                        optionDates, strikeVec, hCapletVol, optionletQuotes,
-                                        dc, wrapper->volatilityType(),
-                                        wrapper->displacement());
+                                        optionDates, strikeVec, hCapletVol, optionletQuotes, dc,
+                                        wrapper->volatilityType(), wrapper->displacement(),
+                                        wrapper->useEffectiveVolatility());
                                 }
                             } else {
                                 // FIXME: Works as of today only, i.e. for sensitivity/scenario analysis.
@@ -1571,7 +1572,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 optionlet = QuantLib::ext::make_shared<QuantLib::StrippedOptionlet>(
                                     settleDays, wrapper->calendar(), wrapper->businessDayConvention(), iborIndex,
                                     optionDates, strikesProxyAdjusted, quotes, dc, wrapper->volatilityType(),
-                                    wrapper->displacement());
+                                    wrapper->displacement(), wrapper->useEffectiveVolatility());
                                 if (!stickySabr) {
                                     hCapletVol = Handle<OptionletVolatilityStructure>(
                                         QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, LinearFlat>>(
@@ -3169,7 +3170,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 DLOG("Ssm comm vol for " << name << " uses BlackVarianceSurfaceMoneynessSpot.");
 
                                 bool flatExtrapMoneyness = true;
-                                Handle<Quote> spot(QuantLib::ext::make_shared<SimpleQuote>(priceCurve->price(0)));
+                                Handle<Quote> spot(QuantLib::ext::make_shared<CommodityPriceQuote>(priceCurve));
                                 if (useSpreadedTermStructures_) {
                                     // get init market curves to populate sticky ts in vol surface ctor
                                     Handle<YieldTermStructure> initMarketYts =

@@ -104,36 +104,6 @@ Real ExerciseCalculator::npv(Size tradeIndex, const QuantLib::ext::shared_ptr<Tr
     return exerciseValue * fx / numeraire;
 }
 
-void CashflowCalculator::init(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
-                              const QuantLib::ext::shared_ptr<SimMarket>& simMarket) {
-    DLOG("init CashflowCalculator");
-    tradeAndLegCcyIndex_.clear();
-    std::set<std::string> ccys;
-    for (auto const& [tradeId,trade] : portfolio->trades()) {
-        tradeAndLegCcyIndex_.push_back(std::vector<Size>(trade->legs().size()));
-        for (auto const& l : trade->legCurrencies()) {
-            ccys.insert(l);
-        }
-    }
-    size_t i = 0;
-    for (const auto& [tradeId, trade] : portfolio->trades()) {
-        for (Size j = 0; j < trade->legs().size(); ++j) {
-            tradeAndLegCcyIndex_[i][j] =
-                std::distance(ccys.begin(), ccys.find(trade->legCurrencies()[j]));
-        }
-        i++;
-    }
-    ccyQuotes_.resize(ccys.size());
-    for (Size i = 0; i < ccys.size(); ++i)
-        ccyQuotes_[i] = (simMarket->fxRate(*std::next(ccys.begin(), i) + baseCcyCode_));
-    fxRates_.resize(ccys.size());
-}
-
-void CashflowCalculator::initScenario() {
-    for (Size i = 0; i < ccyQuotes_.size(); ++i)
-        fxRates_[i] = ccyQuotes_[i]->value();
-}
-
 void CashflowCalculator::calculate(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
                                    const QuantLib::ext::shared_ptr<SimMarket>& simMarket,
                                    QuantLib::ext::shared_ptr<NPVCube>& outputCube,
@@ -166,23 +136,17 @@ void CashflowCalculator::calculate(const QuantLib::ext::shared_ptr<Trade>& trade
 
     try {
         if (!isOption || (isExercised && isPhysical)) {
-            for (Size i = 0; i < trade->legs().size(); i++) {
-                const Leg& leg = trade->legs()[i];
-                Real legFlow = 0;
-                for (auto flow : leg) {
-                    // Take flows in (t, t+1]
-                    if (startDate < flow->date() && flow->date() <= endDate)
-                        legFlow += flow->amount();
-                }
-                if (legFlow != 0) {
-                    // Do FX conversion and add to netFlow
-                    Real fx = fxRates_[tradeAndLegCcyIndex_[tradeIndex][i]];
-                    Real direction = trade->legPayers()[i] ? -1.0 : 1.0;
-                    legFlow *= direction * longShort * fx;
-                    if (legFlow > 0)
-                        netPositiveFlow += legFlow;
+            auto cashflows = trade->cashflows(baseCcyCode_, simMarket, Market::defaultConfiguration, false);
+            for (const auto& cf : cashflows) {
+                // Take flows in (t, t+1]
+                if (startDate < cf.payDate && cf.payDate <= endDate) {
+                    if (cf.baseAmount == Null<Real>())
+                        continue;
+                    Real flow = cf.baseAmount * longShort;
+                    if (flow > 0)
+                        netPositiveFlow += flow;
                     else
-                        netNegativeFlow += legFlow;
+                        netNegativeFlow += flow;
                 }
             }
         }

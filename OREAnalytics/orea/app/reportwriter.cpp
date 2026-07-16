@@ -138,13 +138,9 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
     LOG("NPV file written");
 }
 
-void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& baseCurrency,
-                                 QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio,
-                                 QuantLib::ext::shared_ptr<ore::data::Market> market, const std::string& configuration,
-                                 const bool includePastCashflows) {
+namespace {
 
-    LOG("Writing cashflow report");
-
+void addCashflowReportColumns(ore::data::Report& report) {
     report.addColumn("TradeId", string())
         .addColumn("Type", string())
         .addColumn("CashflowNo", Size())
@@ -174,46 +170,57 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
         .addColumn("EffectiveCapVolatility", double(), 10)
         .addColumn("Amount(Base)", double(), 4)
         .addColumn("DiscountFactor(Base)", double(), 10);
+}
 
-    for (auto [tradeId, trade]: portfolio->trades()) {
+void addTradeCashflowRows(ore::data::Report& report, const ext::shared_ptr<ore::data::Trade>& trade,
+                          const std::vector<ore::data::TradeCashflowReportData>& data) {
+    for (auto const& d : data) {
+        report.next()
+            .add(trade->id())
+            .add(trade->tradeType())
+            .add(d.cashflowNo)
+            .add(d.legNo)
+            .add(d.payDate)
+            .add(d.flowType)
+            .add(d.amount)
+            .add(d.currency)
+            .add(d.coupon)
+            .add(d.accrual)
+            .add(d.accrualStartDate)
+            .add(d.accrualEndDate)
+            .add(d.accruedAmount)
+            .add(d.fixingDate)
+            .add(d.fixingValue)
+            .add(d.notional)
+            .add(d.discountFactor)
+            .add(d.presentValue)
+            .add(d.fxRateLocalBase)
+            .add(d.presentValueBase)
+            .add(d.baseCurrency)
+            .add(d.floorStrike)
+            .add(d.capStrike)
+            .add(d.floorVolatility)
+            .add(d.capVolatility)
+            .add(d.effectiveFloorVolatility)
+            .add(d.effectiveCapVolatility)
+            .add(d.baseAmount)
+            .add(d.discountFactorBase);
+    }
+}
 
+} // namespace
+
+void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& baseCurrency,
+                                 QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio,
+                                 QuantLib::ext::shared_ptr<ore::data::Market> market, const std::string& configuration,
+                                 const bool includePastCashflows) {
+
+    addCashflowReportColumns(report);
+
+    for (auto [tradeId, trade] : portfolio->trades()) {
         try {
-
             auto data = trade->cashflows(baseCurrency, market, configuration, includePastCashflows);
-
-            for(auto const& d: data) {
-                    report.next()
-                        .add(trade->id())
-                        .add(trade->tradeType())
-                        .add(d.cashflowNo)
-                        .add(d.legNo)
-                        .add(d.payDate)
-                        .add(d.flowType)
-                        .add(d.amount)
-                        .add(d.currency)
-                        .add(d.coupon)
-                        .add(d.accrual)
-                        .add(d.accrualStartDate)
-                        .add(d.accrualEndDate)
-                        .add(d.accruedAmount)
-                        .add(d.fixingDate)
-                        .add(d.fixingValue)
-                        .add(d.notional)
-                        .add(d.discountFactor)
-                        .add(d.presentValue)
-                        .add(d.fxRateLocalBase)
-                        .add(d.presentValueBase)
-                        .add(d.baseCurrency)
-                        .add(d.floorStrike)
-                        .add(d.capStrike)
-                        .add(d.floorVolatility)
-                        .add(d.capVolatility)
-                        .add(d.effectiveFloorVolatility)
-                        .add(d.effectiveCapVolatility)
-                        .add(d.baseAmount)
-                        .add(d.discountFactorBase);
-            }
-
+            addTradeCashflowRows(report, trade, data);
         } catch (std::exception& e) {
             StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error during cashflow report generation",
                                         e.what())
@@ -224,6 +231,28 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
     report.end();
     LOG("Cashflow report written");
 }
+
+void ReportWriter::writeCashflow(
+    ore::data::Report& report, QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio,
+    const std::map<std::string, std::vector<ore::data::TradeCashflowReportData>>& tradeCashflows) {
+
+    LOG("Writing cashflow report from precomputed cashflows");
+
+    addCashflowReportColumns(report);
+
+    for (auto [tradeId, trade] : portfolio->trades()) {
+        auto it = tradeCashflows.find(tradeId);
+        if (it == tradeCashflows.end()){
+            WLOG("Trade " << tradeId << " not found in precomputed cashflows, skipping.");
+            continue;
+        }
+        addTradeCashflowRows(report, trade, it->second);
+    }
+
+    report.end();
+    LOG("Cashflow report written");
+}
+
 
 void ReportWriter::writeCashflowNpv(ore::data::Report& report, const ore::data::InMemoryReport& cashflowReport,
                                     QuantLib::ext::shared_ptr<ore::data::Market> market, const std::string& configuration,
@@ -2271,38 +2300,6 @@ void ReportWriter::writeIMScheduleTradeReport(const map<string, vector<IMSchedul
     LOG("IM Schedule trade results report written.");
 }
 
-Real aggregateTradeFlow(const std::string& tradeId, const Date& d0, const Date& d1, 
-            const ext::shared_ptr<InMemoryReport>& cashFlowReport,
-            const ext::shared_ptr<ore::data::Market>& market, const std::string& configuration,
-            const std::string& baseCurrency)  {
-    Size tradeIdColumn = 0;
-    Size dateColumn = 4;
-    Size amountColumn = 6;
-    Size ccyColumn = 7;
-    QL_REQUIRE(cashFlowReport->header(tradeIdColumn) == "TradeId", "incorrect trade id column " << tradeIdColumn);
-    QL_REQUIRE(cashFlowReport->header(amountColumn) == "Amount", "incorrect trade id column " << amountColumn);
-    QL_REQUIRE(cashFlowReport->header(ccyColumn) == "Currency", "incorrect trade id column " << ccyColumn);
-    QL_REQUIRE(cashFlowReport->header(dateColumn) == "PayDate", "incorrect trade id column " << dateColumn);
-
-    Real flow = 0.0;
-    for (Size i = 0; i < cashFlowReport->rows(); ++i) {
-        string id = boost::get<string>(cashFlowReport->data(tradeIdColumn, i));
-    if (id != tradeId)
-        continue;
-    Date date = boost::get<Date>(cashFlowReport->data(dateColumn, i));
-    if (date <= d0 || date > d1)
-        continue;
-    string ccy = boost::get<string>(cashFlowReport->data(ccyColumn, i));
-    Real amount = boost::get<Real>(cashFlowReport->data(amountColumn, i));
-    Real fx = 1.0;
-    if (ccy != baseCurrency)
-        fx = market->fxRate(ccy + baseCurrency, configuration)->value();
-    flow += fx * amount; 
-    }
-    
-    return flow;
-}
-
 void ReportWriter::writePnlReport(ore::data::Report& report,
             const ext::shared_ptr<InMemoryReport>& t0NpvReport,
             const ext::shared_ptr<InMemoryReport>& t0m1p0NpvReport,
@@ -2310,7 +2307,7 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
             const ext::shared_ptr<InMemoryReport>& t1m1p0NpvReport,
             const ext::shared_ptr<InMemoryReport>& t1m0p1NpvReport,
             const ext::shared_ptr<InMemoryReport>& t1m1p1NpvReport,
-            const ext::shared_ptr<InMemoryReport>& t0CashFlowReport,
+            const std::map<std::string, std::vector<ore::data::TradeCashflowReportData>>& t0TradeCashflows,
             const Date& startDate, const Date& endDate,
             const std::string& baseCurrency,
             const ext::shared_ptr<ore::data::Market>& market,
@@ -2424,7 +2421,9 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
             
             Real tradeChangePnl = t1m1p1Npv - t1m1p0Npv;
             Real hypotheticalCleanPnl = t0m1p0Npv - t0Npv;
-            Real periodFlow = aggregateTradeFlow(tradeId, startDate, endDate, t0CashFlowReport, market, configuration, baseCurrency);
+            auto cfIt = t0TradeCashflows.find(tradeId);
+            Real periodFlow = cfIt == t0TradeCashflows.end() ? 0.0 : getAggregateTradeFlows(startDate, endDate,
+                                                                            cfIt->second, market, configuration, baseCurrency);
             Real matured =
                 (maturityDate <= endDate && close_enough(t1m1p0Npv, 0.0) && close_enough(t1m1p1Npv, 0.0)) ? t0Npv : 0.0;
             Real terminated = (close_enough(t1m1p1Npv, 0.0) && !close_enough(t1m1p0Npv, 0.0)) ? t0Npv : 0.0;
