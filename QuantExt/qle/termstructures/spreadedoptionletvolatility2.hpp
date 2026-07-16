@@ -48,6 +48,7 @@ public:
     Real displacement() const override;
     void update() override;
     void deepUpdate() override;
+    bool useEffectiveVolatility() const override;
 
 protected:
     QuantLib::ext::shared_ptr<SmileSection> smileSectionImpl(Time optionTime) const override;

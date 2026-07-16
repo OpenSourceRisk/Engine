@@ -1554,9 +1554,9 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                                     optionlet = QuantLib::ext::make_shared<QuantExt::StrippedOptionlet>(
                                         settleDays, wrapper->calendar(), wrapper->businessDayConvention(), iborIndex,
-                                        optionDates, strikeVec, hCapletVol, optionletQuotes,
-                                        dc, wrapper->volatilityType(),
-                                        wrapper->displacement());
+                                        optionDates, strikeVec, hCapletVol, optionletQuotes, dc,
+                                        wrapper->volatilityType(), wrapper->displacement(),
+                                        wrapper->useEffectiveVolatility());
                                 }
                             } else {
                                 // FIXME: Works as of today only, i.e. for sensitivity/scenario analysis.
@@ -1571,7 +1571,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 optionlet = QuantLib::ext::make_shared<QuantLib::StrippedOptionlet>(
                                     settleDays, wrapper->calendar(), wrapper->businessDayConvention(), iborIndex,
                                     optionDates, strikesProxyAdjusted, quotes, dc, wrapper->volatilityType(),
-                                    wrapper->displacement());
+                                    wrapper->displacement(), wrapper->useEffectiveVolatility());
                                 if (!stickySabr) {
                                     hCapletVol = Handle<OptionletVolatilityStructure>(
                                         QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, LinearFlat>>(
