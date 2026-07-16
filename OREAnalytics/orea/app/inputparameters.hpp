@@ -273,7 +273,7 @@ public:
         // if the string sarts with a '<' we assume it's an XML string and try to load directly from it, otherwise we
         // treat it as a file name or reference and try to load the XML string from it
         auto first = str.find_first_not_of(" \t\r\n");
-        if (first != std::string::npos && str[fir
+        if (first != std::string::npos && str[first] == '<') {
             try {
                 obj->fromXMLString(str);
                 return true;

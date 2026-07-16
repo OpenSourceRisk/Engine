@@ -130,6 +130,8 @@ void Crif::setCsvLoaderConfig(const QuantLib::ext::shared_ptr<SimmConfiguration>
     escapeChar_ = escapeChar;
     nullString_ = nullString;
 
+    QL_REQUIRE(configuration_, "SimmConfiguration must be provided to Crif::setCsvLoaderConfig");
+
     size_t maxIndexRequired = *boost::max_element(requiredHeaders | boost::adaptors::map_keys);
     size_t maxIndexOptional = *boost::max_element(optionalHeaders | boost::adaptors::map_keys);
     size_t maxIndex = std::max(maxIndexRequired, maxIndexOptional);
@@ -154,6 +156,7 @@ void Crif::addRecordToCrif(CrifRecord&& recordToAdd) {
     }
     if (add) {
         addRecord(recordToAdd);
+        updateMapping(recordToAdd);
     } else {
         QL_FAIL("Risk type string " << recordToAdd.riskType
                                     << " does not correspond to a valid SimmConfiguration::RiskType");
@@ -484,6 +487,8 @@ void Crif::fromCSV(std::istream& stream) {
             // Process the header line of the CRIF file
             processHeader(entries);
             headerProcessed = true;
+            if (columnIndex_.empty())
+                QL_FAIL("Crif::fromCSV(): no recognised column headers found in CRIF file");
             auto maxPair = std::max_element(
                 columnIndex_.begin(), columnIndex_.end(),
                 [](const pair<QuantLib::Size, QuantLib::Size>& p1, const pair<QuantLib::Size, QuantLib::Size>& p2) {
