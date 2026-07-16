@@ -1905,7 +1905,7 @@ void YieldCurve::buildFittedBondCurve(const std::size_t index) {
     engineData->engineParameters("Bond") = {{"TimestepPeriod", "6M"}};
 
     std::map<std::string, Handle<YieldTermStructure>> iborCurveMapping;
-    for (auto const& c : curveSegment->iborIndexCurves()) {
+    for (auto const& c : curveSegment->indexCurves()) {
         auto index = parseIborIndex(c.first);
         auto key = yieldCurveKey(index->currency(), c.second, asofDate_);
         auto y = requiredYieldCurveHandles_.find(key);
@@ -2138,7 +2138,7 @@ void YieldCurve::buildBondYieldShiftedCurve(const std::size_t index) {
 
     //  needed to link the ibors in case bond is a floater
     std::map<std::string, Handle<YieldTermStructure>> iborCurveMapping;
-    for (auto const& c : segment->iborIndexCurves()) {
+    for (auto const& c : segment->indexCurves()) {
         auto index = parseIborIndex(c.first);
         auto key = yieldCurveKey(index->currency(), c.second, asofDate_);
         auto y = requiredYieldCurveHandles_.find(key);
