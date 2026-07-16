@@ -24,6 +24,12 @@
 %include scheduler.i
 
 %{
+#include <qle/cashflows/blackaveragebmacouponpricer.hpp>
+#include <qle/cashflows/cappedflooredaveragebmacoupon.hpp>
+#include <qle/cashflows/cmbcoupon.hpp>
+#include <qle/cashflows/zerofixedcoupon.hpp>
+
+using QuantLib::AverageBMACoupon;
 using QuantExt::OvernightIndexedCouponBase;
 using QuantExt::AverageONIndexedCoupon;
 using QuantExt::AverageONIndexedCouponPricer;
@@ -33,8 +39,125 @@ using QuantExt::BlackOvernightIndexedCouponPricer;
 using QuantExt::CapFlooredAverageONIndexedCouponPricer;
 using QuantExt::BlackAverageONIndexedCouponPricer;
 using QuantExt::AverageONLeg;
+using QuantExt::CappedFlooredAverageBMACoupon;
+using QuantExt::CapFlooredAverageBMACouponPricer;
+using QuantExt::BlackAverageBMACouponPricer;
+using QuantExt::CmbCoupon;
+using QuantExt::CmbCouponPricer;
+using QuantExt::ZeroFixedCoupon;
 using namespace std;
 %}
+
+%shared_ptr(AverageBMACoupon)
+class AverageBMACoupon : public FloatingRateCoupon {
+  public:
+    AverageBMACoupon(
+        const Date& paymentDate,
+        Real nominal,
+        const Date& startDate,
+        const Date& endDate,
+        const ext::shared_ptr<BMAIndex>& index,
+        Real gearing = 1.0,
+        Spread spread = 0.0,
+        const Date& refPeriodStart = Date(),
+        const Date& refPeriodEnd = Date(),
+        const DayCounter& dayCounter = DayCounter());
+
+    Date fixingDate() const;
+    std::vector<Date> fixingDates() const;
+    std::vector<Rate> indexFixings() const;
+};
+
+%shared_ptr(CappedFlooredAverageBMACoupon)
+class CappedFlooredAverageBMACoupon : public FloatingRateCoupon {
+  public:
+    CappedFlooredAverageBMACoupon(
+        const ext::shared_ptr<AverageBMACoupon>& underlying,
+        Real cap = Null<Real>(),
+        Real floor = Null<Real>(),
+        bool nakedOption = false,
+        bool includeSpread = false);
+
+    Rate cap() const;
+    Rate floor() const;
+    Rate effectiveCap() const;
+    Rate effectiveFloor() const;
+    Real effectiveCapletVolatility() const;
+    Real effectiveFloorletVolatility() const;
+    Real strippedCapletVolatility() const;
+    Real strippedFloorletVolatility() const;
+    bool isCapped() const;
+    bool isFloored() const;
+    ext::shared_ptr<AverageBMACoupon> underlying() const;
+    bool nakedOption() const;
+    bool includeSpread() const;
+};
+
+%shared_ptr(CapFlooredAverageBMACouponPricer)
+%nodefaultctor CapFlooredAverageBMACouponPricer;
+class CapFlooredAverageBMACouponPricer : public FloatingRateCouponPricer {
+  public:
+    Handle<OptionletVolatilityStructure> capletVolatility() const;
+    Real effectiveCapletVolatility() const;
+    Real effectiveFloorletVolatility() const;
+    Real strippedCapletVolatility() const;
+    Real strippedFloorletVolatility() const;
+};
+
+%shared_ptr(BlackAverageBMACouponPricer)
+class BlackAverageBMACouponPricer : public CapFlooredAverageBMACouponPricer {
+  public:
+    BlackAverageBMACouponPricer(
+        const Handle<OptionletVolatilityStructure>& v);
+};
+
+%shared_ptr(CmbCoupon)
+class CmbCoupon : public FloatingRateCoupon {
+  public:
+    CmbCoupon(
+        const Date& paymentDate,
+        Real nominal,
+        const Date& startDate,
+        const Date& endDate,
+        Natural fixingDays,
+        const ext::shared_ptr<ConstantMaturityBondIndex>& index,
+        Real gearing = 1.0,
+        Spread spread = 0.0,
+        const Date& refPeriodStart = Date(),
+        const Date& refPeriodEnd = Date(),
+        const DayCounter& dayCounter = DayCounter(),
+        bool isInArrears = false,
+        const Date& exCouponDate = Date());
+
+    const ext::shared_ptr<ConstantMaturityBondIndex>& bondIndex() const;
+};
+
+%shared_ptr(CmbCouponPricer)
+class CmbCouponPricer : public FloatingRateCouponPricer {
+  public:
+    CmbCouponPricer();
+};
+
+%shared_ptr(ZeroFixedCoupon)
+class ZeroFixedCoupon : public Coupon {
+  public:
+    ZeroFixedCoupon(
+        const Date& paymentDate,
+        double notional,
+        double rate,
+        const DayCounter& dc,
+        const std::vector<Date>& dates,
+        const Compounding& comp,
+        bool subtractNotional);
+
+    Real amount() const;
+    Real nominal() const;
+    Real rate() const;
+    DayCounter dayCounter() const;
+    Real accruedAmount(const Date& accrualEnd) const;
+    Compounding compounding() const;
+    bool subtractNotional() const;
+};
 
 %shared_ptr(OvernightIndexedCouponBase)
 class OvernightIndexedCouponBase : public FloatingRateCoupon {
