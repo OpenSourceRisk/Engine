@@ -71,6 +71,14 @@ public:
         vector<ScenarioCurvePillar> shiftTenors;
     };
 
+    // Have and own data type, later add shape profile buckets, at moment
+    // parallel shift off the intraday shape
+    struct IntradayPowerShiftData : ShiftData {
+        IntradayPowerShiftData() : ShiftData() {}
+        IntradayPowerShiftData(const ShiftData& d) : ShiftData(d) {}
+        vector<Period> shiftTenors;
+    };
+
     using SpotShiftData = ShiftData;
 
     struct CdsVolShiftData : ShiftData {
@@ -188,6 +196,9 @@ public:
     const map<string, QuantLib::ext::shared_ptr<CurveShiftData>>& commodityCurveShiftData() const {
         return commodityCurveShiftData_;
     }
+    const map<string, QuantLib::ext::shared_ptr<IntradayPowerShiftData>>& intradayPowerCurveShiftData() const {
+        return intradayPowerCurveShiftData_;
+    }
     const map<string, QuantLib::ext::shared_ptr<VolShiftData>>& commodityVolShiftData() const {
         return commodityVolShiftData_;
     }
@@ -245,6 +256,9 @@ public:
     map<string, QuantLib::ext::shared_ptr<VolShiftData>>& equityVolShiftData() { return equityVolShiftData_; }
     map<string, string>& commodityCurrencies() { return commodityCurrencies_; }
     map<string, QuantLib::ext::shared_ptr<CurveShiftData>>& commodityCurveShiftData() { return commodityCurveShiftData_; }
+    map<string, QuantLib::ext::shared_ptr<IntradayPowerShiftData>>& intradayPowerCurveShiftData() {
+        return intradayPowerCurveShiftData_;
+    }
     map<string, QuantLib::ext::shared_ptr<VolShiftData>>& commodityVolShiftData() { return commodityVolShiftData_; }
     map<string, QuantLib::ext::shared_ptr<VolShiftData>>& correlationShiftData() { return correlationShiftData_; }
     map<string, QuantLib::ext::shared_ptr<SpotShiftData>>& securityShiftData() { return securityShiftData_; }
@@ -307,6 +321,9 @@ public:
     void addCommodityCurveShiftData(const string& s, const QuantLib::ext::shared_ptr<CurveShiftData>& d) {
         commodityCurveShiftData_[s] = d;
     }
+    void addIntradayPowerCurveShiftData(const string& s, const QuantLib::ext::shared_ptr<IntradayPowerShiftData>& d) {
+        intradayPowerCurveShiftData_[s] = d;
+    }
     void addCommodityVolShiftData(const string& s, const QuantLib::ext::shared_ptr<VolShiftData>& d) { commodityVolShiftData_[s] = d; }
     void addCorrelationShiftData(const string& s, const QuantLib::ext::shared_ptr<VolShiftData>& d) { correlationShiftData_[s] = d; }
     void addSecurityShiftData(const string& s, const QuantLib::ext::shared_ptr<SpotShiftData>& d) { securityShiftData_[s] = d; }
@@ -342,12 +359,15 @@ public:
 protected:
     void shiftDataFromXML(XMLNode* child, ShiftData& data);
     void curveShiftDataFromXML(XMLNode* child, CurveShiftData& data);
+    void intradayPowerShiftDataFromXML(XMLNode* child, IntradayPowerShiftData& data);
     void volShiftDataFromXML(XMLNode* child, VolShiftData& data, const bool requireShiftStrikes = true);
 
     //! toXML helper methods
     //@{
     void shiftDataToXML(ore::data::XMLDocument& doc, XMLNode* node, const ShiftData& data) const;
     void curveShiftDataToXML(ore::data::XMLDocument& doc, XMLNode* node, const CurveShiftData& data) const;
+    void intradayPowerShiftDataToXML(ore::data::XMLDocument& doc, XMLNode* node,
+                                     const IntradayPowerShiftData& data) const;
     void volShiftDataToXML(ore::data::XMLDocument& doc, XMLNode* node, const VolShiftData& data) const;
     //@}
 
@@ -373,6 +393,7 @@ protected:
     map<string, QuantLib::ext::shared_ptr<CurveShiftData>> dividendYieldShiftData_; // key: equity name
     map<string, std::string> commodityCurrencies_;
     map<string, QuantLib::ext::shared_ptr<CurveShiftData>> commodityCurveShiftData_;
+    map<string, QuantLib::ext::shared_ptr<IntradayPowerShiftData>> intradayPowerCurveShiftData_;
     map<string, QuantLib::ext::shared_ptr<VolShiftData>> correlationShiftData_;
     map<string, QuantLib::ext::shared_ptr<VolShiftData>> commodityVolShiftData_;
     map<string, QuantLib::ext::shared_ptr<SpotShiftData>> securityShiftData_; // key: security name

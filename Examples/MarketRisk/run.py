@@ -24,7 +24,9 @@ cases = [
     "run_stressscenariogeneration.py",
     "run_scenariostress.py",
     "run_correlation.py",
-    "run_curvealgebra.py"
+    "run_curvealgebra.py",
+    "run_curves.py",
+    "run_intradaypower.py"
 ]
 
 sys.exit(run_scripts(cases))

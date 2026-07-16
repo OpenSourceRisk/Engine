@@ -29,6 +29,7 @@
 #include <orea/scenario/historicalscenarioreturn.hpp>
 #include <orea/scenario/historicalscenariogenerator.hpp>
 #include <orea/scenario/scenariowriter.hpp>
+#include <orea/scenario/scenarioshiftcalculator.hpp>
 %}
 
 // STL templates needed by this module
@@ -181,6 +182,19 @@ public:
 };
 }}
 
+// ReturnConfiguration::Return is a nested struct, which SWIG cannot wrap as a
+// proxy class (confirmed: no class is generated, so returnType() would come
+// back as an unusable opaque handle with no readable fields). Flatten it
+// into two accessors on ReturnConfiguration instead.
+%extend ore::analytics::ReturnConfiguration {
+    int returnTypeValue(const QuantExt::RiskFactorKey& key) const {
+        return (int)self->returnType(key).type;
+    }
+    double returnDisplacement(const QuantExt::RiskFactorKey& key) const {
+        return self->returnType(key).displacement;
+    }
+}
+
 %template(KeyTypeReturnTypeMap) std::map<QuantExt::RiskFactorKey::KeyType, ore::analytics::ReturnConfiguration::ReturnType>;
 
 // --- HistoricalScenarioGenerator ---
@@ -238,6 +252,9 @@ public:
 
     void setGenerateDifferenceScenarios(bool b);
     bool generateDifferenceScenarios() const;
+
+    void setRiskFactorBreakdown(const bool b);
+    bool isRiskFactorBreakdown() const;
 };
 }}
 
@@ -309,6 +326,24 @@ public:
     void writeScenario(const ext::shared_ptr<QuantExt::Scenario>& s, bool writeHeader);
     void reset() override;
     void close();
+};
+}}
+
+// --- ScenarioShiftCalculator ---
+%shared_ptr(ore::analytics::ScenarioShiftCalculator)
+
+namespace ore { namespace analytics {
+class ScenarioShiftCalculator {
+public:
+    ScenarioShiftCalculator(const ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityConfig,
+                            const ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketConfig,
+                            const ext::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket =
+                                ext::shared_ptr<ore::analytics::ScenarioSimMarket>());
+
+    QuantLib::Real shift(const ore::analytics::RiskFactorKey& key, 
+                         const ore::analytics::Scenario& s_1,
+                         const ore::analytics::Scenario& s_2, 
+                         const bool isPar = false) const;
 };
 }}
 

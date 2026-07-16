@@ -1,0 +1,62 @@
+/*
+ Copyright (C) 2026 AcadiaSoft Inc
+ All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
+
+/*! \file portfolio/builders/intradaypowerforward.hpp
+    \brief Engine builder for intraday power forward
+    \ingroup builders
+*/
+
+#pragma once
+
+#include <boost/make_shared.hpp>
+#include <ored/portfolio/builders/cachingenginebuilder.hpp>
+#include <ored/portfolio/enginefactory.hpp>
+#include <ored/utilities/marketdata.hpp>
+#include <qle/pricingengines/discountingcommodityforwardengine.hpp>
+
+namespace ore {
+namespace data {
+
+//! Engine builder for intraday power forward
+/*! Pricing engines are cached by currency
+    \ingroup builders
+ */
+class IntradayPowerForwardEngineBuilder
+    : public CachingPricingEngineBuilder<std::string, const QuantLib::Currency&, const QuantLib::Currency&, const std::string&> {
+public:
+    IntradayPowerForwardEngineBuilder()
+        : CachingEngineBuilder("DiscountedCashflows", "DiscountingIntradayPowerForwardEngine", {"IntradayPowerForward"}) {}
+
+protected:
+    virtual std::string keyImpl(const Currency& ccy, const Currency& npvCcy,
+                                const std::string& discountCurveName) override {
+        return ccy.code() + "_" + npvCcy.code() + "_" + discountCurveName;
+    }
+
+    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const QuantLib::Currency& ccy, const QuantLib::Currency& npvCcy, const std::string& discountCurveName) override {
+        return QuantLib::ext::make_shared<QuantExt::DiscountingCommodityForwardEngine>(
+            discountCurveName.empty()
+            ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
+            : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing)),  
+            QuantLib::ext::nullopt, Date(),
+            market_->fxRate(ccy.code() + npvCcy.code(), configuration(MarketContext::pricing)));
+    }
+};
+
+} // namespace data
+} // namespace ore

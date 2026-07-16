@@ -32,6 +32,7 @@
 #include <ql/time/daycounters/one.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
+#include <qle/cashflows/intradaypowercashflow.hpp>
 #include <qle/utilities/time.hpp>
 
 using namespace ore::data;
@@ -751,5 +752,114 @@ Leg CommodityFloatingLegBuilder::buildLeg(
     addToRequiredFixings(leg, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings));
     return leg;
 }
+
+
+Leg makeIntradayPowerFloatingLeg(const LegData& data, const QuantLib::ext::shared_ptr<IntradayPowerIndex>& powerIndex,
+                                 const QuantLib::ext::shared_ptr<IntradayPowerLoadTermStructure>& loadTermStructure,
+                                 const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                                 const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex,
+                                 const QuantLib::Date& openEndDateReplacement) {
+    Schedule schedule;
+    Schedule paymentSchedule;
+    ScheduleBuilder scheduleBuilder;
+    scheduleBuilder.add(schedule, data.schedule());
+    scheduleBuilder.add(paymentSchedule, data.paymentSchedule());
+    scheduleBuilder.makeSchedules(openEndDateReplacement);
+
+    // Get explicit payment dates, if given
+
+    vector<Date> paymentDates;
+
+    if (!paymentSchedule.empty()) {
+        paymentDates = paymentSchedule.dates();
+    } else if (!data.paymentDates().empty()) {
+        BusinessDayConvention paymentDatesConvention =
+            data.paymentConvention().empty() ? Unadjusted : parseBusinessDayConvention(data.paymentConvention());
+        Calendar paymentDatesCalendar =
+            data.paymentCalendar().empty() ? NullCalendar() : parseCalendar(data.paymentCalendar());
+        paymentDates = parseVectorOfValues<Date>(data.paymentDates(), &parseDate);
+        for (Size i = 0; i < paymentDates.size(); i++)
+            paymentDates[i] = paymentDatesCalendar.adjust(paymentDates[i], paymentDatesConvention);
+    }
+
+    // set payment calendar
+
+    Calendar paymentCalendar;
+    if (!data.paymentCalendar().empty())
+        paymentCalendar = parseCalendar(data.paymentCalendar());
+    else if (!paymentSchedule.calendar().empty())
+        paymentCalendar = paymentSchedule.calendar();
+    else if (!schedule.calendar().empty())
+        paymentCalendar = schedule.calendar();
+
+    // set day counter and bdc
+
+    BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    
+    auto intradayData = QuantLib::ext::dynamic_pointer_cast<IntradayPowerFloatingLegData>(data.concreteLegData());
+    QL_REQUIRE(intradayData, "Wrong LegType, expected IntradayPowerFloating");
+    // build standard schedules (for non-strict notional dates)
+    vector<Real> quantities =
+        buildScheduledVector(intradayData->quantities(), intradayData->quantityDates(), schedule);
+
+    // Get spreads and gearings which may be empty
+    vector<Real> spreads = buildScheduledVector(intradayData->spreads(), intradayData->spreadDates(), schedule);
+    vector<Real> gearings =
+        buildScheduledVector(intradayData->gearings(), intradayData->gearingDates(), schedule);
+
+    PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
+
+    Leg leg = IntradayPowerLeg(schedule, powerIndex, loadTermStructure)
+                  .withQuantities(quantities)
+                  .withPricingCalendar(parseCalendar(intradayData->pricingCalendar()))
+                  .withPaymentCalendar(paymentCalendar)
+                  .withPaymentConvention(bdc)
+                  .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
+                  .withSpreads(spreads)
+                  .withGearings(gearings)
+                  .withPaymentDates(paymentDates)
+                  .includeStartDate(intradayData->includePeriodStart())
+                  .includeEndDate(intradayData->includePeriodEnd())
+                  .useBusinessDays(intradayData->businessDays())
+                  .withQuantityMode(intradayData->quantityMode())
+                  .withFxIndex(fxIndex);
+    return leg;
+}
+
+Leg IntradayPowerFloatingLegBuilder::buildLeg(
+    const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+    RequiredFixings& requiredFixings, const string& configuration, const QuantLib::Date& openEndDateReplacement,
+    const bool useXbsCurves, const bool attachPricer,
+    std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngines) const {
+
+    auto intradayData = QuantLib::ext::dynamic_pointer_cast<IntradayPowerFloatingLegData>(data.concreteLegData());
+    QL_REQUIRE(intradayData, "Wrong LegType, expected IntradayPowerFloating");
+
+    string indexName = intradayData->name();
+
+    auto loadTermStructure =
+        intradayData->loadProfileData().has_value() ? intradayData->loadProfileData()->loadTermStructure() : nullptr;
+
+    auto index = engineFactory->market()->intradayPowerIndex(indexName, configuration);
+    auto curve = index->priceCurve();
+
+    auto legCurrency = parseCurrencyWithMinors(data.currency());
+    auto priceCurrency = curve->currency();
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex = nullptr;
+    // if price currency differs from the leg currency we need an FxIndex
+    if (legCurrency != priceCurrency) {
+        QL_REQUIRE(intradayData->fxIndex() != "", "No FxIndex - if price currency ("
+                                                      << priceCurrency << ") differs from leg currency ("
+                                                      << legCurrency << ") an FxIndex must be provided");
+
+        fxIndex = buildFxIndex(intradayData->fxIndex(), data.currency(), priceCurrency.code(), engineFactory->market(),
+                               configuration, useXbsCurves);
+    }
+    Leg result =
+        makeIntradayPowerFloatingLeg(data, *index, loadTermStructure, engineFactory, fxIndex, openEndDateReplacement);
+    addToRequiredFixings(result, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings));
+    return result;
+}
+
 } // namespace data
 } // namespace ore

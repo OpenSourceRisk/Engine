@@ -1,0 +1,17 @@
+#TradeId,ScenarioLabel,Base NPV,Scenario NPV,Sensitivity
+Commodity_Swap_ExplicitLoad,BASE,-167433.14,-167433.14,0.00
+Commodity_Swap_ExplicitLoad,commodityCurvesUp,-167433.14,-178596.42,-11163.28
+Commodity_Swap_NoLoad,BASE,-499985.69,-499985.69,0.00
+Commodity_Swap_NoLoad,commodityCurvesUp,-499985.69,-534133.79,-34148.10
+Commodity_Swap_RulebasedLoad,BASE,-167433.14,-167433.14,0.00
+Commodity_Swap_RulebasedLoad,commodityCurvesUp,-167433.14,-178596.42,-11163.28
+Commodity_Swap_TradeSpecificLoadAndDSTHours,BASE,-954001.42,-954001.42,0.00
+Commodity_Swap_TradeSpecificLoadAndDSTHours,commodityCurvesUp,-954001.42,-1020347.75,-66346.34
+Forward_0.45am_1.15am,BASE,599.28,599.28,0.00
+Forward_0.45am_1.15am,commodityCurvesUp,599.28,578.98,-20.30
+Forward_0.45am_1.15am_15minCurve,BASE,761.70,761.70,0.00
+Forward_0.45am_1.15am_15minCurve,commodityCurvesUp,761.70,744.65,-17.05
+Forward_0am_1am,BASE,883.52,883.52,0.00
+Forward_0am_1am,commodityCurvesUp,883.52,868.90,-14.62
+Forward_0am_1am_15minCurve,BASE,883.52,883.52,0.00
+Forward_0am_1am_15minCurve,commodityCurvesUp,883.52,868.90,-14.62

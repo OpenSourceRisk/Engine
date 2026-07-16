@@ -77,9 +77,11 @@ The Put NPV from the perspective of the long party is:
 
 {\bf Input}}\fi
 
-A Forward Volatility Agreement is set up using trade type \emph{ForwardVolatilityAgreement} and an associated
-\lstinline!ForwardVolatilityAgreementData! node, as shown in Listing \ref{lst:fva_data}. The node elements have the
-following meaning:
+A Forward Volatility Agreement is set up using trade
+type \emph{FxForwardVolatilityAgreement}, \emph{EquityForwardVolatilityAgreement} or \emph{CommodityForwardVolatilityAgreement},
+depending on the underlying asset class, and an associated
+\lstinline!FxForwardVolatilityAgreementData!, \lstinline!EquityForwardVolatilityAgreementData! or \lstinline!CommodityForwardVolatilityAgreementData! node,
+as shown in Listing \ref{lst:fva_data}. The node elements have the following meaning:
 
 \begin{itemize}
 \item FvaDate: The date on which the forward option strike is fixed and the fixed premium is observed. This is also
@@ -160,13 +162,13 @@ following meaning:
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}
 <Trade id="FX_ForwardVolatilityAgreement">
-  <TradeType>ForwardVolatilityAgreement</TradeType>
+  <TradeType>FxForwardVolatilityAgreement</TradeType>
   <Envelope>
     <CounterParty>CPTY_A</CounterParty>
     <NettingSetId>CPTY_A</NettingSetId>
     <AdditionalFields/>
   </Envelope>
-  <ForwardVolatilityAgreementData>
+  <FxForwardVolatilityAgreementData>
     <FvaDate>2019-07-25</FvaDate>
     <OptionExpiry>2020-01-27</OptionExpiry>
     <PremiumDate>2019-07-29</PremiumDate>
@@ -180,23 +182,23 @@ following meaning:
     <Quantity>89000000</Quantity>
     <PayCcy>USD</PayCcy>
     <SettlementDate>2020-01-29</SettlementDate>
-  </ForwardVolatilityAgreementData>
+  </FxForwardVolatilityAgreementData>
 </Trade>
 \end{minted}
-\caption{Forward Volatility Agreement data (Straddle payoff)}
+\caption{FX Forward Volatility Agreement data (Straddle payoff)}
 \label{lst:fva_data}
 \end{listing}
 
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}
 <Trade id="FX_ForwardVolatilityAgreement_Put">
-  <TradeType>ForwardVolatilityAgreement</TradeType>
+  <TradeType>FxForwardVolatilityAgreement</TradeType>
   <Envelope>
     <CounterParty>CPTY_A</CounterParty>
     <NettingSetId>CPTY_A</NettingSetId>
     <AdditionalFields/>
   </Envelope>
-  <ForwardVolatilityAgreementData>
+  <FxForwardVolatilityAgreementData>
     <FvaDate>2019-07-25</FvaDate>
     <OptionExpiry>2020-01-27</OptionExpiry>
     <PremiumDate>2019-07-29</PremiumDate>
@@ -214,7 +216,7 @@ following meaning:
     <DayCountFraction>ACT/365</DayCountFraction>
     <DividendYield>0.0</DividendYield>
     <FixedRate>0.02</FixedRate>
-  </ForwardVolatilityAgreementData>
+  </FxForwardVolatilityAgreementData>
 </Trade>
 \end{minted}
 \caption{Forward Volatility Agreement data (Put payoff)}

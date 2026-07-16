@@ -35,6 +35,7 @@
 #include <ored/marketdata/fxvolcurve.hpp>
 #include <ored/marketdata/inflationcapfloorvolcurve.hpp>
 #include <ored/marketdata/inflationcurve.hpp>
+#include <ored/marketdata/intradaypowercurve.hpp>
 #include <ored/marketdata/security.hpp>
 #include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/marketdata/swaptionvolcurve.hpp>
@@ -796,6 +797,30 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
             commodityIndices_[make_pair(configuration, node.name)] = commIdx;
             calibrationInfo_->commodityCurveCalibrationInfo[commodityCurveSpec->name()] =
                 itr->second->calibrationInfo();
+            break;
+        }
+
+        // Intraday power curve
+        case CurveSpec::CurveType::IntradayPowerCurve: {
+            QuantLib::ext::shared_ptr<IntradayPowerCurveSpec> intradayPowerCurveSpec =
+                QuantLib::ext::dynamic_pointer_cast<IntradayPowerCurveSpec>(spec);
+            QL_REQUIRE(intradayPowerCurveSpec,
+                       "Failed to convert spec, " << *spec << ", to IntradayPowerCurveSpec");
+            auto itr = requiredIntradayPowerCurves_.find(intradayPowerCurveSpec->name());
+            if (itr == requiredIntradayPowerCurves_.end()) {
+                DLOG("Building IntradayPowerCurve " << intradayPowerCurveSpec->name() << " for asof " << asof_);
+                QuantLib::ext::shared_ptr<IntradayPowerCurve> intradayPowerCurve =
+                    QuantLib::ext::make_shared<IntradayPowerCurve>(asof_, *intradayPowerCurveSpec, *loader_,
+                                                                   *curveConfigs_, requiredCommodityCurves_);
+                itr = requiredIntradayPowerCurves_
+                          .insert(make_pair(intradayPowerCurveSpec->name(), intradayPowerCurve))
+                          .first;
+            }
+
+            DLOG("Adding IntradayPowerIndex, " << node.name << ", with spec " << *intradayPowerCurveSpec
+                                               << " to configuration " << configuration);
+            Handle<QuantExt::IntradayPowerIndex> intradayPowerIdx(itr->second->intradayPowerIndex());
+            intradayPowerIndices_[make_pair(configuration, node.name)] = intradayPowerIdx;
             break;
         }
 
