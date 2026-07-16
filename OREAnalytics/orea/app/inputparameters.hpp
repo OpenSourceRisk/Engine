@@ -273,7 +273,7 @@ public:
         // if the string sarts with a '<' we assume it's an XML string and try to load directly from it, otherwise we
         // treat it as a file name or reference and try to load the XML string from it
         auto first = str.find_first_not_of(" \t\r\n");
-        if (first != std::string::npos && str[first] == '<') {
+        if (first != std::string::npos && str[fir
             try {
                 obj->fromXMLString(str);
                 return true;
@@ -301,13 +301,19 @@ public:
                                                                        << ") from XML string: " << xmlStr[0]);
         for (const auto& s : xmlStr) {            
             try {
-                obj->fromXMLString(s);
+                std::error_code ec;
+                if (std::filesystem::is_regular_file(s, ec) && !ec)
+                    obj->fromXMLFile(s);
+                else
+                    obj->fromXMLString(s);
             } catch (const std::exception& e) {
                 LOG("InputParameters::loadParameterXML(): Failed loading parameter (" << analytic << "," << param
                                                                                << ") from XML string: " << s << " , error: " << + e.what());
                 if (mandatory)
                     QL_FAIL("InputParameters::loadParameterXML(): mandatory parameter (" + analytic + "," + param +
                                 ") parsing failed, with error: " + e.what());
+                else
+                    return false;
             }
         }
         return true;
@@ -334,14 +340,14 @@ public:
     template <class T, typename... Args>
     bool loadParameterXML(QuantLib::ext::shared_ptr<T>& obj, const std::string& analytic, const std::vector<std::string>& params, const bool mandatory = false, Args... args) {
         auto analytics = std::vector<std::string>({analytic});
-        return loadParameterXML<T>(obj, analytics, params, false, args...);
+        return loadParameterXML<T>(obj, analytics, params, mandatory, args...);
     }
 
     template <class T, typename... Args>
     bool loadParameterXML(QuantLib::ext::shared_ptr<T>& obj, const std::vector<std::string>& analytics,
                           const std::string& param, const bool mandatory = false, Args... args) {
         auto params = std::vector<std::string>({param});
-        return loadParameterXML<T>(obj, analytics, params, false, args...);
+        return loadParameterXML<T>(obj, analytics, params, mandatory, args...);
     }
 
     //! load a CSVSerializable object from a CSV string for the given (analytic, param) pair
@@ -381,8 +387,6 @@ public:
         if (!obj)
             obj = QuantLib::ext::make_shared<T>(args...);
 
-        // if the string contains a newline we assume it's an inline CSV buffer and load directly from it, otherwise
-        // we treat it as a file name or reference and try to retrieve the CSV string from it
         vector<string> csvStr;
         try {
             csvStr = loadParameterCSVString(str);
@@ -394,20 +398,27 @@ public:
                         ") CSV parsing failed, with error: " + e.what());
         }
 
+        // try original string if no CSV string was found
         if (csvStr.size() == 0)
-            return false;
+            csvStr.push_back(str);
 
         TLOG("InputParameters::loadParameterCSV(): loading parameter (" << analytic << "," << param
                                                                         << ") from CSV string: " << csvStr[0]);
         for (const auto& s : csvStr) {
             try {
-                obj->fromCSVString(s);
+                std::error_code ec;
+                if (std::filesystem::is_regular_file(s, ec) && !ec)
+                    obj->fromCSVFile(s);
+                else
+                    obj->fromCSVString(s);
             } catch (const std::exception& e) {
                 LOG("InputParameters::loadParameterCSV(): Failed loading parameter (" << analytic << "," << param
                                                                               << ") from CSV string: " << s << " , error: " << +e.what());
                 if (mandatory)
                     QL_FAIL("InputParameters::loadParameterCSV(): mandatory parameter (" + analytic + "," + param +
                             ") parsing failed, with error: " + e.what());
+                else
+                    return false;
             }
         }
         return true;
@@ -434,14 +445,14 @@ public:
     template <class T, typename... Args>
     bool loadParameterCSV(QuantLib::ext::shared_ptr<T>& obj, const std::string& analytic, const std::vector<std::string>& params, const bool mandatory = false, Args... args) {
         auto analytics = std::vector<std::string>({analytic});
-        return loadParameterCSV<T>(obj, analytics, params, false, args...);
+        return loadParameterCSV<T>(obj, analytics, params, mandatory, args...);
     }
 
     template <class T, typename... Args>
     bool loadParameterCSV(QuantLib::ext::shared_ptr<T>& obj, const std::vector<std::string>& analytics,
                           const std::string& param, const bool mandatory = false, Args... args) {
         auto params = std::vector<std::string>({param});
-        return loadParameterCSV<T>(obj, analytics, params, false, args...);
+        return loadParameterCSV<T>(obj, analytics, params, mandatory, args...);
     }
 
     virtual QuantLib::ext::shared_ptr<ScenarioReader> loadScenarioReader(const std::string& analytic,

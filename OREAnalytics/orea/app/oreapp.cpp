@@ -655,7 +655,7 @@ std::string OREAppInputParameters::loadParameterString(const std::string& analyt
     return params_->getString(analytic, param, mandatory);
 }
 
-std::vector<std::string> OREAppInputParameters::loadParameterXMLString(const std::string& rawString) {
+std::vector<std::string> constructFilePaths(const string& rawString) {
     if (rawString.empty())
         return {rawString};
     vector<string> fileNames;
@@ -664,12 +664,15 @@ std::vector<std::string> OREAppInputParameters::loadParameterXMLString(const std
         boost::trim(*it);
         *it = (setupVariables_.inputPath_ / *it).generic_string();
     }
-    std::vector<std::string> result;
-    for (auto file : fileNames) {
-        XMLDocument doc(file);
-        result.push_back(doc.toString());
-    }
-    return result;
+    return fileNames;
+}
+
+std::vector<std::string> OREAppInputParameters::loadParameterXMLString(const string& rawString) {
+    return constructFilePaths(rawString);
+}
+
+std::vector<std::string> OREAppInputParameters::loadParameterCSVString(const string& rawString) {
+    return constructFilePaths(rawString);
 }
 
 void OREAppInputParameters::loadParameters() {
