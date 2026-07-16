@@ -303,7 +303,7 @@ public:
             try {
                 std::error_code ec;
                 if (std::filesystem::is_regular_file(s, ec) && !ec)
-                    obj->fromXMLFile(s);
+                    obj->fromFile(s);
                 else
                     obj->fromXMLString(s);
             } catch (const std::exception& e) {
