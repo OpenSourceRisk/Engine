@@ -90,14 +90,6 @@ void FxDigitalCallSpreadEngine::calculate() const {
             results_.vega = 0.0;
         }
 
-        double fxRate = 1.0;
-        if (arguments_.fxIndex != nullptr) {
-            Date fixingDate = arguments_.cashSettlementFxFixingDate.has_value()
-                                  ? *arguments_.cashSettlementFxFixingDate
-                                  : arguments_.fxIndex->fixingDate(expiryDate);
-            fxRate = arguments_.fxIndex->fixing(fixingDate, false);
-        }
-
         // Discount factor to payment date.
         DiscountFactor df_tp = dts->discount(arguments_.paymentDate);
         Time delta_tp = dts->timeFromReference(arguments_.paymentDate);
