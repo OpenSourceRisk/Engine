@@ -458,6 +458,7 @@ termstructures/spreadedswaptionvolatility.cpp
 termstructures/spreadedyoyvolsurface.cpp
 termstructures/strippedoptionlet.cpp
 termstructures/strippedoptionletadapter2.cpp
+termstructures/strippedoptionletbasebumped.cpp
 termstructures/strippedyoyinflationoptionletvol.cpp
 termstructures/subperiodsswaphelper.cpp
 termstructures/svimodeltraits.cpp
@@ -1116,6 +1117,7 @@ termstructures/strippedcpivolatilitystructure.hpp
 termstructures/strippedoptionlet.hpp
 termstructures/strippedoptionletadapter.hpp
 termstructures/strippedoptionletadapter2.hpp
+termstructures/strippedoptionletbasebumped.hpp
 termstructures/strippedyoyinflationoptionletvol.hpp
 termstructures/subperiodsswaphelper.hpp
 termstructures/survivalprobabilitycurve.hpp
