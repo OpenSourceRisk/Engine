@@ -104,10 +104,10 @@ void FxDigitalCallSpreadEngine::calculate() const {
 
         // Only value, rho and theta are meaningful now.
         results_.value = df_tp * payoffAmount * fxRate;
-        results_.rho = -delta_tp * results_.value * fxRate;
+        results_.rho = -delta_tp * results_.value;
         results_.theta = 0.0;
         if (delta_tp > 0.0 && !close(delta_tp, 0.0)) {
-            results_.theta = -std::log(df_tp) / delta_tp * results_.value * fxRate;
+            results_.theta = -std::log(df_tp) / delta_tp * results_.value;
         }
         results_.thetaPerDay = results_.theta / 365.0;
 
@@ -142,7 +142,7 @@ void FxDigitalCallSpreadEngine::calculate() const {
         Real priceHi = hi.first, deltaHi = hi.second;
 
         Real cpSpread = cash * (priceLo - priceHi) / eps_;
-        Real spreadValue = type == Option::Call ? cpSpread : -1.0 * cpSpread;
+        Real spreadValue = type == Option::Call ? cpSpread : -cpSpread;
 
         // Forward discount factor between expiry and payment date, P(t_e, t_p), under deterministic rates.
         DiscountFactor df_te_tp = dts->discount(arguments_.paymentDate) / dts->discount(expiryDate);
@@ -159,14 +159,13 @@ void FxDigitalCallSpreadEngine::calculate() const {
         DiscountFactor riskFreeDiscount = bsp_->riskFreeRate()->discount(expiryDate);
 
         results_.additionalResults["spot"] = spot;
-        results_.additionalResults["forward"] = spot * dividendDiscount / riskFreeDiscount;;
+        results_.additionalResults["forward"] = spot * dividendDiscount / riskFreeDiscount;
         results_.additionalResults["strike"] = strike;
         results_.additionalResults["dividendDiscount"] = dividendDiscount;
         results_.additionalResults["riskFreeDiscount"] = riskFreeDiscount;
         results_.additionalResults["settlementFxFwd"] = fxRate;
 
         results_.additionalResults["discountFactorTeTp"] = df_te_tp;
-        results_.additionalResults["settlementFxFwd"] = fxRate;
         results_.additionalResults["priceLo"] = priceLo;
         results_.additionalResults["priceHi"] = priceHi;
         results_.additionalResults["deltaLo"] = deltaLo;
