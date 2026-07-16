@@ -27,7 +27,6 @@
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <qle/pricingengines/analyticeuropeanengine.hpp>
 #include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
 #include <qle/pricingengines/fxdigitalcallspreadengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
@@ -65,7 +64,10 @@ protected:
 };
 
 //! Engine Builder for European cash-settled FX Digital Options
-/*! Builds an AnalyticCashSettledEuropeanEngine.
+/*! Builds a QuantExt::AnalyticCashSettledEuropeanEngine, which correctly handles both
+    payment date equal to and payment date after the expiry date. The engine name is kept
+    as "AnalyticEuropeanEngine" for backward compatibility with existing pricing engine
+    configurations.
 
     \ingroup portfolio
  */
@@ -76,15 +78,7 @@ public:
 protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy,
                                                                 const bool flipResults) override {
-        string pair = forCcy.code() + domCcy.code();
-
-        QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
-            market_->fxSpot(pair, configuration(ore::data::MarketContext::pricing)),
-            market_->discountCurve(forCcy.code(),
-                                   configuration(ore::data::MarketContext::pricing)), // dividend yield ~ foreign yield
-            market_->discountCurve(domCcy.code(), configuration(ore::data::MarketContext::pricing)),
-            market_->fxVol(pair, configuration(ore::data::MarketContext::pricing)));
-        return QuantLib::ext::make_shared<QuantExt::AnalyticEuropeanEngine>(gbsp, flipResults);
+        return QuantLib::ext::make_shared<QuantExt::AnalyticCashSettledEuropeanEngine>(process(forCcy, domCcy), flipResults);
     }
 };
 
@@ -102,36 +96,6 @@ protected:
                                                                 const bool flipResults) override {
         Real eps = parseReal(engineParameter("CallSpreadEps", {}, false, "1.0e-4"));
         return QuantLib::ext::make_shared<QuantExt::FxDigitalCallSpreadEngine>(process(forCcy, domCcy), flipResults, eps);
-    }
-};
-
-//! Engine Builder for European cash-settled FX Digital Options with CS product type
-/*! Builds an AnalyticCashSettledEuropeanEngine for FxDigitalOptionEuropeanCS product type.
-
-    \ingroup portfolio
- */
-class FxDigitalCSOptionEngineBuilder : public FxDigitalOptionEngineBuilderBase {
-public:
-    FxDigitalCSOptionEngineBuilder()
-        : FxDigitalOptionEngineBuilderBase("GarmanKohlhagen", "AnalyticCashSettledEuropeanEngine", {"FxDigitalOptionEuropeanCS"}) {}
-
-protected:
-    virtual string keyImpl(const Currency& forCcy, const Currency& domCcy, const bool flipResults) override {
-        return forCcy.code() + domCcy.code();
-    }
-
-    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy,
-                                                                const bool flipResults) override {
-        string pair = forCcy.code() + domCcy.code();
-
-        QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
-            market_->fxSpot(pair, configuration(ore::data::MarketContext::pricing)),
-            market_->discountCurve(forCcy.code(),
-                                   configuration(ore::data::MarketContext::pricing)), // dividend yield ~ foreign yield
-            market_->discountCurve(domCcy.code(), configuration(ore::data::MarketContext::pricing)),
-            market_->fxVol(pair, configuration(ore::data::MarketContext::pricing)));
-
-        return QuantLib::ext::make_shared<QuantExt::AnalyticCashSettledEuropeanEngine>(gbsp, flipResults);
     }
 };
 

@@ -15,11 +15,11 @@
 */
 
 #include <boost/make_shared.hpp>
-#include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/builders/fxdigitaloption.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/fxdigitaloption.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ql/errors.hpp>
 #include <ql/exercise.hpp>
 #include <ql/instruments/compositeinstrument.hpp>
@@ -74,17 +74,13 @@ void FxDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engi
     }
     DLOG("Setting up FxDigitalOption with strike " << strike << " foreign " << forCcy << " domestic " << domCcy);
 
-    // Set up the CashOrNothing
-    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff(new CashOrNothingPayoff(type, strike, payoffAmount_));
-
     npvCurrency_ = domCcy.code(); // don't use domesticCurrency_ as it might be flipped
     notional_ = payoffAmount_;
     notionalCurrency_ = payoffCurrency_ != "" ? payoffCurrency_ : domesticCurrency_; // see logic above
 
     // Exercise
     Date expiryDate = parseDate(option_.exerciseDates().front());
-    QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(expiryDate);
-    
+
     Date paymentDate = expiryDate;
     const QuantLib::ext::optional<OptionPaymentData>& opd = option_.paymentData();
     
@@ -102,70 +98,51 @@ void FxDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engi
     }
     maturity_ = std::max(option_.premiumData().latestPremiumDate(), paymentDate);
     maturityType_ = maturity_ == expiryDate ? "Expiry Date" : "Option's Latest Premium Date";
-    QuantLib::ext::shared_ptr<Instrument> vanilla;
+
+    // FxDigitalOption is always cash settled. The cash-settled European option correctly handles both a payment date
+    // equal to and a payment date after the expiry date.
     Real exercisePrice = Null<Real>();
     bool exercised = false;
     QuantLib::ext::shared_ptr<FxIndex> fxIndex;
-    if (paymentDate == expiryDate) {
-        const QuantLib::ext::optional<OptionExerciseData>& oed = option_.exerciseData();
-        if (oed) {
-            QL_REQUIRE(oed->date() == expiryDate, "The supplied exercise date ("
-                                                        << io::iso_date(oed->date())
-                                                        << ") should equal the option's expiry date ("
-                                                        << io::iso_date(expiryDate) << ").");
-            exercised = true;
-            exercisePrice = oed->price();
-        }
-        if (option_.isAutomaticExercise()) {
 
-            fxIndex = buildFxIndex(fxIndex_, domCcy.code(), forCcy.code(), engineFactory->market(),
-                                    engineFactory->configuration(MarketContext::pricing));
-            requiredFixings_.addFixingDate(expiryDate, fxIndex_, paymentDate);
-        }
-
-        vanilla = QuantLib::ext::make_shared<CashSettledEuropeanOption>(type, strike, payoffAmount_, expiryDate,
-                                                                        paymentDate, option_.isAutomaticExercise(),
-                                                                        fxIndex, exercised, exercisePrice);
-        // set pricing engines
-        QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("FxDigitalOption");
-        QL_REQUIRE(builder, "No builder found for " << tradeType_);
-        if(builder->engine()!="CallSpreadEngine")
-            builder = engineFactory->builder("FxDigitalOptionEuropeanCS");
-        QuantLib::ext::shared_ptr<FxDigitalOptionEngineBuilderBase> fxOptBuilder =
-            QuantLib::ext::dynamic_pointer_cast<FxDigitalOptionEngineBuilderBase>(builder);
-        vanilla->setPricingEngine(fxOptBuilder->engine(forCcy, domCcy, flipResults));
-        setSensitivityTemplate(*fxOptBuilder);
-        addProductModelEngine(*fxOptBuilder);
-        Position::Type positionType = parsePositionType(option_.longShort());
-        Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
-        Real mult = bsInd;
-        std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
-        std::vector<Real> additionalMultipliers;
-        string discountCurve = envelope().additionalField("discount_curve", false, std::string());
-        addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(), -bsInd, domCcy,
-                    discountCurve, engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
-        instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
-            new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));
-    } else {
-        QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("FxOptionForward");
-        vanilla = QuantLib::ext::make_shared<QuantExt::VanillaForwardOption>(payoff, exercise, paymentDate, paymentDate);
-        QuantLib::ext::shared_ptr<VanillaOptionEngineBuilder> fxOptBuilder =
-            QuantLib::ext::dynamic_pointer_cast<VanillaOptionEngineBuilder>(builder);
-        vanilla->setPricingEngine(fxOptBuilder->engine(
-            forCcy, domCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
-        setSensitivityTemplate(*fxOptBuilder);
-        addProductModelEngine(*fxOptBuilder);
-        Position::Type positionType = parsePositionType(option_.longShort());
-        Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
-        Real mult = bsInd;
-        std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
-        std::vector<Real> additionalMultipliers;
-        string discountCurve = envelope().additionalField("discount_curve", false, std::string());
-        addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(), -bsInd, domCcy,
-                    discountCurve, engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
-        instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
-            new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));
+    const QuantLib::ext::optional<OptionExerciseData>& oed = option_.exerciseData();
+    if (oed) {
+        QL_REQUIRE(oed->date() == expiryDate, "The supplied exercise date ("
+                                                    << io::iso_date(oed->date())
+                                                    << ") should equal the option's expiry date ("
+                                                    << io::iso_date(expiryDate) << ").");
+        exercised = true;
+        exercisePrice = oed->price();
     }
+    if (option_.isAutomaticExercise()) {
+        fxIndex = buildFxIndex(fxIndex_, domCcy.code(), forCcy.code(), engineFactory->market(),
+                               engineFactory->configuration(MarketContext::pricing));
+        requiredFixings_.addFixingDate(expiryDate, fxIndex_, paymentDate);
+    }
+
+    QuantLib::ext::shared_ptr<Instrument> vanilla = QuantLib::ext::make_shared<CashSettledEuropeanOption>(
+        type, strike, payoffAmount_, expiryDate, paymentDate, option_.isAutomaticExercise(), fxIndex, exercised,
+        exercisePrice);
+
+    // set pricing engine
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("FxDigitalOption");
+    QL_REQUIRE(builder, "No builder found for " << tradeType_);
+    QuantLib::ext::shared_ptr<FxDigitalOptionEngineBuilderBase> fxOptBuilder =
+        QuantLib::ext::dynamic_pointer_cast<FxDigitalOptionEngineBuilderBase>(builder);
+    QL_REQUIRE(fxOptBuilder, "Builder for FxDigitalOption is not an FxDigitalOptionEngineBuilderBase");
+    vanilla->setPricingEngine(fxOptBuilder->engine(forCcy, domCcy, flipResults));
+    setSensitivityTemplate(*fxOptBuilder);
+    addProductModelEngine(*fxOptBuilder);
+    Position::Type positionType = parsePositionType(option_.longShort());
+    Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
+    Real mult = bsInd;
+    std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
+    std::vector<Real> additionalMultipliers;
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
+    addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(), -bsInd, domCcy,
+                discountCurve, engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
+    instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
+        new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));
 }
 
 void FxDigitalOption::fromXML(XMLNode* node) {
