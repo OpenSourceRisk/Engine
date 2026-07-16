@@ -31,6 +31,7 @@
 
 #include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/report/inmemoryreport.hpp>
+#include <ored/portfolio/structuredtradeerror.hpp>
 
 using RFType = ore::analytics::RiskFactorKey::KeyType;
 
@@ -168,6 +169,18 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         CONSOLE("OK");
     }
 
+    //Capture trades cashflows at t0
+    auto trades = analytic()->portfolio()->trades();
+    std::map<std::string, std::vector<ore::data::TradeCashflowReportData>> tradeCashflowsT0;
+    for (auto const& [tradeId, trade] : trades) {
+        try {
+            tradeCashflowsT0[tradeId] =
+                trade->cashflows(effectiveResultCurrency, analytic()->market(), marketConfig, inputs_->includePastCashflows());
+        } catch (std::exception& e) {
+            ore::data::StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error during cashflow report generation", e.what()).log();
+        }
+    }
+
     /****************************************************
      *
      * 2. Write cash flow report for the clean actual P&L 
@@ -175,9 +188,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
      ****************************************************/
 
     QuantLib::ext::shared_ptr<InMemoryReport> t0CashFlowReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-    ReportWriter(inputs_->reportNaString())
-      .writeCashflow(*t0CashFlowReport, effectiveResultCurrency, analytic()->portfolio(),
-		     analytic()->market(), marketConfig, inputs_->includePastCashflows());
+    ReportWriter(inputs_->reportNaString()).writeCashflow(*t0CashFlowReport, analytic()->portfolio(), tradeCashflowsT0);
     analytic()->addReport(LABEL, "pnl_cashflow", t0CashFlowReport);
     
     /*******************************************************************************************
@@ -455,7 +466,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     QuantLib::ext::shared_ptr<InMemoryReport> pnlReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     ReportWriter(inputs_->reportNaString())
         .writePnlReport(*pnlReport, t0NpvReport, t0m1p0NpvReport, t1m0p0NpvReport, t1m1p0NpvReport, t1m0p1NpvReport, t1m1p1NpvReport,
-			t0CashFlowReport, inputs_->asof(), mporDate(), effectiveResultCurrency, analytic()->market(), 
+			tradeCashflowsT0, inputs_->asof(), mporDate(), effectiveResultCurrency, analytic()->market(), 
             marketConfig, analytic()->portfolio());
     analytic()->addReport(LABEL, "pnl", pnlReport);
 
