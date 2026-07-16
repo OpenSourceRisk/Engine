@@ -355,7 +355,7 @@ Example:
     Instrument Type & \emph{OI\_FUTURE} & \\ \hline
     Quote Type & \emph{PRICE} & \\ \hline
     Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the Overnight Index Future price\\ \hline
-    Expiry & Alphanumeric string of the form YYYY-MM & Expiry month and year\\ \hline
+    ContractMonth & Alphanumeric string of the form YYYY-MM & Contract month and year\\ \hline
     Contract & String & Contract name\\ \hline
     Term & An integer followed by M or Y & Underlying Term in months or years \\ \hline
   \end{tabular}
@@ -363,7 +363,7 @@ Example:
   \label{tab:oifp_quote}
 \end{table}
 
-Expiry month is quoted here as YYYY-MM. The exact expiry date follows from a date rule defined in the future
+Contract month is quoted here as YYYY-MM. The exact expiry date follows from a date rule defined in the future
 conventions, see \ref{ss:conventions_future}.
 
 \medskip
