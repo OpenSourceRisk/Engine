@@ -169,7 +169,6 @@ scenario/zerotoparscenariogenerator.cpp
 simm/crif.cpp
 simm/crifconfiguration.cpp
 simm/crifgenerator.cpp
-simm/crifloader.cpp
 simm/crifmarket.cpp
 simm/crifrecord.cpp
 simm/crifrecordgenerator.cpp
@@ -195,6 +194,7 @@ simm/simmconcentrationisdav2_6.cpp
 simm/simmconcentrationisdav2_6_5.cpp
 simm/simmconcentrationisdav2_7_2412.cpp
 simm/simmconcentrationisdav2_8_2506.cpp
+simm/simmconcentrationisdav2_8_2512.cpp
 simm/simmconfiguration.cpp
 simm/simmconfigurationbase.cpp
 simm/simmconfigurationcalibration.cpp
@@ -212,6 +212,7 @@ simm/simmconfigurationisdav2_6.cpp
 simm/simmconfigurationisdav2_6_5.cpp
 simm/simmconfigurationisdav2_7_2412.cpp
 simm/simmconfigurationisdav2_8_2506.cpp
+simm/simmconfigurationisdav2_8_2512.cpp
 simm/simmresults.cpp
 simm/simmtradedata.cpp
 simm/utilities.cpp
@@ -406,7 +407,6 @@ scenario/zerotoparscenariogenerator.hpp
 simm/crif.hpp
 simm/crifconfiguration.hpp
 simm/crifgenerator.hpp
-simm/crifloader.hpp
 simm/crifmarket.hpp
 simm/crifrecord.hpp
 simm/crifrecordgenerator.hpp
@@ -433,6 +433,7 @@ simm/simmconcentrationisdav2_6.hpp
 simm/simmconcentrationisdav2_6_5.hpp
 simm/simmconcentrationisdav2_7_2412.hpp
 simm/simmconcentrationisdav2_8_2506.hpp
+simm/simmconcentrationisdav2_8_2512.hpp
 simm/simmconfiguration.hpp
 simm/simmconfigurationbase.hpp
 simm/simmconfigurationcalibration.hpp
@@ -450,6 +451,7 @@ simm/simmconfigurationisdav2_6.hpp
 simm/simmconfigurationisdav2_6_5.hpp
 simm/simmconfigurationisdav2_7_2412.hpp
 simm/simmconfigurationisdav2_8_2506.hpp
+simm/simmconfigurationisdav2_8_2512.hpp
 simm/simmnamemapper.hpp
 simm/simmresults.hpp
 simm/simmtradedata.hpp

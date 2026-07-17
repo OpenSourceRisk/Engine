@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2026 AcadiaSoft Inc.
+ Copyright (C) 2026 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,29 +16,35 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/quotes/bondfuturequote.hpp
-    \brief Bond future quote that relies on a bond future index
-    \ingroup quotes
+/*! \file ored/utilities/csvutils.hpp
+    \brief CSV utility functions
+    \ingroup utilities
 */
+
 #pragma once
 
-#include <qle/indexes/bondindex.hpp>
+#include <istream>
+#include <string>
 
-namespace QuantExt {
+namespace ore {
+namespace data {
 
-//! A quote for a bond future price that takes its value from a bond future index.
-class BondFutureQuote : public Quote, public Observer {
+//! Base class for all classes that can be populated from CSV
+/*! \ingroup utilities
+ */
+class CSVSerializable {
 public:
-    BondFutureQuote(QuantLib::ext::shared_ptr<BondFuturesIndex> index);
-    //! \name Quote interface
-    //@{
-    QuantLib::Real value() const override;
-    bool isValid() const override;
-    //@}
-    void update() override;
+    virtual ~CSVSerializable() {}
 
-private:
-    QuantLib::ext::shared_ptr<BondFuturesIndex> index_;
+    //! Populate the object from a CSV input stream
+    virtual void fromCSV(std::istream& stream) = 0;
+
+    //! Populate the object from a CSV file
+    void fromCSVFile(const std::string& filename);
+
+    //! Populate the object from a CSV string
+    void fromCSVString(const std::string& csv);
 };
 
-}
+} // namespace data
+} // namespace ore

@@ -33,7 +33,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/portfolio/scriptedtrade.hpp>
-#include <orea/simm/crifloader.hpp>
+#include <orea/simm/crif.hpp>
 #include <orea/simm/simmcalibration.hpp>
 #include <ql/indexes/iborindex.hpp>
 
@@ -858,19 +858,20 @@ void InputParameters::setCrifFromFile(const std::string& fileName, char eol, cha
     bool updateMappings = true;
     bool aggregateTrades = false;
     bool allowUseCounterpartyTrade = true;
-    auto crifLoader = CsvFileCrifLoader(fileName, getSimmConfiguration(), CrifRecord::additionalHeaders, updateMappings,
-                                        aggregateTrades, allowUseCounterpartyTrade, eol, delim, quoteChar, escapeChar, reportNaString());
-    crif_ = crifLoader.loadCrif();
+    crif_ = QuantLib::ext::make_shared<Crif>(getSimmConfiguration(), CrifRecord::additionalHeaders, updateMappings,
+                                             aggregateTrades, allowUseCounterpartyTrade, eol, delim, quoteChar,
+                                             escapeChar, reportNaString());
+    crif_->fromCSVFile(fileName);
 }
 
 void InputParameters::setCrifFromBuffer(const std::string& csvBuffer, char eol, char delim, char quoteChar, char escapeChar) {
     bool updateMappings = true;
     bool aggregateTrades = false;
     bool allowUseCounterpartyTrade = true;
-    auto crifLoader =
-        CsvBufferCrifLoader(csvBuffer, getSimmConfiguration(), CrifRecord::additionalHeaders, updateMappings,
-                            aggregateTrades, allowUseCounterpartyTrade, eol, delim, quoteChar, escapeChar, reportNaString());
-    crif_ = crifLoader.loadCrif();
+    crif_ = QuantLib::ext::make_shared<Crif>(getSimmConfiguration(), CrifRecord::additionalHeaders, updateMappings,
+                                             aggregateTrades, allowUseCounterpartyTrade, eol, delim, quoteChar,
+                                             escapeChar, reportNaString());
+    crif_->fromCSVString(csvBuffer);
 }
 
 void InputParameters::setSimmNameMapper(const std::string& xml) {
@@ -988,9 +989,9 @@ OutputParameters::OutputParameters(const ext::shared_ptr<Parameters>& params) {
     fileNameMap_["xva_stress"] = xvaStressTestFileName_;
     fileNameMap_["sensitivity_stress"] = sensitivityStressTestFileName_;
     fileNameMap_["var"] = varFileName_;
-    fileNameMap_["parConversionSensitivity"] = parConversionOutputFileName_;
-    fileNameMap_["parConversionJacobi"] = parConversionJacobiFileName_;
-    fileNameMap_["parConversionJacobi_inverse"] = parConversionJacobiInverseFileName_;
+    fileNameMap_["parConversionSensitivity" ] = parConversionOutputFileName_;
+    fileNameMap_["parConversionJacobi" ] = parConversionJacobiFileName_;
+    fileNameMap_["parConversionJacobi_inverse" ] = parConversionJacobiInverseFileName_;
     fileNameMap_["pnl"] = pnlOutputFileName_;
     fileNameMap_["parStress_ZeroStressData"] = parStressTestConversionFile_;
     fileNameMap_["pnl_explain"] = pnlExplainOutputFileName_;

@@ -23,7 +23,6 @@
 #pragma once
 
 #include <orea/simm/crif.hpp>
-#include <orea/simm/crifloader.hpp>
 #include <orea/simm/simmresults.hpp>
 #include <ored/utilities/timer.hpp>
 #include <ored/marketdata/market.hpp>
