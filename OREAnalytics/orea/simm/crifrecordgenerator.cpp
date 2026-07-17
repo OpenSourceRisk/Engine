@@ -493,7 +493,6 @@ CrifRecordData CrifRecordGenerator::yieldCurveImpl(const ore::analytics::Sensiti
     } else {
         data.riskType = ore::analytics::CrifRecord::RiskType::IRCurve;
         Period p;
-        std::cout<<"period = "<<period<<std::endl;
         if (period != "MUN" && period != "TIPS") {
             try {
                 p = parsePeriod(period);
