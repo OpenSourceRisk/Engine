@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(testValidTwoDigitYear) {
 
 BOOST_AUTO_TEST_CASE(testValidSingleDigitYear) {
     // Test single digit year - should use current decade
-    auto today = Settings::instance().evaluationDate();
+    QuantLib::Date today = Settings::instance().evaluationDate();
     int currentYear = static_cast<int>(today.year());
     int currentYearDecade = (currentYear / 10) * 10;
 
