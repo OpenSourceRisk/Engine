@@ -118,7 +118,7 @@ void EquityAutoDeltaHedgedOption::build(const QuantLib::ext::shared_ptr<EngineFa
     Date today = Settings::instance().evaluationDate();
     if (observationStartDate_ < today) {
         const string eqIndexName = "EQ-" + assetName;
-        auto eqCurve = *engineFactory->market()->equityCurve(eqIndexName);
+        auto eqCurve = *engineFactory->market()->equityCurve(eqIndexName, engineFactory->configuration(MarketContext::pricing));
         Calendar fixingCal = eqCurve->fixingCalendar();
         for (Date d = fixingCal.adjust(observationStartDate_, Following); d <= today; d = fixingCal.advance(d, 1, Days)) {
             requiredFixings_.addFixingDate(d, eqIndexName, Date::maxDate(), false, d < today);
