@@ -22,6 +22,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
+#include <ql/settings.hpp>
 #include <qle/instruments/equityautodeltahedgedoption.hpp>
 
 using namespace QuantLib;
@@ -111,6 +112,18 @@ void EquityAutoDeltaHedgedOption::build(const QuantLib::ext::shared_ptr<EngineFa
         }
 
         batches.push_back(batch);
+    }
+
+    // Register the historical fixings.
+    Date today = Settings::instance().evaluationDate();
+    if (observationStartDate_ < today) {
+        const string eqIndexName = "EQ-" + assetName;
+        Calendar fixingCal = engineFactory->market()
+                ->equityCurve(assetName, engineFactory->configuration(MarketContext::pricing))
+                ->fixingCalendar();
+        for (Date d = fixingCal.adjust(observationStartDate_, Following); d <= today; d = fixingCal.advance(d, 1, Days)) {
+            requiredFixings_.addFixingDate(d, eqIndexName, Date::maxDate(), false, d < today);
+        }
     }
 
     // Create the QuantExt instrument
