@@ -222,6 +222,53 @@ def test_nonstandard_yoy_pricer_wrappers_construct() -> None:
     assert all(pricer.nominalTermStructure() is not None for pricer in pricers)
 
 
+def test_standard_yoy_coupon_and_leg_wrappers_construct() -> None:
+    """Construct the QuantExt standard YoY coupon and leg wrappers."""
+    start = ore.Date(15, ore.January, 2026)
+    end = ore.Date(15, ore.January, 2027)
+    schedule = ore.Schedule(
+        start,
+        end,
+        ore.Period(3, ore.Months),
+        ore.TARGET(),
+        ore.ModifiedFollowing,
+        ore.ModifiedFollowing,
+        ore.DateGeneration.Forward,
+        False,
+    )
+    index = ore.YoYInflationIndex(
+        "TEST-YY",
+        ore.CustomRegion("Test", "ZZ"),
+        False,
+        ore.Monthly,
+        ore.Period(2, ore.Months),
+        ore.USDCurrency(),
+    )
+    coupon = ore.QLEYoYInflationCoupon(
+        end,
+        1_000.0,
+        start,
+        end,
+        2,
+        index,
+        ore.Period(3, ore.Months),
+        ore.CPI.AsIndex,
+        ore.Actual365Fixed(),
+    )
+    leg = ore.QLEYoYInflationLeg(
+        schedule=schedule,
+        calendar=ore.TARGET(),
+        index=index,
+        observationLag=ore.Period(3, ore.Months),
+        interpolation=ore.CPI.AsIndex,
+        notionals=[1_000.0],
+        paymentDayCounter=ore.Actual365Fixed(),
+    )
+
+    assert coupon is not None
+    assert len(leg) == 4
+
+
 def test_interpolated_ibor_coupon_pricer_and_accessors() -> None:
     """Construct and price an interpolated Ibor coupon."""
     evaluation_date = ore.Date(15, ore.January, 2026)

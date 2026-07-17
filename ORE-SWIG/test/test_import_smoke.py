@@ -23,6 +23,8 @@ class ImportSmokeTest(unittest.TestCase):
             "OREApp",
             "NPVCube",
             "YieldCurveType_Discount",
+            "QLEYoYInflationCoupon",
+            "QLEYoYInflationLeg",
             "NonStandardYoYInflationCoupon",
             "NonStandardYoYInflationCouponPricer",
             "NonStandardBlackYoYInflationCouponPricer",
