@@ -77,11 +77,6 @@ protected:
     mutable QuantLib::Interpolation2D volSpreadInterpolation_;
     mutable QuantLib::Date originalRefDate_, actualRefDate_;
     mutable QuantLib::Real t0_;
-
-private:
-    QuantLib::Date dateFromTime(QuantLib::Time optionTime) const;
-    QuantLib::Rate getAtmRate(const QuantLib::Date& fixingDate,
-        const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index) const;
 };
 
 class AtmAdjustedSpreadedOptionletVolatility2 : public SpreadedOptionletVolatility2 {

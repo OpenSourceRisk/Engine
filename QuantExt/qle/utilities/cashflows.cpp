@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/utilities/cashflows.hpp>
 #include <iostream>
 
@@ -47,6 +48,23 @@ Real getBMAAtmLevel(const QuantLib::ext::shared_ptr<BMAIndex>& bma, const Date& 
     Date adjEnd = std::max(adjStart + 1, end);
     AverageBMACoupon cpn(end, 1.0, adjStart, adjEnd, bma);
     return cpn.rate();
+}
+
+Rate getIndexRate(const Date& fixingDate, const ext::shared_ptr<IborIndex>& index,
+    const Period& rateComputationPeriod)
+{
+    auto fixCal = index->fixingCalendar();
+    if (auto onIndex = ext::dynamic_pointer_cast<OvernightIndex>(index)) {
+        QL_REQUIRE(rateComputationPeriod.length() > 0, "getIndexRate: expected positive "
+            "rate computation period for OIS index.");
+        return getOisAtmLevel(onIndex, fixCal.adjust(fixingDate), rateComputationPeriod);
+    } else if (auto bmaIndex = ext::dynamic_pointer_cast<BMAIndexWrapper>(index)) {
+        QL_REQUIRE(rateComputationPeriod.length() > 0, "getIndexRate: expected positive"
+            " rate computation period for BMA index.");
+        return getBMAAtmLevel(bmaIndex->bma(), fixCal.adjust(fixingDate), rateComputationPeriod);
+    } else {
+        return index->fixing(fixCal.adjust(fixingDate));
+    }
 }
 
 } // namespace QuantExt

@@ -39,6 +39,11 @@ public:
         FlochKennedy = 5
     };
 
+    using ParamInfo = std::pair<Real, ParameterCalibration>;
+    using SabrSliceParamInfo = std::vector<ParamInfo>;
+    using SabrTteUndKey = std::pair<QuantLib::Real, QuantLib::Real>;
+    using SabrParamInfo = std::map<SabrTteUndKey, SabrSliceParamInfo>;
+
     /*! - modelParameters are given by (tte, underlyingLen) as a vector of parameter values and whether the values are
          fixed
         - modelShift is optional and defines the lognormal shift used within the model (if applicable), if not given, it
@@ -48,8 +53,7 @@ public:
         const ModelVariant modelVariant, const std::vector<MarketSmile>& marketSmiles,
         const MarketModelType marketModelType, const MarketQuoteType inputMarketQuoteType,
         const QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve,
-        const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>&
-            modelParameters = {},
+        const SabrParamInfo& modelParameters = {},
         const std::map<QuantLib::Real, QuantLib::Real>& modelShift = {},
         const QuantLib::Size maxCalibrationAttempts = 10, const QuantLib::Real exitEarlyErrorThreshold = 0.005,
         const QuantLib::Real maxAcceptableError = 0.05);
@@ -61,8 +65,8 @@ public:
              const QuantLib::ext::optional<QuantLib::Option::Type> outputOptionType = QuantLib::ext::nullopt) const override;
 
     // the calculated grid of option expiries and the underlying lenghts
-    const std::vector<Real>& timeToEpiries() const;
-    const std::vector<Real>& underlyingLenghts() const;
+    const std::vector<Real>& timeToExpiries() const { return timeToExpiries_; }
+    const std::vector<Real>& underlyingLenghts() const { return underlyingLengths_; }
     // calibrated or interpolated model parameters (rows = underlying lenghts, cols = option expiries)
     const QuantLib::Matrix& alpha() const { return alpha_; }
     const QuantLib::Matrix& beta() const { return beta_; }
@@ -74,6 +78,7 @@ public:
     const QuantLib::Matrix& calibrationError() const { return calibrationError_; }
     // indicator whether smile params were interpolated (1) or calibrated (0)
     const QuantLib::Matrix& isInterpolated() const { return isInterpolated_; }
+    const SabrParamInfo& modelParameters() const { return modelParameters_; }
 
     struct CalibrationResult {
         QuantLib::Real timeToExpiry;
@@ -116,8 +121,7 @@ private:
                                  const Real atmVol) const;
 
     ModelVariant modelVariant_;
-    std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>
-        modelParameters_;
+    SabrParamInfo modelParameters_;
     std::map<QuantLib::Real, QuantLib::Real> modelShifts_;
     QuantLib::Size maxCalibrationAttempts_;
     QuantLib::Real exitEarlyErrorThreshold_;

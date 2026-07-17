@@ -309,7 +309,7 @@ void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurve
         capletVol_ = QuantLib::ext::make_shared<QuantExt::SabrStrippedOptionletAdapter<INTMETH>>(                      \
             asof, transform(*optionletStripper), *sabrModelVariant, INTINSTANCE, outputVolType, outputDisplacement,    \
             config.modelShift(), initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold,              \
-            maxAcceptableError);                                                                                       \
+            maxAcceptableError, index, rateComputationPeriod);                                                         \
     }
 
 void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,
@@ -395,6 +395,8 @@ void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveC
         optVolType = outputVolType;
         optDisplacement = outputDisplacement;
     }
+
+    const auto& rateComputationPeriod = config.rateComputationPeriod();
 
     if (onOpt) {
         if (config.timeInterpolation() == "Linear") {

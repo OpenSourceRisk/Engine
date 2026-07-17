@@ -52,18 +52,19 @@ public:
     //@{
     const std::vector<QuantLib::Rate>& optionletStrikes(QuantLib::Size i) const override;
     const std::vector<QuantLib::Volatility>& optionletVolatilities(QuantLib::Size i) const override;
-
     const std::vector<QuantLib::Date>& optionletFixingDates() const override;
     const std::vector<QuantLib::Time>& optionletFixingTimes() const override;
     QuantLib::Size optionletMaturities() const override;
-
     const std::vector<QuantLib::Rate>& atmOptionletRates() const override;
-
     QuantLib::DayCounter dayCounter() const override;
     QuantLib::Calendar calendar() const override;
     QuantLib::Natural settlementDays() const override;
     QuantLib::BusinessDayConvention businessDayConvention() const override;
     //@}
+
+    QuantLib::VolatilityType volatilityType() const override;
+    QuantLib::Real displacement() const override;
+    bool useEffectiveVolatility() const override;
 
 protected:
     void performCalculations() const override;

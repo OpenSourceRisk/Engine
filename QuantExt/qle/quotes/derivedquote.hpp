@@ -16,29 +16,23 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/quotes/bondfuturequote.hpp
-    \brief Bond future quote that relies on a bond future index
+/*! \file qle/quotes/derivedquote.hpp
+    \brief Add a helper to create a pointer to a derived quote
     \ingroup quotes
 */
 #pragma once
 
-#include <qle/indexes/bondindex.hpp>
+#include <ql/quotes/derivedquote.hpp>
 
 namespace QuantExt {
 
-//! A quote for a bond future price that takes its value from a bond future index.
-class BondFutureQuote : public Quote, public Observer {
-public:
-    BondFutureQuote(QuantLib::ext::shared_ptr<BondFuturesIndex> index);
-    //! \name Quote interface
-    //@{
-    QuantLib::Real value() const override;
-    bool isValid() const override;
-    //@}
-    void update() override;
-
-private:
-    QuantLib::ext::shared_ptr<BondFuturesIndex> index_;
-};
+//! A helper to create a pointer to a derived quote.
+template <class UnaryFunction>
+QuantLib::ext::shared_ptr<QuantLib::DerivedQuote<UnaryFunction>> makeDerivedQuotePtr(
+    QuantLib::Handle<QuantLib::Quote> element, UnaryFunction f, bool pureFunction = false)
+{
+    return QuantLib::ext::make_shared<QuantLib::DerivedQuote<UnaryFunction>>(
+        std::move(element), std::move(f), pureFunction);
+}
 
 }

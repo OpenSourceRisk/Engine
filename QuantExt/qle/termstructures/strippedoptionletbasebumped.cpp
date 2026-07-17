@@ -30,7 +30,7 @@ using std::vector;
 StrippedOptionletBaseBumped::StrippedOptionletBaseBumped(ext::shared_ptr<StrippedOptionletBase> sob,
     QuoteCurve bumpQuotes, vector<Time> bumpTimes)
     : sob_(std::move(sob)), bumpQuotes_(makeGrid(std::move(bumpQuotes))), bumpTimes_(std::move(bumpTimes)),
-      bumpStrikes_({0.0}), bumpMatrix_(bumpTimes_.size(), 1, 0.0) {
+      bumpStrikes_({0.0, 0.1}), bumpMatrix_(bumpTimes_.size(), 2, 0.0) {
     init();
 }
 
@@ -84,6 +84,18 @@ BusinessDayConvention StrippedOptionletBaseBumped::businessDayConvention() const
     return sob_->businessDayConvention();
 }
 
+VolatilityType StrippedOptionletBaseBumped::volatilityType() const {
+    return sob_->volatilityType();
+}
+
+Real StrippedOptionletBaseBumped::displacement() const {
+    return sob_->displacement();
+}
+
+bool StrippedOptionletBaseBumped::useEffectiveVolatility() const {
+    return sob_->useEffectiveVolatility();
+}
+
 void StrippedOptionletBaseBumped::performCalculations() const {
     // Update the matrix of bumps from the quotes.
     for (Size i = 0; i < bumpTimes_.size(); ++i) {
@@ -97,7 +109,7 @@ void StrippedOptionletBaseBumped::performCalculations() const {
         const auto& baseVolRow = sob_->optionletVolatilities(i);
         const auto& baseVolStrikes = sob_->optionletStrikes(i);
         for (Size j = 0; j < baseVolRow.size(); ++j)
-            volatilities_[i][j] = baseVolRow[j] + bumpInterp_(optFixingTimes[i], baseVolStrikes[j]);
+            volatilities_[i][j] = baseVolRow[j] + bumpInterp_(baseVolStrikes[j], optFixingTimes[i]);
     }
 }
 
@@ -105,7 +117,7 @@ StrippedOptionletBaseBumped::QuoteGrid StrippedOptionletBaseBumped::makeGrid(Quo
     QuoteGrid grid;
     grid.reserve(quoteCurve.size());
     for (auto& quote : quoteCurve)
-        grid.emplace_back(QuoteRow{ std::move(quote) });
+        grid.emplace_back(QuoteRow{ quote, quote });
     return grid;
 }
 
@@ -132,11 +144,11 @@ void StrippedOptionletBaseBumped::init() {
     Size nOptDates = optionletMaturities();
     volatilities_.reserve(nOptDates);
     for (Size i = 0; i < nOptDates; ++i)
-        volatilities_.emplace_back(optionletVolatilities(i).size());
+        volatilities_.emplace_back(optionletStrikes(i).size());
 
-    // Initialise the 2D bump interpolation.
-    bumpInterp_ = BilinearFlat().interpolate(bumpTimes_.begin(), bumpTimes_.end(), bumpStrikes_.begin(),
-        bumpStrikes_.end(), bumpMatrix_);
+    // Initialise the 2D bump interpolation (the parameter order is counter intuitive!).
+    bumpInterp_ = BilinearFlat().interpolate(bumpStrikes_.begin(), bumpStrikes_.end(),
+        bumpTimes_.begin(), bumpTimes_.end(), bumpMatrix_);
     bumpInterp_.enableExtrapolation();
 }
 

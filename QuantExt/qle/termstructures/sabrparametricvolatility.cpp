@@ -40,8 +40,7 @@ using namespace QuantLib;
 SabrParametricVolatility::SabrParametricVolatility(
     const ModelVariant modelVariant, const std::vector<MarketSmile>& marketSmiles, const MarketModelType marketModelType,
     const MarketQuoteType inputMarketQuoteType, const Handle<YieldTermStructure> discountCurve,
-    const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>&
-        modelParameters,
+    const SabrParamInfo& modelParameters,
     const std::map<QuantLib::Real, QuantLib::Real>& modelShifts, const Size maxCalibrationAttempts,
     const Real exitEarlyErrorThreshold, const Real maxAcceptableError)
     : ParametricVolatility(marketSmiles, marketModelType, inputMarketQuoteType, discountCurve),

@@ -981,6 +981,7 @@ python_integration/pythonfunctions.hpp
 quotes/basecorrelationquote.hpp
 quotes/bondfuturequote.hpp
 quotes/compositevectorquote.hpp
+quotes/derivedquote.hpp
 quotes/exceptionquote.hpp
 quotes/logquote.hpp
 termstructures/adjusteddefaultcurve.hpp

@@ -25,6 +25,9 @@
 #define quantext_stripped_optionlet_adapter_sabr_h
 
 #include <qle/termstructures/parametricvolatilitysmilesection.hpp>
+#include <qle/termstructures/sabrparametricvolatility.hpp>
+#include <qle/utilities/cashflows.hpp>
+#include <qle/utilities/time.hpp>
 
 #include <ql/math/interpolation.hpp>
 #include <ql/termstructures/interpolatedcurve.hpp>
@@ -41,9 +44,10 @@ namespace QuantExt {
 
 class SabrStrippedOptionletAdapterBase {
 public:
-    using ModelParamData = std::vector<std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>;
+    using SabrSliceParamInfo = SabrParametricVolatility::SabrSliceParamInfo;
+    using ModelParamData = std::vector<SabrSliceParamInfo>;
     virtual ~SabrStrippedOptionletAdapterBase() = default;
-
+    // The strikes of the underlying optionlets for the i-th expiry time.
     virtual std::vector<QuantLib::Real> optionletStrikes(QuantLib::Size i) const = 0;
     virtual const ModelParamData& initialModelParameters() const = 0;
 };
@@ -55,36 +59,50 @@ class SabrStrippedOptionletAdapter : public QuantLib::OptionletVolatilityStructu
 public:
     /*! Constructor that does not take a reference date. The settlement days is derived from \p sob and the term
         structure will be a \e moving term structure.
+
+        The `iborIndexCalib`, if given, is used to provide the forward rates during the calibration of the SABR model.
+        If `iborIndexCalib` is not provided, the forward rates are taken from the underlying stripped optionlet base 
+        using linear interpolation. The `iborIndexRead` parameter, if given, is used in `smileSectionImpl` to provide
+        the forward rate when this structure is being asked for a volatility at a given strike. It is generally not 
+        provided, and the forward rate is obtained from `iborIndexCalib`, if given, and otherwise from the underlying
+        stripped optionlet base via linear interpolation. However, for sensitivity analysis for example, it can be 
+        convenient to provide an `iborIndexRead` that is linked to a forward curve that is bumped, so that the forward
+        rate used in the volatility calculation is consistent with the bumped forward curve and all other parameters 
+        remain the same. This gives the smile adjusted or SABR delta for the optionlet sensitivity. Omitting it and 
+        using the `iborIndexCalib` for both calibration and reading will give the model or sticky strike delta.
     */
     SabrStrippedOptionletAdapter(
         const QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
-        const QuantExt::SabrParametricVolatility::ModelVariant modelVariant,
+        const SabrParametricVolatility::ModelVariant modelVariant,
         const TimeInterpolator& ti = TimeInterpolator(),
         const QuantLib::ext::optional<QuantLib::VolatilityType> outputVolatilityType = QuantLib::ext::nullopt,
-        const QuantLib::Real outputDisplacement = Null<Real>(), const QuantLib::Real modelDisplacement = Null<Real>(),
-        const std::vector<std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>&
-            initialModelParameters = {},
-        const QuantLib::Size maxCalibrationAttempts = 10, const QuantLib::Real exitEarlyErrorThreshold = 0.005,
+        const QuantLib::Real outputDisplacement = Null<Real>(),
+        const QuantLib::Real modelDisplacement = Null<Real>(),
+        const ModelParamData& initialModelParameters = {},
+        const QuantLib::Size maxCalibrationAttempts = 10,
+        const QuantLib::Real exitEarlyErrorThreshold = 0.005,
         const QuantLib::Real maxAcceptableError = 0.05,
-        const std::vector<std::vector<Real>>& strikes = {},
-        const std::vector<std::vector<Handle<Quote>>>& volSpreads = {},
-        bool stickySabr = false);
+        QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexCalib = nullptr,
+        QuantLib::Period rateCompPeriod = 0 * QuantLib::Days,
+        QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexRead = nullptr);
 
     /*! Constructor taking an explicit \p referenceDate and the term structure will therefore be not \e moving.
      */
     SabrStrippedOptionletAdapter(
-        const QuantLib::Date& referenceDate, const QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
-        const QuantExt::SabrParametricVolatility::ModelVariant modelVariant,
+        const QuantLib::Date& referenceDate,
+        const QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
+        const SabrParametricVolatility::ModelVariant modelVariant,
         const TimeInterpolator& ti = TimeInterpolator(),
         const QuantLib::ext::optional<QuantLib::VolatilityType> outputVolatilityType = QuantLib::ext::nullopt,
-        const QuantLib::Real outputDisplacement = Null<Real>(), const QuantLib::Real modelDisplacement = Null<Real>(),
-        const std::vector<std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>&
-            initialModelParameters = {},
-        const QuantLib::Size maxCalibrationAttempts = 10, const QuantLib::Real exitEarlyErrorThreshold = 0.005,
+        const QuantLib::Real outputDisplacement = Null<Real>(),
+        const QuantLib::Real modelDisplacement = Null<Real>(),
+        const ModelParamData& initialModelParameters = {},
+        const QuantLib::Size maxCalibrationAttempts = 10,
+        const QuantLib::Real exitEarlyErrorThreshold = 0.005,
         const QuantLib::Real maxAcceptableError = 0.05,
-        const std::vector<std::vector<Real>>& strikes = {},
-        const std::vector<std::vector<Handle<Quote>>>& volSpreads = {},
-        bool stickySabr = false);
+        QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexCalib = nullptr,
+        QuantLib::Period rateCompPeriod = 0 * QuantLib::Days,
+        QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexRead = nullptr);
 
     //! \name TermStructure interface
     //@{
@@ -134,9 +152,13 @@ public:
     const ModelParamData& initialModelParameters() const override { return initialModelParameters_; }
     QuantLib::Size maxCalibrationAttempts() const { return maxCalibrationAttempts_; }
     QuantLib::Real exitEarlyErrorThreshold() const { return exitEarlyErrorThreshold_; }
-    const std::vector<std::vector<Real>>& strikes() const { return strikes_; }
     QuantLib::Real maxAcceptableError() const { return maxAcceptableError_; }
     //@}
+
+    // Trigger a calibration and then reset the model parameters using the template provided.
+    // The main purpose of this method is to allow the user to change the model parameters in preparation for a 
+    // sensitivity analysis. For example, do a normal calibration and then on updates only imply alpha for example.
+    void amendModelParameters(const SabrSliceParamInfo& sspi);
 
 protected:
     //! \name OptionletVolatilityStructure interface
@@ -146,7 +168,8 @@ protected:
     //@}
 
 private:
-    void init();
+    using MMT = ParametricVolatility::MarketModelType;
+    using MQT = ParametricVolatility::MarketQuoteType;
 
     //! Base optionlet object that provides the stripped optionlet volatilities
     QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase> optionletBase_;
@@ -163,106 +186,79 @@ private:
     QuantLib::Size maxCalibrationAttempts_;
     QuantLib::Real exitEarlyErrorThreshold_;
     QuantLib::Real maxAcceptableError_;
-    std::vector<std::vector<Real>> strikes_;
-    std::vector<std::vector<Handle<Quote>>> volSpreads_;
-    bool stickySabr_;
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexCalib_;
+    QuantLib::Period rateCompPeriod_;
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexRead_;
 
     //! State
     mutable std::map<Real, QuantLib::ext::shared_ptr<ParametricVolatilitySmileSection>> cache_;
     mutable QuantLib::ext::shared_ptr<ParametricVolatility> parametricVolatility_;
     mutable std::unique_ptr<FlatExtrapolation> atmInterpolation_;
+
+    // Calculate the ATM rate.
+    QuantLib::Real atmRate(QuantLib::Time optionTime, const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& iborIndex,
+        const QuantLib::Date& fixingDate = QuantLib::Date()) const;
+
+    // Helper to get parameter values with a check.
+    static const QuantLib::Matrix& getSafeParam(const QuantLib::Matrix& m, const char* name,
+        QuantLib::Size nExpiryTimes);
 };
-
-template <class TimeInterpolator>
-inline void SabrStrippedOptionletAdapter<TimeInterpolator>::init() {
-    registerWith(optionletBase_);
-    Size nFixingDates = optionletBase_->optionletFixingDates().size();
-
-    // The dimension of input StrippedOptionletBase can be either
-    //
-    // - ATM only (only 1 optionlet strike for every fixing date)
-    //   SABR cube will be calibrated to the skew defined by strikes_ and volSpreads_
-    //
-    // or,
-    //
-    // - Smile (more than 1 optionlet strike for at least 1 fixing date)
-    //   SABR cube will be calibrated to the skew defined in the input StrippedOptionletBase
-
-    bool isAtm = true;
-    for (Size i = 0; i < nFixingDates; ++i)
-        if (optionletBase_->optionletStrikes(i).size() > 1)
-            isAtm = isAtm && false;
-
-    if (!isAtm) {
-        QL_REQUIRE(strikes_.empty(), 
-                   "When StrippedOptionletBase contains smiles, strikes "
-                   "inputs to SabrStrippedOptionletAdapter must be empty");
-        strikes_.resize(nFixingDates);
-        for (Size i = 0; i < nFixingDates; ++i) {
-            strikes_[i] = optionletBase_->optionletStrikes(i);
-        }
-        if (volSpreads_.empty()) {
-            volSpreads_.resize(nFixingDates);
-            for (Size i = 0; i < nFixingDates; ++i) {
-                volSpreads_[i] = std::vector<Handle<Quote>>(
-                    strikes_[i].size(), Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0)));
-            }
-        } else { /* do nothing, volSpreads_ will be validated below */ }
-    }
-
-    QL_REQUIRE(nFixingDates == volSpreads_.size(),
-               "mismatch between number of fixing dates (" <<
-               nFixingDates << ") and number of rows (" <<
-               volSpreads_.size() << ")");
-    for (Size i = 0; i < volSpreads_.size(); i++) {
-        Size nStrikes = strikes_[i].size();
-        QL_REQUIRE(nStrikes == volSpreads_[i].size(),
-                   "mismatch between number of strikes (" << nStrikes <<
-                   ") and number of columns (" << volSpreads_[i].size() <<
-                   ") in the " << io::ordinal(i+1) << " row");
-    }
-    if (!stickySabr_) {
-        for (auto const& v : volSpreads_)
-            for (auto const& s : v)
-                registerWith(s);
-    }
-}
 
 template <class TimeInterpolator>
 SabrStrippedOptionletAdapter<TimeInterpolator>::SabrStrippedOptionletAdapter(
     const QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
-    const QuantExt::SabrParametricVolatility::ModelVariant modelVariant, const TimeInterpolator& ti,
-    const QuantLib::ext::optional<QuantLib::VolatilityType> outputVolatilityType, const QuantLib::Real outputDisplacement,
+    const QuantExt::SabrParametricVolatility::ModelVariant modelVariant,
+    const TimeInterpolator& ti,
+    const QuantLib::ext::optional<QuantLib::VolatilityType> outputVolatilityType,
+    const QuantLib::Real outputDisplacement,
     const QuantLib::Real modelDisplacement,
-    const std::vector<std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>& initialModelParameters,
-    const QuantLib::Size maxCalibrationAttempts, const QuantLib::Real exitEarlyErrorThreshold,
-    const QuantLib::Real maxAcceptableError, const std::vector<std::vector<Real>>& strikes,
-    const std::vector<std::vector<Handle<Quote>>>& volSpreads, bool stickySabr)
+    const ModelParamData& initialModelParameters,
+    const QuantLib::Size maxCalibrationAttempts,
+    const QuantLib::Real exitEarlyErrorThreshold,
+    const QuantLib::Real maxAcceptableError,
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexCalib,
+    QuantLib::Period rateCompPeriod,
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexRead)
     : OptionletVolatilityStructure(sob->settlementDays(), sob->calendar(), sob->businessDayConvention(),
-                                   sob->dayCounter()),
-      optionletBase_(sob), ti_(ti), modelVariant_(modelVariant), outputVolatilityType_(outputVolatilityType),
-      outputDisplacement_(outputDisplacement), initialModelParameters_(initialModelParameters),
-      maxCalibrationAttempts_(maxCalibrationAttempts), exitEarlyErrorThreshold_(exitEarlyErrorThreshold),
-      maxAcceptableError_(maxAcceptableError), strikes_(strikes), volSpreads_(volSpreads), stickySabr_(stickySabr) {
-    init();
+      sob->dayCounter()), optionletBase_(sob), ti_(ti), modelVariant_(modelVariant),
+      outputVolatilityType_(outputVolatilityType), outputDisplacement_(outputDisplacement),
+      initialModelParameters_(initialModelParameters), maxCalibrationAttempts_(maxCalibrationAttempts),
+      exitEarlyErrorThreshold_(exitEarlyErrorThreshold), maxAcceptableError_(maxAcceptableError),
+      iborIndexCalib_(std::move(iborIndexCalib)), rateCompPeriod_(std::move(rateCompPeriod)),
+      iborIndexRead_(iborIndexRead ? std::move(iborIndexRead) : iborIndexCalib_) {
+    registerWith(optionletBase_);
+    // We only want to react to changes in the Ibor index used for calibration.
+    if (iborIndexCalib_)
+        registerWith(iborIndexCalib_);
 }
 
 template <class TimeInterpolator>
 SabrStrippedOptionletAdapter<TimeInterpolator>::SabrStrippedOptionletAdapter(
-    const QuantLib::Date& referenceDate, const QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
-    const QuantExt::SabrParametricVolatility::ModelVariant modelVariant, const TimeInterpolator& ti,
-    const QuantLib::ext::optional<QuantLib::VolatilityType> outputVolatilityType, const QuantLib::Real outputDisplacement,
+    const QuantLib::Date& referenceDate,
+    const QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
+    const QuantExt::SabrParametricVolatility::ModelVariant modelVariant,
+    const TimeInterpolator& ti,
+    const QuantLib::ext::optional<QuantLib::VolatilityType> outputVolatilityType,
+    const QuantLib::Real outputDisplacement,
     const QuantLib::Real modelDiscplacement,
-    const std::vector<std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>& initialModelParameters,
-    const QuantLib::Size maxCalibrationAttempts, const QuantLib::Real exitEarlyErrorThreshold,
-    const QuantLib::Real maxAcceptableError, const std::vector<std::vector<Real>>& strikes,
-    const std::vector<std::vector<Handle<Quote>>>& volSpreads, bool stickySabr)
+    const ModelParamData& initialModelParameters,
+    const QuantLib::Size maxCalibrationAttempts,
+    const QuantLib::Real exitEarlyErrorThreshold,
+    const QuantLib::Real maxAcceptableError,
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexCalib,
+    QuantLib::Period rateCompPeriod,
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexRead)
     : OptionletVolatilityStructure(referenceDate, sob->calendar(), sob->businessDayConvention(), sob->dayCounter()),
       optionletBase_(sob), ti_(ti), modelVariant_(modelVariant), outputVolatilityType_(outputVolatilityType),
       outputDisplacement_(outputDisplacement), initialModelParameters_(initialModelParameters),
       maxCalibrationAttempts_(maxCalibrationAttempts), exitEarlyErrorThreshold_(exitEarlyErrorThreshold),
-      maxAcceptableError_(maxAcceptableError), strikes_(strikes), volSpreads_(volSpreads), stickySabr_(stickySabr) {
-    init();
+      maxAcceptableError_(maxAcceptableError), iborIndexCalib_(std::move(iborIndexCalib)),
+      rateCompPeriod_(std::move(rateCompPeriod)),
+      iborIndexRead_(iborIndexRead ? std::move(iborIndexRead) : iborIndexCalib_) {
+    registerWith(optionletBase_);
+    // We only want to react to changes in the Ibor index used for calibration.
+    if (iborIndexCalib_)
+        registerWith(iborIndexCalib_);
 }
 
 template <class TimeInterpolator>
@@ -305,55 +301,32 @@ template <class TimeInterpolator>
 inline void SabrStrippedOptionletAdapter<TimeInterpolator>::performCalculations() const {
     cache_.clear();
 
-    atmInterpolation_ = std::make_unique<FlatExtrapolation>(QuantLib::ext::make_shared<LinearInterpolation>(
-        this->optionletBase()->optionletFixingTimes().begin(), this->optionletBase()->optionletFixingTimes().end(),
-        this->optionletBase()->atmOptionletRates().begin()));
-    atmInterpolation_->enableExtrapolation();
-    atmInterpolation_->update();
-
-    std::vector<ParametricVolatility::MarketSmile> marketSmiles;
-    std::map<std::pair<QuantLib::Real, QuantLib::Real>,
-             std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>
-        modelParameters;
-    QL_REQUIRE(initialModelParameters_.empty() || initialModelParameters_.size() == 1 ||
-                   initialModelParameters_.size() == this->optionletBase()->optionletFixingTimes().size(),
-               "SabrStrippedOptionletAdapter: initial model parameters must be empty or their size ("
-                   << initialModelParameters_.size()
-                   << ") must be 1 or it must match the number of optionlet fixing times ("
-                   << this->optionletBase()->optionletFixingTimes().size() << ")");
-    for (Size i = 0; i < this->optionletBase()->optionletFixingTimes().size(); ++i) {
-        Real forward = atmInterpolation_->operator()(this->optionletBase()->optionletFixingTimes()[i]);
-        auto optionletStrikes = strikes_.empty() ? this->optionletBase()->optionletStrikes(i) : strikes_[i];
-        QL_REQUIRE(!optionletStrikes.empty(),
-                   "SabrStrippedOptionletAdapter: no optionlet strikes for optionlet fixing time "
-                       << this->optionletBase()->optionletFixingTimes()[i]);
-        auto optionletVolatilities = this->optionletBase()->optionletVolatilities(i);
-        QL_REQUIRE(!optionletVolatilities.empty(),
-                   "SabrStrippedOptionletAdapter: no optionlet volatilities for optionlet fixing time "
-                       << this->optionletBase()->optionletFixingTimes()[i]);
-        if (optionletVolatilities.size() == 1 && optionletStrikes.size() > 1)
-            optionletVolatilities = std::vector<Real>(optionletStrikes.size(), optionletVolatilities[0]);
-        for (Size j = 0; j < optionletVolatilities.size(); ++j) {
-            optionletVolatilities[j] += volSpreads_[i][j]->value();
-        }
-        marketSmiles.push_back(ParametricVolatility::MarketSmile{this->optionletBase()->optionletFixingTimes()[i],
-                                                                 Null<Real>(),
-                                                                 forward,
-                                                                 optionletBase_->displacement(),
-                                                                 {},
-                                                                 optionletStrikes,
-                                                                 optionletVolatilities});
-        if (!initialModelParameters_.empty()) {
-            modelParameters[std::make_pair(this->optionletBase()->optionletFixingTimes()[i], Null<Real>())] =
-                initialModelParameters_.size() == 1 ? initialModelParameters_.front() : initialModelParameters_[i];
-        }
+    // If an Ibor index is not provided, we use interpolation of the optionlet base structure's ATM rates.
+    const auto& fixingTimes = optionletBase_->optionletFixingTimes();
+    if (!iborIndexCalib_) {
+        atmInterpolation_ = std::make_unique<FlatExtrapolation>(QuantLib::ext::make_shared<LinearInterpolation>(
+            fixingTimes.begin(), fixingTimes.end(), optionletBase_->atmOptionletRates().begin()));
+        atmInterpolation_->enableExtrapolation();
+        atmInterpolation_->update();
     }
 
-    // For sticky SABR, we only need to re-imply the alpha parameter after initial calibration
-    if (stickySabr_) {
-        if (auto sabr = QuantLib::ext::dynamic_pointer_cast<SabrParametricVolatility>(parametricVolatility_)) {
-            parametricVolatility_ = sabr->clone(marketSmiles, {});
-            return;
+    auto nInitMp = initialModelParameters_.size();
+    QL_REQUIRE(initialModelParameters_.empty() || nInitMp == 1 || nInitMp == fixingTimes.size(),
+        "SabrStrippedOptionletAdapter: initial model parameters must be empty or their size (" << nInitMp <<
+        ") must be 1 or it must match the number of optionlet fixing times (" << fixingTimes.size() << ")");
+
+    std::vector<ParametricVolatility::MarketSmile> marketSmiles;
+    SabrParametricVolatility::SabrParamInfo modelParameters;
+    const auto& fixingDates = optionletBase_->optionletFixingDates();
+    for (Size i = 0; i < fixingTimes.size(); ++i) {
+        Real forward = atmRate(fixingTimes[i], iborIndexCalib_, fixingDates[i]);
+        marketSmiles.push_back(ParametricVolatility::MarketSmile{fixingTimes[i], Null<Real>(), forward,
+            optionletBase_->displacement(), {}, optionletBase_->optionletStrikes(i),
+            optionletBase_->optionletVolatilities(i)});
+
+        if (!initialModelParameters_.empty()) {
+            const auto& mp = initialModelParameters_[nInitMp == 1 ? 0 : i];
+            modelParameters[std::make_pair(fixingTimes[i], Null<Real>())] = mp;
         }
     }
 
@@ -362,25 +335,11 @@ inline void SabrStrippedOptionletAdapter<TimeInterpolator>::performCalculations(
         modelShift[Null<Real>()] = modelDisplacement_;
     }
 
-    parametricVolatility_ = QuantLib::ext::make_shared<SabrParametricVolatility>(
-        modelVariant_, marketSmiles, ParametricVolatility::MarketModelType::Black76,
-        optionletBase_->volatilityType() == QuantLib::Normal
-            ? ParametricVolatility::MarketQuoteType::NormalVolatility
-            : ParametricVolatility::MarketQuoteType::ShiftedLognormalVolatility,
-        Handle<YieldTermStructure>(), modelParameters, modelShift, maxCalibrationAttempts_, exitEarlyErrorThreshold_,
-        maxAcceptableError_);
-
-    // for sticky SABR, after initial calibration, we re-create parametric volatility with only alpha to be implied
-    // this ensures that basis between the two parametric volatilities is eliminated
-    if (stickySabr_) {
-        if (auto sabr = QuantLib::ext::dynamic_pointer_cast<SabrParametricVolatility>(parametricVolatility_)) {
-            parametricVolatility_ = sabr->clone(marketSmiles,
-                                                { ParametricVolatility::ParameterCalibration::Implied, 
-                                                  ParametricVolatility::ParameterCalibration::Fixed,
-                                                  ParametricVolatility::ParameterCalibration::Fixed, 
-                                                  ParametricVolatility::ParameterCalibration::Fixed });
-        }
-    }
+    auto outputMqt = optionletBase_->volatilityType() == QuantLib::Normal
+        ? MQT::NormalVolatility : MQT::ShiftedLognormalVolatility;
+    parametricVolatility_ = QuantLib::ext::make_shared<SabrParametricVolatility>(modelVariant_, marketSmiles,
+        MMT::Black76, outputMqt, Handle<YieldTermStructure>(), modelParameters, modelShift, maxCalibrationAttempts_,
+        exitEarlyErrorThreshold_, maxAcceptableError_);
 }
 
 template <class TimeInterpolator> inline void SabrStrippedOptionletAdapter<TimeInterpolator>::deepUpdate() {
@@ -395,19 +354,105 @@ SabrStrippedOptionletAdapter<TimeInterpolator>::optionletBase() const {
 }
 
 template <class TimeInterpolator>
+inline void SabrStrippedOptionletAdapter<TimeInterpolator>::amendModelParameters(const SabrSliceParamInfo& sspi)
+{
+    // For ease of notation below.
+    using PVPC = ParametricVolatility::ParameterCalibration;
+
+    calculate();
+
+    // Amend the initial model parameters with the new ones provided by the user.
+    auto sabrPv = QuantLib::ext::static_pointer_cast<SabrParametricVolatility>(parametricVolatility_);
+    const auto& expiryTimes = sabrPv->timeToExpiries();
+    auto nExpiryTimes = expiryTimes.size();
+    const auto& modelParamInfo = sabrPv->modelParameters();
+    QL_REQUIRE(modelParamInfo.size() == 1 || modelParamInfo.size() == nExpiryTimes,
+        "SabrStrippedOptionletAdapter: expected size of SabrParametricVolatility model parameters ("
+        << modelParamInfo.size() << ") to be 1 or equal to size of expiry times (" << nExpiryTimes << ")");
+    QL_REQUIRE(sspi.size() == 4, "SabrStrippedOptionletAdapter: expected SabrSliceParamInfo to have 4 elements.");
+
+    // References to the already calibrated parameter values.
+    const Matrix& alpha = getSafeParam(sabrPv->alpha(), "alpha", nExpiryTimes);
+    const Matrix& beta = getSafeParam(sabrPv->beta(), "beta", nExpiryTimes);
+    const Matrix& nu = getSafeParam(sabrPv->nu(), "nu", nExpiryTimes);
+    const Matrix& rho = getSafeParam(sabrPv->rho(), "rho", nExpiryTimes);
+    const std::array<std::reference_wrapper<const Matrix>, 4> params{ alpha, beta, nu, rho };
+
+    // In the loop below, we avoid accessing the modelParamInfo by key as it consists of doubles.
+    auto itMpi = modelParamInfo.begin();
+
+    // The updated model parameters to be populated in the loop below.
+    ModelParamData newMpd;
+    newMpd.reserve(nExpiryTimes);
+
+    for (QuantLib::Size i = 0; i < nExpiryTimes; ++i) {
+        // Existing SABR parameters for the current i-th slice at i-th expiry time.
+        const SabrSliceParamInfo& mp = itMpi->second;
+        QL_REQUIRE(mp.size() == 4, "SabrStrippedOptionletAdapter: expected SabrSliceParamInfo to have 4 elements.");
+
+        // Modified SABR parameters, to be created below, for the current i-th slice at i-th expiry time.
+        SabrSliceParamInfo newSlice;
+        newSlice.reserve(4);
+
+        for (QuantLib::Size j = 0; j < 4; ++j) {
+            const Matrix& paramMtx = params[j].get();
+            auto [paramValue, paramCalibType] = mp[j];
+            if (paramValue != QuantLib::Null<QuantLib::Real>() && paramCalibType == PVPC::Fixed) {
+                // If the original parameter value is fixed and has a valid value, we keep it as is.
+                newSlice.emplace_back(mp[j]);
+            } else if (sspi[j].first != QuantLib::Null<QuantLib::Real>()) {
+                // If a concrete new value is provided, use it along with whatever calibration type is specified.
+                newSlice.emplace_back(sspi[j]);
+            } else {
+                // In all other cases, we use the calibrated value and set the calibration type to the one given.
+                newSlice.emplace_back(paramMtx[0][i], sspi[j].second);
+            }
+        }
+
+        newMpd.emplace_back(std::move(newSlice));
+
+        if (modelParamInfo.size() > 1)
+            itMpi++;
+    }
+
+    // Update the initial model parameters with the new values.
+    initialModelParameters_ = std::move(newMpd);
+}
+
+template <class TimeInterpolator>
 inline QuantLib::ext::shared_ptr<QuantLib::SmileSection>
 SabrStrippedOptionletAdapter<TimeInterpolator>::smileSectionImpl(QuantLib::Time optionTime) const {
     calculate();
-    if (auto c = cache_.find(optionTime); c != cache_.end()) {
-        return c->second;
+
+    // The following logic is to avoid returning a smile section based on a stale forward. So, if iborIndexRead_ is 
+    // non-null and is different from iborIndexCalib_ (if it is the same as iborIndexCalib_, this structure reacts to 
+    // it and will clear the cache anyway in performCalculations), we check that the forward rate calculated from 
+    // iborIndexRead_ is the same as the forward rate used in the cached smile section. If it is not, we create a new
+    // smile section with the updated forward rate.
+    Real forward;
+    auto c = cache_.find(optionTime);
+    if (c != cache_.end()) {
+        if (!iborIndexRead_ || iborIndexCalib_ == iborIndexRead_)
+            return c->second;
+
+        forward = atmRate(optionTime, iborIndexRead_);
+        if (QuantLib::close(forward, c->second->atmLevel()))
+            return c->second;
+    } else {
+        forward = atmRate(optionTime, iborIndexRead_);
     }
-    Real forward = atmInterpolation_->operator()(optionTime);
-    auto tmp = QuantLib::ext::make_shared<ParametricVolatilitySmileSection>(
-        optionTime, Null<Real>(), forward, parametricVolatility_,
-        volatilityType() == QuantLib::Normal ? ParametricVolatility::MarketQuoteType::NormalVolatility
-                                             : ParametricVolatility::MarketQuoteType::ShiftedLognormalVolatility,
-        displacement());
-    cache_[optionTime] = tmp;
+
+    // Create new smile section.
+    auto mqt = volatilityType() == QuantLib::Normal ? MQT::NormalVolatility : MQT::ShiftedLognormalVolatility;
+    auto tmp = QuantLib::ext::make_shared<ParametricVolatilitySmileSection>(optionTime, Null<Real>(), forward,
+        parametricVolatility_, mqt, displacement());
+
+    // Update the cache with the new smile section.
+    if (c != cache_.end())
+        c->second = tmp;
+    else
+        cache_.emplace(optionTime, tmp);
+
     return tmp;
 }
 
@@ -415,6 +460,30 @@ template <class TimeInterpolator>
 inline QuantLib::Volatility
 SabrStrippedOptionletAdapter<TimeInterpolator>::volatilityImpl(QuantLib::Time optionTime, QuantLib::Rate strike) const {
     return smileSectionImpl(optionTime)->volatility(strike);
+}
+
+template <class TimeInterpolator>
+inline QuantLib::Real
+SabrStrippedOptionletAdapter<TimeInterpolator>::atmRate(QuantLib::Time optionTime,
+    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& iborIndex, const QuantLib::Date& fixingDate) const
+{
+    // If an Ibor index is not provided, just use linear interpolation of ATM rates from the optionlet base.
+    if (!iborIndex)
+        return (*atmInterpolation_)(optionTime);
+
+    // If an Ibor index is provided, we calculate the ATM rate from the index.
+    Date d = fixingDate != QuantLib::Date() ? fixingDate : dateFromTime(*this, optionTime);
+    return getIndexRate(d, iborIndex, rateCompPeriod_);
+}
+
+template <class TimeInterpolator>
+inline const QuantLib::Matrix& SabrStrippedOptionletAdapter<TimeInterpolator>::getSafeParam(const QuantLib::Matrix& m,
+    const char* name, QuantLib::Size nExpiryTimes)
+{
+    QL_REQUIRE(m.rows() == 2 && m.columns() == nExpiryTimes, "SabrStrippedOptionletAdapter: expected calibrated "
+        << name << " matrix to have 2 rows (" << m.rows() << ") and " << nExpiryTimes << " columns ("
+        << m.columns() << ").");
+    return m;
 }
 
 } // namespace QuantExt

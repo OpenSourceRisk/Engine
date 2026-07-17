@@ -497,6 +497,7 @@
 #include <qle/quotes/basecorrelationquote.hpp>
 #include <qle/quotes/bondfuturequote.hpp>
 #include <qle/quotes/compositevectorquote.hpp>
+#include <qle/quotes/derivedquote.hpp>
 #include <qle/quotes/exceptionquote.hpp>
 #include <qle/quotes/logquote.hpp>
 #include <qle/termstructures/adjusteddefaultcurve.hpp>

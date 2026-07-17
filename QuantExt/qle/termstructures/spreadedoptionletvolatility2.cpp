@@ -104,12 +104,12 @@ ext::shared_ptr<SmileSection> SpreadedOptionletVolatility2::smileSectionImpl(Tim
     Real anchorInitAtm = Null<Real>();
     Real anchorAtm = Null<Real>();
     if (stickyMoneyness) {
-        Date fixingDate = dateFromTime(optionTime + t0_);
-        initAtm = getAtmRate(fixingDate, initIndex_);
-        atm = getAtmRate(fixingDate, index_);
+        Date fixingDate = dateFromTime(*this, optionTime + t0_);
+        initAtm = getIndexRate(fixingDate, initIndex_, rateComputationPeriod_);
+        atm = getIndexRate(fixingDate, index_, rateComputationPeriod_);
         if (originalRefDate_ != actualRefDate_ && decayMode_ != ConstantVariance) {
-            anchorInitAtm = getAtmRate(actualRefDate_, initIndex_);
-            anchorAtm = getAtmRate(actualRefDate_, index_);
+            anchorInitAtm = getIndexRate(actualRefDate_, initIndex_, rateComputationPeriod_);
+            anchorAtm = getIndexRate(actualRefDate_, index_, rateComputationPeriod_);
         }
     }
 
@@ -154,46 +154,6 @@ void SpreadedOptionletVolatility2::update() {
 void SpreadedOptionletVolatility2::deepUpdate() {
     baseVol_->update();
     update();
-}
-
-Date SpreadedOptionletVolatility2::dateFromTime(Time optionTime) const {
-
-    const Date& refDate = referenceDate();
-
-    // Initial estimate assuming Actual 365 Fixed.
-    Date result = refDate + Period(optionTime * 365.0, Days);
-    Time resultTime = timeFromReference(result);
-    if (close(resultTime, optionTime))
-        return result;
-
-    // Adjust until result is the last date whose time is <= optionTime.
-    if (resultTime > optionTime) {
-        while (resultTime > optionTime)
-            resultTime = timeFromReference(--result);
-    } else {
-        while (timeFromReference(result + 1) <= optionTime)
-            ++result;
-    }
-
-    // Return the date whose time is closest to optionTime.
-    Time timeBelow = timeFromReference(result);
-    Time timeAbove = timeFromReference(result + 1);
-    return (optionTime - timeBelow <= timeAbove - optionTime) ? result : result + 1;
-}
-
-Rate SpreadedOptionletVolatility2::getAtmRate(const Date& fixingDate, const ext::shared_ptr<IborIndex>& index) const {
-    auto fixCal = index->fixingCalendar();
-    if (auto onIndex = ext::dynamic_pointer_cast<OvernightIndex>(index)) {
-        QL_REQUIRE(rateComputationPeriod_.length() > 0, "SpreadedOptionletVolatility2::getAtmRate: expected "
-            "positive rate computation period for OIS index.");
-        return getOisAtmLevel(onIndex, fixCal.adjust(fixingDate), rateComputationPeriod_);
-    } else if (auto bmaIndex = ext::dynamic_pointer_cast<BMAIndexWrapper>(index)) {
-        QL_REQUIRE(rateComputationPeriod_.length() > 0, "SpreadedOptionletVolatility2::getAtmRate: expected "
-            "positive rate computation period for BMA index.");
-        return getBMAAtmLevel(bmaIndex->bma(), fixCal.adjust(fixingDate), rateComputationPeriod_);
-    } else {
-        return index->fixing(fixCal.adjust(fixingDate));
-    }
 }
 
 AtmAdjustedSpreadedOptionletVolatility2::AtmAdjustedSpreadedOptionletVolatility2(
