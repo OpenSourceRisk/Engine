@@ -449,4 +449,34 @@ qle_export_termrate_instance(SofrTerm);
 qle_export_termrate_instance(SoniaTerm);
 qle_export_termrate_instance(TonarTerm);
 
+// QuantExt::InterpolatedIborIndex – interpolation between two ibor tenors.
+// Required dependency of InterpolatedIborCoupon (qle_coupons.i).
+%{
+#include <qle/indexes/interpolatediborindex.hpp>
+using QuantExt::InterpolatedIborIndex;
+%}
+
+%shared_ptr(QuantExt::InterpolatedIborIndex)
+namespace QuantExt {
+class InterpolatedIborIndex : public InterestRateIndex {
+  public:
+    InterpolatedIborIndex(
+        const ext::shared_ptr<QuantLib::IborIndex>& shortIndex,
+        const ext::shared_ptr<QuantLib::IborIndex>& longIndex,
+        Size calendarDays,
+        const Rounding& rounding = Rounding(),
+        const Handle<QuantLib::YieldTermStructure>& overwriteEstimationCurve =
+            Handle<QuantLib::YieldTermStructure>(),
+        bool parCouponMode = false);
+
+    const ext::shared_ptr<QuantLib::IborIndex> shortIndex() const;
+    const ext::shared_ptr<QuantLib::IborIndex> longIndex() const;
+    Size calendarDays() const;
+    const Rounding rounding() const;
+    bool parCouponMode() const;
+    Real shortWeight(const Date& fixingDate) const;
+    Real longWeight(const Date& fixingDate) const;
+};
+} // namespace QuantExt
+
 #endif

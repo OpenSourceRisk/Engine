@@ -202,3 +202,122 @@ def test_range_accrual_pricer_by_call_spread_default_eps() -> None:
         ore.OptionletVolatilityStructureHandle()
     )
     assert pricer is not None
+
+
+def test_interpolated_ibor_coupon_pricer_and_accessors() -> None:
+    """Construct and price an interpolated Ibor coupon."""
+    evaluation_date = ore.Date(15, ore.January, 2026)
+    ore.Settings.instance().evaluationDate = evaluation_date
+    curve = ore.FlatForward(evaluation_date, 0.03, ore.Actual365Fixed())
+    curve_handle = ore.YieldTermStructureHandle(curve)
+    short_index = ore.Euribor3M(curve_handle)
+    long_index = ore.Euribor6M(curve_handle)
+    fixing_date = ore.Date(13, ore.January, 2026)
+    short_index.addFixing(fixing_date, 0.03)
+    long_index.addFixing(fixing_date, 0.03)
+    index = ore.InterpolatedIborIndex(short_index, long_index, 90)
+    coupon = ore.InterpolatedIborCoupon(
+        ore.Date(15, ore.July, 2026),
+        1_000.0,
+        ore.Date(15, ore.January, 2026),
+        ore.Date(15, ore.July, 2026),
+        2,
+        index,
+        1.0,
+        0.0,
+        ore.Date(),
+        ore.Date(),
+        ore.Actual365Fixed(),
+        False,
+        ore.Date(),
+        short_index,
+    )
+    coupon.setPricer(ore.BlackInterpolatedIborCouponPricer())
+
+    # interpolatedIborIndex() should return the index we passed in
+    assert coupon.interpolatedIborIndex() is not None
+    # amount and rate are computed via the flat 3% curve
+    assert coupon.amount() > 0.0
+    assert coupon.rate() > 0.0
+
+
+def test_black_interpolated_ibor_coupon_pricer_enum_values() -> None:
+    """BlackInterpolatedIborCouponPricer enum values are accessible."""
+    assert hasattr(ore.BlackInterpolatedIborCouponPricer, "Black76")
+    assert hasattr(ore.BlackInterpolatedIborCouponPricer, "BivariateLognormal")
+    pricer = ore.BlackInterpolatedIborCouponPricer()
+    # capletVolatility returns an empty Handle (valid, not None)
+    assert pricer.capletVolatility() is not None
+
+
+def test_ibor_fra_coupon_amount() -> None:
+    """Construct an Ibor FRA coupon and evaluate its amount."""
+    evaluation_date = ore.Date(15, ore.January, 2026)
+    ore.Settings.instance().evaluationDate = evaluation_date
+    curve = ore.FlatForward(evaluation_date, 0.03, ore.Actual365Fixed())
+    index = ore.Euribor3M(ore.YieldTermStructureHandle(curve))
+    coupon = ore.IborFraCoupon(
+        ore.Date(15, ore.April, 2026),
+        ore.Date(15, ore.July, 2026),
+        1_000.0,
+        index,
+        0.02,
+    )
+    coupon.setPricer(ore.BlackIborCouponPricer())
+
+    # With 3% forecast and 2% strike the FRA payoff is positive
+    amt = coupon.amount()
+    assert isinstance(amt, float)
+    assert amt > 0.0
+
+
+def test_leg_builder_wrappers_construct() -> None:
+    """Construct the three newly exposed QuantExt leg builders."""
+    start = ore.Date(15, ore.January, 2026)
+    end = ore.Date(15, ore.January, 2027)
+    schedule = ore.Schedule(
+        start,
+        end,
+        ore.Period(3, ore.Months),
+        ore.TARGET(),
+        ore.ModifiedFollowing,
+        ore.ModifiedFollowing,
+        ore.DateGeneration.Forward,
+        False,
+    )
+    curve = ore.FlatForward(start, 0.03, ore.Actual365Fixed())
+    index = ore.Euribor3M(ore.YieldTermStructureHandle(curve))
+
+    sub_periods = ore.SubPeriodsLeg(
+        schedule=schedule,
+        index=index,
+        notionals=[1_000.0],
+        paymentDayCounter=ore.Actual365Fixed(),
+    )
+    trs = ore.TRSLeg(
+        valuationDates=[start, end],
+        paymentDates=[end],
+        notional=1_000.0,
+        index=index,
+    )
+
+    equity = ore.EquityIndex2(
+        "TEST-EQ",
+        ore.TARGET(),
+        ore.USDCurrency(),
+        ore.QuoteHandle(ore.SimpleQuote(100.0)),
+        ore.YieldTermStructureHandle(curve),
+        ore.YieldTermStructureHandle(curve),
+    )
+    equity_margin = ore.EquityMarginLeg(
+        schedule=schedule,
+        equityCurve=equity,
+        couponRates=[0.02],
+        couponDayCounter=ore.Actual365Fixed(),
+        notionals=[1_000.0],
+        paymentDayCounter=ore.Actual365Fixed(),
+    )
+
+    assert len(sub_periods) == 4
+    assert len(trs) == 1
+    assert len(equity_margin) == 4

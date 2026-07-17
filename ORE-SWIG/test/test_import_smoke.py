@@ -30,6 +30,14 @@ class ImportSmokeTest(unittest.TestCase):
             "NonStandardYoYInflationCouponLeg",
             "BRLCdiCouponPricer",
             "RangeAccrualPricerByCallSpread",
+            "InterpolatedIborIndex",
+            "InterpolatedIborCoupon",
+            "InterpolatedIborCouponPricer",
+            "BlackInterpolatedIborCouponPricer",
+            "IborFraCoupon",
+            "SubPeriodsLeg",
+            "EquityMarginLeg",
+            "TRSLeg",
         ]
         for symbol in required_symbols:
             self.assertTrue(

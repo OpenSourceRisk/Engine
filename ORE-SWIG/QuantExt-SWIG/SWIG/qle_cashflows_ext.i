@@ -37,6 +37,7 @@ namespace QuantExt {
 #include <qle/cashflows/equitycouponpricer.hpp>
 #include <qle/cashflows/equitymargincoupon.hpp>
 #include <qle/cashflows/equitymargincouponpricer.hpp>
+#include <qle/cashflows/trscashflow.hpp>
 #include <qle/cashflows/strippedcapflooredcpicoupon.hpp>
 #include <qle/cashflows/yoyinflationcoupon.hpp>
 #include <qle/cashflows/strippedcapflooredyoyinflationcoupon.hpp>
@@ -249,6 +250,84 @@ Leg _EquityLeg(
     const ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
     const std::vector<Date>& paymentDates = {},
     const Schedule& valuationSchedule = Schedule());
+
+// QuantExt::EquityMarginLeg builder using helper-function-with-kwargs pattern
+%{
+Leg _EquityMarginLeg(
+    const Schedule& schedule,
+    const ext::shared_ptr<QuantExt::EquityIndex2>& equityCurve,
+    const std::vector<Rate>& couponRates = {},
+    const DayCounter& couponDayCounter = DayCounter(),
+    Compounding couponCompounding = Simple,
+    Frequency couponFrequency = Annual,
+    Real initialMarginFactor = Null<Real>(),
+    const std::vector<Real>& notionals = {},
+    const DayCounter& paymentDayCounter = DayCounter(),
+    BusinessDayConvention paymentConvention = Following,
+    Integer paymentLag = 0,
+    const Calendar& paymentCalendar = Calendar(),
+    bool totalReturn = false,
+    Real dividendFactor = 1.0,
+    Real initialPrice = Null<Real>(),
+    bool initialPriceIsInTargetCcy = false,
+    Natural fixingDays = 0,
+    const Schedule& valuationSchedule = Schedule(),
+    bool notionalReset = false,
+    Real quantity = Null<Real>(),
+    Real multiplier = Null<Real>(),
+    const ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr)
+{
+    QuantExt::EquityMarginLeg leg(schedule, equityCurve, fxIndex);
+    if (!couponRates.empty())
+        leg.withCouponRates(couponRates, couponDayCounter,
+                            couponCompounding, couponFrequency);
+    if (initialMarginFactor != Null<Real>())
+        leg.withInitialMarginFactor(initialMarginFactor);
+    if (!notionals.empty())
+        leg.withNotionals(notionals);
+    leg.withPaymentDayCounter(paymentDayCounter)
+       .withPaymentAdjustment(paymentConvention)
+       .withPaymentLag(paymentLag)
+       .withPaymentCalendar(paymentCalendar)
+       .withTotalReturn(totalReturn)
+       .withDividendFactor(dividendFactor)
+       .withInitialPrice(initialPrice)
+       .withInitialPriceIsInTargetCcy(initialPriceIsInTargetCcy)
+       .withFixingDays(fixingDays)
+       .withValuationSchedule(valuationSchedule)
+       .withNotionalReset(notionalReset)
+       .withQuantity(quantity)
+       .withMultiplier(multiplier);
+    return leg;
+}
+%}
+#if !defined(SWIGJAVA) && !defined(SWIGCSHARP)
+%feature("kwargs") _EquityMarginLeg;
+#endif
+%rename(EquityMarginLeg) _EquityMarginLeg;
+Leg _EquityMarginLeg(
+    const Schedule& schedule,
+    const ext::shared_ptr<QuantExt::EquityIndex2>& equityCurve,
+    const std::vector<Rate>& couponRates = {},
+    const DayCounter& couponDayCounter = DayCounter(),
+    Compounding couponCompounding = Simple,
+    Frequency couponFrequency = Annual,
+    Real initialMarginFactor = Null<Real>(),
+    const std::vector<Real>& notionals = {},
+    const DayCounter& paymentDayCounter = DayCounter(),
+    BusinessDayConvention paymentConvention = Following,
+    Integer paymentLag = 0,
+    const Calendar& paymentCalendar = Calendar(),
+    bool totalReturn = false,
+    Real dividendFactor = 1.0,
+    Real initialPrice = Null<Real>(),
+    bool initialPriceIsInTargetCcy = false,
+    Natural fixingDays = 0,
+    const Schedule& valuationSchedule = Schedule(),
+    bool notionalReset = false,
+    Real quantity = Null<Real>(),
+    Real multiplier = Null<Real>(),
+    const ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr);
 
 // QuantExt::IndexedCoupon – coupon with an indexed notional multiplier
 %{
@@ -1381,6 +1460,37 @@ Leg _BondTRSLeg(
     const std::vector<Date>& valuationDates,
     const std::vector<Date>& paymentDates,
     Real bondNotional,
+    const ext::shared_ptr<Index>& index,
+    const ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
+    Real initialPrice = Null<Real>(),
+    bool applyFXIndexFixingDays = false);
+
+// QuantExt::TRSLeg builder using helper-function-with-kwargs pattern
+%{
+Leg _TRSLeg(
+    const std::vector<Date>& valuationDates,
+    const std::vector<Date>& paymentDates,
+    Real notional,
+    const ext::shared_ptr<Index>& index,
+    const ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
+    Real initialPrice = Null<Real>(),
+    bool applyFXIndexFixingDays = false)
+{
+    QuantExt::TRSLeg leg(valuationDates, paymentDates, notional, index, fxIndex);
+    if (initialPrice != Null<Real>())
+        leg.withInitialPrice(initialPrice);
+    leg.withApplyFXIndexFixingDays(applyFXIndexFixingDays);
+    return leg;
+}
+%}
+#if !defined(SWIGJAVA) && !defined(SWIGCSHARP)
+%feature("kwargs") _TRSLeg;
+#endif
+%rename(TRSLeg) _TRSLeg;
+Leg _TRSLeg(
+    const std::vector<Date>& valuationDates,
+    const std::vector<Date>& paymentDates,
+    Real notional,
     const ext::shared_ptr<Index>& index,
     const ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
     Real initialPrice = Null<Real>(),

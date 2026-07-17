@@ -28,6 +28,9 @@
 #include <qle/cashflows/brlcdicouponpricer.hpp>
 #include <qle/cashflows/cappedflooredaveragebmacoupon.hpp>
 #include <qle/cashflows/cmbcoupon.hpp>
+#include <qle/cashflows/iborfracoupon.hpp>
+#include <qle/cashflows/interpolatediborcoupon.hpp>
+#include <qle/cashflows/interpolatediborcouponpricer.hpp>
 #include <qle/cashflows/rangeaccrualcouponpricer.hpp>
 #include <qle/cashflows/zerofixedcoupon.hpp>
 
@@ -47,10 +50,118 @@ using QuantExt::CapFlooredAverageBMACouponPricer;
 using QuantExt::BlackAverageBMACouponPricer;
 using QuantExt::CmbCoupon;
 using QuantExt::CmbCouponPricer;
+using QuantExt::IborFraCoupon;
+using QuantExt::InterpolatedIborCoupon;
+using QuantExt::InterpolatedIborCouponPricer;
+using QuantExt::BlackInterpolatedIborCouponPricer;
 using QuantExt::RangeAccrualPricerByCallSpread;
 using QuantExt::ZeroFixedCoupon;
 using namespace std;
 %}
+
+%shared_ptr(QuantExt::InterpolatedIborCoupon)
+namespace QuantExt {
+// Use unqualified FloatingRateCoupon so SWIG establishes the Python
+// inheritance chain (QuantLib::FloatingRateCoupon breaks it).
+class InterpolatedIborCoupon : public FloatingRateCoupon {
+    #if !defined(SWIGJAVA) && !defined(SWIGCSHARP)
+    %feature("kwargs") InterpolatedIborCoupon;
+    #endif
+  public:
+    InterpolatedIborCoupon(
+        const QuantLib::Date& paymentDate,
+        const QuantLib::Real nominal,
+        const QuantLib::Date& accrualStart,
+        const QuantLib::Date& accrualEnd,
+        const QuantLib::Size fixingDays,
+        const ext::shared_ptr<QuantExt::InterpolatedIborIndex>& index,
+        QuantLib::Real gearing = 1.0,
+        QuantLib::Real spread = 0.0,
+        const QuantLib::Date& refPeriodStart = QuantLib::Date(),
+        const QuantLib::Date& refPeriodEnd = QuantLib::Date(),
+        const QuantLib::DayCounter& dayCounter = QuantLib::DayCounter(),
+        bool isInArrears = false,
+        const QuantLib::Date& exCouponDate = QuantLib::Date(),
+        const ext::shared_ptr<QuantLib::IborIndex>& iborIndex =
+            nullptr);
+
+    QuantLib::ext::shared_ptr<QuantExt::InterpolatedIborIndex>
+    interpolatedIborIndex() const;
+    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& iborIndex() const;
+
+    // Explicitly re-declare key FloatingRateCoupon methods so they are
+    // available in Python even in SWIG versions that miss the inheritance.
+    void setPricer(const ext::shared_ptr<FloatingRateCouponPricer>& p);
+    QuantLib::Rate rate() const;
+    QuantLib::Real amount() const;
+    QuantLib::Real nominal() const;
+};
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::InterpolatedIborCouponPricer)
+namespace QuantExt {
+// InterpolatedIborCouponPricer is abstract, but its public constructor and
+// inspectors are part of the wrapped API. Declare the inherited pure virtual
+// interface so SWIG does not generate an invalid direct instantiation.
+class InterpolatedIborCouponPricer : public FloatingRateCouponPricer {
+  public:
+    explicit InterpolatedIborCouponPricer(
+        const QuantLib::Handle<QuantLib::OptionletVolatilityStructure>& v =
+            QuantLib::Handle<QuantLib::OptionletVolatilityStructure>(),
+        QuantLib::ext::optional<bool> useIndexedCoupon =
+            QuantLib::ext::nullopt);
+
+    virtual QuantLib::Real swapletPrice() const = 0;
+    virtual QuantLib::Rate swapletRate() const = 0;
+    virtual QuantLib::Real capletPrice(QuantLib::Rate effectiveCap) const = 0;
+    virtual QuantLib::Rate capletRate(QuantLib::Rate effectiveCap) const = 0;
+    virtual QuantLib::Real floorletPrice(QuantLib::Rate effectiveFloor) const = 0;
+    virtual QuantLib::Rate floorletRate(QuantLib::Rate effectiveFloor) const = 0;
+
+    bool useIndexedCoupon() const;
+    QuantLib::Handle<QuantLib::OptionletVolatilityStructure> capletVolatility() const;
+    void setCapletVolatility(
+        const QuantLib::Handle<QuantLib::OptionletVolatilityStructure>& v =
+            QuantLib::Handle<QuantLib::OptionletVolatilityStructure>());
+};
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::BlackInterpolatedIborCouponPricer)
+namespace QuantExt {
+class BlackInterpolatedIborCouponPricer : public InterpolatedIborCouponPricer {
+    #if !defined(SWIGJAVA) && !defined(SWIGCSHARP)
+    %feature("kwargs") BlackInterpolatedIborCouponPricer;
+    #endif
+  public:
+    enum TimingAdjustment { Black76, BivariateLognormal };
+    BlackInterpolatedIborCouponPricer(
+        const QuantLib::Handle<QuantLib::OptionletVolatilityStructure>& v =
+            QuantLib::Handle<QuantLib::OptionletVolatilityStructure>(),
+        const TimingAdjustment timingAdjustment = Black76,
+        const QuantLib::Handle<QuantLib::Quote> correlation =
+            QuantLib::Handle<QuantLib::Quote>(
+                QuantLib::ext::shared_ptr<QuantLib::Quote>(
+                    new QuantLib::SimpleQuote(1.0))),
+        QuantLib::ext::optional<bool> useIndexedCoupon =
+            QuantLib::ext::nullopt);
+};
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::IborFraCoupon)
+namespace QuantExt {
+// Use unqualified IborCoupon so SWIG establishes the Python inheritance chain.
+class IborFraCoupon : public IborCoupon {
+  public:
+    IborFraCoupon(
+        const QuantLib::Date& startDate,
+        const QuantLib::Date& endDate,
+        QuantLib::Real nominal,
+        const ext::shared_ptr<QuantLib::IborIndex>& index,
+        double strikeRate);
+
+    QuantLib::Real amount() const;
+};
+} // namespace QuantExt
 
 %shared_ptr(AverageBMACoupon)
 class AverageBMACoupon : public FloatingRateCoupon {
