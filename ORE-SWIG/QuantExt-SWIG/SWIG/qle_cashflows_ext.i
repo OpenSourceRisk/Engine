@@ -37,6 +37,7 @@ namespace QuantExt {
 #include <qle/cashflows/equitycouponpricer.hpp>
 #include <qle/cashflows/equitymargincoupon.hpp>
 #include <qle/cashflows/equitymargincouponpricer.hpp>
+#include <qle/cashflows/strippedcapflooredcpicoupon.hpp>
 #include <qle/cashflows/yoyinflationcoupon.hpp>
 #include <qle/cashflows/strippedcapflooredyoyinflationcoupon.hpp>
 #include <qle/cashflows/nonstandardcapflooredyoyinflationcoupon.hpp>
@@ -391,6 +392,7 @@ class CPICoupon : public ::CPICoupon {
               bool subtractInflationNominal = false);
 
     bool subtractInflationNotional();
+    void setPricer(const ext::shared_ptr<QuantLib::CPICouponPricer>& pricer);
 };
 } // namespace QuantExt
 
@@ -429,8 +431,76 @@ class CappedFlooredCPICoupon : public CPICoupon {
     ext::shared_ptr<CPICoupon> underlying() const;
     bool isCapped() const;
     bool isFloored() const;
+    void setPricer(const ext::shared_ptr<QuantLib::CPICouponPricer>& pricer);
 };
 } // namespace QuantExt
+
+// ---------------------------------------------------------------------------
+// QuantExt stripped capped/floored CPI coupon, cashflow and leg
+// ---------------------------------------------------------------------------
+%shared_ptr(QuantExt::StrippedCappedFlooredCPICoupon)
+%nodefaultctor QuantExt::StrippedCappedFlooredCPICoupon;
+namespace QuantExt {
+class StrippedCappedFlooredCPICoupon : public QuantExt::CPICoupon {
+  public:
+    Rate rate() const;
+    Rate cap() const;
+    Rate floor() const;
+    Rate effectiveCap() const;
+    Rate effectiveFloor() const;
+    ext::shared_ptr<QuantExt::CappedFlooredCPICoupon> underlying();
+    bool isCap() const;
+    bool isFloor() const;
+    bool isCollar() const;
+};
+} // namespace QuantExt
+
+%inline %{
+ext::shared_ptr<QuantExt::StrippedCappedFlooredCPICoupon>
+as_stripped_capped_floored_cpi_coupon(const ext::shared_ptr<QuantLib::CashFlow>& cashFlow) {
+    return ext::dynamic_pointer_cast<QuantExt::StrippedCappedFlooredCPICoupon>(cashFlow);
+}
+%}
+
+%{
+ext::shared_ptr<QuantExt::StrippedCappedFlooredCPICoupon>
+_makeStrippedCappedFlooredCPICoupon(
+    const ext::shared_ptr<QuantExt::CappedFlooredCPICoupon>& underlying) {
+    return ext::make_shared<QuantExt::StrippedCappedFlooredCPICoupon>(underlying);
+}
+%}
+%rename(makeStrippedCappedFlooredCPICoupon) _makeStrippedCappedFlooredCPICoupon;
+ext::shared_ptr<QuantExt::StrippedCappedFlooredCPICoupon>
+_makeStrippedCappedFlooredCPICoupon(
+    const ext::shared_ptr<QuantExt::CappedFlooredCPICoupon>& underlying);
+
+%shared_ptr(QuantExt::StrippedCappedFlooredCPICashFlow)
+namespace QuantExt {
+class StrippedCappedFlooredCPICashFlow : public QuantLib::CPICashFlow {
+  public:
+    explicit StrippedCappedFlooredCPICashFlow(
+        const ext::shared_ptr<QuantExt::CappedFlooredCPICashFlow>& underlying);
+    Real amount() const;
+    ext::shared_ptr<QuantExt::CappedFlooredCPICashFlow> underlying() const;
+};
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::StrippedCappedFlooredCPICouponLeg)
+namespace QuantExt {
+class StrippedCappedFlooredCPICouponLeg {
+  public:
+    explicit StrippedCappedFlooredCPICouponLeg(const QuantLib::Leg& underlyingLeg);
+    operator QuantLib::Leg() const;
+};
+} // namespace QuantExt
+
+%{
+QuantLib::Leg _makeStrippedCappedFlooredCPICouponLeg(const QuantLib::Leg& underlyingLeg) {
+    return QuantExt::StrippedCappedFlooredCPICouponLeg(underlyingLeg);
+}
+%}
+%rename(makeStrippedCappedFlooredCPICouponLeg) _makeStrippedCappedFlooredCPICouponLeg;
+QuantLib::Leg _makeStrippedCappedFlooredCPICouponLeg(const QuantLib::Leg& underlyingLeg);
 
 // ---------------------------------------------------------------------------
 // QuantExt Inflation Pricers
