@@ -41,3 +41,24 @@ def test_cmb_and_zero_fixed_coupon_wrappers_construct():
     assert cmb_coupon.bondIndex() is not None
     assert zero_coupon.nominal() == 1_000_000.0
     assert zero_coupon.compounding() == ore.Compounded
+
+
+def test_cashflow_utility_and_wrapper_bindings() -> None:
+    """Exercise QuantExt cashflow utilities and wrapper types."""
+    start_date = ore.Date(15, ore.January, 2026)
+    end_date = ore.Date(15, ore.January, 2027)
+    cashflow = ore.SimpleCashFlow(100.0, end_date)
+    leg = [cashflow]
+
+    scaled_cashflow = ore.ScaledCashFlow(2.0, cashflow)
+    typed_cashflow = ore.TypedCashFlow(
+        100.0, end_date, ore.TypedCashFlow.Type_Interest
+    )
+
+    assert scaled_cashflow.amount() == 200.0
+    assert typed_cashflow.type() == ore.TypedCashFlow.Type_Interest
+    assert ore.QLECashFlows.sumCashflows(
+        leg, start_date, end_date
+    ) == 100.0
+    assert hasattr(ore, "QLESetCouponPricer")
+    assert hasattr(ore, "QLESetCouponPricers")

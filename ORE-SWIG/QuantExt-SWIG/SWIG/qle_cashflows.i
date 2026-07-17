@@ -30,6 +30,99 @@
 %include cashflows.i
 %include qle_indexes.i
 
+%{
+#include <qle/cashflows/cashflows.hpp>
+#include <qle/cashflows/couponpricer.hpp>
+#include <qle/cashflows/scaledcoupon.hpp>
+#include <qle/cashflows/typedcashflow.hpp>
+%}
+
+%rename(QLESetCouponPricer) QuantExt::setCouponPricer;
+%rename(QLESetCouponPricers) QuantExt::setCouponPricers;
+
+namespace QuantExt {
+
+void setCouponPricer(
+    const QuantLib::Leg& leg,
+    const QuantLib::ext::shared_ptr<QuantLib::FloatingRateCouponPricer>& pricer);
+
+void setCouponPricers(
+    const QuantLib::Leg& leg,
+    const std::vector<
+        QuantLib::ext::shared_ptr<QuantLib::FloatingRateCouponPricer> >& pricers);
+
+%nodefaultctor CashFlows;
+%rename(QLECashFlows) CashFlows;
+class CashFlows {
+  public:
+    static Real spreadNpv(
+        const QuantLib::Leg& leg,
+        const QuantLib::YieldTermStructure& discountCurve,
+        bool includeSettlementDateFlows,
+        QuantLib::Date settlementDate = QuantLib::Date(),
+        QuantLib::Date npvDate = QuantLib::Date());
+    static Real sumCashflows(
+        const QuantLib::Leg& leg,
+        const QuantLib::Date& startDate,
+        const QuantLib::Date& endDate);
+    static std::vector<QuantLib::Rate> couponRates(const QuantLib::Leg& leg);
+    static std::vector<QuantLib::Rate> couponDcfRates(const QuantLib::Leg& leg);
+};
+
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::ScaledCashFlow)
+namespace QuantExt {
+class ScaledCashFlow : public CashFlow {
+  public:
+    ScaledCashFlow(
+        Real multiplier,
+        ext::shared_ptr<CashFlow> underlying);
+    QuantLib::Date date() const;
+    Real amount() const;
+    Real multiplier() const;
+    const ext::shared_ptr<CashFlow>& underlyingCashFlow() const;
+};
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::ScaledCoupon)
+namespace QuantExt {
+class ScaledCoupon : public Coupon {
+  public:
+    ScaledCoupon(
+        Real multiplier,
+        ext::shared_ptr<Coupon> underlyingCoupon);
+    void update();
+    Rate amount() const;
+    Real accruedAmount(const QuantLib::Date& d) const;
+    Rate nominal() const;
+    Rate rate() const;
+    QuantLib::DayCounter dayCounter() const;
+    Real multiplier() const;
+    const ext::shared_ptr<Coupon>& underlyingCoupon() const;
+};
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::TypedCashFlow)
+namespace QuantExt {
+class TypedCashFlow : public SimpleCashFlow {
+  public:
+    enum class Type {
+        Interest,
+        Notional,
+        Fee,
+        Premium,
+        Unspecified
+    };
+    TypedCashFlow(
+        Real amount,
+        const QuantLib::Date& date,
+        Type type = Type::Unspecified);
+    Type type() const;
+};
+
+} // namespace QuantExt
+
 %shared_ptr(QuantExt::FXLinkedCashFlow)
 namespace QuantExt {
 class FXLinkedCashFlow : public CashFlow {
