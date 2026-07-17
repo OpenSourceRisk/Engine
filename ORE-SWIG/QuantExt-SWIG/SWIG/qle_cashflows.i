@@ -27,12 +27,17 @@
 %include termstructures.i
 %include scheduler.i
 %include vectors.i
+%include <std_map.i>
 %include cashflows.i
 %include qle_indexes.i
+
+%template(FXLinkedFixings) std::map<Date, Real>;
 
 %{
 #include <qle/cashflows/cashflows.hpp>
 #include <qle/cashflows/couponpricer.hpp>
+#include <qle/cashflows/fixedratefxlinkednotionalcoupon.hpp>
+#include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/scaledcoupon.hpp>
 #include <qle/cashflows/typedcashflow.hpp>
 %}
@@ -123,6 +128,27 @@ class TypedCashFlow : public SimpleCashFlow {
 
 } // namespace QuantExt
 
+%shared_ptr(QuantExt::FXLinked)
+%nodefaultctor QuantExt::FXLinked;
+namespace QuantExt {
+class FXLinked {
+  public:
+    FXLinked(
+        const QuantLib::Date& fixingDate,
+        QuantLib::Real foreignAmount,
+        ext::shared_ptr<QuantExt::FxIndex> fxIndex,
+        const QuantLib::Date& fxResetStart = QuantLib::Date(),
+        QuantLib::Real domesticAmount = QuantLib::Null<QuantLib::Real>());
+    virtual ~FXLinked();
+    QuantLib::Date fxFixingDate() const;
+    QuantLib::Real foreignAmount() const;
+    const ext::shared_ptr<QuantExt::FxIndex>& fxIndex() const;
+    QuantLib::Real fxRate() const;
+    virtual ext::shared_ptr<QuantExt::FXLinked> clone(
+        ext::shared_ptr<QuantExt::FxIndex> fxIndex) = 0;
+};
+} // namespace QuantExt
+
 %shared_ptr(QuantExt::FXLinkedCashFlow)
 namespace QuantExt {
 class FXLinkedCashFlow : public CashFlow {
@@ -137,6 +163,81 @@ class FXLinkedCashFlow : public CashFlow {
     QuantLib::Real amount() const override;
     QuantLib::Real foreignAmount() const;
     QuantLib::Real fxRate() const;
+};
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::FixedRateFXLinkedNotionalCoupon)
+namespace QuantExt {
+class FixedRateFXLinkedNotionalCoupon : public FixedRateCoupon {
+  public:
+    FixedRateFXLinkedNotionalCoupon(
+        const QuantLib::Date& fxFixingDate,
+        QuantLib::Real foreignAmount,
+        ext::shared_ptr<QuantExt::FxIndex> fxIndex,
+        const ext::shared_ptr<FixedRateCoupon>& underlying,
+        const QuantLib::Date& fxResetStart = QuantLib::Date(),
+        QuantLib::Real domesticAmount = QuantLib::Null<QuantLib::Real>());
+    QuantLib::Rate nominal() const;
+    QuantLib::Rate rate() const;
+    ext::shared_ptr<QuantExt::FXLinked> clone(
+        ext::shared_ptr<QuantExt::FxIndex> fxIndex);
+    QuantLib::Date fxFixingDate() const;
+    QuantLib::Real foreignAmount() const;
+    const ext::shared_ptr<QuantExt::FxIndex>& fxIndex() const;
+    QuantLib::Real fxRate() const;
+    ext::shared_ptr<FixedRateCoupon> underlying() const;
+};
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::AverageFXLinked)
+%nodefaultctor QuantExt::AverageFXLinked;
+namespace QuantExt {
+class AverageFXLinked {
+  public:
+    AverageFXLinked(
+        const std::vector<QuantLib::Date>& fixingDates,
+        QuantLib::Real foreignAmount,
+        ext::shared_ptr<QuantExt::FxIndex> fxIndex,
+        bool inverted = false);
+    const std::vector<QuantLib::Date>& fxFixingDates() const;
+    QuantLib::Real foreignAmount() const;
+    const ext::shared_ptr<QuantExt::FxIndex>& fxIndex() const;
+    QuantLib::Real fxRate() const;
+    virtual ext::shared_ptr<QuantExt::AverageFXLinked> clone(
+        ext::shared_ptr<QuantExt::FxIndex> fxIndex) = 0;
+};
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::AverageFXLinkedCashFlow)
+namespace QuantExt {
+class AverageFXLinkedCashFlow : public CashFlow, public AverageFXLinked {
+  public:
+    AverageFXLinkedCashFlow(
+        const QuantLib::Date& cashFlowDate,
+        const std::vector<QuantLib::Date>& fixingDates,
+        QuantLib::Real foreignAmount,
+        ext::shared_ptr<QuantExt::FxIndex> fxIndex,
+        bool inverted = false);
+    QuantLib::Date date() const override;
+    QuantLib::Real amount() const override;
+    ext::shared_ptr<QuantExt::AverageFXLinked> clone(
+        ext::shared_ptr<QuantExt::FxIndex> fxIndex) override;
+    std::map<Date, Real> fixings() const;
+};
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::FXLinkedTypedCashFlow)
+namespace QuantExt {
+class FXLinkedTypedCashFlow : public FXLinkedCashFlow {
+  public:
+    FXLinkedTypedCashFlow(
+        const QuantLib::Date& cashFlowDate,
+        const QuantLib::Date& fixingDate,
+        QuantLib::Real foreignAmount,
+        ext::shared_ptr<QuantExt::FxIndex> fxIndex,
+        QuantExt::TypedCashFlow::Type type =
+            QuantExt::TypedCashFlow::Type::Unspecified);
+    QuantExt::TypedCashFlow::Type type() const;
 };
 } // namespace QuantExt
 

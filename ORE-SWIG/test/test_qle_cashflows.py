@@ -62,3 +62,55 @@ def test_cashflow_utility_and_wrapper_bindings() -> None:
     ) == 100.0
     assert hasattr(ore, "QLESetCouponPricer")
     assert hasattr(ore, "QLESetCouponPricers")
+
+
+def test_fx_linked_cashflow_wrappers() -> None:
+    """Construct and inspect the FX-linked cashflow wrapper family."""
+    evaluation_date = ore.Date(15, ore.January, 2026)
+    fixing_date = ore.Date(14, ore.January, 2026)
+    payment_date = ore.Date(15, ore.January, 2027)
+    ore.Settings.instance().evaluationDate = evaluation_date
+
+    fx_quote = ore.SimpleQuote(1.2)
+    fx_index = ore.FxIndex(
+        "FX::USDEUR",
+        0,
+        ore.USDCurrency(),
+        ore.EURCurrency(),
+        ore.TARGET(),
+        ore.RelinkableQuoteHandle(fx_quote),
+    )
+    fx_index.addFixing(fixing_date, 1.2)
+
+    underlying = ore.FixedRateCoupon(
+        payment_date,
+        1_000.0,
+        0.02,
+        ore.Actual365Fixed(),
+        evaluation_date,
+        payment_date,
+    )
+    fixed_coupon = ore.FixedRateFXLinkedNotionalCoupon(
+        fixing_date, 1_000.0, fx_index, underlying
+    )
+    assert fixed_coupon.nominal() == 1_200.0
+    assert fixed_coupon.rate() == 0.02
+    assert abs(fixed_coupon.amount() - 24.0) < 1e-12
+    assert fixed_coupon.clone(fx_index) is not None
+
+    average = ore.AverageFXLinkedCashFlow(
+        payment_date, [fixing_date], 1_000.0, fx_index
+    )
+    assert average.amount() == 1_200.0
+    assert average.fxRate() == 1.2
+    assert average.fixings()[fixing_date] == 1.2
+
+    typed = ore.FXLinkedTypedCashFlow(
+        payment_date,
+        fixing_date,
+        1_000.0,
+        fx_index,
+        ore.TypedCashFlow.Type_Fee,
+    )
+    assert typed.amount() == 1_200.0
+    assert typed.type() == ore.TypedCashFlow.Type_Fee
