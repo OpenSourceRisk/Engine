@@ -114,3 +114,91 @@ def test_fx_linked_cashflow_wrappers() -> None:
     )
     assert typed.amount() == 1_200.0
     assert typed.type() == ore.TypedCashFlow.Type_Fee
+
+
+def test_brl_cdi_coupon_pricer_attach_and_amount() -> None:
+    """Attach BRLCdiCouponPricer and evaluate a future BRL CDI coupon."""
+    evaluation_date = ore.Date(15, ore.January, 2026)
+    ore.Settings.instance().evaluationDate = evaluation_date
+    curve = ore.FlatForward(evaluation_date, 0.10, ore.Actual365Fixed())
+    index = ore.BRLCdi(ore.YieldTermStructureHandle(curve))
+    coupon = ore.QLEOvernightIndexedCoupon(
+        ore.Date(30, ore.January, 2026),
+        1_000.0,
+        ore.Date(20, ore.January, 2026),
+        ore.Date(30, ore.January, 2026),
+        index,
+        1.0,
+        0.0,
+        ore.Date(),
+        ore.Date(),
+        ore.Business252(),
+        False,
+        False,
+        ore.Period(0, ore.Days),
+        0,
+        ore.nullInt(),
+        ore.Date(),
+        ore.Date(),
+        True,
+    )
+    pricer = ore.BRLCdiCouponPricer()
+    coupon.setPricer(pricer)
+    assert coupon.amount() > 0.0
+
+
+def test_range_accrual_pricer_by_call_spread_attach_and_amount() -> None:
+    """Attach RangeAccrualPricerByCallSpread and evaluate a range coupon."""
+    evaluation_date = ore.Date(15, ore.January, 2026)
+    ore.Settings.instance().evaluationDate = evaluation_date
+    curve = ore.FlatForward(evaluation_date, 0.03, ore.Actual365Fixed())
+    index = ore.Euribor6M(ore.YieldTermStructureHandle(curve))
+    calendar = ore.TARGET()
+    start = ore.Date(20, ore.January, 2026)
+    end = ore.Date(20, ore.April, 2026)
+    observations = ore.Schedule(
+        start,
+        end,
+        ore.Period(1, ore.Months),
+        calendar,
+        ore.ModifiedFollowing,
+        ore.ModifiedFollowing,
+        ore.DateGeneration.Forward,
+        False,
+    )
+    coupon = ore.RangeAccrualFloatersCoupon(
+        ore.Date(22, ore.April, 2026),
+        1_000.0,
+        index,
+        start,
+        end,
+        2,
+        ore.Actual365Fixed(),
+        1.0,
+        0.0,
+        ore.Date(),
+        ore.Date(),
+        observations,
+        0.0,
+        0.10,
+    )
+    vol = ore.ConstantOptionletVolatility(
+        evaluation_date,
+        calendar,
+        ore.Following,
+        0.20,
+        ore.Actual365Fixed(),
+    )
+    pricer = ore.RangeAccrualPricerByCallSpread(
+        ore.OptionletVolatilityStructureHandle(vol)
+    )
+    coupon.setPricer(pricer)
+    assert coupon.amount() > 0.0
+
+
+def test_range_accrual_pricer_by_call_spread_default_eps() -> None:
+    """Construct RangeAccrualPricerByCallSpread using default eps (1e-4)."""
+    pricer = ore.RangeAccrualPricerByCallSpread(
+        ore.OptionletVolatilityStructureHandle()
+    )
+    assert pricer is not None

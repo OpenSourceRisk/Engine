@@ -28,6 +28,8 @@ class ImportSmokeTest(unittest.TestCase):
             "NonStandardCappedFlooredYoYInflationCoupon",
             "StrippedCappedFlooredYoYInflationCoupon",
             "NonStandardYoYInflationCouponLeg",
+            "BRLCdiCouponPricer",
+            "RangeAccrualPricerByCallSpread",
         ]
         for symbol in required_symbols:
             self.assertTrue(

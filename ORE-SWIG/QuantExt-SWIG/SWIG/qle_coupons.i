@@ -25,11 +25,14 @@
 
 %{
 #include <qle/cashflows/blackaveragebmacouponpricer.hpp>
+#include <qle/cashflows/brlcdicouponpricer.hpp>
 #include <qle/cashflows/cappedflooredaveragebmacoupon.hpp>
 #include <qle/cashflows/cmbcoupon.hpp>
+#include <qle/cashflows/rangeaccrualcouponpricer.hpp>
 #include <qle/cashflows/zerofixedcoupon.hpp>
 
 using QuantLib::AverageBMACoupon;
+using QuantExt::BRLCdiCouponPricer;
 using QuantExt::OvernightIndexedCouponBase;
 using QuantExt::AverageONIndexedCoupon;
 using QuantExt::AverageONIndexedCouponPricer;
@@ -44,6 +47,7 @@ using QuantExt::CapFlooredAverageBMACouponPricer;
 using QuantExt::BlackAverageBMACouponPricer;
 using QuantExt::CmbCoupon;
 using QuantExt::CmbCouponPricer;
+using QuantExt::RangeAccrualPricerByCallSpread;
 using QuantExt::ZeroFixedCoupon;
 using namespace std;
 %}
@@ -267,6 +271,23 @@ class CapFlooredAverageONIndexedCouponPricer : public FloatingRateCouponPricer {
 class BlackAverageONIndexedCouponPricer : public CapFlooredAverageONIndexedCouponPricer {
   public:
     BlackAverageONIndexedCouponPricer(const Handle<OptionletVolatilityStructure>& v);
+};
+
+// QuantExt::BRLCdiCouponPricer - default-constructible FloatingRateCouponPricer
+// for BRL CDI overnight coupons
+%shared_ptr(BRLCdiCouponPricer)
+class BRLCdiCouponPricer : public FloatingRateCouponPricer {
+  public:
+    BRLCdiCouponPricer();
+};
+
+// QuantExt::RangeAccrualPricerByCallSpread - call-spread digital replication
+// on optionlet vols
+%shared_ptr(RangeAccrualPricerByCallSpread)
+class RangeAccrualPricerByCallSpread : public RangeAccrualPricer {
+  public:
+    RangeAccrualPricerByCallSpread(const Handle<OptionletVolatilityStructure>& ovs,
+                                   Real eps = 1.0e-4);
 };
 
 %shared_ptr(QuantExt::OvernightIndexedCoupon)
