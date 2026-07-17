@@ -215,7 +215,7 @@ std::string normaliseDeliveryCode(const string& code) {
             }
             std::ostringstream oss;
             oss << year << "-" << std::setw(2) << std::setfill('0') << month;
-            return std::to_string(year) + "-" + oss.str();
+            return oss.str();
         }
     }
     return code;
