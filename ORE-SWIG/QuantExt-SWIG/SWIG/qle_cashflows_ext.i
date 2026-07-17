@@ -43,6 +43,11 @@ namespace QuantExt {
 #include <qle/cashflows/nonstandardcapflooredyoyinflationcoupon.hpp>
 #include <qle/cashflows/nonstandardinflationcouponpricer.hpp>
 #include <qle/cashflows/nonstandardyoyinflationcoupon.hpp>
+#include <qle/cashflows/commodityindexedcashflow.hpp>
+#include <qle/cashflows/intradaypowercashflow.hpp>
+#include <qle/cashflows/nettedcommoditycashflow.hpp>
+#include <qle/indexes/intradaypowerindex.hpp>
+#include <qle/termstructures/intradaypowerloadtermstructure.hpp>
 using QuantLib::InflationCouponPricer;
 %}
 
@@ -1029,6 +1034,285 @@ Leg _CommodityIndexedAverageLeg(
     QuantExt::CommodityQuantityFrequency quantityFrequency
         = QuantExt::CommodityQuantityFrequency::PerCalculationPeriod,
     const ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr);
+
+%template(CommodityCashFlowVector)
+    std::vector<ext::shared_ptr<QuantExt::CommodityCashFlow>>;
+
+%typemap(in) const std::vector<ext::shared_ptr<QuantExt::CommodityCashFlow>>&
+    (std::vector<ext::shared_ptr<QuantExt::CommodityCashFlow>> tmp) {
+    void* vptr = 0;
+    int vres = SWIG_ConvertPtr(
+        $input, &vptr,
+        $descriptor(std::vector<ext::shared_ptr<QuantExt::CommodityCashFlow>> *), 0);
+    if (SWIG_IsOK(vres) && vptr) {
+        $1 = reinterpret_cast<std::vector<ext::shared_ptr<QuantExt::CommodityCashFlow>>*>(vptr);
+    } else {
+        if (!PySequence_Check($input)) {
+            PyErr_SetString(PyExc_TypeError, "Expected a Python sequence for CommodityCashFlow vector");
+            SWIG_fail;
+        }
+        Py_ssize_t size = PySequence_Size($input);
+        for (Py_ssize_t i = 0; i < size; ++i) {
+            PyObject* item = PySequence_GetItem($input, i);
+            void* eptr = 0;
+            int eres = SWIG_ConvertPtr(
+                item, &eptr,
+                $descriptor(ext::shared_ptr<QuantExt::CommodityCashFlow> *), 0);
+            Py_DECREF(item);
+            if (!SWIG_IsOK(eres) || !eptr) {
+                PyErr_Format(PyExc_TypeError,
+                             "Element %zd of sequence is not a CommodityCashFlow instance", i);
+                SWIG_fail;
+            }
+            tmp.push_back(
+                *reinterpret_cast<ext::shared_ptr<QuantExt::CommodityCashFlow>*>(eptr));
+        }
+        $1 = &tmp;
+    }
+}
+%typemap(freearg) const std::vector<ext::shared_ptr<QuantExt::CommodityCashFlow>>& ""
+
+%shared_ptr(QuantExt::NettedCommodityCashFlow)
+namespace QuantExt {
+class NettedCommodityCashFlow : public CommodityCashFlow {
+  public:
+    NettedCommodityCashFlow(
+        const std::vector<ext::shared_ptr<QuantExt::CommodityCashFlow>>& underlyingCashflows,
+        const std::vector<bool>& isPayer,
+        QuantLib::Natural nettingPrecision = QuantLib::Null<QuantLib::Natural>());
+    const std::vector<QuantLib::ext::shared_ptr<QuantExt::CommodityCashFlow>>&
+        underlyingCashflows() const;
+    QuantLib::Natural nettingPrecision() const;
+    QuantLib::Date date() const override;
+    QuantLib::Real amount() const override;
+    QuantLib::Real periodQuantity() const override;
+    QuantLib::Real fixing() const override;
+};
+} // namespace QuantExt
+
+// The load curve remains an opaque abstract dependency. IntradayPowerIndex is
+// declared in qle_indexes.i, which is included above.
+%shared_ptr(QuantExt::IntradayPowerLoadTermStructure)
+%nodefaultctor QuantExt::IntradayPowerLoadTermStructure;
+namespace QuantExt {
+class IntradayPowerLoadTermStructure {
+  public:
+    virtual bool empty() const = 0;
+};
+} // namespace QuantExt
+
+namespace QuantExt {
+enum class IntradayPowerQuantityMode {
+    TotalEnergy,
+    LoadShapeMultiplier
+};
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::IntradayPowerCashFlow)
+namespace QuantExt {
+class IntradayPowerCashFlow : public QuantLib::CashFlow {
+  public:
+    IntradayPowerCashFlow(
+        QuantLib::Real quantity,
+        const QuantLib::Date& startDate,
+        const QuantLib::Date& endDate,
+        const QuantLib::Date& paymentDate,
+        const ext::shared_ptr<QuantExt::IntradayPowerIndex>& index,
+        const ext::shared_ptr<QuantExt::IntradayPowerLoadTermStructure>& loadCurve = nullptr,
+        const QuantLib::Calendar& pricingCalendar = QuantLib::Calendar(),
+        QuantLib::Real spread = 0.0,
+        QuantLib::Real gearing = 1.0,
+        bool includeStartDate = false,
+        bool includeEndDate = true,
+        bool businessDays = true,
+        QuantExt::IntradayPowerQuantityMode quantityMode =
+            QuantExt::IntradayPowerQuantityMode::TotalEnergy,
+        const ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr);
+    const QuantLib::Date& startDate() const;
+    const QuantLib::Date& endDate() const;
+    const QuantLib::Calendar& pricingCalendar() const;
+    QuantLib::Real spread() const;
+    QuantLib::Real gearing() const;
+    bool includeStartDate() const;
+    bool includeEndDate() const;
+    bool businessDays() const;
+    QuantLib::Real periodQuantity() const;
+    QuantLib::Real fixing() const;
+    QuantLib::Real amount() const override;
+};
+} // namespace QuantExt
+
+// QuantExt::CommodityIndexedLeg builder using the kwargs helper pattern
+%{
+QuantLib::Leg _CommodityIndexedLeg(
+    const QuantLib::Schedule& schedule,
+    const QuantLib::ext::shared_ptr<QuantExt::CommodityIndex>& index,
+    const std::vector<QuantLib::Real>& quantities,
+    QuantLib::Natural paymentLag = 0,
+    const QuantLib::Calendar& paymentCalendar = QuantLib::Calendar(),
+    QuantLib::BusinessDayConvention paymentConvention = QuantLib::Following,
+    QuantLib::Natural pricingLag = 0,
+    const QuantLib::Calendar& pricingLagCalendar = QuantLib::Calendar(),
+    const std::vector<QuantLib::Real>& spreads = {},
+    const std::vector<QuantLib::Real>& gearings = {},
+    QuantExt::CommodityIndexedCashFlow::PaymentTiming paymentTiming =
+        QuantExt::CommodityIndexedCashFlow::PaymentTiming::InArrears,
+    bool inArrears = true,
+    bool useFuturePrice = false,
+    bool useFutureExpiryDate = true,
+    QuantLib::Integer futureMonthOffset = 0,
+    const QuantLib::ext::shared_ptr<QuantExt::FutureExpiryCalculator>& calc = nullptr,
+    bool payAtMaturity = false,
+    const std::vector<QuantLib::Date>& pricingDates = {},
+    const std::vector<QuantLib::Date>& paymentDates = {},
+    QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>(),
+    const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
+    bool isAveraging = false,
+    const QuantLib::Calendar& pricingCalendar = QuantLib::Calendar(),
+    bool includeEndDate = true,
+    bool excludeStartDate = true)
+{
+    QuantExt::CommodityIndexedLeg leg(schedule, index);
+    if (quantities.size() == 1)
+        leg.withQuantities(quantities[0]);
+    else
+        leg.withQuantities(quantities);
+    leg.withPaymentLag(paymentLag)
+        .withPaymentCalendar(paymentCalendar)
+        .withPaymentConvention(paymentConvention)
+        .withPricingLag(pricingLag)
+        .withPricingLagCalendar(pricingLagCalendar)
+        .paymentTiming(paymentTiming)
+        .inArrears(inArrears)
+        .useFuturePrice(useFuturePrice)
+        .useFutureExpiryDate(useFutureExpiryDate)
+        .withFutureMonthOffset(futureMonthOffset)
+        .withFutureExpiryCalculator(calc)
+        .payAtMaturity(payAtMaturity)
+        .withPricingDates(pricingDates)
+        .withPaymentDates(paymentDates)
+        .withDailyExpiryOffset(dailyExpiryOffset)
+        .withFxIndex(fxIndex)
+        .withIsAveraging(isAveraging)
+        .withPricingCalendar(pricingCalendar)
+        .includeEndDate(includeEndDate)
+        .excludeStartDate(excludeStartDate);
+    if (spreads.size() == 1)
+        leg.withSpreads(spreads[0]);
+    else if (!spreads.empty())
+        leg.withSpreads(spreads);
+    if (gearings.size() == 1)
+        leg.withGearings(gearings[0]);
+    else if (!gearings.empty())
+        leg.withGearings(gearings);
+    return leg;
+}
+%}
+#if !defined(SWIGJAVA) && !defined(SWIGCSHARP)
+%feature("kwargs") _CommodityIndexedLeg;
+#endif
+%rename(CommodityIndexedLeg) _CommodityIndexedLeg;
+Leg _CommodityIndexedLeg(
+    const Schedule& schedule,
+    const ext::shared_ptr<QuantExt::CommodityIndex>& index,
+    const std::vector<Real>& quantities,
+    Natural paymentLag = 0,
+    const Calendar& paymentCalendar = Calendar(),
+    BusinessDayConvention paymentConvention = Following,
+    Natural pricingLag = 0,
+    const Calendar& pricingLagCalendar = Calendar(),
+    const std::vector<Real>& spreads = {},
+    const std::vector<Real>& gearings = {},
+    QuantExt::CommodityIndexedCashFlow::PaymentTiming paymentTiming =
+        QuantExt::CommodityIndexedCashFlow::PaymentTiming::InArrears,
+    bool inArrears = true,
+    bool useFuturePrice = false,
+    bool useFutureExpiryDate = true,
+    Integer futureMonthOffset = 0,
+    const ext::shared_ptr<QuantExt::FutureExpiryCalculator>& calc = nullptr,
+    bool payAtMaturity = false,
+    const std::vector<Date>& pricingDates = {},
+    const std::vector<Date>& paymentDates = {},
+    Natural dailyExpiryOffset = Null<Natural>(),
+    const ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
+    bool isAveraging = false,
+    const Calendar& pricingCalendar = Calendar(),
+    bool includeEndDate = true,
+    bool excludeStartDate = true);
+
+// QuantExt::IntradayPowerLeg builder using the kwargs helper pattern
+%{
+QuantLib::Leg _IntradayPowerLeg(
+    const QuantLib::Schedule& schedule,
+    const QuantLib::ext::shared_ptr<QuantExt::IntradayPowerIndex>& index,
+    const std::vector<QuantLib::Real>& quantities,
+    const QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadTermStructure>& loadCurve = nullptr,
+    QuantLib::Natural paymentLag = 0,
+    const QuantLib::Calendar& paymentCalendar = QuantLib::Calendar(),
+    QuantLib::BusinessDayConvention paymentConvention = QuantLib::Following,
+    const QuantLib::Calendar& pricingCalendar = QuantLib::Calendar(),
+    const std::vector<QuantLib::Real>& spreads = {},
+    const std::vector<QuantLib::Real>& gearings = {},
+    bool includeEndDate = true,
+    bool includeStartDate = false,
+    bool businessDays = true,
+    const std::vector<QuantLib::Date>& paymentDates = {},
+    const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
+    QuantExt::IntradayPowerQuantityMode quantityMode =
+        QuantExt::IntradayPowerQuantityMode::TotalEnergy,
+    QuantLib::Natural avgPricePrecision = QuantLib::Null<QuantLib::Natural>())
+{
+    QuantExt::IntradayPowerLeg leg(schedule, index, loadCurve);
+    if (quantities.size() == 1)
+        leg.withQuantities(quantities[0]);
+    else
+        leg.withQuantities(quantities);
+    leg.withPaymentLag(paymentLag)
+        .withPaymentCalendar(paymentCalendar)
+        .withPaymentConvention(paymentConvention)
+        .withPricingCalendar(pricingCalendar)
+        .withPaymentDates(paymentDates)
+        .includeEndDate(includeEndDate)
+        .includeStartDate(includeStartDate)
+        .useBusinessDays(businessDays)
+        .withFxIndex(fxIndex)
+        .withQuantityMode(quantityMode);
+    if (spreads.size() == 1)
+        leg.withSpreads(spreads[0]);
+    else if (!spreads.empty())
+        leg.withSpreads(spreads);
+    if (gearings.size() == 1)
+        leg.withGearings(gearings[0]);
+    else if (!gearings.empty())
+        leg.withGearings(gearings);
+    if (avgPricePrecision != QuantLib::Null<QuantLib::Natural>())
+        leg.withAvgPricePrecision(std::optional<QuantLib::Natural>(avgPricePrecision));
+    return leg;
+}
+%}
+#if !defined(SWIGJAVA) && !defined(SWIGCSHARP)
+%feature("kwargs") _IntradayPowerLeg;
+#endif
+%rename(IntradayPowerLeg) _IntradayPowerLeg;
+Leg _IntradayPowerLeg(
+    const Schedule& schedule,
+    const ext::shared_ptr<QuantExt::IntradayPowerIndex>& index,
+    const std::vector<Real>& quantities,
+    const ext::shared_ptr<QuantExt::IntradayPowerLoadTermStructure>& loadCurve = nullptr,
+    Natural paymentLag = 0,
+    const Calendar& paymentCalendar = Calendar(),
+    BusinessDayConvention paymentConvention = Following,
+    const Calendar& pricingCalendar = Calendar(),
+    const std::vector<Real>& spreads = {},
+    const std::vector<Real>& gearings = {},
+    bool includeEndDate = true,
+    bool includeStartDate = false,
+    bool businessDays = true,
+    const std::vector<Date>& paymentDates = {},
+    const ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
+    QuantExt::IntradayPowerQuantityMode quantityMode =
+        QuantExt::IntradayPowerQuantityMode::TotalEnergy,
+    Natural avgPricePrecision = Null<Natural>());
 
 %shared_ptr(QuantExt::TRSCashFlow)
 namespace QuantExt {
