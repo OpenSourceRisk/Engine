@@ -190,9 +190,8 @@ std::string normaliseDeliveryCode(const string& code) {
     if (!code.empty()) {
         char deliveryMonthCode = code.front();
         static const std::unordered_map<char, int> deliveryMonthhMap = {
-            {'F', 1}, {'G', 2}, {'H', 3}, {'J', 4}, {'K', 5},
-            {'M', 6}, {'N', 7}, {'Q', 8}, {'U', 9}, {'V', 10},
-            {'X', 11}, {'Z', 12},
+            {'F', 1}, {'G', 2}, {'H', 3}, {'J', 4},  {'K', 5},  {'M', 6},
+            {'N', 7}, {'Q', 8}, {'U', 9}, {'V', 10}, {'X', 11}, {'Z', 12},
         };
         auto it = deliveryMonthhMap.find(deliveryMonthCode);
         if (it != deliveryMonthhMap.end()) {
@@ -209,8 +208,9 @@ std::string normaliseDeliveryCode(const string& code) {
                 year += currentYearDecade; // current decade
             } else if (yearStr.size() == 2) {
                 year += 2000; // current century
-            }
-            else {
+            } else if (yearStr.size() == 4) {
+                // keep year as is
+            } else {
                 return code; // invalid format
             }
             std::ostringstream oss;
