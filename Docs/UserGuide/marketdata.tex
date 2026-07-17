@@ -334,13 +334,16 @@ Example:
   \label{tab:mmfp_quote}
 \end{table}
 
-Expiry month is quoted here as YYYY-MM or \texttt{[FGHJKMNQUVXZ][0-9]\{1,2\}}. The exact expiry date follows from a date rule defined in the future
-conventions, see \ref{ss:conventions_future}.
+Contract month is quoted here as YYYY-MM or using contract month codes, see table \ref{tab:contract_month_codes}. Contract
+month codes are combined with one or two digits representing the contract year. For a single digit, the decade of the
+valuation date is implied. The underlying dates follow from a date rule defined in the future conventions, see
+\ref{ss:conventions_future}.
 
 \medskip
 Example:
 \begin{itemize}
 \item {MM\_FUTURE/PRICE/EUR/2018-06/LIF3ME/3M}
+\item {MM\_FUTURE/PRICE/EUR/M18/LIF3ME/3M}
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -363,14 +366,40 @@ Example:
   \label{tab:oifp_quote}
 \end{table}
 
-Contract month is quoted here as YYYY-MM or \texttt{[FGHJKMNQUVXZ][0-9]\{1,2\}}. The exact expiry date follows from a date rule defined in the future
-conventions, see \ref{ss:conventions_future}.
+Contract month is quoted here as YYYY-MM or using contract month codes, see table \ref{tab:contract_month_codes}. Contract
+month codes are combined with one or two digits representing the contract year. For a single digit, the decade of the
+valuation date is implied. The underlying dates follow from a date rule defined in the future conventions, see
+\ref{ss:conventions_future}.
 
 \medskip
 Example: Three Months SOFR Futures (DEC 2019):
 \begin{itemize}
 \item {OI\_FUTURE/PRICE/USD/2019-12/CME:SR3Z2019/3M}
+\item {OI\_FUTURE/PRICE/USD/Z19/CME:SR3Z2019/3M}
 \end{itemize}
+
+
+\begin{table}[H]
+\centering
+  \begin{tabular}{|p{3cm}|p{4.5cm}|p{7cm}|}
+  \hline
+    {\bf Code} & {\bf Month} \\ \hline
+    F & Jan \\
+    G & Feb \\
+    H & Mar \\
+    J & Apr \\
+    K & May \\
+    M & Jun \\
+    N & Jul \\
+    Q & Aug \\
+    U & Sep \\
+    V & Oct \\
+    X & Nov \\
+    Z & Dec \\ \hline
+  \end{tabular}
+  \caption{Contract Month Codes}
+  \label{tab:contract_month_codes}
+\end{table}
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 %\subsection{Equity Futures Price}
