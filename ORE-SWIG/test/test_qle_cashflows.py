@@ -204,6 +204,24 @@ def test_range_accrual_pricer_by_call_spread_default_eps() -> None:
     assert pricer is not None
 
 
+def test_nonstandard_yoy_pricer_wrappers_construct() -> None:
+    """Construct all concrete nonstandard YoY inflation pricer wrappers."""
+    nominal_curve = ore.FlatForward(
+        ore.Date(15, ore.January, 2026), 0.03, ore.Actual365Fixed()
+    )
+    nominal_handle = ore.YieldTermStructureHandle(nominal_curve)
+
+    pricers = [
+        ore.NonStandardBlackYoYInflationCouponPricer(nominal_handle),
+        ore.NonStandardUnitDisplacedBlackYoYInflationCouponPricer(
+            nominal_handle
+        ),
+        ore.NonStandardBachelierYoYInflationCouponPricer(nominal_handle),
+    ]
+
+    assert all(pricer.nominalTermStructure() is not None for pricer in pricers)
+
+
 def test_interpolated_ibor_coupon_pricer_and_accessors() -> None:
     """Construct and price an interpolated Ibor coupon."""
     evaluation_date = ore.Date(15, ore.January, 2026)

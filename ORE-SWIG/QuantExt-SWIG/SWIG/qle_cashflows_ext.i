@@ -717,6 +717,45 @@ class NonStandardYoYInflationCouponPricer : public InflationCouponPricer {
 };
 } // namespace QuantExt
 
+%shared_ptr(QuantExt::NonStandardBlackYoYInflationCouponPricer)
+namespace QuantExt {
+class NonStandardBlackYoYInflationCouponPricer
+    : public NonStandardYoYInflationCouponPricer {
+  public:
+    NonStandardBlackYoYInflationCouponPricer(
+        const Handle<YieldTermStructure>& nominalTermStructure);
+    NonStandardBlackYoYInflationCouponPricer(
+        const Handle<YoYOptionletVolatilitySurface>& capletVol,
+        const Handle<YieldTermStructure>& nominalTermStructure);
+};
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::NonStandardUnitDisplacedBlackYoYInflationCouponPricer)
+namespace QuantExt {
+class NonStandardUnitDisplacedBlackYoYInflationCouponPricer
+    : public NonStandardYoYInflationCouponPricer {
+  public:
+    NonStandardUnitDisplacedBlackYoYInflationCouponPricer(
+        const Handle<YieldTermStructure>& nominalTermStructure);
+    NonStandardUnitDisplacedBlackYoYInflationCouponPricer(
+        const Handle<YoYOptionletVolatilitySurface>& capletVol,
+        const Handle<YieldTermStructure>& nominalTermStructure);
+};
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::NonStandardBachelierYoYInflationCouponPricer)
+namespace QuantExt {
+class NonStandardBachelierYoYInflationCouponPricer
+    : public NonStandardYoYInflationCouponPricer {
+  public:
+    NonStandardBachelierYoYInflationCouponPricer(
+        const Handle<YieldTermStructure>& nominalTermStructure);
+    NonStandardBachelierYoYInflationCouponPricer(
+        const Handle<YoYOptionletVolatilitySurface>& capletVol,
+        const Handle<YieldTermStructure>& nominalTermStructure);
+};
+} // namespace QuantExt
+
 %shared_ptr(QuantExt::NonStandardCappedFlooredYoYInflationCoupon)
 namespace QuantExt {
 class NonStandardCappedFlooredYoYInflationCoupon : public NonStandardYoYInflationCoupon {
