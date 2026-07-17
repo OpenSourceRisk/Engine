@@ -187,7 +187,7 @@ std::string prettyPrintInternalCurveName(std::string name) {
 }
 
 std::string normaliseDeliveryCode(const string& code) {
-    static const std::map<char, int> deliveryMonthhMap = {
+    static const std::map<char, int> deliveryMonthMap = {
         {'F', QuantLib::Month::Jan}, {'G', QuantLib::Month::Feb}, {'H', QuantLib::Month::Mar},
         {'J', QuantLib::Month::Apr}, {'K', QuantLib::Month::May}, {'M', QuantLib::Month::Jun},
         {'N', QuantLib::Month::Jul}, {'Q', QuantLib::Month::Aug}, {'U', QuantLib::Month::Sep},
@@ -195,8 +195,8 @@ std::string normaliseDeliveryCode(const string& code) {
     };
     if (!code.empty()) {
         char deliveryMonthCode = code.front();
-        auto it = deliveryMonthhMap.find(deliveryMonthCode);
-        if (it != deliveryMonthhMap.end()) {
+        auto it = deliveryMonthMap.find(deliveryMonthCode);
+        if (it != deliveryMonthMap.end()) {
             int month = it->second;
             std::string yearStr = code.substr(1);
             if (yearStr.empty() || !std::all_of(yearStr.begin(), yearStr.end(), ::isdigit))
