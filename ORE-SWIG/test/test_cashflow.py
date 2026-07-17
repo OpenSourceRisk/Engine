@@ -208,7 +208,8 @@ class CommodityIndexedAverageCashFlowTest(unittest.TestCase):
         power_index = IntradayPowerIndex(
             "POWER_TEST", delivery_date, self.commCalendar)
         power_index.addFixing(delivery_date, 50.0, True)
-        schedule = Schedule([delivery_date], self.commCalendar)
+        schedule = Schedule(
+            [delivery_date, payment_date], self.commCalendar)
 
         leg = IntradayPowerLeg(
             schedule=schedule,
@@ -228,8 +229,6 @@ class CommodityIndexedAverageCashFlowTest(unittest.TestCase):
         self.assertAlmostEqual(cashflow.gearing(), 1.0, delta=1e-10)
         self.assertAlmostEqual(
             cashflow.amount(), self.quantity * 50.0, delta=1e-10)
-        self.assertAlmostEqual(
-            leg[0].amount(), self.quantity * 50.0, delta=1e-10)
 
 
 class EquityCouponTest(unittest.TestCase):

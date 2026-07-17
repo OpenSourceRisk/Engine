@@ -176,7 +176,7 @@ def test_floating_annuity_coupon_rate_and_fixing(euribor3m_curve):
 
     # rate() = gearing * (fixing + spread) = 1.0 * (0.03 + 0.0)
     rate = coupon.rate()
-    assert abs(rate - fixing * gearing + spread) < 1e-12
+    assert abs(rate - (fixing * gearing + spread)) < 1e-12
 
 
 def test_floating_annuity_coupon_nominal_decreases(euribor3m_curve):
@@ -390,6 +390,6 @@ def test_jyyoy_pricer_requires_cross_asset_model():
     constructor would raise TypeError/AttributeError when called with wrong args,
     confirming the signature has been exposed correctly.
     """
-    with pytest.raises((TypeError, Exception)):
+    with pytest.raises((TypeError, ValueError)):
         # Passing None as model must fail — CrossAssetModel cannot be None
         ore.JyYoYInflationCouponPricer(None, 0)
