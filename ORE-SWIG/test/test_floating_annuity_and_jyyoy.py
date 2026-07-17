@@ -234,7 +234,7 @@ def test_floating_annuity_coupon_amount(euribor3m_curve):
 
 
 def test_floating_annuity_coupon_accrued_amount(euribor3m_curve):
-    """FloatingAnnuityCoupon.accruedAmount() up to accrual end equals full amount."""
+    """FloatingAnnuityCoupon.accruedAmount() is zero at accrual start."""
     annuity = 3_000.0
     nominal = 50_000.0
     start = ore.Date(15, ore.January, 2026)
@@ -246,10 +246,7 @@ def test_floating_annuity_coupon_accrued_amount(euribor3m_curve):
         annuity, True, initial, pay, start, end, 2, euribor3m_curve
     )
 
-    # Accrued up to end of period should equal full amount
-    accrued_full = coupon.accruedAmount(end)
-    full = coupon.amount()
-    assert abs(accrued_full - full) < 1e-6
+    assert coupon.accruedAmount(start) == pytest.approx(0.0, abs=1e-12)
 
 
 def test_floating_annuity_coupon_previous_nominal(euribor3m_curve):

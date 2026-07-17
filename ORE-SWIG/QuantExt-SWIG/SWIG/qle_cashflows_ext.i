@@ -61,7 +61,7 @@ class CrossAssetModel;
 
 %shared_ptr(QuantExt::JyYoYInflationCouponPricer)
 namespace QuantExt {
-class JyYoYInflationCouponPricer : public QuantLib::YoYInflationCouponPricer {
+class JyYoYInflationCouponPricer : public YoYInflationCouponPricer {
   public:
     JyYoYInflationCouponPricer(
         const ext::shared_ptr<CrossAssetModel>& model,
