@@ -22,14 +22,14 @@
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/marketdata.hpp>
 
-namespace ore {
-namespace analytics {
-
 using ore::data::parsePeriod;
 using ore::data::to_string;
 
+namespace ore {
+namespace analytics {
+
 IrFutureExpiryYearMonth::IrFutureExpiryYearMonth(const std::string& str) : str_(str) {
-    auto tmp = normaliseDeliveryCode(str_);
+    auto tmp = data::normaliseDeliveryCode(str_);
     QL_REQUIRE(tmp.size() == 7 && tmp[4] == '-',
                "IrFutureExpiryYearMonth " << str_ << " can not be normalzsed to YYYY-MM.");
     year_ = boost::lexical_cast<int>(tmp.substr(0, 4));
