@@ -19,6 +19,7 @@
 
 #include <ored/marketdata/defaultcurve.hpp>
 #include <ored/marketdata/fittedbondcurvehelpermarket.hpp>
+#include <ored/marketdata/inflationcurve.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/portfolio/bond.hpp>
@@ -90,6 +91,12 @@ namespace {
 // Helper function to return the key required to look up the map in the YieldCurve ctor
 string yieldCurveKey(const Currency& curveCcy, const string& curveID, const Date&) {
     ore::data::YieldCurveSpec tempSpec(curveCcy.code(), curveID);
+    return tempSpec.name();
+}
+
+// Helper function to return the key required to look up the required inflation curve handles map
+string inflationCurveKey(const string& inflationIndex, const string& curveID) {
+    ore::data::InflationCurveSpec tempSpec(inflationIndex, curveID);
     return tempSpec.name();
 }
 
@@ -408,13 +415,15 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
                        const CurveConfigurations& curveConfigs, const Loader& loader,
                        const map<string, QuantLib::ext::shared_ptr<YieldCurve>>& requiredYieldCurves,
                        const map<string, QuantLib::ext::shared_ptr<DefaultCurve>>& requiredDefaultCurves,
+                       const map<string, QuantLib::ext::shared_ptr<InflationCurve>>& requiredInflationCurves,
                        const FXTriangulation& fxTriangulation,
                        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                        const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
                        const bool preserveQuoteLinkage, const bool buildCalibrationInfo, const Market* market,
                        const bool useAtParCoupons)
     : asofDate_(asof), curveSpec_(curveSpec), loader_(loader), requiredYieldCurves_(requiredYieldCurves),
-      requiredDefaultCurves_(requiredDefaultCurves), fxTriangulation_(fxTriangulation), referenceData_(referenceData),
+      requiredDefaultCurves_(requiredDefaultCurves), requiredInflationCurves_(requiredInflationCurves),
+      fxTriangulation_(fxTriangulation), referenceData_(referenceData),
       iborFallbackConfig_(iborFallbackConfig), preserveQuoteLinkage_(preserveQuoteLinkage),
       buildCalibrationInfo_(buildCalibrationInfo), market_(market), useAtParCoupons_(useAtParCoupons) {
 
@@ -425,6 +434,7 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
         CleanUp(YieldCurve* c) : c_(c) {}
         ~CleanUp() {
             c_->requiredYieldCurveHandles_.clear();
+            c_->requiredInflationCurveHandles_.clear();
             c_->discountCurve_.clear();
             c_->multiCurve_.reset();
             c_->rateHelperData_.clear();
@@ -444,6 +454,17 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
 
     for (auto const& s : curveSpec) {
         requiredYieldCurveHandles_[s->name()] = QuantLib::RelinkableHandle<YieldTermStructure>();
+    }
+
+    // copy the required inflation curves container to our handle container. Unlike YieldCurve, InflationCurve does
+    // not expose a term structure handle, so we build a ZeroInflationIndex from its zero inflation term structure.
+
+    for (auto const& [k, v] : requiredInflationCurves_) {
+        if (auto zts =
+                QuantLib::ext::dynamic_pointer_cast<ZeroInflationTermStructure>(v->inflationTermStructure())) {
+            auto index = parseZeroInflationIndex(v->spec().index(), Handle<ZeroInflationTermStructure>(zts));
+            requiredInflationCurveHandles_[k] = QuantLib::RelinkableHandle<ZeroInflationIndex>(index);
+        }
     }
 
     // collect the info we need to build the curves
@@ -1917,8 +1938,12 @@ void YieldCurve::buildFittedBondCurve(const std::size_t index) {
 
     std::map<std::string, Handle<ZeroInflationIndex>> inflationIndexMapping;
     for (auto const& c : curveSegment->inflationIndexCurves()) {
-        QL_REQUIRE(market_ != nullptr, "market required to resolve inflation index '" << c.first << "' for fitted bond curve");
-        inflationIndexMapping[c.first] = market_->zeroInflationIndex(c.first);
+        auto key = inflationCurveKey(c.first, c.second);
+        auto y = requiredInflationCurveHandles_.find(key);
+        QL_REQUIRE(y != requiredInflationCurveHandles_.end(), "required inflation curve '"
+                                                                  << key << "' for inflationIndex '" << c.first
+                                                                  << "' not provided for fitted bond curve");
+        inflationIndexMapping[c.first] = y->second;
     }
 
     auto engineFactory = QuantLib::ext::make_shared<EngineFactory>(
@@ -2150,9 +2175,12 @@ void YieldCurve::buildBondYieldShiftedCurve(const std::size_t index) {
     //  needed to project the cpi legs in case bond is inflation-linked (e.g. TIPS)
     std::map<std::string, Handle<ZeroInflationIndex>> inflationIndexMapping;
     for (auto const& c : segment->inflationIndexCurves()) {
-        QL_REQUIRE(market_ != nullptr,
-                   "market required to resolve inflation index '" << c.first << "' for bond yield shifted curve");
-        inflationIndexMapping[c.first] = market_->zeroInflationIndex(c.first);
+        auto key = inflationCurveKey(c.first, c.second);
+        auto y = requiredInflationCurveHandles_.find(key);
+        QL_REQUIRE(y != requiredInflationCurveHandles_.end(),
+                   "required inflation index curve '" << key << "' for inflationIndex '" << c.first
+                                                      << "' for bond yield shifted curve");
+        inflationIndexMapping[c.first] = y->second;
     }
 
     auto engineFactory = QuantLib::ext::make_shared<EngineFactory>(

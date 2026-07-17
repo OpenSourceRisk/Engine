@@ -51,6 +51,7 @@ using ore::data::YieldCurveConfigMap;
 using ore::data::YieldCurveSegment;
 
 class DefaultCurve;
+class InflationCurve;
 class ReferenceDataManager;
 
 //! Wrapper class for building yield term structures
@@ -108,6 +109,9 @@ public:
         //! Map of underlying default curves if required
         const map<string, QuantLib::ext::shared_ptr<DefaultCurve>>& requiredDefaultCurves =
             map<string, QuantLib::ext::shared_ptr<DefaultCurve>>(),
+        //! Map of underlying inflation curves if required
+        const map<string, QuantLib::ext::shared_ptr<InflationCurve>>& requiredInflationCurves =
+            map<string, QuantLib::ext::shared_ptr<InflationCurve>>(),
         //! FxTriangultion to get FX rate from cross if needed
         const FXTriangulation& fxTriangulation = FXTriangulation(),
         //! optional pointer to reference data, needed to build fitted bond curves
@@ -195,6 +199,7 @@ private:
 
     map<string, QuantLib::ext::shared_ptr<YieldCurve>> requiredYieldCurves_;
     map<string, QuantLib::ext::shared_ptr<DefaultCurve>> requiredDefaultCurves_;
+    map<string, QuantLib::ext::shared_ptr<InflationCurve>> requiredInflationCurves_;
     const FXTriangulation& fxTriangulation_;
     QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
     QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
@@ -205,6 +210,7 @@ private:
     bool useAtParCoupons_;
 
     map<string, QuantLib::RelinkableHandle<YieldTermStructure>> requiredYieldCurveHandles_;
+    map<string, QuantLib::RelinkableHandle<ZeroInflationIndex>> requiredInflationCurveHandles_;
 
     std::pair<QuantLib::ext::shared_ptr<YieldTermStructure>, std::vector<Date>>
     buildPiecewiseCurve(const std::size_t index, const std::size_t mixedInterpolationSize,
