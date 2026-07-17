@@ -44,6 +44,9 @@ namespace QuantExt {
 #include <qle/cashflows/nonstandardcapflooredyoyinflationcoupon.hpp>
 #include <qle/cashflows/nonstandardinflationcouponpricer.hpp>
 #include <qle/cashflows/nonstandardyoyinflationcoupon.hpp>
+#include <qle/cashflows/jyyoyinflationcouponpricer.hpp>
+#include <qle/cashflows/floatingannuitycoupon.hpp>
+#include <qle/cashflows/floatingannuitynominal.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
 #include <qle/cashflows/intradaypowercashflow.hpp>
 #include <qle/cashflows/nettedcommoditycashflow.hpp>
@@ -51,6 +54,86 @@ namespace QuantExt {
 #include <qle/termstructures/intradaypowerloadtermstructure.hpp>
 using QuantLib::InflationCouponPricer;
 %}
+
+namespace QuantExt {
+class CrossAssetModel;
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::JyYoYInflationCouponPricer)
+namespace QuantExt {
+class JyYoYInflationCouponPricer : public QuantLib::YoYInflationCouponPricer {
+  public:
+    JyYoYInflationCouponPricer(
+        const ext::shared_ptr<CrossAssetModel>& model,
+        Size index);
+};
+
+Real jyExpectedIndexRatio(
+    const ext::shared_ptr<CrossAssetModel>& model,
+    Size index,
+    Time S,
+    Time T);
+
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::FloatingAnnuityCoupon)
+namespace QuantExt {
+class FloatingAnnuityCoupon : public Coupon {
+  public:
+    FloatingAnnuityCoupon(
+        Real annuity,
+        bool underflow,
+        const ext::shared_ptr<Coupon>& previousCoupon,
+        const Date& paymentDate,
+        const Date& startDate,
+        const Date& endDate,
+        Natural fixingDays,
+        const ext::shared_ptr<InterestRateIndex>& index,
+        Real gearing = 1.0,
+        Spread spread = 0.0,
+        const Date& refPeriodStart = Date(),
+        const Date& refPeriodEnd = Date(),
+        const DayCounter& dayCounter = DayCounter(),
+        bool isInArrears = false);
+
+    Rate amount() const;
+    Real accruedAmount(const Date& d) const;
+    Rate nominal() const;
+    Rate previousNominal() const;
+    Rate rate() const;
+    Real price(const Handle<YieldTermStructure>& discountingCurve) const;
+    const ext::shared_ptr<InterestRateIndex>& index() const;
+    DayCounter dayCounter() const;
+    Rate indexFixing() const;
+    Natural fixingDays() const;
+    Date fixingDate() const;
+    Real gearing() const;
+    Spread spread() const;
+    Rate convexityAdjustment() const;
+    Rate adjustedFixing() const;
+    bool isInArrears() const;
+};
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::FloatingAnnuityNominal)
+namespace QuantExt {
+class FloatingAnnuityNominal : public CashFlow {
+  public:
+    FloatingAnnuityNominal(
+        const ext::shared_ptr<FloatingAnnuityCoupon>& floatingAnnuityCoupon);
+
+    Rate amount() const;
+    Date date() const;
+};
+} // namespace QuantExt
+
+%{
+Leg _makeFloatingAnnuityNominalLeg(const Leg& floatingAnnuityLeg) {
+    return QuantExt::makeFloatingAnnuityNominalLeg(floatingAnnuityLeg);
+}
+%}
+%rename(makeFloatingAnnuityNominalLeg) _makeFloatingAnnuityNominalLeg;
+Leg _makeFloatingAnnuityNominalLeg(const Leg& floatingAnnuityLeg);
 
 namespace QuantExt {
 

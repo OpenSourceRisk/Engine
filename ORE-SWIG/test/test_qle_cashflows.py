@@ -269,6 +269,39 @@ def test_standard_yoy_coupon_and_leg_wrappers_construct() -> None:
     assert len(leg) == 4
 
 
+def test_floating_annuity_wrappers_construct() -> None:
+    """Construct floating annuity coupon and nominal wrappers."""
+    evaluation_date = ore.Date(15, ore.January, 2026)
+    ore.Settings.instance().evaluationDate = evaluation_date
+    curve = ore.FlatForward(evaluation_date, 0.03, ore.Actual365Fixed())
+    index = ore.Euribor3M(ore.YieldTermStructureHandle(curve))
+    start = ore.Date(15, ore.January, 2026)
+    end = ore.Date(15, ore.April, 2026)
+    previous = ore.FixedRateCoupon(
+        end,
+        1_000.0,
+        0.02,
+        ore.Actual365Fixed(),
+        start,
+        end,
+    )
+    coupon = ore.FloatingAnnuityCoupon(
+        1_000.0,
+        False,
+        previous,
+        ore.Date(15, ore.July, 2026),
+        end,
+        ore.Date(15, ore.July, 2026),
+        2,
+        index,
+    )
+    nominal = ore.FloatingAnnuityNominal(coupon)
+
+    assert coupon.previousNominal() == 1_000.0
+    assert nominal.date() == end
+    assert len(ore.makeFloatingAnnuityNominalLeg([coupon])) == 1
+
+
 def test_interpolated_ibor_coupon_pricer_and_accessors() -> None:
     """Construct and price an interpolated Ibor coupon."""
     evaluation_date = ore.Date(15, ore.January, 2026)
