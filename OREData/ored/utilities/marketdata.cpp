@@ -187,12 +187,14 @@ std::string prettyPrintInternalCurveName(std::string name) {
 }
 
 std::string normaliseDeliveryCode(const string& code) {
+    static const std::map<char, int> deliveryMonthhMap = {
+        {'F', QuantLib::Month::Jan}, {'G', QuantLib::Month::Feb}, {'H', QuantLib::Month::Mar},
+        {'J', QuantLib::Month::Apr}, {'K', QuantLib::Month::May}, {'M', QuantLib::Month::Jun},
+        {'N', QuantLib::Month::Jul}, {'Q', QuantLib::Month::Aug}, {'U', QuantLib::Month::Sep},
+        {'V', QuantLib::Month::Oct}, {'X', QuantLib::Month::Nov}, {'Z', QuantLib::Month::Dec},
+    };
     if (!code.empty()) {
         char deliveryMonthCode = code.front();
-        static const std::unordered_map<char, int> deliveryMonthhMap = {
-            {'F', 1}, {'G', 2}, {'H', 3}, {'J', 4},  {'K', 5},  {'M', 6},
-            {'N', 7}, {'Q', 8}, {'U', 9}, {'V', 10}, {'X', 11}, {'Z', 12},
-        };
         auto it = deliveryMonthhMap.find(deliveryMonthCode);
         if (it != deliveryMonthhMap.end()) {
             int month = it->second;
