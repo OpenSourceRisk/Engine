@@ -23,6 +23,11 @@ class ImportSmokeTest(unittest.TestCase):
             "OREApp",
             "NPVCube",
             "YieldCurveType_Discount",
+            "NonStandardYoYInflationCoupon",
+            "NonStandardYoYInflationCouponPricer",
+            "NonStandardCappedFlooredYoYInflationCoupon",
+            "StrippedCappedFlooredYoYInflationCoupon",
+            "NonStandardYoYInflationCouponLeg",
         ]
         for symbol in required_symbols:
             self.assertTrue(

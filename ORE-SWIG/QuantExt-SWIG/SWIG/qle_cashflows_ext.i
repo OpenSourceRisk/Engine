@@ -37,6 +37,12 @@ namespace QuantExt {
 #include <qle/cashflows/equitycouponpricer.hpp>
 #include <qle/cashflows/equitymargincoupon.hpp>
 #include <qle/cashflows/equitymargincouponpricer.hpp>
+#include <qle/cashflows/yoyinflationcoupon.hpp>
+#include <qle/cashflows/strippedcapflooredyoyinflationcoupon.hpp>
+#include <qle/cashflows/nonstandardcapflooredyoyinflationcoupon.hpp>
+#include <qle/cashflows/nonstandardinflationcouponpricer.hpp>
+#include <qle/cashflows/nonstandardyoyinflationcoupon.hpp>
+using QuantLib::InflationCouponPricer;
 %}
 
 namespace QuantExt {
@@ -490,6 +496,237 @@ class BachelierCPICouponPricer : public CappedFlooredCPICouponPricer {
         const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>());
 };
 } // namespace QuantExt
+
+// ---------------------------------------------------------------------------
+// QuantExt non-standard YoY inflation coupons and pricers
+// ---------------------------------------------------------------------------
+%shared_ptr(QuantLib::InflationCouponPricer)
+%nodefaultctor InflationCouponPricer;
+class InflationCouponPricer {
+};
+
+%shared_ptr(QuantExt::NonStandardYoYInflationCoupon)
+namespace QuantExt {
+class NonStandardYoYInflationCoupon : public InflationCoupon {
+  public:
+    NonStandardYoYInflationCoupon(
+        const Date& paymentDate,
+        Real nominal,
+        const Date& startDate,
+        const Date& endDate,
+        Natural fixingDays,
+        const ext::shared_ptr<ZeroInflationIndex>& index,
+        const Period& observationLag,
+        const DayCounter& dayCounter,
+        Real gearing = 1.0,
+        Spread spread = 0.0,
+        const Date& refPeriodStart = Date(),
+        const Date& refPeriodEnd = Date(),
+        bool addInflationNotional = false,
+        CPI::InterpolationType interpolation = CPI::Flat);
+
+    Real gearing() const;
+    Spread spread() const;
+    Rate adjustedFixing() const;
+    Date fixingDateNumerator() const;
+    Date fixingDateDenumerator() const;
+    ext::shared_ptr<ZeroInflationIndex> cpiIndex() const;
+    Rate indexFixing() const;
+    Date fixingDate() const;
+    Rate rate() const;
+    bool addInflationNotional() const;
+    bool isInterpolated() const;
+    CPI::InterpolationType interpolationType() const;
+    void setPricer(const ext::shared_ptr<QuantLib::InflationCouponPricer>& pricer);
+};
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::NonStandardYoYInflationCouponPricer)
+namespace QuantExt {
+class NonStandardYoYInflationCouponPricer : public InflationCouponPricer {
+  public:
+    NonStandardYoYInflationCouponPricer(
+        const Handle<YieldTermStructure>& nominalTermStructure);
+    NonStandardYoYInflationCouponPricer(
+        const Handle<YoYOptionletVolatilitySurface>& capletVol,
+        const Handle<YieldTermStructure>& nominalTermStructure);
+
+    Handle<YoYOptionletVolatilitySurface> capletVolatility() const;
+    Handle<YieldTermStructure> nominalTermStructure() const;
+    void setCapletVolatility(const Handle<YoYOptionletVolatilitySurface>& capletVol);
+    Real swapletPrice() const;
+    Rate swapletRate() const;
+    Real capletPrice(Rate effectiveCap) const;
+    Rate capletRate(Rate effectiveCap) const;
+    Real floorletPrice(Rate effectiveFloor) const;
+    Rate floorletRate(Rate effectiveFloor) const;
+};
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::NonStandardCappedFlooredYoYInflationCoupon)
+namespace QuantExt {
+class NonStandardCappedFlooredYoYInflationCoupon : public NonStandardYoYInflationCoupon {
+  public:
+    NonStandardCappedFlooredYoYInflationCoupon(
+        const ext::shared_ptr<NonStandardYoYInflationCoupon>& underlying,
+        Rate cap = Null<Rate>(),
+        Rate floor = Null<Rate>());
+    NonStandardCappedFlooredYoYInflationCoupon(
+        const Date& paymentDate,
+        Real nominal,
+        const Date& startDate,
+        const Date& endDate,
+        Natural fixingDays,
+        const ext::shared_ptr<ZeroInflationIndex>& index,
+        const Period& observationLag,
+        const DayCounter& dayCounter,
+        Real gearing = 1.0,
+        Spread spread = 0.0,
+        Rate cap = Null<Rate>(),
+        Rate floor = Null<Rate>(),
+        const Date& refPeriodStart = Date(),
+        const Date& refPeriodEnd = Date(),
+        bool addInflationNotional = false,
+        CPI::InterpolationType interpolation = CPI::Flat);
+
+    Rate rate() const;
+    Rate cap() const;
+    Rate floor() const;
+    Rate effectiveCap() const;
+    Rate effectiveFloor() const;
+    bool isCapped() const;
+    bool isFloored() const;
+    void setPricer(const ext::shared_ptr<NonStandardYoYInflationCouponPricer>& pricer);
+};
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::CappedFlooredYoYInflationCoupon)
+%rename(QLECappedFlooredYoYInflationCoupon) QuantExt::CappedFlooredYoYInflationCoupon;
+namespace QuantExt {
+class CappedFlooredYoYInflationCoupon : public QuantLib::CappedFlooredYoYInflationCoupon {
+  public:
+    CappedFlooredYoYInflationCoupon(
+        const Date& paymentDate,
+        Real nominal,
+        const Date& startDate,
+        const Date& endDate,
+        Natural fixingDays,
+        const ext::shared_ptr<YoYInflationIndex>& index,
+        const Period& observationLag,
+        CPI::InterpolationType interpolation,
+        const DayCounter& dayCounter,
+        Real gearing = 1.0,
+        Spread spread = 0.0,
+        Rate cap = Null<Rate>(),
+        Rate floor = Null<Rate>(),
+        const Date& refPeriodStart = Date(),
+        const Date& refPeriodEnd = Date(),
+        bool addInflationNotional = false);
+
+    Rate rate() const;
+    Rate cap() const;
+    Rate floor() const;
+    bool isCapped() const;
+    bool isFloored() const;
+};
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::StrippedCappedFlooredYoYInflationCoupon)
+%nodefaultctor QuantExt::StrippedCappedFlooredYoYInflationCoupon;
+namespace QuantExt {
+class StrippedCappedFlooredYoYInflationCoupon : public YoYInflationCoupon {
+  public:
+    Rate rate() const;
+    Rate cap() const;
+    Rate floor() const;
+    Rate effectiveCap() const;
+    Rate effectiveFloor() const;
+    bool isCap() const;
+    bool isFloor() const;
+    bool isCollar() const;
+    void setPricer(const ext::shared_ptr<YoYInflationCouponPricer>& pricer);
+    ext::shared_ptr<CappedFlooredYoYInflationCoupon> underlying();
+};
+} // namespace QuantExt
+
+%{
+ext::shared_ptr<QuantExt::StrippedCappedFlooredYoYInflationCoupon>
+_makeStrippedCappedFlooredYoYInflationCoupon(
+    const ext::shared_ptr<QuantExt::CappedFlooredYoYInflationCoupon>& underlying) {
+    return ext::make_shared<QuantExt::StrippedCappedFlooredYoYInflationCoupon>(underlying);
+}
+%}
+%rename(makeStrippedCappedFlooredYoYInflationCoupon) _makeStrippedCappedFlooredYoYInflationCoupon;
+ext::shared_ptr<QuantExt::StrippedCappedFlooredYoYInflationCoupon>
+_makeStrippedCappedFlooredYoYInflationCoupon(
+    const ext::shared_ptr<QuantExt::CappedFlooredYoYInflationCoupon>& underlying);
+
+%shared_ptr(QuantExt::StrippedCappedFlooredYoYInflationCouponLeg)
+namespace QuantExt {
+class StrippedCappedFlooredYoYInflationCouponLeg {
+  public:
+    explicit StrippedCappedFlooredYoYInflationCouponLeg(const Leg& underlyingLeg);
+    operator Leg() const;
+};
+} // namespace QuantExt
+
+%{
+Leg _QLENonStandardYoYInflationCouponLeg(
+    const Schedule& schedule,
+    const Calendar& calendar,
+    const ext::shared_ptr<ZeroInflationIndex>& index,
+    const Period& observationLag,
+    const std::vector<Real>& notionals,
+    const DayCounter& paymentDayCounter = DayCounter(),
+    BusinessDayConvention paymentAdjustment = Following,
+    Natural fixingDays = 0,
+    const std::vector<Real>& gearings = {},
+    const std::vector<Spread>& spreads = {},
+    const std::vector<Rate>& caps = {},
+    const std::vector<Rate>& floors = {},
+    const Handle<YieldTermStructure>& rateCurve = Handle<YieldTermStructure>(),
+    bool addInflationNotional = false,
+    CPI::InterpolationType observationInterpolation = CPI::Flat,
+    const std::vector<Date>& paymentDates = {},
+    Integer paymentLag = 0) {
+    return QuantExt::NonStandardYoYInflationLeg(schedule, calendar, index, observationLag)
+        .withNotionals(notionals)
+        .withPaymentDayCounter(paymentDayCounter)
+        .withPaymentAdjustment(paymentAdjustment)
+        .withFixingDays(fixingDays)
+        .withGearings(gearings)
+        .withSpreads(spreads)
+        .withCaps(caps)
+        .withFloors(floors)
+        .withRateCurve(rateCurve)
+        .withInflationNotional(addInflationNotional)
+        .withObservationInterpolation(observationInterpolation)
+        .withPaymentDates(paymentDates)
+        .withPaymentLag(paymentLag);
+}
+%}
+#if !defined(SWIGJAVA) && !defined(SWIGCSHARP)
+%feature("kwargs") _QLENonStandardYoYInflationCouponLeg;
+#endif
+%rename(NonStandardYoYInflationCouponLeg) _QLENonStandardYoYInflationCouponLeg;
+Leg _QLENonStandardYoYInflationCouponLeg(
+    const Schedule& schedule,
+    const Calendar& calendar,
+    const ext::shared_ptr<ZeroInflationIndex>& index,
+    const Period& observationLag,
+    const std::vector<Real>& notionals,
+    const DayCounter& paymentDayCounter = DayCounter(),
+    BusinessDayConvention paymentAdjustment = Following,
+    Natural fixingDays = 0,
+    const std::vector<Real>& gearings = {},
+    const std::vector<Spread>& spreads = {},
+    const std::vector<Rate>& caps = {},
+    const std::vector<Rate>& floors = {},
+    const Handle<YieldTermStructure>& rateCurve = Handle<YieldTermStructure>(),
+    bool addInflationNotional = false,
+    CPI::InterpolationType observationInterpolation = CPI::Flat,
+    const std::vector<Date>& paymentDates = {},
+    Integer paymentLag = 0);
 
 // ---------------------------------------------------------------------------
 // QuantExt::CPILeg builder (kwargs pattern)
