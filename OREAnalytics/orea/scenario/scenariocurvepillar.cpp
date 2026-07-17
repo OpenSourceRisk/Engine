@@ -15,15 +15,53 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
+
 #include <orea/scenario/scenariocurvepillar.hpp>
+
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/marketdata.hpp>
 
 namespace ore {
 namespace analytics {
 
 using ore::data::parsePeriod;
 using ore::data::to_string;
+
+IrFutureExpiryYearMonth::IrFutureExpiryYearMonth(const std::string& str) : str_(str) {
+    auto tmp = normaliseDeliveryCode(str_);
+    QL_REQUIRE(tmp.size() == 7 && tmp[4] == '-',
+               "IrFutureExpiryYearMonth " << str_ << " can not be normalzsed to YYYY-MM.");
+    year_ = boost::lexical_cast<int>(tmp.substr(0, 4));
+    month_ = QuantLib::Month(boost::lexical_cast<int>(tmp.substr(5, 2)));
+}
+
+QuantLib::Month IrFutureExpiryYearMonth::month() const {
+    return month_;
+}
+
+QuantLib::Year IrFutureExpiryYearMonth::year() const {
+    return year_;
+}
+
+std::string IrFutureExpiryYearMonth::toString() const { return str_; }
+
+void IrFutureExpiryYearMonth::setConvention(const QuantLib::ext::shared_ptr<ore::data::FutureConvention>& convention) {
+    convention_ = convention;
+}
+
+QuantLib::Period IrFutureExpiryYearMonth::toPeriod(const QuantLib::Date& referenceDate) const {
+    QL_REQUIRE(convention_ != nullptr, "IRFutureExpiryies are only allowed in the context of par scenarios");
+    bool isMMFuture = !convention_->isOvernightIndexFuture();
+    QL_REQUIRE(isMMFuture || convention_->overnightIndexTenor().has_value(),
+               "IRFutureExpiryies are only allowed for overnight index futures if an overnight index tenor is "
+               "specified in the convention");
+    QuantLib::Date d = isMMFuture ? getMmFutureExpiryDate(month_, year_, convention_->dateGenerationRule())
+                                  : getOiFutureStartEndDate(month_, year_, convention_->overnightIndexTenor().value(),
+                                                            convention_->dateGenerationRule(), convention_->calendar())
+                                        .second;
+    return QuantLib::Period((d - referenceDate) * QuantLib::Days);
+}
 
 std::ostream& operator<<(std::ostream& os, const IrFutureExpiryYearMonth& v) { return os << v.toString(); }
 
@@ -42,6 +80,21 @@ ScenarioCurvePillar parseScenarioCurvePillar(const std::string& str) {
 std::ostream& operator<<(std::ostream& os, const ScenarioCurvePillar& v) {
     std::visit([&](const auto& x) { os << x; }, v);
     return os;
+}
+
+std::vector<QuantLib::Period> scenarioPillarsToPeriodVector(const QuantLib::Date& asof,
+                                                            const std::vector<ScenarioCurvePillar>& pillars,
+                                                            bool allowFutureExpiries) {
+    std::vector<QuantLib::Period> result;
+    for (const auto& pillar : pillars) {
+        if (auto p = std::get_if<QuantLib::Period>(&pillar)) {
+            result.push_back(*p);
+        } else if (auto p = std::get_if<IrFutureExpiryYearMonth>(&pillar)) {
+            QL_REQUIRE(allowFutureExpiries, "IR Future expiries are not allowed in this context");
+            result.push_back(p->toPeriod(asof));
+        }
+    }
+    return result;
 }
 
 } // namespace analytics
