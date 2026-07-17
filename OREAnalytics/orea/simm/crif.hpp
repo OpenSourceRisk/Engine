@@ -25,6 +25,7 @@
 #include <orea/simm/crifrecord.hpp>
 #include <ored/report/report.hpp>
 #include <ored/marketdata/market.hpp>
+#include <ored/utilities/csvutils.hpp>
 #include <boost/bimap.hpp>
 #include <boost/multi_index/composite_key.hpp>
 #include <boost/multi_index/mem_fun.hpp>
@@ -42,6 +43,7 @@ namespace ore {
 namespace analytics {
 
 class Crif;
+class SimmConfiguration;
 
 class SlimCrifRecord {
 
@@ -489,12 +491,34 @@ std::ostream& operator<<(std::ostream& out, const SlimCrifRecord& cr);
     <em>ISDA SIMM Methodology, Risk Data Standards. Version 1.36: 1 February 2017.</em>
     or an updated version thereof.
 */
-class Crif : public QuantLib::ext::enable_shared_from_this<Crif> {
+class Crif : public QuantLib::ext::enable_shared_from_this<Crif>, public ore::data::CSVSerializable {
 public:
     enum class CrifType { FRTB, SIMM, SACCR, Empty };
     Crif() = default;
 
+    /*! Construct a Crif with the configuration used when populating it from a CSV stream via fromCSV().
+        This is equivalent to default-constructing and then calling setCsvLoaderConfig(). */
+    Crif(const QuantLib::ext::shared_ptr<SimmConfiguration>& configuration,
+         const std::vector<std::set<std::string>>& additionalHeaders = {}, bool updateMapper = false,
+         bool aggregateTrades = true, bool allowUseCounterpartyTrade = true, char eol = '\n', char delim = '\t',
+         char quoteChar = '\0', char escapeChar = '\\', const std::string& nullString = "#N/A");
+
     CrifType type() const { return type_; }
+
+    /*! Configure the parameters used when populating this Crif from a CSV stream via fromCSV().
+        These mirror the parameters previously held by the CRIF loaders. */
+    void setCsvLoaderConfig(const QuantLib::ext::shared_ptr<SimmConfiguration>& configuration,
+                            const std::vector<std::set<std::string>>& additionalHeaders = {}, bool updateMapper = false,
+                            bool aggregateTrades = true, bool allowUseCounterpartyTrade = true, char eol = '\n',
+                            char delim = '\t', char quoteChar = '\0', char escapeChar = '\\',
+                            const std::string& nullString = "#N/A");
+
+    //! Populate this Crif from a CSV input stream. Implements CSVSerializable::fromCSV.
+    void fromCSV(std::istream& stream) override;
+
+    /*! Validate, normalise and add a full CrifRecord to this Crif using the configuration provided via
+        setCsvLoaderConfig(). Used by the CSV and JSON CRIF loaders. */
+    void addRecordToCrif(CrifRecord&& recordToAdd);
 
     void addRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false,
                    bool sortFxVolQualifer = true);
@@ -651,6 +675,33 @@ private:
     void addSimmParameterRecord(const SlimCrifRecord& record, bool aggregateDifferentAmountCurrencies = false);
     void updateAmountExistingRecord(SlimCrifRecordContainer::nth_index_iterator<0>::type it,
                                     const SlimCrifRecord& record);
+
+    // CSV loading helpers (moved from the CRIF loaders)
+    void validateSimmRecord(const CrifRecord& cr) const;
+    void currencyOverrides(CrifRecord& crifRecord) const;
+    void updateMapping(const CrifRecord& cr) const;
+    void processHeader(const std::vector<std::string>& headers);
+    bool process(const std::vector<std::string>& entries, QuantLib::Size maxIndex, QuantLib::Size currentLine,
+                 std::vector<std::tuple<std::string, std::string, std::string, std::string>>& structuredErrors);
+
+    //! Map giving required CRIF file headers and their allowable alternatives
+    static std::map<QuantLib::Size, std::set<std::string>> requiredHeaders;
+    //! Map giving optional CRIF file headers and their allowable alternatives
+    static std::map<QuantLib::Size, std::set<std::string>> optionalHeaders;
+
+    // CSV loading configuration
+    QuantLib::ext::shared_ptr<SimmConfiguration> configuration_;
+    std::vector<std::set<std::string>> additionalHeaders_;
+    bool updateMapper_ = false;
+    bool aggregateTrades_ = true;
+    bool allowUseCounterpartyTrade_ = true;
+    char eol_ = '\n';
+    char delim_ = '\t';
+    char quoteChar_ = '\0';
+    char escapeChar_ = '\\';
+    std::string nullString_ = "#N/A";
+    std::map<QuantLib::Size, QuantLib::Size> columnIndex_;
+    std::map<QuantLib::Size, std::set<std::string>> additionalHeadersIndexMap_;
 
     boost::bimap<int, std::string> tradeIdIndex_, tradeTypeIndex_, qualifierIndex_, bucketIndex_, label1Index_,
         label2Index_, currencyIndex_, resultCurrencyIndex_, endDateIndex_, label3Index_, creditQualityIndex_,

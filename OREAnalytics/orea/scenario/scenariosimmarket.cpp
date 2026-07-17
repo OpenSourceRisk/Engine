@@ -2832,7 +2832,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 DLOG("Ssm comm vol for " << name << " uses BlackVarianceSurfaceMoneynessSpot.");
 
                                 bool flatExtrapMoneyness = true;
-                                Handle<Quote> spot(QuantLib::ext::make_shared<SimpleQuote>(priceCurve->price(0)));
+                                Handle<Quote> spot(
+                                    QuantLib::ext::make_shared<DerivedPriceQuote>(Handle<PriceTermStructure>(priceCurve)));
                                 if (useSpreadedTermStructures_) {
                                     // get init market curves to populate sticky ts in vol surface ctor
                                     Handle<YieldTermStructure> initMarketYts =

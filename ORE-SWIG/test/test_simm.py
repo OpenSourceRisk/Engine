@@ -10,7 +10,7 @@ import unittest
 import ORE
 
 # ---------------------------------------------------------------------------
-# Tab-delimited CRIF buffer (tab is the default delimiter for CsvBufferCrifLoader).
+# Tab-delimited CRIF buffer (tab is the default delimiter for the Crif CSV loader).
 # Risk_IRCurve is the canonical risk-type string (bimap in crifrecord.cpp).
 # AmountUSD is required by SimmCalculator when no market object is provided;
 # without it the calculator tries FX conversion via a null market and throws.
@@ -45,9 +45,6 @@ class SimmBindingSmokeTest(unittest.TestCase):
             "SimmConfigurationBase",
             "SimmConfiguration_ISDA_V2_6",
             "SimmResults",
-            "CrifLoader",
-            "CsvFileCrifLoader",
-            "CsvBufferCrifLoader",
             "SimmCalculator",
             "RegulationSimmResultsPair",
         ]
@@ -92,8 +89,9 @@ class SimmCalculatorResultAccessorTest(unittest.TestCase):
         the Python binding must faithfully reflect it.
         """
         config = ORE.SimmConfiguration_ISDA_V2_6()
-        loader = ORE.CsvBufferCrifLoader(_CRIF_BUFFER, config)
-        crif = loader.loadCrif()
+        crif = ORE.Crif()
+        crif.setCsvLoaderConfig(config)
+        crif.fromCSVString(_CRIF_BUFFER)
         self.assertFalse(crif.empty(), "Loaded CRIF must contain records")
         calc = ORE.SimmCalculator(crif, config)
         # No parameter records → simmParameters_ stays null → Python sees None
@@ -168,12 +166,13 @@ class SimmCalculatorResultAccessorTest(unittest.TestCase):
         """Full workflow: load CRIF, run SimmCalculator, query all result accessors.
 
         Demonstrates the canonical usage pattern:
-          CsvBufferCrifLoader → loadCrif → SimmCalculator →
+          Crif.setCsvLoaderConfig → Crif.fromCSVString → SimmCalculator →
           winningRegulations → simmResults → finalSimmResults
         """
         config = ORE.SimmConfiguration_ISDA_V2_6()
-        loader = ORE.CsvBufferCrifLoader(_CRIF_BUFFER, config)
-        crif = loader.loadCrif()
+        crif = ORE.Crif()
+        crif.setCsvLoaderConfig(config)
+        crif.fromCSVString(_CRIF_BUFFER)
         self.assertFalse(crif.empty(), "Loaded CRIF must contain records")
 
         calc = ORE.SimmCalculator(crif, config)
