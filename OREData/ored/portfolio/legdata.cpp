@@ -626,7 +626,8 @@ CMBLegData::CMBLegData(const string& genericBond, bool hasCreditRisk, Size fixin
       fixingDays_(fixingDays), isInArrears_(isInArrears), spreads_(spreads), spreadDates_(spreadDates), caps_(caps),
       capDates_(capDates), floors_(floors), floorDates_(floorDates), gearings_(gearings), gearingDates_(gearingDates),
       nakedOption_(nakedOption) {
-    indices_.insert("BOND-" + getSecurityFamilyAndSuffix(genericBond_).first);
+    if (!genericBond_.empty())
+        indices_.insert("BOND-" + getSecurityFamilyAndSuffix(genericBond_).first);
 }
 
 
@@ -648,7 +649,8 @@ XMLNode* CMBLegData::toXML(XMLDocument& doc) const {
 void CMBLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     genericBond_ = XMLUtils::getChildValue(node, "Index", true);
-    indices_.insert("BOND-" + getSecurityFamilyAndSuffix(genericBond_).first);
+    if (!genericBond_.empty())
+        indices_.insert("BOND-" + getSecurityFamilyAndSuffix(genericBond_).first);
     // These are all optional
     spreads_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Spreads", "Spread", "startDate", spreadDates_,
                                                                &parseReal);
