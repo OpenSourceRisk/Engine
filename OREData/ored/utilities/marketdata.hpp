@@ -102,6 +102,9 @@ indexTrancheBaseCorrelationCurve(const QuantLib::ext::shared_ptr<Market>& market
 /*! Pretty print an internal curve name occuring (once or several times) in a string (e.g. in a risk factor name). */
 std::string prettyPrintInternalCurveName(std::string name);
 
+/*! Takes in a delivery code and normalizes it to YYYY-MM format. */
+std::string normaliseDeliveryCode(const std::string& code);
+
 /*! Build an Fx Index given a market. Note: sold==domestic, bought==foreign */
 QuantLib::ext::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, const string& foreign,
                                                   const QuantLib::ext::shared_ptr<Market>& market, const string& configuration,
@@ -109,7 +112,9 @@ QuantLib::ext::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex,
 
 std::tuple<Natural, Calendar, BusinessDayConvention> getFxIndexConventions(const string& index);
 
-std::pair<Date, Date> getOiFutureStartEndDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear,
+std::pair<QuantLib::Month, QuantLib::Natural> getMonthYear(const std::string& expiry);
+
+std::pair<Date, Date> getOiFutureStartEndDate(QuantLib::Month contractMonth, QuantLib::Natural contractYear,
                                               QuantLib::Period tenor, FutureConvention::DateGenerationRule rule,
                                               const QuantLib::Calendar& calendar);
 

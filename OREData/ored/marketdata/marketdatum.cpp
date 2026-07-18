@@ -242,42 +242,6 @@ CommodityForwardQuote::CommodityForwardQuote(QuantLib::Real value, const QuantLi
     QL_REQUIRE(quoteType == QuoteType::PRICE, "Commodity forward quote must be of type 'PRICE'");
 }
 
-namespace {
-Natural yearFromExpiryString(const std::string& expiry) {
-    QL_REQUIRE(expiry.length() == 7, "The expiry string must be of "
-                                     "the form YYYY-MM");
-    string strExpiryYear = expiry.substr(0, 4);
-    Natural expiryYear;
-    try {
-        expiryYear = lexical_cast<Natural>(strExpiryYear);
-    } catch (const bad_lexical_cast&) {
-        QL_FAIL("Could not convert year string, " << strExpiryYear << ", to number.");
-    }
-    return expiryYear;
-}
-
-Month monthFromExpiryString(const std::string& expiry) {
-    QL_REQUIRE(expiry.length() == 7, "The expiry string must be of "
-                                     "the form YYYY-MM");
-    string strExpiryMonth = expiry.substr(5);
-    Natural expiryMonth;
-    try {
-        expiryMonth = lexical_cast<Natural>(strExpiryMonth);
-    } catch (const bad_lexical_cast&) {
-        QL_FAIL("Could not convert month string, " << strExpiryMonth << ", to number.");
-    }
-    return static_cast<Month>(expiryMonth);
-}
-} // namespace
-
-Natural MMFutureQuote::expiryYear() const { return yearFromExpiryString(expiry_); }
-
-Month MMFutureQuote::expiryMonth() const { return monthFromExpiryString(expiry_); }
-
-Natural OIFutureQuote::expiryYear() const { return yearFromExpiryString(expiry_); }
-
-Month OIFutureQuote::expiryMonth() const { return monthFromExpiryString(expiry_); }
-
 QuantLib::Size SeasonalityQuote::applyMonth() const {
     QL_REQUIRE(month_.length() == 3, "The month string must be of "
                                      "the form MMM");
@@ -434,7 +398,7 @@ template <class Archive> void MMFutureQuote::serialize(Archive& ar, const unsign
 template <class Archive> void OIFutureQuote::serialize(Archive& ar, const unsigned int version) {
     ar& boost::serialization::base_object<MarketDatum>(*this);
     ar& ccy_;
-    ar& expiry_;
+    ar& contractMonth_;
     ar& contract_;
     ar& tenor_;
 }
