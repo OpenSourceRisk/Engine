@@ -643,7 +643,7 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
        The atm type ist set to delta neutral. */
 
     DeltaVolQuote::DeltaType dt_c =
-        dt_ == (DeltaVolQuote::Spot || dt_ == DeltaVolQuote::Fwd) ? DeltaVolQuote::Fwd : DeltaVolQuote::PaFwd;
+        (dt_ == DeltaVolQuote::Spot || dt_ == DeltaVolQuote::Fwd) ? DeltaVolQuote::Fwd : DeltaVolQuote::PaFwd;
     DeltaVolQuote::AtmType at_c = DeltaVolQuote::AtmDeltaNeutral;
 
     /* find the vols on both smiles for the artificial smile conventions */
@@ -776,10 +776,11 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
                                                        " - after retry with linear interpolation");
                 return blackVolImpl(t, strike);
             }
+        } else {
+            smileHasError_[failureIndex] = true;
+            smileMessages_[failureIndex].push_back(e.what());
+            return blackVolImpl(t, strike);
         }
-        smileHasError_[failureIndex] = true;
-        smileMessages_[failureIndex].push_back(e.what());
-        return blackVolImpl(t, strike);
     }
 
     /* store the new smile in the cache */
