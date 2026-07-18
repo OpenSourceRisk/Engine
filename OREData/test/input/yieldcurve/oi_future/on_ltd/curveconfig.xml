@@ -9,9 +9,9 @@
         <Simple>
           <Type>Future</Type>
           <Quotes>
+            <Quote>OI_FUTURE/PRICE/USD/2020-03/CME/3M</Quote>
             <Quote>OI_FUTURE/PRICE/USD/2020-06/CME/3M</Quote>
             <Quote>OI_FUTURE/PRICE/USD/2020-09/CME/3M</Quote>
-            <Quote>OI_FUTURE/PRICE/USD/2020-12/CME/3M</Quote>
           </Quotes>
           <Conventions>USD-SOFR-3M-FUTURES</Conventions>
           <ProjectionCurve>USD-SOFR</ProjectionCurve>
