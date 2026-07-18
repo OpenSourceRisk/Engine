@@ -151,5 +151,9 @@ QuantLib::ext::shared_ptr<QuantExt::PriceTermStructure> getCalendarSpreadPriceCu
 QuantLib::ext::shared_ptr<QuantExt::PriceTermStructure>
 getCalendarSpreadPriceCurve(const ore::data::Market* market, const std::string& name, const std::string& configuration,
                             int offset, const QuantLib::ext::shared_ptr<QuantExt::FutureExpiryCalculator>& expCal);
+
+// split security name FAMILY-SUFFIX into FAMILY and SUFFIX, e.g. DE-BUND-10Y into DE-Bund, 10Y
+std::pair<std::string, std::string> getSecurityFamilyAndSuffix(const std::string& s);
+
 } // namespace data
 } // namespace ore
