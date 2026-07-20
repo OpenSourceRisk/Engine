@@ -1606,6 +1606,8 @@ struct UnderlyingOptionData {
 class EquityAutoDeltaHedgedOption : public Trade {
 public:
     EquityAutoDeltaHedgedOption();
+    EquityAutoDeltaHedgedOption(Envelope& env, std::vector<UnderlyingOptionData> underlyings, double& hedgingVol, double& driftRate,
+                                QuantLib::Date& observationStartDate,  QuantLib::Date& paymentDate);
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;

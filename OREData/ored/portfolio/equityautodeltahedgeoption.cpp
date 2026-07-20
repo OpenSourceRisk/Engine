@@ -43,6 +43,7 @@ void EquityAutoDeltaHedgedOption::build(const QuantLib::ext::shared_ptr<EngineFa
 
     QL_REQUIRE(!underlyings_.empty(),
                "EquityAutoDeltaHedgedOption: no underlyings specified for trade " << id());
+    QL_REQUIRE(observationStartDate_!=QuantLib::Date(), "ObservationStartDate is empty for trade " << id());
 
     // All underlyings share the same equity name and currency — use the first
     string assetName = underlyings_.front().equityUnderlying.name();
