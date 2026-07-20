@@ -213,11 +213,12 @@ void MarketDataLoader::populateFixings(
         impl()->retrieveFixings(loader_, fixings_, lastAvailableFixingLookupMap);
 
     applyFixings(loader_->loadFixings());
-        
+
     // check and warn any missing fixings - only warn for mandatory fixings
+    const Date evaluationDate = Settings::instance().evaluationDate();
     for (const auto& [indexName, fixingDates] : fixings_) {
         for (const auto& [d, mandatory] :fixingDates) {
-            if (mandatory.first && !loader_->hasFixing(indexName, d)) {
+            if (mandatory.first && d < evaluationDate && !loader_->hasFixing(indexName, d)) {
                 string fixingErr = "";
                 if (isFxIndex(indexName)) {
                     auto fxInd = parseFxIndex(indexName);
