@@ -70,6 +70,15 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
     // Option expiry date.
     Date expiryDate = arguments_.exercise->lastDate();
 
+    double fxRate = 1.0;
+    Date fixingDate = Date();
+    if (arguments_.fxIndex != nullptr) {
+        fixingDate = arguments_.cashSettlementFxFixingDate.has_value()
+                                ? *arguments_.cashSettlementFxFixingDate
+                                : arguments_.fxIndex->fixingDate(expiryDate);
+        fxRate = arguments_.fxIndex->fixing(fixingDate, false);
+    }
+
     Date today = Settings::instance().evaluationDate();
     if (expiryDate <= today) {
         // If expiry has occurred, we attempt to establish the payoff amount, if any, and discount it.
@@ -101,14 +110,6 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
             results_.gamma = 0.0;
             results_.dividendRho = 0.0;
             results_.vega = 0.0;
-        }
-
-        double fxRate = 1.0;
-        if (arguments_.fxIndex != nullptr) {
-            Date fixingDate = arguments_.cashSettlementFxFixingDate.has_value()
-                                  ? *arguments_.cashSettlementFxFixingDate
-                                  : arguments_.fxIndex->fixingDate(expiryDate);
-            fxRate = arguments_.fxIndex->fixing(fixingDate, false);
         }
 
         // Discount factor to payment date.
@@ -166,15 +167,6 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
         const CashSettledEuropeanOption::results* underlyingResults =
             dynamic_cast<const CashSettledEuropeanOption::results*>(underlyingEngine_.getResults());
         QL_REQUIRE(underlyingResults, "Underlying engine expected to have compatible results.");
-
-        double fxRate = 1.0;
-        Date fixingDate = Date();
-        if (arguments_.fxIndex != nullptr) {
-            fixingDate = arguments_.cashSettlementFxFixingDate.has_value()
-                                  ? *arguments_.cashSettlementFxFixingDate
-                                  : arguments_.fxIndex->fixingDate(expiryDate);
-            fxRate = arguments_.fxIndex->fixing(fixingDate, false);
-        }
 
         results_.value = df_te_tp * underlyingResults->value * fxRate;
         results_.delta = df_te_tp * underlyingResults->delta;
