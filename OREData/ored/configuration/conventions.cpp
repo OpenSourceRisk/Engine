@@ -1672,6 +1672,7 @@ void CommodityForwardConvention::fromXML(XMLNode* node) {
     strPointsFactor_ = XMLUtils::getChildValue(node, "PointsFactor", false);
     strAdvanceCalendar_ = XMLUtils::getChildValue(node, "AdvanceCalendar", false);
     strSpotRelative_ = XMLUtils::getChildValue(node, "SpotRelative", false);
+    deliveryLocation_ = XMLUtils::getChildValue(node, "DeliveryLocation", false);
 
     bdc_ = Following;
     if (XMLNode* n = XMLUtils::getChildNode(node, "BusinessDayConvention")) {
@@ -1699,6 +1700,8 @@ XMLNode* CommodityForwardConvention::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "AdvanceCalendar", strAdvanceCalendar_);
     if (!strSpotRelative_.empty())
         XMLUtils::addChild(doc, node, "SpotRelative", strSpotRelative_);
+    if (!deliveryLocation_.empty())
+        XMLUtils::addChild(doc, node, "DeliveryLocation", deliveryLocation_);
 
 
     XMLUtils::addChild(doc, node, "BusinessDayConvention", ore::data::to_string(bdc_));
@@ -2259,6 +2262,7 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
     indexName_ = XMLUtils::getChildValue(node, "IndexName", false);
 
     savingsTime_ = XMLUtils::getChildValue(node, "SavingsTime", false, "US");
+    deliveryLocation_ = XMLUtils::getChildValue(node, "DeliveryLocation", false);
 
     balanceOfTheMonth_ = XMLUtils::getChildValueAsBool(node, "BalanceOfTheMonth", false, false);
 
@@ -2384,6 +2388,9 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) const {
 
     if (!savingsTime_.empty())
         XMLUtils::addChild(doc, node, "SavingsTime", savingsTime_);
+
+    if (!deliveryLocation_.empty())
+        XMLUtils::addChild(doc, node, "DeliveryLocation", deliveryLocation_);
 
     if (contractFrequency_ == Monthly && !validContractMonths_.empty() && validContractMonths_.size() < 12) {
         XMLNode* validContractMonthNode = doc.allocNode("ValidContractMonths");
