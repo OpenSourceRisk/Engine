@@ -72,6 +72,11 @@
 #include <orea/app/parameters.hpp>
 #include <orea/app/portfolioanalyser.hpp>
 #include <orea/app/reportwriter.hpp>
+#include <orea/app/reportwriters/capitalreportwriter.hpp>
+#include <orea/app/reportwriters/pricingreportwriter.hpp>
+#include <orea/app/reportwriters/scenarioreportwriter.hpp>
+#include <orea/app/reportwriters/simmreportwriter.hpp>
+#include <orea/app/reportwriters/xvareportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/app/zerosensitivityloader.hpp>

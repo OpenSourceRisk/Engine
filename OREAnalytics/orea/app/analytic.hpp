@@ -22,30 +22,21 @@
 
 #pragma once
 
-#include <ored/marketdata/todaysmarketparameters.hpp>
-#include <ored/marketdata/inmemoryloader.hpp>
-#include <ored/portfolio/nettingsetmanager.hpp>
 #include <ored/utilities/timer.hpp>
-
-#include <orea/aggregation/collateralaccount.hpp>
-#include <orea/aggregation/collatexposurehelper.hpp>
-#include <orea/aggregation/postprocess.hpp>
-#include <orea/cube/cubeinterpretation.hpp>
 #include <orea/cube/cube_io.hpp>
-#include <orea/engine/sensitivitycubestream.hpp>
-#include <orea/engine/parsensitivitycubestream.hpp>
-#include <orea/scenario/scenariosimmarketparameters.hpp>
-
-#include <orea/app/marketcalibrationreport.hpp>
 #include <orea/app/inputvariables.hpp>
+#include <orea/scenario/scenario.hpp>
 
-#include <ql/any.hpp>
-#include <iostream>
+#include <ql/shared_ptr.hpp>
 
 namespace ore {
 namespace data {
 class CrossAssetModelData;
 class InMemoryReport;
+class Portfolio;
+class TodaysMarketParameters;
+class InMemoryLoader;
+class Loader;
 }; // namespace ore
 }; // namespace data
 
@@ -55,6 +46,14 @@ namespace analytics {
 class InputParameters;
 class AnalyticsManager;
 class StressTestScenarioData;
+class ScenarioSimMarketParameters;
+class SensitivityScenarioData;
+class ScenarioGeneratorData;
+class ParSensitivityCubeStream;
+class AggregationScenarioData;
+class MarketCalibrationReportBase;
+class NPVCubeWithMetaData;
+
 class Analytic {
 public:
     class Impl;
@@ -139,8 +138,8 @@ public:
     }
     const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio() const { return portfolio_; };
     void setInputs(const QuantLib::ext::shared_ptr<InputParameters>& inputs) { inputs_ = inputs; }
-    void setMarket(const QuantLib::ext::shared_ptr<ore::data::Market>& market) { market_ = market; };
-    void setPortfolio(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio) { portfolio_ = portfolio; };
+    void setMarket(const QuantLib::ext::shared_ptr<ore::data::Market>& market) { market_ = market; }
+    void setPortfolio(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio) { portfolio_ = portfolio; }
     std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> todaysMarketParams();
     const QuantLib::ext::shared_ptr<ore::data::Loader>& loader() const { return loader_; };
     Configurations& configurations() { return configurations_; }

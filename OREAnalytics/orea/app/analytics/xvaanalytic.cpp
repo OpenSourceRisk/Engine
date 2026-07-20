@@ -25,10 +25,11 @@
 #include <orea/aggregation/dynamicdeltavarcalculator.hpp>
 #include <orea/aggregation/dynamicsimmcalculator.hpp>
 #include <orea/aggregation/simmhelper.hpp>
+#include <orea/aggregation/postprocess.hpp>
 #include <orea/app/analytics/utilities.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/app/inputparameters.hpp>
-#include <orea/app/reportwriter.hpp>
+#include <orea/app/reportwriters/xvareportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/cube/overlaynpvcube.hpp>
@@ -1642,7 +1643,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
                 for (const auto& [tradeId, tradeIdCubePos] : postProcess_->tradeIds()) {
                     auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                     try {
-                        ReportWriter(inputs_->reportNaString()).writeTradeExposures(*report, postProcess_, tradeId);
+                        XvaReportWriter(inputs_->reportNaString()).writeTradeExposures(*report, postProcess_, tradeId);
                         analytic()->addReport(LABEL, "exposure_trade_" + tradeId, report);
                     } catch (const std::exception& e) {
                         QuantLib::ext::shared_ptr<Trade> failedTrade =
@@ -1658,7 +1659,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
             } else {
                 auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 try {
-                    ReportWriter(inputs_->reportNaString()).writeTradeExposures(*report, postProcess_);
+                    XvaReportWriter(inputs_->reportNaString()).writeTradeExposures(*report, postProcess_);
                 } catch (const std::exception& e) {
                     StructuredAnalyticsErrorMessage("Trade Exposure Report", "Error processing report.", e.what()).log();
                 }
@@ -1671,7 +1672,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
                 for (auto [nettingSet, nettingSetPosInCube] : postProcess_->nettingSetIds()) {
                     auto exposureReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                     try {
-                        ReportWriter(inputs_->reportNaString())
+                        XvaReportWriter(inputs_->reportNaString())
                             .writeNettingSetExposures(*exposureReport, postProcess_, nettingSet);
                         analytic()->addReport(LABEL, "exposure_nettingset_" + nettingSet, exposureReport);
                     } catch (const std::exception& e) {
@@ -1682,7 +1683,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
                     if (runXva_) {
                         auto colvaReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                         try {
-                            ReportWriter(inputs_->reportNaString())
+                            XvaReportWriter(inputs_->reportNaString())
                                 .writeNettingSetColva(*colvaReport, postProcess_, nettingSet);
                             analytic()->addReport(LABEL, "colva_nettingset_" + nettingSet, colvaReport);
                         } catch (const std::exception& e) {
@@ -1693,7 +1694,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
                         auto cvaSensiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                         try {
-                            ReportWriter(inputs_->reportNaString())
+                            XvaReportWriter(inputs_->reportNaString())
                                 .writeNettingSetCvaSensitivities(*cvaSensiReport, postProcess_, nettingSet);
                             analytic()->addReport(LABEL, "cva_sensitivity_nettingset_" + nettingSet, cvaSensiReport);
                         } catch (const std::exception& e) {
@@ -1709,7 +1710,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
                 auto cvaSensiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
 
                 try {
-                    ReportWriter(inputs_->reportNaString())
+                    XvaReportWriter(inputs_->reportNaString())
                         .writeNettingSetExposures(*exposureReport, postProcess_);
                 } catch (const std::exception& e) {
                     StructuredAnalyticsErrorMessage("Netting Set Exposure Report", "Error processing netting set.",
@@ -1717,14 +1718,14 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
                 }
                 if (runXva_) {
                     try {
-                        ReportWriter(inputs_->reportNaString())
+                        XvaReportWriter(inputs_->reportNaString())
                             .writeNettingSetColva(*colvaReport, postProcess_);
                     } catch (const std::exception& e) {
                         StructuredAnalyticsErrorMessage("Netting Set Colva Report", "Error processing netting set.",
                                                         e.what()).log();
                     }
                     try {
-                        ReportWriter(inputs_->reportNaString())
+                        XvaReportWriter(inputs_->reportNaString())
                             .writeNettingSetCvaSensitivities(*cvaSensiReport, postProcess_);
                     } catch (const std::exception& e) {
                         StructuredAnalyticsErrorMessage("Cva Sensi Report", "Error processing netting set.",
@@ -1743,7 +1744,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
         if (runXva_) {
             auto xvaReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-            ReportWriter(inputs_->reportNaString())
+            XvaReportWriter(inputs_->reportNaString())
                 .writeXVA(*xvaReport, xvaVars->exposureAllocationMethod_, analytic()->portfolio(), postProcess_);
             analytic()->addReport(LABEL, "xva", xvaReport);
 
@@ -1755,7 +1756,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
             if (xvaVars->timeAveragedNettedExposureOutput_) {
                 auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-                ReportWriter(inputs_->reportNaString())
+                XvaReportWriter(inputs_->reportNaString())
                     .writeTimeAveragedNettedExposure(*report, postProcess_->timeAveragedNettedExposure());
                 analytic()->addReport(LABEL, "timeAveragedNettedExposure", report);
             }

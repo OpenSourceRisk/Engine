@@ -20,7 +20,7 @@
 #include <orea/app/analytics/utilities.hpp>
 #include <orea/app/inputparameters.hpp>
 #include <orea/app/hwhistoricalcalibrationdataloader.hpp>
-#include <orea/app/reportwriter.hpp>
+#include <orea/app/reportwriters/xvareportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <ored/model/crossassetmodelbuilder.hpp>
@@ -512,7 +512,7 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
                     Size principalComponent = hwHistoricalModelData_->principalComponents().find(ccy)->second;
 
                     CSVFileReport report((outputDir / (stem + "_" + ccy + extension)).string());
-                    ReportWriter().writePcaReport(ccy, eigenValue, eigenVector, principalComponent, report);
+                    XvaReportWriter().writePcaReport(ccy, eigenValue, eigenVector, principalComponent, report);
                 }
                 LOG("PCA Results Reports written");
             }
@@ -531,7 +531,7 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
                     Matrix kappa = hwHistoricalModelData_->kappa().find(ccy)->second;
 
                     CSVFileReport report((outputDir / (stem + "_" + ccy + extension)).string());
-                    ReportWriter().writeMeanReversionReport(v, kappa, report);
+                    XvaReportWriter().writeMeanReversionReport(v, kappa, report);
                 }
                 LOG("Mean Reversion Results Report written");
 

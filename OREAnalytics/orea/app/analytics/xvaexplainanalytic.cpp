@@ -22,7 +22,7 @@
 #include <orea/app/analytics/xvaexplainanalytic.hpp>
 #include <orea/app/analytics/xvastressanalytic.hpp>
 #include <orea/app/inputparameters.hpp>
-#include <orea/app/reportwriter.hpp>
+#include <orea/app/reportwriters/xvareportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/cube/cube_io.hpp>
@@ -235,11 +235,11 @@ void XvaExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     XvaExplainResults xvaData(xvaReport);
 
     auto xvaExplainReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-    ReportWriter(inputs_->reportNaString()).writeXvaExplainReport(*xvaExplainReport, xvaData);
+    XvaReportWriter(inputs_->reportNaString()).writeXvaExplainReport(*xvaExplainReport, xvaData);
     analytic()->addReport(label(), "xvaExplain", xvaExplainReport);
 
     auto xvaExplainSummaryReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-    ReportWriter(inputs_->reportNaString()).writeXvaExplainSummary(*xvaExplainSummaryReport, xvaData);
+    XvaReportWriter(inputs_->reportNaString()).writeXvaExplainSummary(*xvaExplainSummaryReport, xvaData);
 
     analytic()->addReport(label(), "xvaExplain_summary", xvaExplainSummaryReport);
     CONSOLE("OK");

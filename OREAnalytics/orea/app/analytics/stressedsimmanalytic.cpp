@@ -29,6 +29,7 @@
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
+#include <orea/simm/crif.hpp>
 #include <ored/report/inmemoryreport.hpp>
 #include <ored/report/utilities.hpp>
 

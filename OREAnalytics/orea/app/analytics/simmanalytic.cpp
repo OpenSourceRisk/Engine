@@ -17,8 +17,10 @@
 */
 
 #include <orea/app/analytics/simmanalytic.hpp>
+#include <orea/app/analytics/crifanalytic.hpp>
+#include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/inputparameters.hpp>
-#include <orea/app/reportwriter.hpp>
+#include <orea/app/reportwriters/simmreportwriter.hpp>
 #include <orea/simm/crif.hpp>
 #include <orea/simm/simmcalculator.hpp>
 #include <orea/simm/simmcalibration.hpp>
@@ -60,7 +62,7 @@ void SimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
     if (analytic()->getWriteIntermediateReports()) {
         QuantLib::ext::shared_ptr<Crif> simmDataCrif = simmAnalytic->crif()->aggregate();
         QuantLib::ext::shared_ptr<InMemoryReport> simmDataReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-        ReportWriter(inputs_->reportNaString()).writeSIMMData(*simmDataCrif, simmDataReport, simmAnalytic->hasNettingSetDetails());
+        SimmReportWriter(inputs_->reportNaString()).writeSIMMData(*simmDataCrif, simmDataReport, simmAnalytic->hasNettingSetDetails());
         analytic()->addReport(LABEL, "simm_data", simmDataReport);
         LOG("SIMM data report generated");
     }
@@ -98,7 +100,7 @@ void SimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
 
     CONSOLEW("SIMM: Generate Reports");
     QuantLib::ext::shared_ptr<InMemoryReport> simmRegulationBreakdownReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-    ReportWriter(inputs_->reportNaString())
+    SimmReportWriter(inputs_->reportNaString())
         .writeSIMMReport(simm->simmResults(), simmRegulationBreakdownReport, simmAnalytic->hasNettingSetDetails(),
                          inputs_->simmResultCurrency(), inputs_->simmCalculationCurrencyCall(),
                          inputs_->simmCalculationCurrencyPost(), inputs_->simmReportingCurrency(), false, fxSpot);
@@ -107,7 +109,7 @@ void SimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
 
 
     QuantLib::ext::shared_ptr<InMemoryReport> simmReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-    ReportWriter(inputs_->reportNaString())
+    SimmReportWriter(inputs_->reportNaString())
         .writeSIMMReport(simm->finalSimmResults(), simmReport, simmAnalytic->hasNettingSetDetails(),
                          inputs_->simmResultCurrency(), inputs_->simmCalculationCurrencyCall(),
                          inputs_->simmCalculationCurrencyPost(), inputs_->simmReportingCurrency(), fxSpot);

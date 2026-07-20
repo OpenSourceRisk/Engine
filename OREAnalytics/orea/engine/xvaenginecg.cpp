@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/app/reportwriter.hpp>
+#include <orea/app/reportwriters/xvareportwriter.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/cube/npvsensicube.hpp>
 #include <orea/cube/sensitivitycube.hpp>
