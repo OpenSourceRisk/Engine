@@ -1188,6 +1188,22 @@
       <xs:element type="xs:string" name="PillarChoice" minOccurs="0"/>
       <xs:element type="xs:nonNegativeInteger" name="Priority" minOccurs="0"/>
       <xs:element type="xs:nonNegativeInteger" name="MinDistance" minOccurs="0"/>
+      <xs:element name="IndexCurves" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="IndexCurve" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="Index" type="xs:string"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <!-- IborIndexCurves is deprecated, kept for backwards compatibility; use IndexCurves instead -->
       <xs:element name="IborIndexCurves" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
@@ -1203,6 +1219,21 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
+      <xs:element name="InflationIndexCurves" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="InflationIndexCurve" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="inflationIndex" type="xs:string"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
       <xs:element type="xs:boolean" name="ExtrapolateFlat" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
@@ -1211,6 +1242,22 @@
       <xs:element type="xs:string" name="Type" fixed="Bond Yield Shifted"/>
       <xs:element type="xs:string" name="ReferenceCurve"/>
       <xs:element type="quoteType" name="Quotes"/>
+      <xs:element name="IndexCurves" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="IndexCurve" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="Index" type="xs:string"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <!-- IborIndexCurves is deprecated, kept for backwards compatibility; use IndexCurves instead -->
       <xs:element name="IborIndexCurves" minOccurs="0">
         <xs:complexType>
           <xs:sequence>

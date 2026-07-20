@@ -544,7 +544,8 @@ public:
     FittedBondYieldCurveSegment() {}
     //! Detailed constructor
     FittedBondYieldCurveSegment(const string& typeID, const vector<string>& quotes,
-                                const map<string, string>& iborIndexCurves, const bool extrapolateFlat);
+                                const map<string, string>& indexCurves, const bool extrapolateFlat,
+                                const map<string, string>& inflationIndexCurves = {});
 
     //! \name Serialisation
     //@{
@@ -554,7 +555,8 @@ public:
 
     //! \name Inspectors
     //@{
-    const map<string, string>& iborIndexCurves() const { return iborIndexCurves_; }
+    const map<string, string>& indexCurves() const { return indexCurves_; }
+    const map<string, string>& inflationIndexCurves() const { return inflationIndexCurves_; }
     const bool extrapolateFlat() const { return extrapolateFlat_; }
     //@}
 
@@ -564,7 +566,8 @@ public:
     //@}
 
 private:
-    map<string, string> iborIndexCurves_;
+    map<string, string> indexCurves_;
+    map<string, string> inflationIndexCurves_;
     bool extrapolateFlat_;
 };
 
@@ -624,7 +627,8 @@ public:
     BondYieldShiftedYieldCurveSegment() {}
     //! Detailed constructor
     BondYieldShiftedYieldCurveSegment(const string& typeID, const string& referenceCurveID, const vector<string>& quotes,
-                                      const map<string, string>& iborIndexCurves, const bool extrapolateFlat);
+                                      const map<string, string>& indexCurves, const bool extrapolateFlat,
+                                      const map<string, string>& inflationIndexCurves = {});
 
     //! Default destructor
     virtual ~BondYieldShiftedYieldCurveSegment() {}
@@ -639,7 +643,8 @@ public:
     //! \name Inspectors
     //@{
     const string& referenceCurveID() const { return referenceCurveID_; }
-    const map<string, string>& iborIndexCurves() const { return iborIndexCurves_; }
+    const map<string, string>& indexCurves() const { return indexCurves_; }
+    const map<string, string>& inflationIndexCurves() const { return inflationIndexCurves_; }
     const bool extrapolateFlat() const { return extrapolateFlat_; }
     //@}
 
@@ -650,7 +655,8 @@ public:
 
 private:
     string referenceCurveID_;
-    map<string, string> iborIndexCurves_;
+    map<string, string> indexCurves_;
+    map<string, string> inflationIndexCurves_;
     bool extrapolateFlat_;
     QuantLib::ext::optional<Real> spread_;
     QuantLib::ext::optional<Real> bondYield_;
