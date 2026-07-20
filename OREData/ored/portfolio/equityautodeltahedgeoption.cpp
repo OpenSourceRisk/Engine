@@ -120,7 +120,7 @@ void EquityAutoDeltaHedgedOption::build(const QuantLib::ext::shared_ptr<EngineFa
         const string eqIndexName = "EQ-" + assetName;
         auto eqCurve = engineFactory->market()->equityCurve(assetName, engineFactory->configuration(MarketContext::pricing));
         Calendar fixingCal = eqCurve->fixingCalendar();
-        for (Date d = fixingCal.adjust(observationStartDate_, Following); d <= today; d = fixingCal.advance(d, 1, Days)) {
+        for (Date d = fixingCal.adjust(observationStartDate_, Following); d < today; d = fixingCal.advance(d, 1, Days)) {
             requiredFixings_.addFixingDate(d, eqIndexName, Date::maxDate(), false, d < today);
         }
     }
@@ -150,6 +150,7 @@ void EquityAutoDeltaHedgedOption::fromXML(XMLNode* node) {
     driftRate_ = XMLUtils::getChildValueAsDouble(eqNode, "DriftRate", true);
 
     string obsStartStr = XMLUtils::getChildValue(eqNode, "ObservationStartDate", true);
+    QL_REQUIRE(!obsStartStr.empty(), "ObservationStartDate is empty for trade " << id());
     observationStartDate_ = parseDate(obsStartStr);
 
     string payDateStr = XMLUtils::getChildValue(eqNode, "PaymentDate", false);
