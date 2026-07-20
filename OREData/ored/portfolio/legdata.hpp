@@ -818,13 +818,7 @@ public:
                const vector<double>& caps = vector<double>(), const vector<string>& capDates = vector<string>(),
                const vector<double>& floors = vector<double>(), const vector<string>& floorDates = vector<string>(),
                const vector<double>& gearings = vector<double>(), const vector<string>& gearingDates = vector<string>(),
-               bool nakedOption = false)
-        : LegAdditionalData(LegType::CMB), genericBond_(genericBond), hasCreditRisk_(hasCreditRisk),
-          fixingDays_(fixingDays), isInArrears_(isInArrears), spreads_(spreads), spreadDates_(spreadDates), caps_(caps),
-          capDates_(capDates), floors_(floors), floorDates_(floorDates), gearings_(gearings),
-          gearingDates_(gearingDates), nakedOption_(nakedOption) {
-        // indices_.insert(swapIndex_);
-    }
+               bool nakedOption = false);
 
     //! \name Inspectors
     //@{
