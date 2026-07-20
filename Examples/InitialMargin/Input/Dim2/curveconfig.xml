@@ -1407,17 +1407,17 @@
         <Simple>
           <Type>Future</Type>
           <Quotes>
+            <Quote>OI_FUTURE/PRICE/USD/2024-12/XCME:SRA/3M</Quote>
+            <Quote>OI_FUTURE/PRICE/USD/2025-01/XCME:SRA/3M</Quote>
+            <Quote>OI_FUTURE/PRICE/USD/2025-02/XCME:SRA/3M</Quote>
             <Quote>OI_FUTURE/PRICE/USD/2025-03/XCME:SRA/3M</Quote>
             <Quote>OI_FUTURE/PRICE/USD/2025-04/XCME:SRA/3M</Quote>
             <Quote>OI_FUTURE/PRICE/USD/2025-05/XCME:SRA/3M</Quote>
             <Quote>OI_FUTURE/PRICE/USD/2025-06/XCME:SRA/3M</Quote>
             <Quote>OI_FUTURE/PRICE/USD/2025-07/XCME:SRA/3M</Quote>
-            <Quote>OI_FUTURE/PRICE/USD/2025-08/XCME:SRA/3M</Quote>
             <Quote>OI_FUTURE/PRICE/USD/2025-09/XCME:SRA/3M</Quote>
-            <Quote>OI_FUTURE/PRICE/USD/2025-10/XCME:SRA/3M</Quote>
             <Quote>OI_FUTURE/PRICE/USD/2025-12/XCME:SRA/3M</Quote>
             <Quote>OI_FUTURE/PRICE/USD/2026-03/XCME:SRA/3M</Quote>
-            <Quote>OI_FUTURE/PRICE/USD/2026-06/XCME:SRA/3M</Quote>
           </Quotes>
           <Conventions>USD-SOFR-3M-FUTURES</Conventions>
           <PillarChoice>LastRelevantPillarDate</PillarChoice>
@@ -1487,17 +1487,17 @@
         <Simple>
           <Type>Future</Type>
           <Quotes>
+            <Quote>OI_FUTURE/PRICE/USD/2024-12/XCME:SRA/3M</Quote>
+            <Quote>OI_FUTURE/PRICE/USD/2025-01/XCME:SRA/3M</Quote>
+            <Quote>OI_FUTURE/PRICE/USD/2025-02/XCME:SRA/3M</Quote>
             <Quote>OI_FUTURE/PRICE/USD/2025-03/XCME:SRA/3M</Quote>
             <Quote>OI_FUTURE/PRICE/USD/2025-04/XCME:SRA/3M</Quote>
             <Quote>OI_FUTURE/PRICE/USD/2025-05/XCME:SRA/3M</Quote>
             <Quote>OI_FUTURE/PRICE/USD/2025-06/XCME:SRA/3M</Quote>
             <Quote>OI_FUTURE/PRICE/USD/2025-07/XCME:SRA/3M</Quote>
-            <Quote>OI_FUTURE/PRICE/USD/2025-08/XCME:SRA/3M</Quote>
             <Quote>OI_FUTURE/PRICE/USD/2025-09/XCME:SRA/3M</Quote>
-            <Quote>OI_FUTURE/PRICE/USD/2025-10/XCME:SRA/3M</Quote>
             <Quote>OI_FUTURE/PRICE/USD/2025-12/XCME:SRA/3M</Quote>
             <Quote>OI_FUTURE/PRICE/USD/2026-03/XCME:SRA/3M</Quote>
-            <Quote>OI_FUTURE/PRICE/USD/2026-06/XCME:SRA/3M</Quote>
           </Quotes>
           <Conventions>USD-SOFR-3M-FUTURES</Conventions>
           <PillarChoice>LastRelevantPillarDate</PillarChoice>

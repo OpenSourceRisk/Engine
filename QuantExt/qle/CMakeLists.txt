@@ -319,6 +319,7 @@ pricingengines/discountingriskybondenginemultistate.cpp
 pricingengines/discountingswapenginedeltagamma.cpp
 pricingengines/discretizedconvertible.cpp
 pricingengines/fdblackscholesvanillaengine.cpp
+pricingengines/fxdigitalcallspreadengine.cpp
 pricingengines/fdcallablebondevents.cpp
 pricingengines/fdconvertiblebondevents.cpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.cpp
@@ -960,6 +961,7 @@ pricingengines/numericalintegrationindexcdsoptionengine.hpp
 pricingengines/numericlgmbgsflexiswapengine.hpp
 pricingengines/numericlgmcallablebondengine.hpp
 pricingengines/numericlgmflexiswapengine.hpp
+pricingengines/fxdigitalcallspreadengine.hpp
 pricingengines/numericlgmmultilegoptionengine.hpp
 pricingengines/pairwisevarianceswapengine.hpp
 pricingengines/paymentdiscountingengine.hpp

@@ -493,7 +493,7 @@ CrifRecordData CrifRecordGenerator::yieldCurveImpl(const ore::analytics::Sensiti
     } else {
         data.riskType = ore::analytics::CrifRecord::RiskType::IRCurve;
         Period p;
-        if (period != "MUN") {
+        if (period != "MUN" && period != "TIPS") {
             try {
                 p = parsePeriod(period);
                 data.label2 = label2(p);
@@ -503,8 +503,18 @@ CrifRecordData CrifRecordGenerator::yieldCurveImpl(const ore::analytics::Sensiti
                         << "'. Expected CCY1-IN-CCY2, CURVENAME-CCY, CURVENAME-CCY-TENOR, "
                            "CMB-A-B-...-TENOR, CMB-A-B-...-MUN.");
             }
-        } else
-            data.label2 = "Municipal";
+        } else{
+            if(period == "MUN")
+                data.label2 = "Municipal";
+            else if(period == "TIPS")
+                data.label2 = "OIS";
+            else{
+                QL_FAIL("CRIF: YieldCurve risk factor '"
+                        << originalQualifier << "' contains illegal tenor '" << period
+                        << "'. Expected CCY1-IN-CCY2, CURVENAME-CCY, CURVENAME-CCY-TENOR, "
+                           "CMB-A-B-...-TENOR, CMB-A-B-...-MUN.");
+            }  
+        }
 
         data.bucket = bucket(data.riskType, data.qualifier);
         data.label1 = tenorLabel(rfTokens.front());

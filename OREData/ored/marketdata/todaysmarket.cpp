@@ -302,9 +302,9 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
             })) {
             DLOG("Building YieldCurve " << reducedNode << " for asof " << asof_);
             yieldCurve = QuantLib::ext::make_shared<YieldCurve>(
-                asof_, ycspecs, *curveConfigs_, *loader_, requiredYieldCurves_, requiredDefaultCurves_, *fx_,
-                referenceData_, iborFallbackConfig_, preserveQuoteLinkage_, buildCalibrationInfo_, this,
-                useAtParCoupons_);
+                asof_, ycspecs, *curveConfigs_, *loader_, requiredYieldCurves_, requiredDefaultCurves_,
+                requiredInflationCurves_, *fx_, referenceData_, iborFallbackConfig_, preserveQuoteLinkage_,
+                buildCalibrationInfo_, this, useAtParCoupons_);
         }
 
         for (auto const& node: reducedNode.nodes) {
