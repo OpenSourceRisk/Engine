@@ -527,5 +527,15 @@ QuantLib::ext::shared_ptr<QuantExt::PriceTermStructure> getCalendarSpreadPriceCu
     return getCalendarSpreadPriceCurve(market, name, configuration, offset, expCalc);
 }
 
+std::pair<std::string, std::string> getSecurityFamilyAndSuffix(const std::string& s) {
+    std::vector<string> tokens;
+    split(tokens, s, boost::is_any_of("-"));
+    QL_REQUIRE(tokens.size() >= 2, "Generic Bond Index with at least two tokens separated by - expected, found " << s);
+    return std::make_pair(
+        std::accumulate(tokens.begin(), std::prev(tokens.end()), std::string(),
+                        [](const std::string& s, const std::string& t) { return s + (!s.empty() ? "-" : "") + t; }),
+        tokens.back());
+}
+
 } // namespace data
 } // namespace ore
