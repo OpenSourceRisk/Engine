@@ -252,6 +252,70 @@ class QLECPILegTest(unittest.TestCase):
         self.assertGreater(len(leg), 0)
 
 
+class StrippedCappedFlooredCPITest(unittest.TestCase):
+    def setUp(self):
+        self.todayDate = Date(15, January, 2026)
+        Settings.instance().evaluationDate = self.todayDate
+        self.dayCounter = Actual365Fixed()
+        self.calendar = UnitedKingdom()
+        self.baseCPI = 100.0
+        self.observationLag = Period(3, Months)
+        self.flatForward = FlatForward(self.todayDate, 0.03, self.dayCounter)
+        self.ytsHandle = RelinkableYieldTermStructureHandle(self.flatForward)
+        self.inflIndexLinked, self._inflCurve = _build_inflation_index_with_curve(
+            self.todayDate, self.baseCPI, self.observationLag, 0.025,
+            self.dayCounter, self.calendar, self.ytsHandle)
+
+    def testStrippedCappedFlooredCPICouponLegRate(self):
+        underlying = QLECPICoupon(
+            self.baseCPI,
+            Date(17, January, 2027),
+            1000000.0,
+            Date(15, January, 2026),
+            Date(15, January, 2027),
+            self.inflIndexLinked,
+            self.observationLag,
+            CPI.Flat,
+            self.dayCounter,
+            1.0)
+        underlying.setPricer(
+            BlackCPICouponPricer(CPIVolatilitySurfaceHandle(), self.ytsHandle))
+        cappedFloored = CappedFlooredCPICoupon(
+            underlying, Date(1, October, 2025))
+        cappedFloored.setPricer(
+            BlackCPICouponPricer(CPIVolatilitySurfaceHandle(), self.ytsHandle))
+
+        leg = Leg()
+        leg.append(cappedFloored)
+        strippedLeg = makeStrippedCappedFlooredCPICouponLeg(leg)
+        strippedCoupon = as_stripped_capped_floored_cpi_coupon(strippedLeg[0])
+
+        self.assertEqual(len(strippedLeg), 1)
+        self.assertIsNotNone(strippedCoupon)
+        self.assertAlmostEqual(strippedCoupon.rate(), 0.0, delta=1e-12)
+
+    def testStrippedCappedFlooredCPICashFlowAmount(self):
+        underlying = CPICashFlow(
+            1000000.0,
+            self.inflIndexLinked,
+            Date(1, October, 2025),
+            self.baseCPI,
+            Date(1, October, 2026),
+            self.observationLag,
+            CPI.Flat,
+            Date(17, January, 2027),
+            True)
+        cappedFloored = CappedFlooredCPICashFlow(
+            underlying, Date(1, October, 2025), self.observationLag)
+        cappedFloored.setPricer(
+            InflationCashFlowPricer(CPIVolatilitySurfaceHandle(), self.ytsHandle))
+
+        stripped = StrippedCappedFlooredCPICashFlow(cappedFloored)
+
+        self.assertIsNotNone(stripped.underlying())
+        self.assertAlmostEqual(stripped.amount(), 0.0, delta=1e-8)
+
+
 if __name__ == '__main__':
     print('testing ORE ' + ORE.__version__)
     suite = unittest.TestSuite()
@@ -259,5 +323,6 @@ if __name__ == '__main__':
     suite.addTest(unittest.makeSuite(CappedFlooredCPICashFlowTest, 'test'))
     suite.addTest(unittest.makeSuite(InflationPricerTest, 'test'))
     suite.addTest(unittest.makeSuite(QLECPILegTest, 'test'))
+    suite.addTest(unittest.makeSuite(StrippedCappedFlooredCPITest, 'test'))
     unittest.TextTestRunner(verbosity=2).run(suite)
     unittest.main()
