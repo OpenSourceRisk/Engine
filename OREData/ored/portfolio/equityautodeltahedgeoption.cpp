@@ -155,7 +155,6 @@ void EquityAutoDeltaHedgedOption::fromXML(XMLNode* node) {
     driftRate_ = XMLUtils::getChildValueAsDouble(eqNode, "DriftRate", true);
 
     string obsStartStr = XMLUtils::getChildValue(eqNode, "ObservationStartDate", true);
-    QL_REQUIRE(!obsStartStr.empty(), "ObservationStartDate is empty for trade " << id());
     observationStartDate_ = parseDate(obsStartStr);
 
     string payDateStr = XMLUtils::getChildValue(eqNode, "PaymentDate", false);
