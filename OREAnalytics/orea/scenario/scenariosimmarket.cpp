@@ -3944,8 +3944,7 @@ void ScenarioSimMarket::createOptionletVol(RiskFactorKey::KeyType rfKeyType, con
         else
             baseOvs.linkTo(initMktOvs);
 
-        ssmOvs = createStickySabrOptionletVol(rfKeyType, name, simDataWritten, bc,
-            index, baseOvs, rateCompPeriod, proxy);
+        ssmOvs = createSabrOptionletVol(rfKeyType, name, simDataWritten, bc, index, baseOvs, rateCompPeriod, proxy);
 
     } else {
         auto baseOvs = bc.initMarket->capFloorVol(name, bc.configuration);
@@ -4140,6 +4139,11 @@ Handle<OptionletVolatilityStructure> ScenarioSimMarket::createOptionletVol(RiskF
 {
     DLOG("ScenarioSimMarket: building simulated optionlet volatility for " << name);
 
+    if (!useSpreadedTermStructures_ && stickyness == Stickyness::StickyMoneyness) {
+        QL_FAIL("ScenarioSimMarket: StickyMoneyness not supported when useSpreadedTermStructures is false "
+            "when building optionlet volatility for " << name);
+    }
+
     // Some conventions to help with the creation of the cap floor volatility structure.
     CapFloorConventions conventions = getCapFloorConventions(name, bc.curveConfigs, index);
 
@@ -4236,7 +4240,7 @@ Handle<OptionletVolatilityStructure> ScenarioSimMarket::createOptionletVol(RiskF
     return hOvs;
 }
 
-Handle<OptionletVolatilityStructure> ScenarioSimMarket::createStickySabrOptionletVol(RiskFactorKey::KeyType rfKeyType,
+Handle<OptionletVolatilityStructure> ScenarioSimMarket::createSabrOptionletVol(RiskFactorKey::KeyType rfKeyType,
     const string& name, bool& simDataWritten, const BuildContext& bc, const ext::shared_ptr<IborIndex>& index,
     const Handle<OptionletVolatilityStructure>& baseOvs, const Period& rateCompPeriod,
     const ext::shared_ptr<ProxyOptionletVolatility>& proxy) {
