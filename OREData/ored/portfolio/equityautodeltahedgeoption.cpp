@@ -22,6 +22,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
+#include <ql/settings.hpp>
 #include <qle/instruments/equityautodeltahedgedoption.hpp>
 
 using namespace QuantLib;
@@ -42,6 +43,7 @@ void EquityAutoDeltaHedgedOption::build(const QuantLib::ext::shared_ptr<EngineFa
 
     QL_REQUIRE(!underlyings_.empty(),
                "EquityAutoDeltaHedgedOption: no underlyings specified for trade " << id());
+    QL_REQUIRE(observationStartDate_!=QuantLib::Date(), "ObservationStartDate is empty for trade " << id());
 
     // All underlyings share the same equity name and currency — use the first
     string assetName = underlyings_.front().equityUnderlying.name();
@@ -111,6 +113,21 @@ void EquityAutoDeltaHedgedOption::build(const QuantLib::ext::shared_ptr<EngineFa
         }
 
         batches.push_back(batch);
+    }
+
+    // Register the historical fixings. Note the loop runs up to and including the evaluation date: the pricing engine
+    // reads the equity fixing for every business day in [observationStartDate, today]. The evaluation-date fixing must
+    // be registered (as non-mandatory) so that when the valuation date is rolled forward - e.g. by the Theta
+    // sensitivity, which shifts the evaluation date by 1D - the FixingManager has captured the (then spot) fixing for
+    // the previous evaluation date and it is available as a historical fixing at the shifted date.
+    Date today = Settings::instance().evaluationDate();
+    if (observationStartDate_ <= today) {
+        const string eqIndexName = "EQ-" + assetName;
+        auto eqCurve = engineFactory->market()->equityCurve(assetName, engineFactory->configuration(MarketContext::pricing));
+        Calendar fixingCal = eqCurve->fixingCalendar();
+        for (Date d = fixingCal.adjust(observationStartDate_, Following); d <= today; d = fixingCal.advance(d, 1, Days)) {
+            requiredFixings_.addFixingDate(d, eqIndexName, Date::maxDate(), false, d < today);
+        }
     }
 
     // Create the QuantExt instrument
