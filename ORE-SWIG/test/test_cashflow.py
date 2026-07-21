@@ -164,6 +164,72 @@ class CommodityIndexedAverageCashFlowTest(unittest.TestCase):
 
         self.assertGreater(len(leg), 0)
 
+    def testNettedCommodityCashFlow(self):
+        """Test netting two commodity cashflows with opposite payer flags."""
+        pricing_date = Date(15, January, 2026)
+        payment_date = Date(16, January, 2026)
+        self.commodityIndex.addFixing(pricing_date, 10.0, True)
+        cashflow = CommodityIndexedCashFlow(
+            self.quantity, pricing_date, payment_date, self.commodityIndex)
+        payer_cashflow = CommodityIndexedCashFlow(
+            self.quantity, pricing_date, payment_date, self.commodityIndex,
+            1.0)
+
+        netted = NettedCommodityCashFlow(
+            [cashflow, payer_cashflow], [False, True], 2)
+
+        self.assertAlmostEqual(netted.amount(), self.quantity, delta=1e-10)
+
+    def testCommodityIndexedLeg(self):
+        """Test the plain commodity indexed leg builder and cashflow amount."""
+        pricing_date = Date(15, January, 2026)
+        payment_date = Date(16, January, 2026)
+        self.commodityIndex.addFixing(pricing_date, 10.0, True)
+        schedule = Schedule(
+            [self.startDate, self.endDate], self.commCalendar)
+
+        leg = CommodityIndexedLeg(
+            schedule=schedule,
+            index=self.commodityIndex,
+            quantities=[self.quantity],
+            pricingDates=[pricing_date],
+            paymentDates=[payment_date],
+            paymentCalendar=self.commCalendar,
+            pricingCalendar=self.commCalendar)
+
+        self.assertEqual(len(leg), 1)
+        self.assertAlmostEqual(
+            leg[0].amount(), self.quantity * 10.0, delta=1e-10)
+
+    def testIntradayPowerLeg(self):
+        """Test the intraday power leg builder and cashflow accessors."""
+        delivery_date = Date(15, January, 2026)
+        payment_date = Date(16, January, 2026)
+        power_index = IntradayPowerIndex(
+            "POWER_TEST", delivery_date, self.commCalendar)
+        power_index.addFixing(delivery_date, 50.0, True)
+        schedule = Schedule(
+            [delivery_date, payment_date], self.commCalendar)
+
+        leg = IntradayPowerLeg(
+            schedule=schedule,
+            index=power_index,
+            quantities=[self.quantity],
+            paymentDates=[payment_date],
+            paymentCalendar=self.commCalendar,
+            pricingCalendar=self.commCalendar)
+
+        self.assertEqual(len(leg), 1)
+        cashflow = IntradayPowerCashFlow(
+            self.quantity, delivery_date, delivery_date, payment_date,
+            power_index, None, self.commCalendar, 0.0, 1.0, True)
+        self.assertEqual(cashflow.startDate(), delivery_date)
+        self.assertEqual(cashflow.endDate(), delivery_date)
+        self.assertAlmostEqual(cashflow.spread(), 0.0, delta=1e-10)
+        self.assertAlmostEqual(cashflow.gearing(), 1.0, delta=1e-10)
+        self.assertAlmostEqual(
+            cashflow.amount(), self.quantity * 50.0, delta=1e-10)
+
 
 class EquityCouponTest(unittest.TestCase):
     def setUp(self):
@@ -487,4 +553,3 @@ if __name__ == '__main__':
     suite.addTest(unittest.makeSuite(BondTRSCashFlowTest,'test'))
     unittest.TextTestRunner(verbosity=2).run(suite)
     unittest.main()
-

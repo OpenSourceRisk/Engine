@@ -31,6 +31,7 @@
 %include inflation.i
 
 %{
+#include <qle/indexes/intradaypowerindex.hpp>
 using QuantExt::BEHICP;
 using QuantExt::BondIndex;
 using QuantExt::BondFuturesIndex;
@@ -253,6 +254,22 @@ public:
         const QuantLib::ext::optional<QuantLib::Handle<PriceTermStructure>>& ts = QuantLib::ext::nullopt) const;
 };
 
+%shared_ptr(QuantExt::IntradayPowerIndex)
+namespace QuantExt {
+class IntradayPowerIndex : public Index {
+  public:
+    IntradayPowerIndex(const std::string& underlyingName,
+                       const QuantLib::Date& deliveryDate,
+                       const QuantLib::Calendar& fixingCalendar);
+    std::string name() const override;
+    QuantLib::Calendar fixingCalendar() const override;
+    QuantLib::Real fixing(const QuantLib::Date& fixingDate,
+                          bool forecastTodaysFixing = false) const override;
+    const QuantLib::Date& deliveryDate() const;
+    QuantLib::Real totalLoadMWh() const;
+};
+} // namespace QuantExt
+
 // QuantLib BMA Index (not yet wrapped in QL v1.14)
 %shared_ptr(BMAIndex)
 class BMAIndex : public InterestRateIndex {
@@ -431,5 +448,35 @@ qle_export_overnight_instance(THBThor);
 qle_export_termrate_instance(SofrTerm);
 qle_export_termrate_instance(SoniaTerm);
 qle_export_termrate_instance(TonarTerm);
+
+// QuantExt::InterpolatedIborIndex – interpolation between two ibor tenors.
+// Required dependency of InterpolatedIborCoupon (qle_coupons.i).
+%{
+#include <qle/indexes/interpolatediborindex.hpp>
+using QuantExt::InterpolatedIborIndex;
+%}
+
+%shared_ptr(QuantExt::InterpolatedIborIndex)
+namespace QuantExt {
+class InterpolatedIborIndex : public InterestRateIndex {
+  public:
+    InterpolatedIborIndex(
+        const ext::shared_ptr<QuantLib::IborIndex>& shortIndex,
+        const ext::shared_ptr<QuantLib::IborIndex>& longIndex,
+        Size calendarDays,
+        const Rounding& rounding = Rounding(),
+        const Handle<QuantLib::YieldTermStructure>& overwriteEstimationCurve =
+            Handle<QuantLib::YieldTermStructure>(),
+        bool parCouponMode = false);
+
+    const ext::shared_ptr<QuantLib::IborIndex> shortIndex() const;
+    const ext::shared_ptr<QuantLib::IborIndex> longIndex() const;
+    Size calendarDays() const;
+    const Rounding rounding() const;
+    bool parCouponMode() const;
+    Real shortWeight(const Date& fixingDate) const;
+    Real longWeight(const Date& fixingDate) const;
+};
+} // namespace QuantExt
 
 #endif

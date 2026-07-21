@@ -618,6 +618,19 @@ void CMSLegData::fromXML(XMLNode* node) {
         nakedOption_ = false;
 }
 
+CMBLegData::CMBLegData(const string& genericBond, bool hasCreditRisk, Size fixingDays, bool isInArrears,
+                       const vector<double>& spreads, const vector<string>& spreadDates, const vector<double>& caps,
+                       const vector<string>& capDates, const vector<double>& floors, const vector<string>& floorDates,
+                       const vector<double>& gearings, const vector<string>& gearingDates, bool nakedOption)
+    : LegAdditionalData(LegType::CMB), genericBond_(genericBond), hasCreditRisk_(hasCreditRisk),
+      fixingDays_(fixingDays), isInArrears_(isInArrears), spreads_(spreads), spreadDates_(spreadDates), caps_(caps),
+      capDates_(capDates), floors_(floors), floorDates_(floorDates), gearings_(gearings), gearingDates_(gearingDates),
+      nakedOption_(nakedOption) {
+    if (!genericBond_.empty())
+        indices_.insert("BOND-" + getSecurityFamilyAndSuffix(genericBond_).first);
+}
+
+
 XMLNode* CMBLegData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode(legNodeName());
     XMLUtils::addChild(doc, node, "Index", genericBond_);
@@ -636,7 +649,8 @@ XMLNode* CMBLegData::toXML(XMLDocument& doc) const {
 void CMBLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     genericBond_ = XMLUtils::getChildValue(node, "Index", true);
-    //indices_.insert(swapIndex_);
+    if (!genericBond_.empty())
+        indices_.insert("BOND-" + getSecurityFamilyAndSuffix(genericBond_).first);
     // These are all optional
     spreads_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Spreads", "Spread", "startDate", spreadDates_,
                                                                &parseReal);
@@ -2623,14 +2637,7 @@ Leg makeCMBLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactor
     std::string bondIndexName = cmbData->genericBond();
     // Expected bondIndexName structure with at least two tokens, separated by "-", of the form FAMILY-TERM or
     // FAMILY-MUN, for example: US-CMT-5Y, US-TIPS-10Y, UK-GILT-5Y, DE-BUND-10Y
-    std::vector<string> tokens;
-    split(tokens, bondIndexName, boost::is_any_of("-"));
-    QL_REQUIRE(tokens.size() >= 2,
-               "Generic Bond Index with at least two tokens separated by - expected, found " << bondIndexName);
-    std::string securityFamily = tokens[0];
-    for (Size i = 1; i < tokens.size() - 1; ++i)
-        securityFamily = securityFamily + "-" + tokens[i];
-    string underlyingTerm = tokens.back();
+    auto [securityFamily, underlyingTerm] = getSecurityFamilyAndSuffix(bondIndexName);
     Period underlyingPeriod = parsePeriod(underlyingTerm);
     LOG("Generic bond id " << bondIndexName << " has family " << securityFamily << " and term " << underlyingPeriod);
 

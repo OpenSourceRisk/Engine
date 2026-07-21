@@ -152,6 +152,7 @@ public:
                 asof, curveSpecs, curveConfigs, loader,
                 /*requiredYieldCurves=*/ {},
                 /*requiredDefaultCurves=*/ {},
+                /*requiredInflationCurves=*/ {},
                 /*fxTriangulation=*/ ore::data::FXTriangulation(),
                 /*referenceData=*/ nullptr,
                 iborFallbackConfig,

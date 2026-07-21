@@ -29,7 +29,9 @@ namespace ore {
 namespace data {
 
 FittedBondCurveHelperMarket::FittedBondCurveHelperMarket(
-    const std::map<std::string, Handle<YieldTermStructure>>& iborIndexCurves, const bool handlePseudoCurrencies)
+    const std::map<std::string, Handle<YieldTermStructure>>& iborIndexCurves,
+    const std::map<std::string, Handle<ZeroInflationIndex>>& zeroInflationIndices,
+    const bool handlePseudoCurrencies)
     : MarketImpl(handlePseudoCurrencies) {
 
     QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
@@ -38,6 +40,16 @@ FittedBondCurveHelperMarket::FittedBondCurveHelperMarket(
     for (auto const& c : iborIndexCurves)
         iborIndices_[std::make_pair(Market::defaultConfiguration, c.first)] =
             Handle<IborIndex>(parseIborIndex(c.first, c.second));
+
+    // populate the zero inflation indices
+    for (auto const& c : zeroInflationIndices)
+        zeroInflationIndices_[std::make_pair(Market::defaultConfiguration, c.first)] =
+            Handle<ZeroInflationIndex>(parseZeroInflationIndex(c.first, c.second->zeroInflationTermStructure()));
+}
+
+Handle<YieldTermStructure> FittedBondCurveHelperMarket::discountCurveImpl(const string& ccy,
+                                                                          const string& configuration) const {
+    return Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.0, Actual365Fixed()));
 }
 
 Handle<YieldTermStructure> FittedBondCurveHelperMarket::yieldCurve(const string& name,

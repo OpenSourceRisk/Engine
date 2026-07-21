@@ -31,6 +31,7 @@
 #include <ql/instruments/compositeinstrument.hpp>
 #include <ql/instruments/vanillaoption.hpp>
 #include <qle/indexes/fxindex.hpp>
+#include <qle/instruments/cashsettledeuropeanoption.hpp>
 
 using namespace QuantLib;
 
@@ -126,8 +127,11 @@ void FxDigitalBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory
         QuantLib::ext::make_shared<CashOrNothingPayoff>(type, strike, payoffAmount_);
 
     // QL does not have an FXDigitalBarrierOption, so we add a barrier option here and wrap
-    // it in a composite
-    QuantLib::ext::shared_ptr<Instrument> vanilla = QuantLib::ext::make_shared<VanillaOption>(payoff, exercise);
+    // it in a composite. If an 'in' barrier is triggered the trade becomes an FxDigitalOption, so the underlying
+    // digital leg is set up as a CashSettledEuropeanOption (paying at expiry) so that the FxDigitalOption engine,
+    // which requires a payment date in its arguments, can price it.
+    QuantLib::ext::shared_ptr<Instrument> vanilla = QuantLib::ext::make_shared<QuantExt::CashSettledEuropeanOption>(
+        type, strike, payoffAmount_, expiryDate, expiryDate, false, nullptr, false, Null<Real>());
     QuantLib::ext::shared_ptr<Instrument> barrier =
         QuantLib::ext::make_shared<BarrierOption>(barrierType, level, rebate, payoff, exercise);
 
@@ -163,8 +167,8 @@ void FxDigitalBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory
     // if an 'in' option is triggered it becomes an FxDigitalOption, so we need an fxDigitalOption pricer
     builder = engineFactory->builder("FxDigitalOption");
     QL_REQUIRE(builder, "No builder found for FxDigitalOption");
-    QuantLib::ext::shared_ptr<FxDigitalOptionEngineBuilder> fxOptBuilder =
-        QuantLib::ext::dynamic_pointer_cast<FxDigitalOptionEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<FxDigitalOptionEngineBuilderBase> fxOptBuilder =
+        QuantLib::ext::dynamic_pointer_cast<FxDigitalOptionEngineBuilderBase>(builder);
     setSensitivityTemplate(*builder);
     addProductModelEngine(*builder);
 
