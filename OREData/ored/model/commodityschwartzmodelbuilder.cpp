@@ -153,7 +153,7 @@ void CommoditySchwartzModelBuilder::performCalculations() const {
         buildOptionBasket();
     }
     referenceDate_ = curve_->referenceDate();
-   initParametrization();
+    initParametrization();
 }
 
 void CommoditySchwartzModelBuilder::setCalibrationDone() const {
