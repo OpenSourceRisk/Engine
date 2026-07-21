@@ -584,9 +584,12 @@ void SabrParametricVolatility::calculate() {
         QL_REQUIRE(param != modelParameters_.end(), "SabrParametricVolatility: no model parameter given for ("
             << s.timeToExpiry << ", " << s.underlyingLength << "). All (timeToExpiry, underlyingLength) pairs "
             "that are given as market points must be covered by the given model parameters.");
+
+        // Conversion may have failed for this smile. If so, we cannot calibrate the model. Will interpolate below.
         auto itQuotes = convertedMarketQuotes_.find(key);
-        QL_REQUIRE(itQuotes != convertedMarketQuotes_.end(), "SabrParametricVolatility: no converted market "
-            "quotes given for (" << s.timeToExpiry << ", " << s.underlyingLength << ").");
+        if (itQuotes == convertedMarketQuotes_.end())
+            continue;
+
         try {
             auto [params, error, shift, noOfAttempts] = calibrateModelParameters(s, param->second, itQuotes->second);
             if (error < maxAcceptableError_)
@@ -815,13 +818,23 @@ void SabrParametricVolatility::populateConvertedMarketQuotes() const {
         auto poqt = preferredOutputQuoteType();
         ext::optional<Option::Type> optType;
         Size nStrikes = marketSmile.strikes.size();
-        vector<Real>& vols = convertedMarketQuotes_.try_emplace(tteUndKey, nStrikes, 0.0).first->second;
-        for (Size i = 0; i < nStrikes; ++i) {
-            if (!marketSmile.optionTypes.empty())
-                optType = marketSmile.optionTypes[i];
-            vols[i] = convert(marketSmile.marketQuotes[i], inputMarketQuoteType_, marketSmile.lognormalShift, optType,
-                marketSmile.timeToExpiry, marketSmile.strikes[i], marketSmile.forward, poqt, modelLognormalShift);
+
+        // If the conversion fails for any volatility in the smile, we move to the next smile.
+        vector<Real> vols;
+        vols.reserve(nStrikes);
+        try
+        {
+            for (Size i = 0; i < nStrikes; ++i) {
+                if (!marketSmile.optionTypes.empty())
+                    optType = marketSmile.optionTypes[i];
+                vols.push_back(convert(marketSmile.marketQuotes[i], inputMarketQuoteType_, marketSmile.lognormalShift,
+                    optType, marketSmile.timeToExpiry, marketSmile.strikes[i], marketSmile.forward, poqt,
+                    modelLognormalShift));
+            }
+        } catch (const std::exception&) {
+            continue;
         }
+        convertedMarketQuotes_.emplace(tteUndKey, vols);
     }
 }
 
@@ -975,10 +988,12 @@ vector<Real> SabrParametricVolatility::calculateResiduals(const MarketSmile& mar
     auto modelVols = evaluateSabr(params, marketSmile.forward, marketSmile.timeToExpiry,
         lognormalShift, marketSmile.strikes);
 
-    // Market volatilities.
+    // Market volatilities. The conversion of market quotes to the preferred output quote type may have failed for 
+    // this smile. In this case, we set the residuals to zero and return. Should probably improve this but there is 
+    // likely an issue with the market data in this case.
     auto itQuotes = convertedMarketQuotes_.find(tteUndKey);
-    QL_REQUIRE(itQuotes != convertedMarketQuotes_.end(), "SabrParametricVolatility: no converted market "
-        "quotes given for " << keyStr << ".");
+    if (itQuotes == convertedMarketQuotes_.end())
+        return vector<Real>(marketSmile.strikes.size() + 2, 0.0);
     const auto& marketVols = itQuotes->second;
 
     // Sanity checks.
