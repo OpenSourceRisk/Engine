@@ -123,6 +123,14 @@ SimpleDeltaInterpolatedSmile::SimpleDeltaInterpolatedSmile(
     }
 
     interpolation_->enableExtrapolation();
+
+    static const std::vector<Real> samplePoints = {0.01, 0.05, 0.1, 0.2, 0.5, 0.8, 0.9, 0.95, 0.99};
+    for (auto const& simpleDelta : samplePoints) {
+        Real vol = volatilityAtSimpleDelta(simpleDelta);
+        QL_REQUIRE(vol < 5.0, "SimpleDeltaInterpolatedSmile at expiry "
+                                  << expiryTime_ << ": volatility at simple delta " << simpleDelta << " (" << vol
+                                  << ") is not plausible.");
+    }
 }
 
 Real SimpleDeltaInterpolatedSmile::strikeFromDelta(const Option::Type type, const Real delta,
@@ -484,13 +492,6 @@ QuantLib::ext::shared_ptr<detail::SimpleDeltaInterpolatedSmile> BlackVolatilityS
                                             << ") exceeds tolerance " << butterflyErrorTolerance_);
 
         resultSmile = targetFunction.bestSmile;
-    }
-
-    static const std::vector<Real> samplePoints = {0.01, 0.05, 0.1, 0.2, 0.5, 0.8, 0.9, 0.95, 0.99};
-    for (auto const& simpleDelta : samplePoints) {
-        Real vol = resultSmile->volatilityAtSimpleDelta(simpleDelta);
-        QL_REQUIRE(vol < 5.0, "createSmile at expiry " << expiryTime << ": volatility at simple delta " << simpleDelta
-                                                       << " (" << vol << ") is not plausible.");
     }
 
     return resultSmile;
