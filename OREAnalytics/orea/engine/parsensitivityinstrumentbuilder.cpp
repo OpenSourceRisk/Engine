@@ -1099,6 +1099,7 @@ std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityI
         QuantLib::ext::dynamic_pointer_cast<FutureConvention>(convention);
     Handle<YieldTermStructure> indexTs =
         Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.00, Actual365Fixed()));
+    term.setConvention(futureConvention);
     if (market == nullptr) {
         if (!singleCurve)
             parHelperDependencies.emplace(RiskFactorKey::KeyType::IndexCurve,

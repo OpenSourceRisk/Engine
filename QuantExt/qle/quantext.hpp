@@ -452,6 +452,7 @@
 #include <qle/pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.hpp>
 #include <qle/pricingengines/forwardenabledbondengine.hpp>
 #include <qle/pricingengines/forwardriskyannuitystrike.hpp>
+#include <qle/pricingengines/fxdigitalcallspreadengine.hpp>
 #include <qle/pricingengines/indexcdsoptionbaseengine.hpp>
 #include <qle/pricingengines/indexcdstrancheengine.hpp>
 #include <qle/pricingengines/inflationcapfloorengines.hpp>
@@ -496,7 +497,6 @@
 #include <qle/python_integration/pythonfunctions.hpp>
 #include <qle/quotes/basecorrelationquote.hpp>
 #include <qle/quotes/bondfuturequote.hpp>
-#include <qle/quotes/commoditypricequote.hpp>
 #include <qle/quotes/compositevectorquote.hpp>
 #include <qle/quotes/exceptionquote.hpp>
 #include <qle/quotes/logquote.hpp>

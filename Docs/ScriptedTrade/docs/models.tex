@@ -290,18 +290,18 @@ meant to mark scripts that are suitable for AAD sensitivity computations.
   \scriptsize
   \begin{tabular}{l | l | l | l}
     Product Tag & Examples & Suitable Models & Suitable Engines \\ \hline
-    \verb+SingleAssetOption({AssetClass})+ & FX TaRF & BS, LV, GCAM & MC \\
-    \verb+SingleAssetOptionAD({AssetClass})+ & FX TaRF & BS, LV, GCAM & MC \\
-    \verb+SingleAssetOptionBwd({AssetClass})+ & EQ American Option & BS, LV, GCAM & MC, FD \\
-    \verb+MultiAssetOption({AssetClass})+ & EQ Autocallable & BS, LV, GCAM & MC \\
-    \verb+MultiAssetOptionAD({AssetClass})+ & EQ Autocallable & BS, LV, GCAM & MC \\
+    \verb+SingleAssetOption({AssetClass})+ & FX TaRF & BS, LV, GCAM, H & MC \\
+    \verb+SingleAssetOptionAD({AssetClass})+ & FX TaRF & BS, LV, GCAM, H & MC \\
+    \verb+SingleAssetOptionBwd({AssetClass})+ & EQ American Option & BS, LV, GCAM, H & MC, FD \\
+    \verb+MultiAssetOption({AssetClass})+ & EQ Autocallable & BS, LV, GCAM, H & MC \\
+    \verb+MultiAssetOptionAD({AssetClass})+ & EQ Autocallable & BS, LV, GCAM, H & MC \\
     \verb+SingleUnderlyingIrOption+ & IR TaRN & LGM1F & MC \\
     \verb+SingleUnderlyingIrOptionBwd+ & Bermudan swaption & LGM1F & MC, FD, Conv \\
     \verb+MultiUnderlyingIrOption+ & Cross currency swaption & GCAM & MC \\
     \verb+IrHybrid({AssetClass})+ & IR-EQ basket option & GCAM & MC \\
   \end{tabular}
   \caption{Grouping trades by product tag (Example), models are abbreviated as\\ BS = BlackScholes, LV = LocalVol, GCAM =
-    GaussianCrossAsset}
+    GaussianCrossAsset, H = Heston}
   \label{tab:producttag}
 \end{table}
 

@@ -274,7 +274,7 @@ void FixingManager::applyFixingsProjected(const Date& start, const Date& end) {
         Settings::instance().evaluationDate() = d;
 
         for (auto const& index : indices) {
-            index->addFixing(d, getFixing(index, d));
+            index->addFixing(d, getFixing(index, d), true);
             modifiedFixingHistory_ = true;
         }
     }

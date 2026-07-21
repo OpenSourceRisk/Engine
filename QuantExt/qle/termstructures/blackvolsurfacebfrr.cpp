@@ -123,6 +123,14 @@ SimpleDeltaInterpolatedSmile::SimpleDeltaInterpolatedSmile(
     }
 
     interpolation_->enableExtrapolation();
+
+    static const std::vector<Real> samplePoints = {0.01, 0.05, 0.1, 0.2, 0.5, 0.8, 0.9, 0.95, 0.99};
+    for (auto const& simpleDelta : samplePoints) {
+        Real vol = volatilityAtSimpleDelta(simpleDelta);
+        QL_REQUIRE(vol < 5.0, "SimpleDeltaInterpolatedSmile at expiry "
+                                  << expiryTime_ << ": volatility at simple delta " << simpleDelta << " (" << vol
+                                  << ") is not plausible.");
+    }
 }
 
 Real SimpleDeltaInterpolatedSmile::strikeFromDelta(const Option::Type type, const Real delta,
@@ -486,13 +494,6 @@ QuantLib::ext::shared_ptr<detail::SimpleDeltaInterpolatedSmile> BlackVolatilityS
         resultSmile = targetFunction.bestSmile;
     }
 
-    static const std::vector<Real> samplePoints = {0.01, 0.05, 0.1, 0.2, 0.5, 0.8, 0.9, 0.95, 0.99};
-    for (auto const& simpleDelta : samplePoints) {
-        Real vol = resultSmile->volatilityAtSimpleDelta(simpleDelta);
-        QL_REQUIRE(vol < 5.0, "createSmile at expiry " << expiryTime << ": volatility at simple delta " << simpleDelta
-                                                       << " (" << vol << ") is not plausible.");
-    }
-
     return resultSmile;
 }
 
@@ -643,7 +644,7 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
        The atm type ist set to delta neutral. */
 
     DeltaVolQuote::DeltaType dt_c =
-        dt_ == (DeltaVolQuote::Spot || dt_ == DeltaVolQuote::Fwd) ? DeltaVolQuote::Fwd : DeltaVolQuote::PaFwd;
+        (dt_ == DeltaVolQuote::Spot || dt_ == DeltaVolQuote::Fwd) ? DeltaVolQuote::Fwd : DeltaVolQuote::PaFwd;
     DeltaVolQuote::AtmType at_c = DeltaVolQuote::AtmDeltaNeutral;
 
     /* find the vols on both smiles for the artificial smile conventions */
@@ -776,10 +777,11 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
                                                        " - after retry with linear interpolation");
                 return blackVolImpl(t, strike);
             }
+        } else {
+            smileHasError_[failureIndex] = true;
+            smileMessages_[failureIndex].push_back(e.what());
+            return blackVolImpl(t, strike);
         }
-        smileHasError_[failureIndex] = true;
-        smileMessages_[failureIndex].push_back(e.what());
-        return blackVolImpl(t, strike);
     }
 
     /* store the new smile in the cache */

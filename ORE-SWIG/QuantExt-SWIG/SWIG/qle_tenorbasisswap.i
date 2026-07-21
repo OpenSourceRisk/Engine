@@ -27,6 +27,10 @@
 
 %include qle_termstructures.i
 
+%{
+#include <qle/cashflows/subperiodscoupon.hpp>
+%}
+
 %shared_ptr(QuantExt::SubPeriodsCoupon1)
 namespace QuantExt {
 class SubPeriodsCoupon1 : public FloatingRateCoupon {
@@ -61,6 +65,57 @@ class SubPeriodsCouponPricer1 : public FloatingRateCouponPricer {
     QuantLib::Rate swapletRate() const;
 };
 } // namespace QuantExt
+
+// QuantExt::SubPeriodsLeg1 builder using helper-function-with-kwargs pattern
+%{
+Leg _SubPeriodsLeg(
+    const Schedule& schedule,
+    const ext::shared_ptr<InterestRateIndex>& index,
+    const std::vector<Real>& notionals = {},
+    const DayCounter& paymentDayCounter = DayCounter(),
+    BusinessDayConvention paymentConvention = Following,
+    const Calendar& paymentCalendar = Calendar(),
+    const std::vector<Real>& gearings = {},
+    const std::vector<Spread>& spreads = {},
+    QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding,
+    bool includeSpread = false,
+    Integer paymentLag = 0,
+    const std::vector<Date>& paymentDates = {})
+{
+    QuantExt::SubPeriodsLeg1 leg(schedule, index);
+    if (!notionals.empty())
+        leg.withNotionals(notionals);
+    leg.withPaymentDayCounter(paymentDayCounter)
+       .withPaymentAdjustment(paymentConvention)
+       .withPaymentCalendar(paymentCalendar);
+    if (!gearings.empty())
+        leg.withGearings(gearings);
+    if (!spreads.empty())
+        leg.withSpreads(spreads);
+    leg.withType(type)
+       .includeSpread(includeSpread)
+       .withPaymentLag(paymentLag)
+       .withPaymentDates(paymentDates);
+    return leg;
+}
+%}
+#if !defined(SWIGJAVA) && !defined(SWIGCSHARP)
+%feature("kwargs") _SubPeriodsLeg;
+#endif
+%rename(SubPeriodsLeg) _SubPeriodsLeg;
+Leg _SubPeriodsLeg(
+    const Schedule& schedule,
+    const ext::shared_ptr<InterestRateIndex>& index,
+    const std::vector<Real>& notionals = {},
+    const DayCounter& paymentDayCounter = DayCounter(),
+    BusinessDayConvention paymentConvention = Following,
+    const Calendar& paymentCalendar = Calendar(),
+    const std::vector<Real>& gearings = {},
+    const std::vector<Spread>& spreads = {},
+    QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding,
+    bool includeSpread = false,
+    Integer paymentLag = 0,
+    const std::vector<Date>& paymentDates = {});
 
 %shared_ptr(QuantExt::TenorBasisSwap)
 namespace QuantExt {

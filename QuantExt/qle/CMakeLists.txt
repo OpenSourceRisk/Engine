@@ -319,6 +319,7 @@ pricingengines/discountingriskybondenginemultistate.cpp
 pricingengines/discountingswapenginedeltagamma.cpp
 pricingengines/discretizedconvertible.cpp
 pricingengines/fdblackscholesvanillaengine.cpp
+pricingengines/fxdigitalcallspreadengine.cpp
 pricingengines/fdcallablebondevents.cpp
 pricingengines/fdconvertiblebondevents.cpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.cpp
@@ -366,7 +367,6 @@ processes/ptdhestonprocess.cpp
 processes/quantohestonprocess.cpp
 python_integration/pythonfunctions.cpp
 quotes/bondfuturequote.cpp
-quotes/commoditypricequote.cpp
 quotes/logquote.cpp
 termstructures/aposurface.cpp
 termstructures/averagefuturepricehelper.cpp
@@ -961,6 +961,7 @@ pricingengines/numericalintegrationindexcdsoptionengine.hpp
 pricingengines/numericlgmbgsflexiswapengine.hpp
 pricingengines/numericlgmcallablebondengine.hpp
 pricingengines/numericlgmflexiswapengine.hpp
+pricingengines/fxdigitalcallspreadengine.hpp
 pricingengines/numericlgmmultilegoptionengine.hpp
 pricingengines/pairwisevarianceswapengine.hpp
 pricingengines/paymentdiscountingengine.hpp
@@ -980,7 +981,6 @@ processes/quantohestonprocess.hpp
 python_integration/pythonfunctions.hpp
 quotes/basecorrelationquote.hpp
 quotes/bondfuturequote.hpp
-quotes/commoditypricequote.hpp
 quotes/compositevectorquote.hpp
 quotes/exceptionquote.hpp
 quotes/logquote.hpp
