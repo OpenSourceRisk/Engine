@@ -16,7 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#pragma once
 #include <qle/math/flatextrapolation2d.hpp>
 #include <qle/termstructures/strippedoptionletbasebumped.hpp>
 #include <ql/time/daycounter.hpp>
