@@ -115,13 +115,17 @@ void EquityAutoDeltaHedgedOption::build(const QuantLib::ext::shared_ptr<EngineFa
         batches.push_back(batch);
     }
 
-    // Register the historical fixings.
+    // Register the historical fixings. Note the loop runs up to and including the evaluation date: the pricing engine
+    // reads the equity fixing for every business day in [observationStartDate, today]. The evaluation-date fixing must
+    // be registered (as non-mandatory) so that when the valuation date is rolled forward - e.g. by the Theta
+    // sensitivity, which shifts the evaluation date by 1D - the FixingManager has captured the (then spot) fixing for
+    // the previous evaluation date and it is available as a historical fixing at the shifted date.
     Date today = Settings::instance().evaluationDate();
-    if (observationStartDate_ < today) {
+    if (observationStartDate_ <= today) {
         const string eqIndexName = "EQ-" + assetName;
         auto eqCurve = engineFactory->market()->equityCurve(assetName, engineFactory->configuration(MarketContext::pricing));
         Calendar fixingCal = eqCurve->fixingCalendar();
-        for (Date d = fixingCal.adjust(observationStartDate_, Following); d < today; d = fixingCal.advance(d, 1, Days)) {
+        for (Date d = fixingCal.adjust(observationStartDate_, Following); d <= today; d = fixingCal.advance(d, 1, Days)) {
             requiredFixings_.addFixingDate(d, eqIndexName, Date::maxDate(), false, d < today);
         }
     }
