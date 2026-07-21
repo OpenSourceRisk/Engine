@@ -202,11 +202,11 @@ bool createSabrAdapter(
         auto ssmSabr = ext::make_shared<SabrStrippedOptionletAdapter<TimeInterpolator>>(optionlet, sabr->modelVariant(),
             TimeInterpolator(), sabr->volatilityType(), sabr->displacement(), sabr->modelDisplacement(),
             modelParameters, sabr->maxCalibrationAttempts(), sabr->exitEarlyErrorThreshold(),
-            sabr->maxAcceptableError(), initMktIndex, rateCompPeriod, ssmIndex);
+            sabr->maxAcceptableError(), initMktIndex, rateCompPeriod, sabr->residualCorrection(), ssmIndex);
 
         // Trigger calibration and then amend parameters for response to updates.
         using PVPC = QuantExt::ParametricVolatility::ParameterCalibration;
-        SabrParametricVolatility::SabrSliceParamInfo sspi {
+        SabrParametricVolatility::SliceParamInfo sspi {
             {Null<Real>(), PVPC::Implied}, // alpha implied.
             {Null<Real>(), PVPC::Fixed},   // beta fixed at its initially calibrated value on each slice.
             {Null<Real>(), PVPC::Fixed},   // nu fixed at its initially calibrated value on each slice.

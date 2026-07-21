@@ -51,10 +51,31 @@ public:
         std::vector<QuantLib::Real> marketQuotes;
     };
 
+    /*! Allow for a residual correction to be applied to the model output smile where for each slice the residuals are:
+        \f[
+            \epsilon_i = \epsilon(K_i) = \sigma_{\text{market}}(K_i) - \sigma_{\text{model}}(K_i)
+        \f]
+    */
+    struct ResidualCorrection {
+        enum class Dimension {
+            // Use (K_i, \epsilon_i)
+            AbsoluteStrike,
+            // Use (K_i - F, \epsilon_i)
+            StrikeMinusForward,
+            // Use (K_i / F, \epsilon_i)
+            StrikeOverForward
+            // Potentially more over time ...
+        };
+        Dimension dimension = Dimension::AbsoluteStrike;
+        // Over time, we may want to configure elements here e.g. interpolation type, extrapolation type, etc.
+    };
+
     virtual ~ParametricVolatility() {}
-    ParametricVolatility(const std::vector<MarketSmile>& marketSmiles, const MarketModelType marketModelType,
-                         const MarketQuoteType inputMarketQuoteType,
-                         const QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve);
+    ParametricVolatility(const std::vector<MarketSmile>& marketSmiles,
+        MarketModelType marketModelType,
+        MarketQuoteType inputMarketQuoteType,
+        QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve,
+        QuantLib::ext::optional<ResidualCorrection> residualCorrection = QuantLib::ext::nullopt);
 
     // if outputOptionType is none, otm strike is used (and call for atm)
     Real convert(const Real inputQuote, const MarketQuoteType inputMarketQuoteType,
@@ -79,6 +100,7 @@ protected:
     MarketModelType marketModelType_;
     MarketQuoteType inputMarketQuoteType_;
     QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
+    QuantLib::ext::optional<ResidualCorrection> residualCorrection_;
 };
 
 /* strict weak ordering on MarketPoint by lexicographic comparison, i.e.
@@ -87,5 +109,9 @@ bool operator<(const ParametricVolatility::MarketSmile& s, const ParametricVolat
 
 QuantExt::ParametricVolatility::ParameterCalibration parseParametricSmileParameterCalibration(const std::string& s);
 std::ostream& operator<<(std::ostream& os, QuantExt::ParametricVolatility::ParameterCalibration type);
+
+using PVRCDimension = QuantExt::ParametricVolatility::ResidualCorrection::Dimension;
+PVRCDimension parseParametricVolResidualCorrectionDimension(const std::string& s);
+std::ostream& operator<<(std::ostream& os, PVRCDimension dimension);
 
 } // namespace QuantExt

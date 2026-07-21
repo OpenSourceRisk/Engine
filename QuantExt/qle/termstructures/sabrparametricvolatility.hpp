@@ -24,6 +24,7 @@
 
 #include <qle/termstructures/parametricvolatility.hpp>
 
+#include <ql/math/interpolation.hpp>
 #include <ql/math/interpolations/interpolation2d.hpp>
 
 namespace QuantExt {
@@ -39,30 +40,76 @@ public:
         FlochKennedy = 5
     };
 
-    using ParamInfo = std::pair<Real, ParameterCalibration>;
-    using SabrSliceParamInfo = std::vector<ParamInfo>;
-    using SabrTteUndKey = std::pair<QuantLib::Real, QuantLib::Real>;
-    using SabrParamInfo = std::map<SabrTteUndKey, SabrSliceParamInfo>;
-
-    /*! - modelParameters are given by (tte, underlyingLen) as a vector of parameter values and whether the values are
-         fixed
-        - modelShift is optional and defines the lognormal shift used within the model (if applicable), if not given, it
-          is set to the input market smiles shift
+    /*! Value for a single parameter, i.e. \f$\alpha\f$, \f$\beta\f$, \f$\nu\f$ or \f$\rho\f$, and whether it is 
+        fixed, calibrated or implied.
     */
-    SabrParametricVolatility(
-        const ModelVariant modelVariant, const std::vector<MarketSmile>& marketSmiles,
-        const MarketModelType marketModelType, const MarketQuoteType inputMarketQuoteType,
-        const QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve,
-        const SabrParamInfo& modelParameters = {},
-        const std::map<QuantLib::Real, QuantLib::Real>& modelShift = {},
-        const QuantLib::Size maxCalibrationAttempts = 10, const QuantLib::Real exitEarlyErrorThreshold = 0.005,
-        const QuantLib::Real maxAcceptableError = 0.05);
+    using SingleParamInfo = std::pair<Real, ParameterCalibration>;
+    /*! Calibration information for a single smile i.e. all four parameters in the order \f$\alpha\f$, \f$\beta\f$, 
+        \f$\nu\f$, \f$\rho\f$.
+    */
+    using SliceParamInfo = std::vector<SingleParamInfo>;
+    /*! Each smile is identified by a key consisting of time-to-expiry and underlying tenor.
+        The underlying tenor is used for swaptions and set to `Null<Real>()` for cap floor surfaces and other surfaces
+        where the underlying tenor is not relevant.
+    */
+    using TteUndKey = std::pair<QuantLib::Real, QuantLib::Real>;
+    //! The parameter information for all smiles for the volatility surface or cube.
+    using ParamInfo = std::map<TteUndKey, SliceParamInfo>;
 
-    QuantLib::Real
-    evaluate(const QuantLib::Real timeToExpiry, const QuantLib::Real underlyingLength, const QuantLib::Real strike,
-             const QuantLib::Real forward, const MarketQuoteType outputMarketQuoteType,
-             const QuantLib::Real outputLognormalShift = QuantLib::Null<QuantLib::Real>(),
-             const QuantLib::ext::optional<QuantLib::Option::Type> outputOptionType = QuantLib::ext::nullopt) const override;
+    /*! \param modelVariant
+            SABR model variant to use.
+
+        \param marketSmiles
+            Input market smiles.
+
+        \param marketModelType
+            Market model type represented by the input smiles.
+
+        \param inputMarketQuoteType
+            Quote type of the input market smiles.
+
+        \param discountCurve
+            Discount curve used where required by the model.
+
+        \param modelParameters
+            Optional SABR model parameters, indexed by (time-to-expiry, underlying length).
+            Each entry contains the parameter values together with their calibration status.
+
+        \param modelShift
+            Optional lognormal shifts indexed by underlying length. If not provided, the
+            shift from the corresponding input market smile is used.
+
+        \param maxCalibrationAttempts
+            Maximum number of calibration attempts per smile.
+
+        \param exitEarlyErrorThreshold
+            Calibration error threshold below which no further calibration attempts are made.
+
+        \param maxAcceptableError
+            Maximum acceptable calibration error.
+
+        \param residualCorrection
+            Optional residual correction method. If not provided, no residual correction is applied.
+    */
+    SabrParametricVolatility(const ModelVariant modelVariant,
+        const std::vector<MarketSmile>& marketSmiles,
+        const MarketModelType marketModelType,
+        const MarketQuoteType inputMarketQuoteType,
+        const QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve,
+        const ParamInfo& modelParameters = {},
+        const std::map<QuantLib::Real, QuantLib::Real>& modelShift = {},
+        const QuantLib::Size maxCalibrationAttempts = 10,
+        const QuantLib::Real exitEarlyErrorThreshold = 0.005,
+        const QuantLib::Real maxAcceptableError = 0.05,
+        QuantLib::ext::optional<ResidualCorrection> residualCorrection = QuantLib::ext::nullopt);
+
+    QuantLib::Real evaluate(const QuantLib::Real timeToExpiry,
+        const QuantLib::Real underlyingLength,
+        const QuantLib::Real strike,
+        const QuantLib::Real forward,
+        const MarketQuoteType outputMarketQuoteType,
+        const QuantLib::Real outputLognormalShift = QuantLib::Null<QuantLib::Real>(),
+        const QuantLib::ext::optional<QuantLib::Option::Type> outputOptionType = QuantLib::ext::nullopt) const override;
 
     // the calculated grid of option expiries and the underlying lenghts
     const std::vector<Real>& timeToExpiries() const { return timeToExpiries_; }
@@ -78,7 +125,7 @@ public:
     const QuantLib::Matrix& calibrationError() const { return calibrationError_; }
     // indicator whether smile params were interpolated (1) or calibrated (0)
     const QuantLib::Matrix& isInterpolated() const { return isInterpolated_; }
-    const SabrParamInfo& modelParameters() const { return modelParameters_; }
+    const ParamInfo& modelParameters() const { return modelParameters_; }
 
     struct CalibrationResult {
         QuantLib::Real timeToExpiry;
@@ -106,39 +153,80 @@ private:
 
     void calculate();
 
-    std::vector<std::pair<Real, ParameterCalibration>> defaultModelParameters() const;
-    std::vector<Real> getGuess(const std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>& params,
-                               const std::vector<Real>& randomSeq, const Real forward, const Real lognormalShift) const;
+    SliceParamInfo defaultModelParameters() const;
+    std::vector<Real> getGuess(const SliceParamInfo& params, const std::vector<Real>& randomSeq,
+        const Real forward, const Real lognormalShift) const;
     ParametricVolatility::MarketQuoteType preferredOutputQuoteType() const;
     std::vector<Real> direct(const std::vector<Real>& x, const Real forward, const Real lognormalShift) const;
     std::vector<Real> inverse(const std::vector<Real>& y, const Real forward, const Real lognormalShift) const;
     std::vector<Real> evaluateSabr(const std::vector<Real>& params, const Real forward, const Real timeToExpiry,
                                    const Real lognormalShift, const std::vector<Real>& strikes) const;
-    std::tuple<std::vector<Real>, Real, Real, QuantLib::Size>
-    calibrateModelParameters(const MarketSmile& marketSmile,
-                             const std::vector<std::pair<Real, ParameterCalibration>>& params) const;
+    std::tuple<std::vector<Real>, Real, Real, QuantLib::Size> calibrateModelParameters(const MarketSmile& marketSmile,
+        const SliceParamInfo& params, const std::vector<Real>& convertedMarketQuotes) const;
     std::vector<Real> implyAlpha(const std::vector<Real>& params, const Real forward, const Real tte, const Real shift,
                                  const Real atmVol) const;
+    QuantLib::Real getLognormalShift(const ParametricVolatility::MarketSmile& marketSmile) const;
+    void populateConvertedMarketQuotes() const;
+
+    // Helpers for residual correction.
+    void buildResidualSmiles() const;
+    void updateResidualSmiles() const;
+    QuantLib::Real residualCorrection(QuantLib::Real timeToExpiry, QuantLib::Real underlyingLength,
+        QuantLib::Real strike, QuantLib::Real forward) const;
+    std::vector<QuantLib::Real> calculateResiduals(const MarketSmile& marketSmile, const TteUndKey& tteUndKey,
+        const std::string& keyStr) const;
 
     ModelVariant modelVariant_;
-    SabrParamInfo modelParameters_;
+    ParamInfo modelParameters_;
     std::map<QuantLib::Real, QuantLib::Real> modelShifts_;
     QuantLib::Size maxCalibrationAttempts_;
     QuantLib::Real exitEarlyErrorThreshold_;
     QuantLib::Real maxAcceptableError_;
-
-    mutable std::map<std::pair<Real, Real>, std::vector<Real>> calibratedSabrParams_;
-    mutable std::map<std::pair<Real, Real>, Real> lognormalShifts_;
-    mutable std::map<std::pair<Real, Real>, Real> calibrationErrors_;
-    mutable std::map<std::pair<Real, Real>, QuantLib::Size> noOfAttempts_;
-
-    mutable std::vector<Real> underlyingLengths_, timeToExpiries_;
-    mutable std::vector<Real> underlyingLengthsForInterpolation_, timeToExpiriesForInterpolation_;
-    mutable QuantLib::Matrix alpha_, beta_, nu_, rho_, lognormalShift_, calibrationError_, isInterpolated_,
-        numberOfCalibrationAttempts_;
-    mutable QuantLib::Interpolation2D alphaInterpolation_, betaInterpolation_, nuInterpolation_, rhoInterpolation_,
-        lognormalShiftInterpolation_;
+    mutable std::map<TteUndKey, std::vector<Real>> calibratedSabrParams_;
+    mutable std::map<TteUndKey, Real> lognormalShifts_;
+    mutable std::map<TteUndKey, Real> calibrationErrors_;
+    mutable std::map<TteUndKey, QuantLib::Size> noOfAttempts_;
+    mutable std::vector<Real> underlyingLengths_;
+    mutable std::vector<Real> timeToExpiries_;
+    mutable std::vector<Real> underlyingLengthsForInterpolation_;
+    mutable std::vector<Real> timeToExpiriesForInterpolation_;
+    mutable QuantLib::Matrix alpha_;
+    mutable QuantLib::Matrix beta_;
+    mutable QuantLib::Matrix nu_;
+    mutable QuantLib::Matrix rho_;
+    mutable QuantLib::Matrix lognormalShift_;
+    mutable QuantLib::Matrix calibrationError_;
+    mutable QuantLib::Matrix isInterpolated_;
+    mutable QuantLib::Matrix numberOfCalibrationAttempts_;
+    mutable QuantLib::Interpolation2D alphaInterpolation_;
+    mutable QuantLib::Interpolation2D betaInterpolation_;
+    mutable QuantLib::Interpolation2D nuInterpolation_;
+    mutable QuantLib::Interpolation2D rhoInterpolation_;
+    mutable QuantLib::Interpolation2D lognormalShiftInterpolation_;
     mutable std::vector<CalibrationResult> calibrationResults_;
+    mutable std::map<TteUndKey, std::vector<Real>> convertedMarketQuotes_;
+
+    // Residuals for each smile and associated interpolation.
+    // Implementation is private for now but may be made public in the future if needed elsewhere.
+    struct ResidualSmile {
+        std::vector<QuantLib::Real> strikeCoordinates_;
+        std::vector<QuantLib::Real> residuals_;
+        QuantLib::Interpolation interpolation_;
+
+        ResidualSmile(std::vector<QuantLib::Real> strikeCoordinates, std::vector<QuantLib::Real> residuals);
+
+        // Prevent copying or moving.
+        ResidualSmile(const ResidualSmile&) = delete;
+        ResidualSmile& operator=(const ResidualSmile&) = delete;
+        ResidualSmile(ResidualSmile&&) = delete;
+        ResidualSmile& operator=(ResidualSmile&&) = delete;
+
+        void build();
+        void updateResiduals(const std::vector<QuantLib::Real>& newResiduals);
+    };
+    mutable std::map<TteUndKey, std::unique_ptr<ResidualSmile>> residualSmiles_;
+    QuantLib::Real evaluateResidual(const ResidualSmile& residualSmile, QuantLib::Real strike,
+        QuantLib::Real forward) const;
 };
 
 } // namespace QuantExt

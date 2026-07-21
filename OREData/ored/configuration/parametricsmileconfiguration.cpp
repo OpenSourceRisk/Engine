@@ -73,6 +73,24 @@ XMLNode* ParametricSmileConfiguration::Calibration::toXML(XMLDocument& doc) cons
     return n;
 }
 
+void ParametricSmileConfiguration::ResidualCorrection::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "ResidualCorrection");
+    dimension = QuantExt::parseParametricVolResidualCorrectionDimension(
+        XMLUtils::getChildValue(node, "Dimension", true));
+}
+
+QuantExt::ParametricVolatility::ResidualCorrection ParametricSmileConfiguration::ResidualCorrection::convert() const {
+    QuantExt::ParametricVolatility::ResidualCorrection rc;
+    rc.dimension = dimension;
+    return rc;
+}
+
+XMLNode* ParametricSmileConfiguration::ResidualCorrection::toXML(XMLDocument& doc) const {
+    XMLNode* n = doc.allocNode("ResidualCorrection");
+    XMLUtils::addChild(doc, n, "Dimension", ore::data::to_string(dimension));
+    return n;
+}
+
 ParametricSmileConfiguration::ParametricSmileConfiguration(std::vector<Parameter> parameters, Calibration calibration)
     : parameters_(std::move(parameters)), calibration_(std::move(calibration)) {}
 
@@ -93,6 +111,11 @@ void ParametricSmileConfiguration::fromXML(XMLNode* node) {
     if (XMLNode* n = XMLUtils::getChildNode(node, "Calibration")) {
         calibration_.fromXML(n);
     }
+
+    if (XMLNode* n = XMLUtils::getChildNode(node, "ResidualCorrection")) {
+        residualCorrection_ = ResidualCorrection{};
+        residualCorrection_->fromXML(n);
+    }
 }
 
 XMLNode* ParametricSmileConfiguration::toXML(XMLDocument& doc) const {
@@ -105,6 +128,11 @@ XMLNode* ParametricSmileConfiguration::toXML(XMLDocument& doc) const {
     }
 
     XMLUtils::appendNode(node, calibration_.toXML(doc));
+
+    if (residualCorrection_) {
+        XMLNode* rcNode = residualCorrection_->toXML(doc);
+        XMLUtils::appendNode(node, rcNode);
+    }
 
     return node;
 }

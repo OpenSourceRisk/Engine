@@ -44,8 +44,10 @@ namespace QuantExt {
 
 class SabrStrippedOptionletAdapterBase {
 public:
-    using SabrSliceParamInfo = SabrParametricVolatility::SabrSliceParamInfo;
-    using ModelParamData = std::vector<SabrSliceParamInfo>;
+    using SliceParamInfo = SabrParametricVolatility::SliceParamInfo;
+    using ModelParamData = std::vector<SliceParamInfo>;
+    using ResidualCorrection = SabrParametricVolatility::ResidualCorrection;
+
     virtual ~SabrStrippedOptionletAdapterBase() = default;
     // The strikes of the underlying optionlets for the i-th expiry time.
     virtual std::vector<QuantLib::Real> optionletStrikes(QuantLib::Size i) const = 0;
@@ -84,6 +86,7 @@ public:
         const QuantLib::Real maxAcceptableError = 0.05,
         QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexCalib = nullptr,
         QuantLib::Period rateCompPeriod = 0 * QuantLib::Days,
+        QuantLib::ext::optional<ResidualCorrection> residualCorrection = QuantLib::ext::nullopt,
         QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexRead = nullptr);
 
     /*! Constructor taking an explicit \p referenceDate and the term structure will therefore be not \e moving.
@@ -102,6 +105,7 @@ public:
         const QuantLib::Real maxAcceptableError = 0.05,
         QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexCalib = nullptr,
         QuantLib::Period rateCompPeriod = 0 * QuantLib::Days,
+        QuantLib::ext::optional<ResidualCorrection> residualCorrection = QuantLib::ext::nullopt,
         QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexRead = nullptr);
 
     //! \name TermStructure interface
@@ -153,12 +157,13 @@ public:
     QuantLib::Size maxCalibrationAttempts() const { return maxCalibrationAttempts_; }
     QuantLib::Real exitEarlyErrorThreshold() const { return exitEarlyErrorThreshold_; }
     QuantLib::Real maxAcceptableError() const { return maxAcceptableError_; }
+    QuantLib::ext::optional<ResidualCorrection> residualCorrection() const { return residualCorrection_; }
     //@}
 
     // Trigger a calibration and then reset the model parameters using the template provided.
     // The main purpose of this method is to allow the user to change the model parameters in preparation for a 
     // sensitivity analysis. For example, do a normal calibration and then on updates only imply alpha for example.
-    void amendModelParameters(const SabrSliceParamInfo& sspi);
+    void amendModelParameters(const SliceParamInfo& sspi);
 
 protected:
     //! \name OptionletVolatilityStructure interface
@@ -188,6 +193,7 @@ private:
     QuantLib::Real maxAcceptableError_;
     QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexCalib_;
     QuantLib::Period rateCompPeriod_;
+    QuantLib::ext::optional<ResidualCorrection> residualCorrection_;
     QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexRead_;
 
     //! State
@@ -218,6 +224,7 @@ SabrStrippedOptionletAdapter<TimeInterpolator>::SabrStrippedOptionletAdapter(
     const QuantLib::Real maxAcceptableError,
     QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexCalib,
     QuantLib::Period rateCompPeriod,
+    QuantLib::ext::optional<ResidualCorrection> residualCorrection,
     QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexRead)
     : OptionletVolatilityStructure(sob->settlementDays(), sob->calendar(), sob->businessDayConvention(),
       sob->dayCounter()), optionletBase_(sob), ti_(ti), modelVariant_(modelVariant),
@@ -225,6 +232,7 @@ SabrStrippedOptionletAdapter<TimeInterpolator>::SabrStrippedOptionletAdapter(
       initialModelParameters_(initialModelParameters), maxCalibrationAttempts_(maxCalibrationAttempts),
       exitEarlyErrorThreshold_(exitEarlyErrorThreshold), maxAcceptableError_(maxAcceptableError),
       iborIndexCalib_(std::move(iborIndexCalib)), rateCompPeriod_(std::move(rateCompPeriod)),
+      residualCorrection_(std::move(residualCorrection)),
       iborIndexRead_(iborIndexRead ? std::move(iborIndexRead) : iborIndexCalib_) {
     registerWith(optionletBase_);
     // We only want to react to changes in the Ibor index used for calibration.
@@ -247,13 +255,14 @@ SabrStrippedOptionletAdapter<TimeInterpolator>::SabrStrippedOptionletAdapter(
     const QuantLib::Real maxAcceptableError,
     QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexCalib,
     QuantLib::Period rateCompPeriod,
+    QuantLib::ext::optional<ResidualCorrection> residualCorrection,
     QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexRead)
     : OptionletVolatilityStructure(referenceDate, sob->calendar(), sob->businessDayConvention(), sob->dayCounter()),
       optionletBase_(sob), ti_(ti), modelVariant_(modelVariant), outputVolatilityType_(outputVolatilityType),
       outputDisplacement_(outputDisplacement), initialModelParameters_(initialModelParameters),
       maxCalibrationAttempts_(maxCalibrationAttempts), exitEarlyErrorThreshold_(exitEarlyErrorThreshold),
       maxAcceptableError_(maxAcceptableError), iborIndexCalib_(std::move(iborIndexCalib)),
-      rateCompPeriod_(std::move(rateCompPeriod)),
+      rateCompPeriod_(std::move(rateCompPeriod)), residualCorrection_(std::move(residualCorrection)),
       iborIndexRead_(iborIndexRead ? std::move(iborIndexRead) : iborIndexCalib_) {
     registerWith(optionletBase_);
     // We only want to react to changes in the Ibor index used for calibration.
@@ -316,7 +325,7 @@ inline void SabrStrippedOptionletAdapter<TimeInterpolator>::performCalculations(
         ") must be 1 or it must match the number of optionlet fixing times (" << fixingTimes.size() << ")");
 
     std::vector<ParametricVolatility::MarketSmile> marketSmiles;
-    SabrParametricVolatility::SabrParamInfo modelParameters;
+    SabrParametricVolatility::ParamInfo modelParameters;
     const auto& fixingDates = optionletBase_->optionletFixingDates();
     for (Size i = 0; i < fixingTimes.size(); ++i) {
         Real forward = atmRate(fixingTimes[i], iborIndexCalib_, fixingDates[i]);
@@ -339,7 +348,7 @@ inline void SabrStrippedOptionletAdapter<TimeInterpolator>::performCalculations(
         ? MQT::NormalVolatility : MQT::ShiftedLognormalVolatility;
     parametricVolatility_ = QuantLib::ext::make_shared<SabrParametricVolatility>(modelVariant_, marketSmiles,
         MMT::Black76, outputMqt, Handle<YieldTermStructure>(), modelParameters, modelShift, maxCalibrationAttempts_,
-        exitEarlyErrorThreshold_, maxAcceptableError_);
+        exitEarlyErrorThreshold_, maxAcceptableError_, residualCorrection_);
 }
 
 template <class TimeInterpolator> inline void SabrStrippedOptionletAdapter<TimeInterpolator>::deepUpdate() {
@@ -354,7 +363,7 @@ SabrStrippedOptionletAdapter<TimeInterpolator>::optionletBase() const {
 }
 
 template <class TimeInterpolator>
-inline void SabrStrippedOptionletAdapter<TimeInterpolator>::amendModelParameters(const SabrSliceParamInfo& sspi)
+inline void SabrStrippedOptionletAdapter<TimeInterpolator>::amendModelParameters(const SliceParamInfo& sspi)
 {
     // For ease of notation below.
     using PVPC = ParametricVolatility::ParameterCalibration;
@@ -369,7 +378,7 @@ inline void SabrStrippedOptionletAdapter<TimeInterpolator>::amendModelParameters
     QL_REQUIRE(modelParamInfo.size() == 1 || modelParamInfo.size() == nExpiryTimes,
         "SabrStrippedOptionletAdapter: expected size of SabrParametricVolatility model parameters ("
         << modelParamInfo.size() << ") to be 1 or equal to size of expiry times (" << nExpiryTimes << ")");
-    QL_REQUIRE(sspi.size() == 4, "SabrStrippedOptionletAdapter: expected SabrSliceParamInfo to have 4 elements.");
+    QL_REQUIRE(sspi.size() == 4, "SabrStrippedOptionletAdapter: expected SliceParamInfo to have 4 elements.");
 
     // References to the already calibrated parameter values.
     const Matrix& alpha = getSafeParam(sabrPv->alpha(), "alpha", nExpiryTimes);
@@ -387,11 +396,11 @@ inline void SabrStrippedOptionletAdapter<TimeInterpolator>::amendModelParameters
 
     for (QuantLib::Size i = 0; i < nExpiryTimes; ++i) {
         // Existing SABR parameters for the current i-th slice at i-th expiry time.
-        const SabrSliceParamInfo& mp = itMpi->second;
-        QL_REQUIRE(mp.size() == 4, "SabrStrippedOptionletAdapter: expected SabrSliceParamInfo to have 4 elements.");
+        const SliceParamInfo& mp = itMpi->second;
+        QL_REQUIRE(mp.size() == 4, "SabrStrippedOptionletAdapter: expected SliceParamInfo to have 4 elements.");
 
         // Modified SABR parameters, to be created below, for the current i-th slice at i-th expiry time.
-        SabrSliceParamInfo newSlice;
+        SliceParamInfo newSlice;
         newSlice.reserve(4);
 
         for (QuantLib::Size j = 0; j < 4; ++j) {
