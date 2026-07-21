@@ -34,6 +34,7 @@
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/report/inmemoryreport.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 
 using namespace ore::data;
 using namespace std::filesystem;

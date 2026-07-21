@@ -39,6 +39,7 @@
 
 #include <qle/currencies/currencycomparator.hpp>
 #include <qle/instruments/pathlevelresult.hpp>
+#include <ored/portfolio/cashflowutils.hpp>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/range/adaptor/indexed.hpp>

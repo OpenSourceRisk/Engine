@@ -27,6 +27,7 @@
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/tradefactory.hpp>
+#include <ored/portfolio/premiumdata.hpp>
 
 namespace ore {
 namespace data {

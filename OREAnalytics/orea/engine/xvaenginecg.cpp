@@ -41,6 +41,7 @@
 #include <qle/instruments/payment.hpp>
 #include <qle/math/randomvariable_ops.hpp>
 #include <qle/methods/multipathvariategenerator.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/stats.hpp>

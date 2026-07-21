@@ -28,6 +28,7 @@
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/portfolio/cashflowutils.hpp>
 
 #include <ql/cashflows/floatingratecoupon.hpp>
 

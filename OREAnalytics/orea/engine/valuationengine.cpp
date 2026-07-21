@@ -34,6 +34,7 @@
 #include <ored/utilities/progressbar.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/osutils.hpp>
+#include <qle/models/modelbuilder.hpp>
 
 #include <ql/errors.hpp>
 

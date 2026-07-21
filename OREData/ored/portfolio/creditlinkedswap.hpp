@@ -25,6 +25,7 @@
 
 #include <qle/instruments/creditlinkedswap.hpp>
 
+#include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/trade.hpp>
 
 namespace ore {
@@ -32,6 +33,8 @@ namespace data {
 using ore::data::XMLSerializable;
 using std::string;
 using std::vector;
+
+class LegData;
 
 class CreditLinkedSwap : public Trade {
 public:

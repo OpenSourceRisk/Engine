@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/portfolio/trade.hpp>
+#include <ored/portfolio/underlying.hpp>
 
 #include <qle/indexes/equityindex.hpp>
 

@@ -33,7 +33,9 @@
 namespace ore {
 namespace data {
 
-//! Serializable FX Barrier Option
+class DelegatingEngineBuilder;
+
+    //! Serializable FX Barrier Option
 /*!
   \ingroup tradedata
 */

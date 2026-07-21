@@ -32,6 +32,7 @@
 #include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/report/inmemoryreport.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
+#include <ored/portfolio/cashflowutils.hpp>
 
 using RFType = ore::analytics::RiskFactorKey::KeyType;
 

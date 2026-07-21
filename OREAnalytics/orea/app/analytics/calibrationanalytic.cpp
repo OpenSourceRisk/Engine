@@ -32,6 +32,7 @@
 
 #include <qle/models/cirppconstantfellerparametrization.hpp>
 #include <qle/models/cirppconstantparametrization.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 
 
 using namespace ore::data;
