@@ -25,13 +25,21 @@
 #include <ored/utilities/timer.hpp>
 
 #include <ql/any.hpp>
+#include <ql/time/date.hpp>
 #include <ql/shared_ptr.hpp>
+
+#include <set>
+#include <vector>
+#include <map>
 
 namespace ore::data {
 class CrossAssetModelData;
 class InMemoryReport;
 class InMemoryLoader;
 class Portfolio;
+class CurveConfigurations;
+class EngineData;
+class TodaysMarketParameters;
 }; // namespace ore::data
 
 namespace ore::analytics {
@@ -42,6 +50,10 @@ class AnalyticsManager;
 class StressTestScenarioData;
 class NPVCubeWithMetaData;
 class ParSensitivityCubeStream;
+class AggregationScenarioData;
+class ScenarioSimMarketParameters;
+class SensitivityScenarioData;
+class ScenarioGeneratorData;
 
 class Analytic {
 public:
