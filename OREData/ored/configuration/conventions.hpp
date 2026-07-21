@@ -1389,7 +1389,8 @@ public:
     //! Detailed constructor
     CommodityForwardConvention(const string& id, const string& spotDays = "", const string& pointsFactor = "",
                                const string& advanceCalendar = "", const string& spotRelative = "",
-                               BusinessDayConvention bdc = Following, bool outright = true);
+                               BusinessDayConvention bdc = Following, bool outright = true,
+                               const string& deliveryLocation = "");
     //@}
 
     //! \name Inspectors
@@ -1648,7 +1649,8 @@ public:
                               const AveragingData& averagingData = AveragingData(),
                               QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
                               const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = QuantLib::ext::nullopt,
-                              const std::string& indexName = "", const std::string& optionFrequency = "");
+                              const std::string& indexName = "", const std::string& optionFrequency = "",
+                              const string& deliveryLocation = "");
 
     //! N-th weekday based constructor
     CommodityFutureConvention(const std::string& id, const std::string& nth, const std::string& weekday,
@@ -1665,7 +1667,7 @@ public:
                               const AveragingData& averagingData = AveragingData(),
                               QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
                               const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = QuantLib::ext::nullopt,
-                              const std::string& indexName = "", const std::string& optionFrequency = "");
+                              const std::string& indexName = "", const std::string& optionFrequency = "", const std::string& deliveryLocation = "");
 
     //! Calendar days before based constructor
     CommodityFutureConvention(const std::string& id, const CalendarDaysBefore& calendarDaysBefore,
@@ -1682,7 +1684,7 @@ public:
                               const AveragingData& averagingData = AveragingData(),
                               QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
                               const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = QuantLib::ext::nullopt,
-                              const std::string& indexName = "", const std::string& optionFrequency = "");
+                              const std::string& indexName = "", const std::string& optionFrequency = "", const std::string& deliveryLocation = "");
 
     //! Business days before based constructor
     CommodityFutureConvention(const std::string& id, const BusinessDaysAfter& businessDaysAfter,
@@ -1699,7 +1701,7 @@ public:
                               const AveragingData& averagingData = AveragingData(),
                               QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
                               const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = QuantLib::ext::nullopt,
-                              const std::string& indexName = "", const std::string& optionFrequency = "");
+                              const std::string& indexName = "", const std::string& optionFrequency = "", const std::string& deliveryLocation = "");
 
     //! \name Inspectors
     //@{

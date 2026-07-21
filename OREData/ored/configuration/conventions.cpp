@@ -1649,9 +1649,10 @@ XMLNode* CmsSpreadOptionConvention::toXML(XMLDocument& doc) const {
 CommodityForwardConvention::CommodityForwardConvention(const string& id, const string& spotDays,
                                                        const string& pointsFactor, const string& advanceCalendar,
                                                        const string& spotRelative, BusinessDayConvention bdc,
-                                                       bool outright)
+                                                       bool outright, const string& deliveryLocation)
     : Convention(id, Type::CommodityForward), bdc_(bdc), outright_(outright), strSpotDays_(spotDays),
-      strPointsFactor_(pointsFactor), strAdvanceCalendar_(advanceCalendar), strSpotRelative_(spotRelative) {
+      strPointsFactor_(pointsFactor), strAdvanceCalendar_(advanceCalendar), strSpotRelative_(spotRelative),
+      deliveryLocation_(deliveryLocation) {
     build();
 }
 
@@ -1936,7 +1937,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Day
                                                      Natural hoursPerDay,
                                                      const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData, 
                                                      const string& indexName,
-                                                     const std::string& optionFrequency)
+                                                     const std::string& optionFrequency,
+                                                     const string& deliveryLocation)
     : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::DayOfMonth),
       strDayOfMonth_(dayOfMonth.dayOfMonth_), strContractFrequency_(contractFrequency), strCalendar_(calendar),
       strExpiryCalendar_(expiryCalendar), expiryMonthLag_(expiryMonthLag), strOneContractMonth_(oneContractMonth),
@@ -1947,7 +1949,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Day
       indexName_(indexName), strOptionContractFrequency_(optionFrequency), optionAnchorType_(optionExpiryDateRule.type_), strOptionExpiryOffset_(optionExpiryDateRule.daysBefore_),
       strOptionExpiryDay_(optionExpiryDateRule.expiryDay_), strOptionNth_(optionExpiryDateRule.nth_),
       strOptionWeekday_(optionExpiryDateRule.weekday_), strOptionCalendarDaysBefore_(optionExpiryDateRule.calendarDaysBefore_),
-      strOptionMinBusinessDaysBefore_(optionExpiryDateRule.minBusinessDaysBefore_), balanceOfTheMonth_(false) {
+      strOptionMinBusinessDaysBefore_(optionExpiryDateRule.minBusinessDaysBefore_),
+      deliveryLocation_(deliveryLocation), balanceOfTheMonth_(false) {
     build();
 }
 
@@ -1966,7 +1969,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const str
                                                      Natural hoursPerDay,
                                                      const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData,
                                                      const string& indexName,
-                                                     const std::string& optionFrequency)
+                                                     const std::string& optionFrequency,
+                                                     const string& deliveryLocation)
     : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::NthWeekday), strNth_(nth), strWeekday_(weekday),
       strContractFrequency_(contractFrequency), strCalendar_(calendar), strExpiryCalendar_(expiryCalendar),
       expiryMonthLag_(expiryMonthLag), strOneContractMonth_(oneContractMonth), strOffsetDays_(offsetDays), strBdc_(bdc),
@@ -1978,7 +1982,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const str
       optionAnchorType_(optionExpiryDateRule.type_), strOptionExpiryOffset_(optionExpiryDateRule.daysBefore_),
       strOptionExpiryDay_(optionExpiryDateRule.expiryDay_), strOptionNth_(optionExpiryDateRule.nth_),
       strOptionWeekday_(optionExpiryDateRule.weekday_), strOptionCalendarDaysBefore_(optionExpiryDateRule.calendarDaysBefore_),
-      strOptionMinBusinessDaysBefore_(optionExpiryDateRule.minBusinessDaysBefore_), balanceOfTheMonth_(false) {
+      strOptionMinBusinessDaysBefore_(optionExpiryDateRule.minBusinessDaysBefore_),
+      deliveryLocation_(deliveryLocation), balanceOfTheMonth_(false) {
     build();
 }
 
@@ -1997,7 +2002,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Cal
                                                      Natural hoursPerDay,
                                                      const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData,
                                                      const string& indexName,
-                                                     const std::string& optionFrequency)
+                                                     const std::string& optionFrequency,
+                                                     const string& deliveryLocation)
     : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::CalendarDaysBefore),
       strCalendarDaysBefore_(calendarDaysBefore.calendarDaysBefore_), strContractFrequency_(contractFrequency),
       strCalendar_(calendar), strExpiryCalendar_(expiryCalendar), expiryMonthLag_(expiryMonthLag),
@@ -2010,7 +2016,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Cal
       optionAnchorType_(optionExpiryDateRule.type_), strOptionExpiryOffset_(optionExpiryDateRule.daysBefore_), 
       strOptionExpiryDay_(optionExpiryDateRule.expiryDay_), strOptionNth_(optionExpiryDateRule.nth_), 
       strOptionWeekday_(optionExpiryDateRule.weekday_), strOptionCalendarDaysBefore_(optionExpiryDateRule.calendarDaysBefore_),
-      strOptionMinBusinessDaysBefore_(optionExpiryDateRule.minBusinessDaysBefore_), balanceOfTheMonth_(false) {
+      strOptionMinBusinessDaysBefore_(optionExpiryDateRule.minBusinessDaysBefore_),
+      deliveryLocation_(deliveryLocation), balanceOfTheMonth_(false) {
     build();
 }
 
@@ -2029,7 +2036,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Bus
                                                      Natural hoursPerDay,
                                                      const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData,
                                                      const string& indexName,
-                                                     const std::string& optionFrequency)
+                                                     const std::string& optionFrequency,
+                                                     const string& deliveryLocation)
     : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::BusinessDaysAfter),
       strBusinessDaysAfter_(businessDaysAfter.businessDaysAfter_), strContractFrequency_(contractFrequency),
       strCalendar_(calendar), strExpiryCalendar_(expiryCalendar), expiryMonthLag_(expiryMonthLag),
@@ -2042,7 +2050,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Bus
       optionAnchorType_(optionExpiryDateRule.type_), strOptionExpiryOffset_(optionExpiryDateRule.daysBefore_), 
       strOptionExpiryDay_(optionExpiryDateRule.expiryDay_), strOptionNth_(optionExpiryDateRule.nth_), 
       strOptionWeekday_(optionExpiryDateRule.weekday_), strOptionCalendarDaysBefore_(optionExpiryDateRule.calendarDaysBefore_),
-      strOptionMinBusinessDaysBefore_(optionExpiryDateRule.minBusinessDaysBefore_), balanceOfTheMonth_(false) {
+      strOptionMinBusinessDaysBefore_(optionExpiryDateRule.minBusinessDaysBefore_), deliveryLocation_(deliveryLocation),
+      balanceOfTheMonth_(false) {
     build();
 }
 
