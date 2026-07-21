@@ -25,6 +25,7 @@
 #include <ored/utilities/timer.hpp>
 
 #include <ql/any.hpp>
+#include <ql/shared_ptr.hpp>
 
 namespace ore::data {
 class CrossAssetModelData;

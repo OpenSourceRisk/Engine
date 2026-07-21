@@ -22,8 +22,12 @@
 */
 
 #pragma once
+
 #include <ql/optional.hpp>
+#include <ql/types.hpp>
+
 #include <boost/timer/timer.hpp>
+
 #include <iostream>
 #include <limits>
 #include <map>
