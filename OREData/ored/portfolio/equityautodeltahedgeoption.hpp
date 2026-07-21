@@ -63,9 +63,9 @@ public:
     //! Default constructor
     EquityAutoDeltaHedgedOption() : Trade("EquityAutoDeltaHedgedOption") {}
 
-    EquityAutoDeltaHedgedOption(Envelope& env, std::vector<UnderlyingOptionData> underlyings, double& hedgingVol, double& driftRate,
-                                QuantLib::Date& observationStartDate,  QuantLib::Date& paymentDate) 
-                                : ore::data::Trade("FxDigitalOption", env), underlyings_(underlyings), hedgingVol_(hedgingVol),
+    EquityAutoDeltaHedgedOption(Envelope& env, std::vector<UnderlyingOptionData> underlyings, double hedgingVol, double driftRate,
+                                const QuantLib::Date& observationStartDate,  const QuantLib::Date& paymentDate) 
+                                : ore::data::Trade("EquityAutoDeltaHedgedOption", env), underlyings_(underlyings), hedgingVol_(hedgingVol),
                                 driftRate_(driftRate), observationStartDate_(observationStartDate), paymentDate_(paymentDate){}
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
