@@ -27,12 +27,14 @@
 #include <orea/app/inputvariables.hpp>
 #include <orea/engine/valuationcalculator.hpp>
 #include <orea/engine/sensitivitystoragemanager.hpp>
-#include <orea/engine/xvaenginecg.hpp>
 
 namespace ore {
 namespace analytics {
 
+class DynamicInitialMarginCalculator;
+class PostProcess;
 class InputParameters;
+class CubeInterpretation;
 
 struct XvaVariables : public InputVariables {
     void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;

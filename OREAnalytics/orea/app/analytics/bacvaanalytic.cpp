@@ -19,6 +19,7 @@
 #include <orea/app/analytics/bacvaanalytic.hpp>
 #include <orea/app/inputparameters.hpp>
 #include <orea/app/reportwriter.hpp>
+#include <orea/engine/bacvacalculator.hpp>
 #include <ored/report/inmemoryreport.hpp>
 
 using namespace ore::data;

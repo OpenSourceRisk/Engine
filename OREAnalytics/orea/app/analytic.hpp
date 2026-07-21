@@ -22,39 +22,26 @@
 
 #pragma once
 
-#include <ored/marketdata/todaysmarketparameters.hpp>
-#include <ored/marketdata/inmemoryloader.hpp>
-#include <ored/portfolio/nettingsetmanager.hpp>
 #include <ored/utilities/timer.hpp>
 
-#include <orea/aggregation/collateralaccount.hpp>
-#include <orea/aggregation/collatexposurehelper.hpp>
-#include <orea/aggregation/postprocess.hpp>
-#include <orea/cube/cubeinterpretation.hpp>
-#include <orea/cube/cube_io.hpp>
-#include <orea/engine/sensitivitycubestream.hpp>
-#include <orea/engine/parsensitivitycubestream.hpp>
-#include <orea/scenario/scenariosimmarketparameters.hpp>
-
-#include <orea/app/marketcalibrationreport.hpp>
-#include <orea/app/inputvariables.hpp>
-
 #include <ql/any.hpp>
-#include <iostream>
 
-namespace ore {
-namespace data {
+namespace ore::data {
 class CrossAssetModelData;
 class InMemoryReport;
-}; // namespace ore
-}; // namespace data
+class InMemoryLoader;
+class Portfolio;
+}; // namespace ore::data
 
-namespace ore {
-namespace analytics {
+namespace ore::analytics {
 
 class InputParameters;
+class MarketCalibrationReportBase;
 class AnalyticsManager;
 class StressTestScenarioData;
+class NPVCubeWithMetaData;
+class ParSensitivityCubeStream;
+
 class Analytic {
 public:
     class Impl;
@@ -354,5 +341,4 @@ QuantLib::ext::shared_ptr<ore::data::Loader> implyBondSpreads(const Date& asof,
                  const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
                  const std::string& excludeRegex);
 
-} // namespace analytics
-} // namespace oreplus
+} // namespace ore::analytics

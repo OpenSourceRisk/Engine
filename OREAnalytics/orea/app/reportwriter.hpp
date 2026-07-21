@@ -23,31 +23,15 @@
 
 #pragma once
 
-#include <ql/shared_ptr.hpp>
-#include <map>
-#include <orea/aggregation/postprocess.hpp>
-#include <orea/app/parameters.hpp>
-#include <orea/app/analytics/xvaexplainanalytic.hpp>
-#include <orea/cube/npvcube.hpp>
-#include <orea/cube/sensitivitycube.hpp>
-#include <orea/engine/bacvacalculator.hpp>
-#include <orea/engine/cvasensitivitycubestream.hpp>
-#include <orea/engine/sacvasensitivityrecord.hpp>
-#include <orea/engine/sensitivitystream.hpp>
-#include <orea/simm/crifrecord.hpp>
-#include <orea/simm/simmresults.hpp>
-#include <orea/simm/crif.hpp>
+#include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/simm/imschedulecalculator.hpp>
-#include <orea/scenario/scenariogenerator.hpp>
-#include <ored/marketdata/market.hpp>
-#include <ored/marketdata/todaysmarketparameters.hpp>
-#include <ored/marketdata/todaysmarketcalibrationinfo.hpp>
-#include <ored/marketdata/loader.hpp>
-#include <ored/portfolio/portfolio.hpp>
-#include <ored/report/report.hpp>
-#include <ored/report/inmemoryreport.hpp>
-#include <ored/utilities/dategrid.hpp>
-#include <ored/utilities/xmlutils.hpp>
+#include <orea/simm/simmconfiguration.hpp>
+#include <orea/simm/simmresults.hpp>
+#include <orea/aggregation/nettedexposurecalculator.hpp>
+
+#include <ql/shared_ptr.hpp>
+
+#include <map>
 #include <string>
 
 namespace ore {
@@ -59,7 +43,14 @@ class AdjustmentFactors;
 namespace ore {
 namespace analytics {
 
+class SensitivityCube;
+class PostProcess;
+class BaCvaCalculator;
+class CvaSensitivityCubeStream;
+class XvaExplainResults;
 class HistoricalScenarioGenerator;
+class SaccrTradeData;
+class StressScenarioGenerator;
 
 //! Write ORE outputs to reports
 /*! \ingroup app

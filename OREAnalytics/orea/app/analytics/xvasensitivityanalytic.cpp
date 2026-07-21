@@ -27,6 +27,7 @@
 #include <orea/engine/parsensitivitycubestream.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <orea/scenario/deltascenariofactory.hpp>
+#include <orea/engine/sensitivitycubestream.hpp>
 
 #include <orea/scenario/stressscenariogenerator.hpp>
 #include <ored/report/inmemoryreport.hpp>

@@ -19,10 +19,11 @@
 #include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/analytics/sacvaanalytic.hpp>
 #include <orea/app/inputparameters.hpp>
-#include <orea/engine/standardapproachcvacalculator.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/engine/parsensitivitycubestream.hpp>
 #include <orea/engine/sacvasensitivityloader.hpp>
+#include <orea/engine/standardapproachcvacalculator.hpp>
+#include <orea/simm/simmbasicnamemapper.hpp>
 #include <ored/portfolio/counterpartymanager.hpp>
 #include <ored/report/inmemoryreport.hpp>
 #include <ored/utilities/parsers.hpp>

@@ -18,18 +18,41 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <orea/aggregation/postprocess.hpp>
+#include <orea/app/analytics/xvaexplainanalytic.hpp>
+#include <orea/app/parameters.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
-#include <orea/simm/utilities.hpp>
+#include <orea/cube/npvcube.hpp>
+#include <orea/cube/sensitivitycube.hpp>
+#include <orea/engine/bacvacalculator.hpp>
+#include <orea/engine/cvasensitivitycubestream.hpp>
+#include <orea/engine/sacvasensitivityrecord.hpp>
+#include <orea/engine/sensitivitystream.hpp>
 #include <orea/scenario/historicalscenariogenerator.hpp>
+#include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariowriter.hpp>
+#include <orea/simm/crif.hpp>
+#include <orea/simm/crifrecord.hpp>
+#include <orea/simm/imschedulecalculator.hpp>
+#include <orea/simm/simmresults.hpp>
+#include <orea/simm/utilities.hpp>
 
-#include <ored/utilities/marketdata.hpp>
-#include <ored/portfolio/structuredtradeerror.hpp>
-#include <ored/utilities/to_string.hpp>
+#include <ored/marketdata/loader.hpp>
+#include <ored/marketdata/market.hpp>
+#include <ored/marketdata/todaysmarketcalibrationinfo.hpp>
+#include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/model/assetmodelbuilderbase.hpp>
+#include <ored/portfolio/portfolio.hpp>
+#include <ored/portfolio/structuredtradeerror.hpp>
+#include <ored/report/inmemoryreport.hpp>
+#include <ored/report/report.hpp>
 #include <ored/scripting/models/assetmodel.hpp>
 #include <ored/scripting/models/heston.hpp>
+#include <ored/utilities/dategrid.hpp>
+#include <ored/utilities/marketdata.hpp>
+#include <ored/utilities/to_string.hpp>
+#include <ored/utilities/xmlutils.hpp>
 
 #include <qle/currencies/currencycomparator.hpp>
 #include <qle/instruments/pathlevelresult.hpp>

@@ -25,6 +25,8 @@
 #include <orea/engine/stresstest.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
+
+#include <ored/marketdata/inmemoryloader.hpp>
 #include <ored/report/inmemoryreport.hpp>
 
 using namespace ore::data;

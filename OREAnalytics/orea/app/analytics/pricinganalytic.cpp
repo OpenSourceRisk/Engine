@@ -22,6 +22,7 @@
 #include <orea/engine/decomposedsensitivitystream.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/parsensitivitycubestream.hpp>
+#include <orea/engine/sensitivitycubestream.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/report/inmemoryreport.hpp>
 
