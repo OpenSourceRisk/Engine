@@ -20,6 +20,8 @@
 
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
+#include <ored/report/inmemoryreport.hpp>
+
 #include <orea/simm/utilities.hpp>
 #include <orea/scenario/historicalscenariogenerator.hpp>
 #include <orea/cube/sensitivitycube.hpp>

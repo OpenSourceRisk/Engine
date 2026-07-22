@@ -25,10 +25,27 @@
 #include <orea/app/analytic.hpp>
 #include <orea/app/inputvariables.hpp>
 
+#include <ql/handle.hpp>
+#include <ql/types.hpp>
+
+namespace QuantExt {
+class CrossAssetModel;
+}
+
+namespace ore {
+namespace data {
+class CrossAssetModelData;
+class EngineData;
+class DateGrid;
+}
+} // namespace ore
+
 namespace ore {
 namespace analytics {
 
 class InputParameters;
+class ScenarioSimMarket;
+class ScenarioGenerator;
 
 enum class ScenarioGenerationType { stress, sensitivity, exposure };
 struct ScenarioGenerationVariables : public InputVariables {
@@ -46,8 +63,8 @@ struct ScenarioGenerationVariables : public InputVariables {
     
     QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketParams_;
     QuantLib::ext::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData_;
-    QuantLib::ext::shared_ptr<CrossAssetModelData> crossAssetModelData_;
-    QuantLib::ext::shared_ptr<EngineData> pricingEngine_;
+    QuantLib::ext::shared_ptr<ore::data::CrossAssetModelData> crossAssetModelData_;
+    QuantLib::ext::shared_ptr<ore::data::EngineData> pricingEngine_;
 };
 
 class ScenarioGenerationAnalyticImpl : public Analytic::Impl {
@@ -70,11 +87,11 @@ protected:
     void buildScenarioGenerator(const bool continueOnError, const bool allowModelFallbacks);
 
     QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket_;
-    QuantLib::Handle<CrossAssetModel> model_;
+    QuantLib::Handle<QuantExt::CrossAssetModel> model_;
     QuantLib::ext::shared_ptr<ScenarioGenerator> scenarioGenerator_;
 
-    QuantLib::ext::shared_ptr<DateGrid> grid_;
-    Size samples_ = 0;
+    QuantLib::ext::shared_ptr<ore::data::DateGrid> grid_;
+    QuantLib::Size samples_ = 0;
 };
 
 ScenarioGenerationType parseScenarioGenerationType(const std::string& s);

@@ -25,8 +25,13 @@
 #include <orea/app/analytic.hpp>
 #include <orea/app/inputvariables.hpp>
 
+namespace QuantExt {
+class CrossAssetModel;
+}
+
 namespace ore {
 namespace data {
+class EngineFactory;
 class CrossAssetModelBuilder;
 class HwHistoricalCalibrationModelData;
 class HwHistoricalCalibrationModelBuilder;
@@ -81,8 +86,8 @@ protected:
     void buildCrossAssetModel(bool continueOnError, bool allowModelFallbacks);
     void buildHwHistoricalCalibrationModelData();
 
-    QuantLib::ext::shared_ptr<EngineFactory> engineFactory_;
-    QuantLib::ext::shared_ptr<CrossAssetModel> model_;
+    QuantLib::ext::shared_ptr<ore::data::EngineFactory> engineFactory_;
+    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model_;
     QuantLib::ext::shared_ptr<ore::data::CrossAssetModelBuilder> builder_;
     QuantLib::ext::shared_ptr<ore::data::HwHistoricalCalibrationModelData> hwHistoricalModelData_;
     QuantLib::ext::shared_ptr<ore::data::HwHistoricalCalibrationModelBuilder> hwHistoricalModelBuilder_;

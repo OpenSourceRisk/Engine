@@ -35,7 +35,8 @@
 #include <vector>
 #include <map>
 
-namespace ore::data {
+namespace ore {
+namespace data {
 class CrossAssetModelData;
 class InMemoryReport;
 class InMemoryLoader;
@@ -46,9 +47,12 @@ class TodaysMarketParameters;
 class Loader;
 class EngineFactory;
 class MarketImpl;
-}; // namespace ore::data
+class Market;
+}; // namespace data
+}; // namespace ore
 
-namespace ore::analytics {
+namespace ore {
+namespace analytics {
 
 class InputParameters;
 class MarketCalibrationReportBase;
@@ -141,9 +145,7 @@ public:
     const QuantLib::ext::weak_ptr<AnalyticsManager>& analyticsManager() const { return analyticsManager_; }
     const QuantLib::ext::shared_ptr<ore::data::Market>& market() const { return market_; };
     // To allow SWIG wrapping
-    QuantLib::ext::shared_ptr<ore::data::MarketImpl> getMarket() const {        
-        return QuantLib::ext::dynamic_pointer_cast<ore::data::MarketImpl>(market_);
-    }
+    QuantLib::ext::shared_ptr<ore::data::MarketImpl> getMarket() const;
     const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio() const { return portfolio_; };
     void setInputs(const QuantLib::ext::shared_ptr<InputParameters>& inputs) { inputs_ = inputs; }
     void setMarket(const QuantLib::ext::shared_ptr<ore::data::Market>& market) { market_ = market; }
@@ -361,4 +363,5 @@ QuantLib::ext::shared_ptr<ore::data::Loader> implyBondSpreads(const QuantLib::Da
                  const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
                  const std::string& excludeRegex);
 
-} // namespace ore::analytics
+} // namespace analytics
+} // namespace ore

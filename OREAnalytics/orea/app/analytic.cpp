@@ -27,6 +27,7 @@
 #include <orea/scenario/scenario.hpp>
 
 #include <ored/marketdata/compositeloader.hpp>
+#include <ored/marketdata/marketimpl.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/marketdata/bondspreadimply.hpp>
 #include <ored/utilities/indexparser.hpp>
@@ -69,6 +70,10 @@ Analytic::Analytic(std::unique_ptr<Impl> impl,
         impl_->setAnalytic(this);
         impl_->setGenerateAdditionalResults(inputs_->outputAdditionalResults());
     }
+}
+
+QuantLib::ext::shared_ptr<ore::data::MarketImpl> Analytic::getMarket() const {
+    return QuantLib::ext::dynamic_pointer_cast<ore::data::MarketImpl>(market_);
 }
 
 Analytic::analytic_reports Analytic::reports() { 
