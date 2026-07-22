@@ -155,11 +155,11 @@ future quotes, for example futures on Euribor 3M or SOFR 3M underlyings. The str
     \item \texttt{IMMEUR}: Expiry is two EUREX business days before the 3rd Wednesday of the expiry month. Used for
       EUR-EURIBOR-3M futures.
     \end{itemize}
-  \item For an overnight index future `IMM' means that the end date of the future is set to the 3rd Wednesday of the
-    expiry month and the start date is set to the 3rd Wednesday of the expiry month minus the future tenor. The setting
-    `IMM' applies to SOFR-3M futures for example. `FirstDayOfMonth' on the other hand means that the end date of the
-    future is set to the first day in the month following the future's expiry month and the start date is set to the
-    first day of the month lying $n$ months before the end date's month where $n$ is the number of months of the
+  \item For an overnight index future `IMM' means that the start date of the future is set to the 3rd Wednesday of the
+    contract month and the end date is set to the 3rd Wednesday of the contract month plus the future tenor. The setting
+    `IMM' applies to SOFR-3M futures for example. `FirstDayOfMonth' on the other hand means that the start date of the
+    future is set to the first day in the contract month and the end date is set to the
+    first day of the month lying $n$ months after the start date's month where $n$ is the number of months of the
     future's underlying tenor. The setting `FirstDayOfMonth' applies to SOFR-1M futures for example. For `FirstDayOfMonth'
     the start and end date are adjusted to the next business day w.r.t. roll convention `following' and the overnight
     index calendar - or if given the calendar given in the field `Calendar'. This tenor is

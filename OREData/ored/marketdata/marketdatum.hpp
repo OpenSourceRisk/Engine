@@ -461,22 +461,21 @@ class MMFutureQuote : public MarketDatum {
 public:
     MMFutureQuote() {}
     //! Constructor
-    MMFutureQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, string expiry,
-                  string contract = "", Period tenor = 3 * Months)
+    MMFutureQuote(Real value, const Date& asofDate, const string& name, QuoteType quoteType, const string& ccy,
+                  const string& expiry, const string& contract = "", const Period& tenor = 3 * Months)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::MM_FUTURE), ccy_(ccy), expiry_(expiry),
           contract_(contract), tenor_(tenor) {}
 
     //! Make a copy of the market datum
     QuantLib::ext::shared_ptr<MarketDatum> clone() override {
-        return QuantLib::ext::make_shared<MMFutureQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, expiry_, contract_, tenor_);
+        return QuantLib::ext::make_shared<MMFutureQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, expiry_,
+                                                         contract_, tenor_);
     }
 
     //! \name Inspectors
     //@{
     const string& ccy() const { return ccy_; }
     const string& expiry() const { return expiry_; }
-    Natural expiryYear() const;
-    Month expiryMonth() const;
     const string& contract() const { return contract_; }
     const Period& tenor() const { return tenor_; }
     //@}
@@ -504,29 +503,28 @@ class OIFutureQuote : public MarketDatum {
 public:
     OIFutureQuote() {}
     //! Constructor
-    OIFutureQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, string expiry,
-                  string contract = "", Period tenor = 3 * Months)
-        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::OI_FUTURE), ccy_(ccy), expiry_(expiry),
-          contract_(contract), tenor_(tenor) {}
-    
+    OIFutureQuote(Real value, const Date& asofDate, const string& name, QuoteType quoteType, const string& ccy,
+                  const string& contractMonth, const string& contract = "", const Period& tenor = 3 * Months)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::OI_FUTURE), ccy_(ccy),
+          contractMonth_(contractMonth), contract_(contract), tenor_(tenor) {}
+
     //! Make a copy of the market datum
     QuantLib::ext::shared_ptr<MarketDatum> clone() override {
-        return QuantLib::ext::make_shared<OIFutureQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, expiry_, contract_, tenor_);
+        return QuantLib::ext::make_shared<OIFutureQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_,
+                                                         contractMonth_, contract_, tenor_);
     }
 
     //! \name Inspectors
     //@{
     const string& ccy() const { return ccy_; }
-    const string& expiry() const { return expiry_; }
-    Natural expiryYear() const;
-    Month expiryMonth() const;
+    const string& contractMonth() const { return contractMonth_; }
     const string& contract() const { return contract_; }
     const Period& tenor() const { return tenor_; }
     //@}
 
 private:
     string ccy_;
-    string expiry_;
+    string contractMonth_;
     string contract_;
     Period tenor_;
     //! Serialization

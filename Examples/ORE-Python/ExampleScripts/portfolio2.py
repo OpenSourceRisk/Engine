@@ -1134,8 +1134,18 @@ def main():
 
     # ore/OREData/ored/portfolio/equityautodeltahedgeoption.hpp
 
-    ql.UnderlyingOptionData()
+    uod = ql.UnderlyingOptionData()
+    uod.optionData = option_data0
+    uod.equityUnderlying = equity_underlying0
+    uod.currency = "EUR"
+    uod.strike = trade_strike0
+    uod.quantity = 1.0
+
+    underlyings = ql.UnderlyingOptionDataVector()
+    underlyings.push_back(uod)
     ql.EquityAutoDeltaHedgedOption()
+    ql.EquityAutoDeltaHedgedOption(env0, underlyings, 0.0, 0.0, 
+                                   qlEvalDate, qlEvalDate)
 
     # ore/OREData/ored/portfolio/ratedigitaloption.hpp
 

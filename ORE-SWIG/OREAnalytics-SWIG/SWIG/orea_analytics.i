@@ -29,6 +29,7 @@
 %shared_ptr(ore::analytics::SaCcrAnalytic)
 %shared_ptr(ore::analytics::PnlAnalytic)
 %shared_ptr(ore::analytics::PnlExplainAnalytic)
+%shared_ptr(ore::analytics::HistoricalSimulationVarAnalytic)
 
 %rename(SaccrAnalytic) ore::analytics::SaCcrAnalytic;
 
@@ -179,6 +180,33 @@ class PnlExplainAnalytic : public ore::analytics::Analytic {
 }
 }
 
+namespace ore {
+namespace analytics {
+class HistoricalSimulationVarAnalytic : public ore::analytics::Analytic {
+  public:
+    %extend {
+        HistoricalSimulationVarAnalytic() {
+            auto inputs = ext::make_shared<ore::analytics::InputParameters>();
+            return new ore::analytics::HistoricalSimulationVarAnalytic(
+                inputs, ext::weak_ptr<ore::analytics::AnalyticsManager>());
+        }
+        HistoricalSimulationVarAnalytic(
+            const ext::shared_ptr<ore::analytics::InputParameters>& inputs) {
+            return new ore::analytics::HistoricalSimulationVarAnalytic(
+                inputs, ext::weak_ptr<ore::analytics::AnalyticsManager>());
+        }
+    }
+};
+
+class HistoricalSimulationVarCalculator {
+  public:
+    HistoricalSimulationVarCalculator(const std::vector<QuantLib::Real>& pnls);
+    QuantLib::Real var(QuantLib::Real confidence, bool isCall = true) const;
+    QuantLib::Real expectedShortfall(QuantLib::Real confidence, bool isCall = true) const;
+};
+}
+}
+
 // Helper to downcast Analytic to PnlAnalytic
 %inline %{
 QuantLib::ext::shared_ptr<ore::analytics::PnlAnalytic> asPnlAnalytic(
@@ -194,5 +222,45 @@ QuantLib::ext::shared_ptr<ore::analytics::PnlExplainAnalytic> asPnlExplainAnalyt
     return QuantLib::ext::dynamic_pointer_cast<ore::analytics::PnlExplainAnalytic>(analytic);
 }
 %}
+
+// Helper to downcast Analytic to HistoricalSimulationVarAnalytic
+%inline %{
+ext::shared_ptr<ore::analytics::HistoricalSimulationVarAnalytic>
+asHistoricalSimulationVarAnalytic(
+    ext::shared_ptr<ore::analytics::Analytic> analytic) {
+    return ext::dynamic_pointer_cast<ore::analytics::HistoricalSimulationVarAnalytic>(analytic);
+}
+%}
+
+#if defined(SWIGPYTHON)
+%pythoncode %{
+_HistoricalSimulationVarCalculator_init = HistoricalSimulationVarCalculator.__init__
+_HistoricalSimulationVarCalculator_var = HistoricalSimulationVarCalculator.var
+_HistoricalSimulationVarCalculator_expectedShortfall = (
+    HistoricalSimulationVarCalculator.expectedShortfall
+)
+
+def _historicalSimulationVarCalculatorInit(self, pnls):
+    copied_pnls = DoubleVector()
+    for pnl in pnls:
+        copied_pnls.append(pnl)
+    self._pnls = copied_pnls
+    _HistoricalSimulationVarCalculator_init(self, copied_pnls)
+
+def _historicalSimulationVarCalculatorVar(self, confidence, isCall=True, tradeIds=None):
+    return _HistoricalSimulationVarCalculator_var(self, confidence, isCall)
+
+def _historicalSimulationVarCalculatorExpectedShortfall(
+    self, confidence, isCall=True, tradeIds=None
+):
+    return _HistoricalSimulationVarCalculator_expectedShortfall(self, confidence, isCall)
+
+HistoricalSimulationVarCalculator.__init__ = _historicalSimulationVarCalculatorInit
+HistoricalSimulationVarCalculator.var = _historicalSimulationVarCalculatorVar
+HistoricalSimulationVarCalculator.expectedShortfall = (
+    _historicalSimulationVarCalculatorExpectedShortfall
+)
+%}
+#endif
 
 #endif
