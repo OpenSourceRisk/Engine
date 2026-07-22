@@ -333,6 +333,7 @@
       <xs:element type="xs:decimal" name="PointsFactor" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="AdvanceCalendar" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="SpotRelative" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="DeliveryLocation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="businessDayConvention" name="BusinessDayConvention" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="Outright" minOccurs="0" maxOccurs="1"/>
     </xs:all>
@@ -486,6 +487,7 @@
       <xs:element type="offPeakPowerIndexDataType" name="OffPeakPowerIndexData" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="IndexName" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="SavingsTime" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="DeliveryLocation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="BalanceOfTheMonth" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="BalanceOfTheMonthPricingCalendar" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="OptionUnderlyingFutureConvention" minOccurs="0" maxOccurs="1"/>
