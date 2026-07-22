@@ -32,10 +32,10 @@
 #include <ored/utilities/marketdata.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
-#include <ored/portfolio/trade.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/model/assetmodelbuilderbase.hpp>
-#include <ored/report/inmemoryreport.hpp>
+#include <ored/scripting/models/assetmodel.hpp>
+#include <ored/scripting/models/heston.hpp>
 
 #include <qle/currencies/currencycomparator.hpp>
 #include <qle/instruments/pathlevelresult.hpp>

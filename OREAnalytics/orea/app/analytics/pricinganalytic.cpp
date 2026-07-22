@@ -18,7 +18,6 @@
 
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/inputparameters.hpp>
-#include <orea/app/reportwriter.hpp>
 #include <orea/app/reportwriters/pricingreportwriter.hpp>
 #include <orea/engine/decomposedsensitivitystream.hpp>
 #include <orea/engine/observationmode.hpp>

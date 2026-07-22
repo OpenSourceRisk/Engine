@@ -63,7 +63,7 @@ public:
     virtual void writeHistoricalScenarioDetails(const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& generator,
                                                 ore::data::Report& report);
 
-                                                void writeHistoricalScenarios(const QuantLib::ext::shared_ptr<HistoricalScenarioLoader>& hsloader,
+    void writeHistoricalScenarios(const QuantLib::ext::shared_ptr<HistoricalScenarioLoader>& hsloader,
                                   const QuantLib::ext::shared_ptr<ore::data::Report>& report);
 
     void

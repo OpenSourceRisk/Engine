@@ -17,11 +17,11 @@
 */
 
 #include <orea/app/analytics/scenariogenerationanalytic.hpp>
+#include <orea/app/analytics/utilities.hpp>
 #include <orea/app/inputparameters.hpp>
 #include <orea/app/reportwriters/scenarioreportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
-#include <orea/app/analytics/utilities.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <orea/scenario/crossassetmodelscenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>

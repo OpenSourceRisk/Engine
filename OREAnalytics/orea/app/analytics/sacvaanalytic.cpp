@@ -23,6 +23,7 @@
 #include <orea/app/reportwriters/capitalreportwriter.hpp>
 #include <orea/engine/parsensitivitycubestream.hpp>
 #include <orea/engine/sacvasensitivityloader.hpp>
+#include <orea/engine/standardapproachcvacalculator.hpp>
 #include <orea/simm/simmbasicnamemapper.hpp>
 #include <ored/portfolio/counterpartymanager.hpp>
 #include <ored/portfolio/nettingsetmanager.hpp>

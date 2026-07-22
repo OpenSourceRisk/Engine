@@ -23,27 +23,29 @@
 #pragma once
 
 #include <ored/utilities/timer.hpp>
-#include <orea/cube/cube_io.hpp>
-#include <orea/app/inputvariables.hpp>
-#include <orea/scenario/scenario.hpp>
 
+#include <ql/any.hpp>
+#include <ql/time/date.hpp>
 #include <ql/shared_ptr.hpp>
 
-namespace ore {
-namespace data {
+#include <set>
+#include <vector>
+#include <map>
+
+namespace ore::data {
 class CrossAssetModelData;
 class InMemoryReport;
-class Portfolio;
-class TodaysMarketParameters;
 class InMemoryLoader;
-class Loader;
-}; // namespace ore
-}; // namespace data
+class Portfolio;
+class CurveConfigurations;
+class EngineData;
+class TodaysMarketParameters;
+}; // namespace ore::data
 
-namespace ore {
-namespace analytics {
+namespace ore::analytics {
 
 class InputParameters;
+class MarketCalibrationReportBase;
 class AnalyticsManager;
 class StressTestScenarioData;
 class ScenarioSimMarketParameters;
@@ -353,5 +355,4 @@ QuantLib::ext::shared_ptr<ore::data::Loader> implyBondSpreads(const Date& asof,
                  const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
                  const std::string& excludeRegex);
 
-} // namespace analytics
-} // namespace oreplus
+} // namespace ore::analytics

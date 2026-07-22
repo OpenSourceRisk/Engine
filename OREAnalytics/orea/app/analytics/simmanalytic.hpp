@@ -25,7 +25,7 @@
 #include <orea/app/inputvariables.hpp>
 
 namespace ore {
-namespace analytics {
+namespace data {
 class InMemoryLoader;
 }
 }
