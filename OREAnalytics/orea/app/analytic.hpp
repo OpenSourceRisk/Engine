@@ -24,8 +24,10 @@
 
 #include <ored/utilities/timer.hpp>
 #include <orea/app/inputvariables.hpp>
+#include <orea/scenario/scenario.hpp>
 
 #include <ql/any.hpp>
+#include <ql/errors.hpp>
 #include <ql/time/date.hpp>
 #include <ql/shared_ptr.hpp>
 
@@ -41,17 +43,14 @@ class Portfolio;
 class CurveConfigurations;
 class EngineData;
 class TodaysMarketParameters;
-class Market;
-class MarketImpl;
 class Loader;
 class EngineFactory;
-class Timer;
+class MarketImpl;
 }; // namespace ore::data
 
 namespace ore::analytics {
 
 class InputParameters;
-class Scenario;
 class MarketCalibrationReportBase;
 class AnalyticsManager;
 class StressTestScenarioData;
