@@ -1,16 +1,3 @@
----
-post_title: Historical Simulation VaR SWIG Workflow
-author1: John O'Brien
-post_slug: historical-simulation-var-swig-workflow
-microsoft_alias: jobrien@microsoft.com
-featured_image: https://example.com/oreplus-historical-simulation-var-swig.png
-categories: [Analytics]
-tags: [swig, python, var, historical-simulation, risk-analytics]
-ai_note: true
-summary: Run and inspect the public ORE Python historical simulation VaR workflow.
-post_date: 2026-07-22
----
-
 ## Historical Simulation VaR SWIG Workflow
 
 This example demonstrates the public Python/SWIG interface for ORE historical
