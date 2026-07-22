@@ -4225,7 +4225,7 @@ Handle<OptionletVolatilityStructure> ScenarioSimMarket::createOptionletVol(RiskF
     if (useSpreadedTermStructures_) {
         auto decayMode = parseDecayMode(parameters_->capFloorVolDecayMode());
         hOvs = Handle<OptionletVolatilityStructure>(ext::make_shared<SpreadedOptionletVolatility2>(
-            baseOvs, optionDates, strikes, quotes, decayMode, stickyness, ssmIndex, initMktIndex));
+            baseOvs, optionDates, strikes, quotes, decayMode, stickyness, ssmIndex, initMktIndex, rateCompPeriod));
     } else {
         // FIXME: Works as of today only e.g. for sensitivity / scenario analysis.
         // TODO: Build floating reference date StrippedOptionlet class for MC path generators.
