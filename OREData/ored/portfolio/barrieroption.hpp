@@ -35,7 +35,7 @@ namespace data {
 
 class DelegatingEngineBuilder;
 
-    //! Serializable FX Barrier Option
+//! Serializable FX Barrier Option
 /*!
   \ingroup tradedata
 */
