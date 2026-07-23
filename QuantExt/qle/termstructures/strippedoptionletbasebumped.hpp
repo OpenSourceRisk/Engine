@@ -48,6 +48,10 @@ public:
         std::vector<QuantLib::Time> bumpTimes,
         std::vector<QuantLib::Rate> bumpStrikes);
 
+    // Prevent copying to avoid dangling iterators in bumpInterp_.
+    StrippedOptionletBaseBumped(const StrippedOptionletBaseBumped&) = delete;
+    StrippedOptionletBaseBumped& operator=(const StrippedOptionletBaseBumped&) = delete;
+
     //! \name StrippedOptionletBase interface
     //@{
     const std::vector<QuantLib::Rate>& optionletStrikes(QuantLib::Size i) const override;
