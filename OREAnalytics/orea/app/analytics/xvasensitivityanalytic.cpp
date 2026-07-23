@@ -20,11 +20,12 @@
 #include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/app/analytics/xvasensitivityanalytic.hpp>
 #include <orea/app/inputparameters.hpp>
-#include <orea/app/reportwriter.hpp>
+#include <orea/app/reportwriters/xvareportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/cube/cube_io.hpp>
 #include <orea/engine/parsensitivitycubestream.hpp>
+#include <orea/engine/sensitivitycubestream.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <orea/scenario/deltascenariofactory.hpp>
 
@@ -386,7 +387,7 @@ void XvaSensitivityAnalyticImpl::createZeroReports(ZeroSensiResults& xvaZeroSeni
         auto ssNetting = QuantLib::ext::make_shared<SensitivityCubeStream>(nettingCube, inputs_->baseCurrency());
         QuantLib::ext::shared_ptr<ore::data::InMemoryReport> zeroSensiReport =
             QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
-        ReportWriter(inputs_->reportNaString())
+        XvaReportWriter(inputs_->reportNaString())
             .writeXvaSensitivityReport(*zeroSensiReport, ssTrade, ssNetting, xvaZeroSeniCubes.tradeNettingSetMap_,
                                        inputs_->xvaSensiThreshold());
         analytic()->addReport(label(), "xva_zero_sensitivity_" + to_string(valueAdjustment), zeroSensiReport);
@@ -458,7 +459,7 @@ void XvaSensitivityAnalyticImpl::createParReports(ParSensiResults& xvaParSensiCu
 
         QuantLib::ext::shared_ptr<ore::data::InMemoryReport> report =
             QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
-        ReportWriter(inputs_->reportNaString())
+        XvaReportWriter(inputs_->reportNaString())
             .writeXvaSensitivityReport(*report, pssTrade, pssNetting, tradeNettingSetMap,
                                        inputs_->xvaSensiThreshold(), inputs_->xvaSensiOutputPrecision());
         analytic()->addReport(label(), "xva_par_sensitivity_" + to_string(valueAdjustment), report);

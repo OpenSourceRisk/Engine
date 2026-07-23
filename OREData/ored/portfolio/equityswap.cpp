@@ -21,6 +21,7 @@
 #include <ored/utilities/to_string.hpp>
 
 #include <qle/cashflows/equitycoupon.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 
 namespace ore {
 namespace data {

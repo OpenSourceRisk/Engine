@@ -23,14 +23,19 @@
 
 #include <orea/app/analytic.hpp>
 #include <orea/app/inputvariables.hpp>
-#include <orea/simm/crif.hpp>
-#include <orea/app/analytics/crifanalytic.hpp>
-#include <orea/app/analytics/analyticfactory.hpp>
+
+namespace ore {
+namespace data {
+class InMemoryLoader;
+}
+}
 
 namespace ore {
 namespace analytics {
 
 class InputParameters;
+class Crif;
+class ScenarioSimMarketParameters;
 
 struct SimmVariables : public InputVariables {
     void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;

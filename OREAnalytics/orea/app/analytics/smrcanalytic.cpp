@@ -19,7 +19,8 @@
 #include <orea/app/analytics/smrcanalytic.hpp>
 #include <orea/app/inputparameters.hpp>
 #include <orea/engine/smrc.hpp>
-#include <orea/app/reportwriter.hpp>
+#include <orea/app/reportwriters/capitalreportwriter.hpp>
+#include <orea/app/reportwriters/pricingreportwriter.hpp>
 #include <ored/report/inmemoryreport.hpp>
 
 namespace ore {
@@ -60,7 +61,7 @@ void SmrcAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
         std::filesystem::path cfReportPath = inputs_->resultsPath() / "cashflow.csv";
         CSVFileReport cfReport(cfReportPath.string(), ',', false, inputs_->csvQuoteChar(), inputs_->reportNaString(),
                                false);
-        ReportWriter(inputs_->reportNaString())
+        PricingReportWriter(inputs_->reportNaString())
             .writeCashflow(cfReport, inputs_->baseCurrency(), analytic()->portfolio(), analytic()->market(),
                            marketConfig);
     }

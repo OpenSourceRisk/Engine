@@ -35,6 +35,7 @@
 #include <ored/portfolio/scriptedtrade.hpp>
 #include <orea/simm/crif.hpp>
 #include <orea/simm/simmcalibration.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 #include <ql/indexes/iborindex.hpp>
 
 using namespace QuantLib;

@@ -18,7 +18,8 @@
 
 #include <orea/app/analytics/bacvaanalytic.hpp>
 #include <orea/app/inputparameters.hpp>
-#include <orea/app/reportwriter.hpp>
+#include <orea/app/reportwriters/capitalreportwriter.hpp>
+#include <orea/engine/bacvacalculator.hpp>
 #include <ored/report/inmemoryreport.hpp>
 
 using namespace ore::data;
@@ -88,7 +89,7 @@ void BaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoad
 
     // generate report
     QuantLib::ext::shared_ptr<InMemoryReport> baCvaReport = QuantLib::ext::make_shared<InMemoryReport>();
-    ReportWriter(inputs_->reportNaString()).writeBaCvaReport(baCvaCalculator, *baCvaReport);
+    CapitalReportWriter(inputs_->reportNaString()).writeBaCvaReport(baCvaCalculator, *baCvaReport);
     LOG("BA-CVA Calculation - Completed");
 
     analytic()->addReport(label(), "bacva", baCvaReport);

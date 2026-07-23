@@ -39,6 +39,9 @@
 #include <tuple>
 
 namespace ore {
+namespace data {
+class EngineData;
+}
 namespace analytics {
 
 //! Stress Test Analysis

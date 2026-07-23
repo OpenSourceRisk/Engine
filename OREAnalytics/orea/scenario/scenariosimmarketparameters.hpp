@@ -29,6 +29,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
+#include <ql/types.hpp>
 
 namespace ore {
 namespace analytics {

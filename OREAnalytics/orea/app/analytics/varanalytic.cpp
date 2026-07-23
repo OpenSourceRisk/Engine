@@ -19,7 +19,7 @@
 #include <orea/app/analytics/varanalytic.hpp>
 #include <orea/app/analytics/utilities.hpp>
 #include <orea/app/inputparameters.hpp>
-#include <orea/app/reportwriter.hpp>
+#include <orea/app/reportwriters/scenarioreportwriter.hpp>
 #include <orea/engine/historicalsimulationvar.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/parametricvar.hpp>
@@ -198,7 +198,7 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
             returnConfig, varVars->horizonOverlappingPeriods_);
 
         if (varVars->outputHistoricalScenarios_)
-            ReportWriter().writeHistoricalScenarios(
+            ScenarioReportWriter().writeHistoricalScenarios(
                 scenarios->scenarioLoader(),
                 QuantLib::ext::make_shared<CSVFileReport>(path(inputs_->resultsPath() / "backtest_histscenarios.csv").string(),
                                                   ',', false, inputs_->csvQuoteChar(), inputs_->reportNaString()));
@@ -270,7 +270,7 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
         returnConfig, varVars->horizonOverlappingPeriods_, riskFactorBreakdown_, varVars->includeTheta_);
 
     if (varVars->outputHistoricalScenarios_)
-        ore::analytics::ReportWriter().writeHistoricalScenarios(
+        ScenarioReportWriter().writeHistoricalScenarios(
             scenarios->scenarioLoader(),
             QuantLib::ext::make_shared<CSVFileReport>(path(inputs_->resultsPath() / "var_histscenarios.csv").string(), ',',
                                               false, inputs_->csvQuoteChar(), inputs_->reportNaString()));

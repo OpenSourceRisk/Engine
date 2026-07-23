@@ -18,13 +18,13 @@
 
 #include <orea/app/analytics/stresstestanalytic.hpp>
 #include <orea/app/inputparameters.hpp>
-#include <orea/app/reportwriter.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/parsensitivityanalysis.hpp>
 #include <orea/engine/parstressconverter.hpp>
 #include <orea/engine/stresstest.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
+#include <ored/marketdata/inmemoryloader.hpp>
 #include <ored/report/inmemoryreport.hpp>
 
 using namespace ore::data;

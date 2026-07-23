@@ -18,10 +18,11 @@
 
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/inputparameters.hpp>
-#include <orea/app/reportwriter.hpp>
+#include <orea/app/reportwriters/pricingreportwriter.hpp>
 #include <orea/engine/decomposedsensitivitystream.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/parsensitivitycubestream.hpp>
+#include <orea/engine/sensitivitycubestream.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/report/inmemoryreport.hpp>
 
@@ -124,7 +125,7 @@ void PricingAnalyticImpl::runAnalytic(
         auto marketConfig = inputs_->marketConfig("pricing");
         if (type == "NPV") {
             CONSOLEW("Pricing: NPV Report");
-            ReportWriter(inputs_->reportNaString())
+            PricingReportWriter(inputs_->reportNaString())
                 .writeNpv(*report, effectiveResultCurrency, analytic()->market(), marketConfig,
                           analytic()->portfolio());
             analytic()->addReport(type, "npv", report);
@@ -170,7 +171,7 @@ void PricingAnalyticImpl::runAnalytic(
                 QuantLib::ext::shared_ptr<InMemoryReport> curvesReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 DateGrid grid(pVars->curvesGrid_, parseCalendar(pVars->curvesCalendar_));
                 std::string config = pVars->curvesMarketConfig_;
-                ReportWriter(inputs_->reportNaString())
+                PricingReportWriter(inputs_->reportNaString())
                     .writeCurves(*curvesReport, config, grid, *analytic()->configurations().todaysMarketParams,
                                  analytic()->market(), inputs_->continueOnError());
                 analytic()->addReport(type, "curves", curvesReport);
@@ -184,7 +185,7 @@ void PricingAnalyticImpl::runAnalytic(
                 QuantLib::ext::shared_ptr<InMemoryReport> curvesReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 DateGrid grid(pVars->curvesGrid_, parseCalendar(pVars->curvesCalendar_));
                 std::string config = pVars->curvesMarketConfig_;
-                ReportWriter(inputs_->reportNaString())
+                PricingReportWriter(inputs_->reportNaString())
                     .writeCurves(*curvesReport, config, grid, *analytic()->configurations().todaysMarketParams,
                                  analytic()->market(), inputs_->continueOnError());
                 analytic()->addReport(type, "curves", curvesReport);
@@ -192,18 +193,18 @@ void PricingAnalyticImpl::runAnalytic(
             }
         } else if (type == "CASHFLOW") {
             CONSOLEW("Pricing: Cashflow Report");
-            ReportWriter(inputs_->reportNaString())
+            PricingReportWriter(inputs_->reportNaString())
                 .writeCashflow(*report, effectiveResultCurrency, analytic()->portfolio(), analytic()->market(),
                                marketConfig, inputs_->includePastCashflows());
             analytic()->addReport(type, "cashflow", report);
             CONSOLE("OK");
         } else if (type == "CASHFLOWNPV") {
             CONSOLEW("Pricing: Cashflow NPV report");
-            ReportWriter(inputs_->reportNaString())
+            PricingReportWriter(inputs_->reportNaString())
                 .writeCashflow(tmpReport, effectiveResultCurrency, analytic()->portfolio(),
                                analytic()->market(),
                                marketConfig, inputs_->includePastCashflows());
-            ReportWriter(inputs_->reportNaString())
+            PricingReportWriter(inputs_->reportNaString())
                 .writeCashflowNpv(*report, tmpReport, analytic()->market(), marketConfig,
                                   effectiveResultCurrency, inputs_->cashflowHorizon());
             analytic()->addReport(type, "cashflownpv", report);
@@ -276,7 +277,7 @@ void PricingAnalyticImpl::runAnalytic(
                     analytic()->market());
             }
 
-            ReportWriter(inputs_->reportNaString())
+            PricingReportWriter(inputs_->reportNaString())
                 .writeSensitivityReport(*report, ss, inputs_->sensiThreshold(), analytic()->market(), marketConfig,
                                         inputs_->sensiOutputPrecision());
 
@@ -290,7 +291,7 @@ void PricingAnalyticImpl::runAnalytic(
             analytic()->addReport(type, "sensitivity_scenario", scenarioReport);
 
             auto simmSensitivityConfigReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-            ReportWriter(inputs_->reportNaString())
+            PricingReportWriter(inputs_->reportNaString())
                 .writeSensitivityConfigReport(*simmSensitivityConfigReport,
                                               sensiAnalysis_->scenarioGenerator()->shiftSizes(),
                                               sensiAnalysis_->scenarioGenerator()->baseValues(),
@@ -334,7 +335,7 @@ void PricingAnalyticImpl::runAnalytic(
                 // If the stream is going to be reused - wrap it into a buffered stream to gain some
                 // performance. The cost for this is the memory footpring of the buffer.
                 QuantLib::ext::shared_ptr<InMemoryReport> parSensiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-                ReportWriter(inputs_->reportNaString())
+                PricingReportWriter(inputs_->reportNaString())
                     .writeSensitivityReport(*parSensiReport, pss, inputs_->sensiThreshold(), analytic()->market(),
                                             marketConfig, inputs_->sensiOutputPrecision());
                 analytic()->addReport(type, "par_sensitivity", parSensiReport);

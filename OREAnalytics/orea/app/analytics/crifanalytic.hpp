@@ -34,6 +34,7 @@ namespace analytics {
 
 class InputParameters;
 class Crif;
+class SensitivityStream;
 
 class CrifAnalyticBase {
 public:

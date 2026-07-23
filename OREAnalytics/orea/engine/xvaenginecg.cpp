@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/app/reportwriter.hpp>
+#include <orea/app/reportwriters/xvareportwriter.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/cube/npvsensicube.hpp>
 #include <orea/cube/sensitivitycube.hpp>
@@ -41,6 +41,7 @@
 #include <qle/instruments/payment.hpp>
 #include <qle/math/randomvariable_ops.hpp>
 #include <qle/methods/multipathvariategenerator.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/stats.hpp>

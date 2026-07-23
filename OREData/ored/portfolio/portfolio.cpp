@@ -19,6 +19,8 @@
 #include <ored/portfolio/failedtrade.hpp>
 #include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/portfolio.hpp>
+#include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/tradefactory.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/portfolio/structuredtradewarning.hpp>
 #include <ored/portfolio/swap.hpp>

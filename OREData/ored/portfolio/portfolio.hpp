@@ -23,17 +23,22 @@
 
 #pragma once
 
-#include <boost/make_shared.hpp>
 #include <ql/shared_ptr.hpp>
-#include <ored/portfolio/enginefactory.hpp>
-#include <ored/portfolio/tradefactory.hpp>
+#include <ored/portfolio/fixingdates.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ored/utilities/xmlutils.hpp>
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
+#include <map>
+#include <set>
+#include <string>
 #include <vector>
 
 namespace ore {
 namespace data {
 
+class Trade;
+class EngineFactory;
 class ReferenceDataManager;
 
 //! Serializable portfolio

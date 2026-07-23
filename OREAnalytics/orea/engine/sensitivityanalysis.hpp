@@ -42,6 +42,9 @@
 #include <tuple>
 
 namespace ore {
+namespace data {
+class EngineData;
+}
 namespace analytics {
 
 class ScenarioFactory;
