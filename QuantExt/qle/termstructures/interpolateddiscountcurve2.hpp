@@ -43,7 +43,7 @@ using namespace QuantLib;
 */
 class InterpolatedDiscountCurve2 : public YieldTermStructure, public LazyObject {
 public:
-    enum class Interpolation { logLinear, linearZero };
+    enum class Interpolation { logLinear, linearZero, logCubic };
     enum class Extrapolation { flatFwd, flatZero };
     //! \name Constructors
     //@{
@@ -73,6 +73,8 @@ protected:
     DiscountFactor discountImpl(Time t) const override;
 
 private:
+    QuantLib::ext::shared_ptr<QuantLib::Interpolation> makeInterpolation() const;
+
     std::vector<Time> times_;
     std::vector<Handle<Quote>> quotes_;
     Interpolation interpolation_;

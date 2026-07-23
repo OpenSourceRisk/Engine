@@ -18,6 +18,7 @@
 
 #include "toplevelfixture.hpp"
 #include <boost/test/unit_test.hpp>
+#include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
@@ -81,6 +82,55 @@ BOOST_AUTO_TEST_CASE(testDiscountCurve) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(testDiscountCurveLogCubic) {
+
+    BOOST_TEST_MESSAGE("Testing QuantExt::InterpolatedDiscountCurve2 with log-cubic interpolation...");
+
+    SavedSettings backup;
+    Settings::instance().evaluationDate() = Date(1, Dec, 2015);
+    Date today = Settings::instance().evaluationDate();
+
+    vector<Date> dates;
+    vector<Real> times;
+    vector<DiscountFactor> dfs;
+    vector<Handle<Quote>> quotes;
+
+    Size numYears = 30;
+    int startYear = 2015;
+    DayCounter dc = ActualActual(ActualActual::ISDA);
+    Calendar cal = NullCalendar();
+
+    for (Size i = 0; i < numYears; i++) {
+        // slightly non-linear zero rate so that cubic differs from linear
+        Real rate = 0.01 + i * 0.001 + 0.0005 * std::sin(0.5 * i);
+        dates.push_back(Date(1, Dec, startYear + i));
+        Time t = dc.yearFraction(today, dates.back());
+        times.push_back(t);
+        DiscountFactor df = ::exp(-rate * t);
+        quotes.push_back(Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(df)));
+        dfs.push_back(df);
+    }
+
+    // Reference: QuantLib discount curve using monotonic log-cubic interpolation of discount factors
+    QuantLib::ext::shared_ptr<YieldTermStructure> ytsBase(
+        new QuantLib::InterpolatedDiscountCurve<MonotonicLogCubic>(dates, dfs, dc, cal));
+    ytsBase->enableExtrapolation();
+
+    QuantLib::ext::shared_ptr<YieldTermStructure> ytsTest(new QuantExt::InterpolatedDiscountCurve2(
+        times, quotes, dc, QuantExt::InterpolatedDiscountCurve2::Interpolation::logCubic));
+
+    // the pillar discount factors must be reproduced exactly
+    for (Size i = 0; i < dates.size(); ++i) {
+        BOOST_CHECK_CLOSE(ytsTest->discount(dates[i]), dfs[i], 1e-10);
+    }
+
+    // interpolated discount factors within the pillar range must match the QuantLib reference
+    for (Time t = 0.1; t < numYears - 0.5; t += 0.1) {
+        BOOST_CHECK_CLOSE(ytsBase->discount(t), ytsTest->discount(t), 1e-10);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
+
