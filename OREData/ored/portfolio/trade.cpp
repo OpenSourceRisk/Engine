@@ -18,6 +18,9 @@
 
 #include <ored/portfolio/structuredtradewarning.hpp>
 #include <ored/portfolio/trade.hpp>
+#include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/premiumdata.hpp>
+#include <ored/portfolio/tradefactory.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>

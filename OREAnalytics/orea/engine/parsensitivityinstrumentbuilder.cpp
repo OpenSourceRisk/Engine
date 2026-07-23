@@ -24,6 +24,7 @@
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/parsensitivityinstrumentbuilder.hpp>
 #include <orea/engine/valuationengine.hpp>
+#include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <ored/marketdata/inflationcurve.hpp>

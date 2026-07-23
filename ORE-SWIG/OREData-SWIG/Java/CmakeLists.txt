@@ -55,7 +55,7 @@ link_directories(${ORE}/build/OREData/ored)
 set (CMAKE_CXX_STANDARD 11)
 
 # run SWIG
-find_package(SWIG REQUIRED)
+find_package(SWIG MODULE REQUIRED)
 find_package(Java REQUIRED)
 find_package(JNI REQUIRED)
 include(UseJava)

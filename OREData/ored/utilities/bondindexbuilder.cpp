@@ -18,6 +18,7 @@
 
 #include <ored/utilities/bondindexbuilder.hpp>
 #include <ored/utilities/marketdata.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 
 namespace ore {
 namespace data {

@@ -19,7 +19,6 @@
 #include <orea/app/analytics/correlationanalytic.hpp>
 #include <orea/app/analytics/utilities.hpp>
 #include <orea/app/inputparameters.hpp>
-#include <orea/app/reportwriter.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/scenario/filteredscenarioreader.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>

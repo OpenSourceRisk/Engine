@@ -27,16 +27,13 @@
 #include <orea/app/analytics/xvasensitivityanalytic.hpp>
 
 namespace ore {
-namespace analytics {
-
-
-class InputParameters;
-
-}
 namespace data {
 class CounterpartyManager;
-}
+class NettingSetManager;
+} // namespace data
+
 namespace analytics {
+class InputParameters;
 
 struct SaCvaVariables : public InputVariables {
     void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;

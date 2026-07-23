@@ -16,37 +16,28 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <iomanip>
 #include <orea/app/analytic.hpp>
 #include <orea/app/analyticsmanager.hpp>
 #include <orea/app/inputparameters.hpp>
 #include <orea/app/inputvariables.hpp>
-#include <orea/app/reportwriter.hpp>
-#include <orea/app/marketdataloader.hpp>
 #include <orea/app/portfolioanalyser.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
-#include <orea/engine/bufferedsensitivitystream.hpp>
-#include <orea/engine/filteredsensitivitystream.hpp>
 #include <orea/engine/observationmode.hpp>
-#include <orea/engine/zerotoparcube.hpp>
-#include <orea/cube/cubewriter.hpp>
-#include <orea/scenario/simplescenariofactory.hpp>
-#include <orea/scenario/scenariowriter.hpp>
-#include <orea/engine/valuationengine.hpp>
-#include <orea/aggregation/dimregressioncalculator.hpp>
+#include <orea/scenario/scenario.hpp>
 
 #include <ored/marketdata/compositeloader.hpp>
+#include <ored/marketdata/marketimpl.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/marketdata/bondspreadimply.hpp>
-#include <ored/portfolio/builders/currencyswap.hpp>
-#include <ored/portfolio/builders/fxoption.hpp>
-#include <ored/portfolio/builders/swaption.hpp>
-#include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/utilities/indexparser.hpp>
 
 #include <iostream>
 
 using namespace ore::data;
 using namespace std::filesystem;
+
+using std::setprecision;
 using boost::timer::cpu_timer;
 using boost::timer::default_places;
 
@@ -79,6 +70,10 @@ Analytic::Analytic(std::unique_ptr<Impl> impl,
         impl_->setAnalytic(this);
         impl_->setGenerateAdditionalResults(inputs_->outputAdditionalResults());
     }
+}
+
+QuantLib::ext::shared_ptr<ore::data::MarketImpl> Analytic::getMarket() const {
+    return QuantLib::ext::dynamic_pointer_cast<ore::data::MarketImpl>(market_);
 }
 
 Analytic::analytic_reports Analytic::reports() { 

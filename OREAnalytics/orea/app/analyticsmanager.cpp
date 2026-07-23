@@ -24,12 +24,14 @@
 
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/timer.hpp>
 
 #include <ql/errors.hpp>
 
 using namespace std;
 using namespace std::filesystem;
 using ore::data::InMemoryReport;
+using ore::data::Timer;
 
 namespace ore {
 namespace analytics {
@@ -135,12 +137,12 @@ void AnalyticsManager::runAnalytics(
         QuantLib::ext::shared_ptr<InMemoryReport> dividendReport =
             QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
 
-        ore::analytics::ReportWriter(inputs_->reportNaString())
+        ReportWriter(inputs_->reportNaString())
             .writeMarketData(*mdReport, marketDataLoader_->loader(), inputs_->asof(),
                              marketDataLoader_->quotes()[inputs_->asof()], !inputs_->entireMarket());
-        ore::analytics::ReportWriter(inputs_->reportNaString())
+        ReportWriter(inputs_->reportNaString())
             .writeFixings(*fixingReport, marketDataLoader_->loader());
-        ore::analytics::ReportWriter(inputs_->reportNaString())
+        ReportWriter(inputs_->reportNaString())
             .writeDividends(*dividendReport, marketDataLoader_->loader());
 
         reports_["MARKETDATA"]["marketdata"] = mdReport;
@@ -172,9 +174,9 @@ void AnalyticsManager::runAnalytics(
         reports_["STATS"]["pricingstats"] = pricingStatsReport;
     }
 
-    Timer timer;
+    ore::data::Timer timer;
     for (auto a : analytics_) {
-        Timer analyticTimer = a.second->getTimer();
+        ore::data::Timer analyticTimer = a.second->getTimer();
         if (!analyticTimer.empty()) {
             timer.addTimer(a.first, analyticTimer);
         }
