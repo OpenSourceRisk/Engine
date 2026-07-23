@@ -2386,13 +2386,12 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
                 fixingTenorIndex = Null<Size>();
                 for (Size j : members) {
                     if (asof + shiftPeriods[j] == fixingDates[j]) {
-                        QL_REQUIRE(fixingTenorIndex == Null<Size>(), "Commodity curve '"
-                                                                           << name
-                                                                           << "': fixing-calendar bucket for fixing date "
-                                                                           << fixingDates[j]
-                                                                           << " has multiple fixing tenors ('"
-                                                                           << data.shiftTenors[fixingTenorIndex] << "' and '"
-                                                                           << data.shiftTenors[j] << "')");
+                        if (fixingTenorIndex != Null<Size>()) {
+                            QL_FAIL("Commodity curve '"
+                                    << name << "': fixing-calendar bucket for fixing date " << fixingDates[j]
+                                    << " has multiple fixing tenors ('" << data.shiftTenors[fixingTenorIndex]
+                                    << "' and '" << data.shiftTenors[j] << "')");
+                        }
                         fixingTenorIndex = j;
                     }
                 }

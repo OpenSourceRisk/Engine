@@ -78,7 +78,6 @@ public:
     struct CommodityCurveShiftData : CurveShiftData {
         CommodityCurveShiftData() : CurveShiftData() {}
         CommodityCurveShiftData(const CurveShiftData& d) : CurveShiftData(d) {}
-        virtual ~CommodityCurveShiftData() {}
         std::optional<QuantLib::Calendar> fixingCalendar;
         QuantLib::BusinessDayConvention fixingConvention = QuantLib::Preceding;
     };
