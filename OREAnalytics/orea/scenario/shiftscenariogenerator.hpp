@@ -147,8 +147,8 @@ public:
         //! Initialise shiftedValues vector before applying this shift j (yes for sensitivity, no for stress)
         bool initialise);
 
-    //! Apply one flat-topped shift across a group of shift curve tenor points known to share a single
-    //! risk factor, public to allow test suite access
+    //! Apply one shift across a group of shift curve tenor points known to share a single risk factor,
+    //! public to allow test suite access
     /*!
       Generalises the single point applyShift() above: weight one is applied to every curve grid
       point between the group's first and last member, tapering to zero only between the group's

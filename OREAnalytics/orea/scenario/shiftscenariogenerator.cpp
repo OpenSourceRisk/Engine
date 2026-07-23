@@ -261,9 +261,8 @@ void ShiftScenarioGenerator::applyShift(const vector<Size>& js, Real shiftSize, 
             shiftedValues[i] = values[i];
     }
 
-    // Flat top: full weight between the group's first and last member, tapering only towards the
-    // immediately neighbouring non-member tenor, exactly as the single point shift tapers towards its
-    // neighbours.
+    // Apply full weight between the group's first and last members, tapering only towards the
+    // immediately neighbouring non-member tenor.
     Time tLo = tenors[loIdx];
     Time tHi = tenors[hiIdx];
     bool hasLeftNeighbor = loIdx > 0;

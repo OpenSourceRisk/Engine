@@ -2410,7 +2410,7 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
             QuantLib::ext::shared_ptr<Scenario> scenario =
                 sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
 
-            // Apply one flat-topped shift across all member tenor points of the bucket
+            // Apply one shift across all member tenor points of the bucket
             applyShift(members, shiftSize, up, shiftType, shiftTimes, basePrices, times, shiftedPrices, true);
 
             // store shifted commodity price curve in the scenario
