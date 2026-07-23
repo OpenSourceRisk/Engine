@@ -18,6 +18,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 
 #include <ql/cashflows/inflationcoupon.hpp>
 #include <ql/cashflows/inflationcouponpricer.hpp>
+#include <qle/cashflows/yoyinflationcoupon.hpp>
 #include <qle/cashflows/strippedcapflooredyoyinflationcoupon.hpp>
 
 namespace QuantExt {
