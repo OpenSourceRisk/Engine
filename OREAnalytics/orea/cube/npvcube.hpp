@@ -33,8 +33,7 @@
 
 namespace ore {
 namespace analytics {
-using QuantLib::Real;
-using QuantLib::Size;
+
 //! NPV Cube class stores both future and current NPV values.
 /*! The cube class stores future NPV values in a 4-D array.
  *
@@ -63,13 +62,13 @@ public:
     virtual ~NPVCube() {}
 
     //! Return the length of each dimension
-    virtual Size numIds() const = 0;
-    virtual Size numDates() const = 0;
-    virtual Size samples() const = 0;
-    virtual Size depth() const = 0;
+    virtual QuantLib::Size numIds() const = 0;
+    virtual QuantLib::Size numDates() const = 0;
+    virtual QuantLib::Size samples() const = 0;
+    virtual QuantLib::Size depth() const = 0;
 
     //! Get a map of id and their index position in this cube 
-    virtual const std::map<std::string, Size>& idsAndIndexes() const = 0;
+    virtual const std::map<std::string, QuantLib::Size>& idsAndIndexes() const = 0;
 
     //! Get a set of all ids in the cube
     const std::set<std::string> ids() const {
@@ -86,47 +85,52 @@ public:
     //! Return the asof date (T0 date)
     virtual QuantLib::Date asof() const = 0;
     //! Get a T0 value from the cube using index
-    virtual Real getT0(Size id, Size depth = 0) const = 0;
+    virtual QuantLib::Real getT0(QuantLib::Size id, QuantLib::Size depth = 0) const = 0;
     //! Get a T0 value from the cube using trade id
-    virtual Real getT0(const std::string& id, Size depth = 0) const { return getT0(index(id), depth); };
+    virtual QuantLib::Real getT0(const std::string& id, QuantLib::Size depth = 0) const { return getT0(index(id), depth); };
     //! Set a value in the cube using index
-    virtual void setT0(Real value, Size id, Size depth = 0) = 0;
+    virtual void setT0(QuantLib::Real value, QuantLib::Size id, QuantLib::Size depth = 0) = 0;
     //! Set a value in the cube using trade id
-    virtual void setT0(Real value, const std::string& id, Size depth = 0) { setT0(value, index(id), depth); };
+    virtual void setT0(QuantLib::Real value, const std::string& id, QuantLib::Size depth = 0) {
+        setT0(value, index(id), depth);
+    };
 
     //! Get a value from the cube using index
-    virtual Real get(Size id, Size date, Size sample, Size depth = 0) const = 0;
+    virtual QuantLib::Real get(QuantLib::Size id, QuantLib::Size date, QuantLib::Size sample,
+                               QuantLib::Size depth = 0) const = 0;
     //! Set a value in the cube using index
-    virtual void set(Real value, Size id, Size date, Size sample, Size depth = 0) = 0;
+    virtual void set(QuantLib::Real value, QuantLib::Size id, QuantLib::Size date, QuantLib::Size sample,
+                     QuantLib::Size depth = 0) = 0;
 
     //! Get a value from the cube using trade id and date
-    virtual Real get(const std::string& id, const QuantLib::Date& date, Size sample, Size depth = 0) const {
+    virtual QuantLib::Real get(const std::string& id, const QuantLib::Date& date, QuantLib::Size sample, QuantLib::Size depth = 0) const {
         return get(index(id), index(date), sample, depth);
     };
     //! Set a value in the cube using trade id and date
-    virtual void set(Real value, const std::string& id, const QuantLib::Date& date, Size sample, Size depth = 0) {
+    virtual void set(QuantLib::Real value, const std::string& id, const QuantLib::Date& date, QuantLib::Size sample,
+                     QuantLib::Size depth = 0) {
         set(value, index(id), index(date), sample, depth);
     }
 
     /*! Remove t0 values for a given id */
-    virtual void removeT0(Size id);
+    virtual void removeT0(QuantLib::Size id);
 
     /*! Set non-t0 value to either 0 or the t0 value for a given id and sample. If sample is null, all samples are removed */
-    virtual void remove(Size id, Size sample, bool setToT0Value);
+    virtual void remove(QuantLib::Size id, QuantLib::Size sample, bool setToT0Value);
 
-    Size getTradeIndex(const std::string& id) const { return index(id); }
-    Size getDateIndex(const QuantLib::Date& date) const { return index(date); }
+    QuantLib::Size getTradeIndex(const std::string& id) const { return index(id); }
+    QuantLib::Size getDateIndex(const QuantLib::Date& date) const { return index(date); }
 
     virtual bool usesDoublePrecision() const = 0;
 
 protected:
-    virtual Size index(const std::string& id) const {
+    virtual QuantLib::Size index(const std::string& id) const {
         const auto& it = idsAndIndexes().find(id);
         QL_REQUIRE(it != idsAndIndexes().end(), "NPVCube can't find an index for id " << id);
         return it->second;
     };
 
-    virtual Size index(const QuantLib::Date& date) const {
+    virtual QuantLib::Size index(const QuantLib::Date& date) const {
         auto it = std::find(dates().begin(), dates().end(), date);
         QL_REQUIRE(it != dates().end(), "NPVCube can't find an index for date " << date);
         return std::distance(dates().begin(), it);
@@ -136,20 +140,20 @@ protected:
 
 // impl
 
-inline void NPVCube::removeT0(Size id) {
-    for (Size depth = 0; depth < this->depth(); ++depth) {
+inline void NPVCube::removeT0(QuantLib::Size id) {
+    for (QuantLib::Size depth = 0; depth < this->depth(); ++depth) {
         setT0(0.0, id, depth);
     }
 }
 
-inline void NPVCube::remove(Size id, Size sample, bool setToT0Value) {
-    for (Size date = 0; date < this->numDates(); ++date) {
-        for (Size depth = 0; depth < this->depth(); ++depth) {
-            Real value = setToT0Value ? getT0(id, depth) : 0.0;
-            if (sample != QuantLib::Null<Size>()) {
+inline void NPVCube::remove(QuantLib::Size id, QuantLib::Size sample, bool setToT0Value) {
+    for (QuantLib::Size date = 0; date < this->numDates(); ++date) {
+        for (QuantLib::Size depth = 0; depth < this->depth(); ++depth) {
+            QuantLib::Real value = setToT0Value ? getT0(id, depth) : 0.0;
+            if (sample != QuantLib::Null<QuantLib::Size>()) {
                 set(value, id, date, sample, depth);
             } else {
-                for (Size sample = 0; sample < this->samples(); ++sample) {
+                for (QuantLib::Size sample = 0; sample < this->samples(); ++sample) {
                     set(value, id, date, sample, depth);
                 }
             }

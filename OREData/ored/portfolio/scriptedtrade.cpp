@@ -27,6 +27,7 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/model/assetmodelbuilderbase.hpp>
+#include <ored/portfolio/premiumdata.hpp>
 
 #include <boost/algorithm/string/replace.hpp>
 

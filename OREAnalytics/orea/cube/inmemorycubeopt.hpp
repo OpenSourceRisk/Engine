@@ -26,6 +26,7 @@
 #include <orea/cube/npvcube.hpp>
 
 #include <ql/errors.hpp>
+#include <ql/types.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -37,6 +38,7 @@ namespace analytics {
 
 using QuantLib::Date;
 using QuantLib::Size;
+using QuantLib::Real;
 
 template <typename T> class InMemoryCubeOpt : public NPVCube {
 public:

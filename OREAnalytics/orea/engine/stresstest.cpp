@@ -25,6 +25,7 @@
 #include <orea/scenario/scenariowriter.hpp>
 
 #include <ored/utilities/log.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 
 #include <ql/utilities/null_deleter.hpp>
 #include <ql/errors.hpp>

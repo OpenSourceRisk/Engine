@@ -20,6 +20,7 @@
 #include <ored/portfolio/tradefactory.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 
 namespace ore {
 namespace data {

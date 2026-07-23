@@ -18,7 +18,7 @@
 
 #include <orea/app/analytics/parconversionanalytic.hpp>
 #include <orea/app/inputparameters.hpp>
-#include <orea/app/reportwriter.hpp>
+#include <orea/app/reportwriters/pricingreportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/engine/parsensitivityanalysis.hpp>
 #include <orea/engine/sensitivityinmemorystream.hpp>
@@ -189,7 +189,7 @@ void ParConversionAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore:
         auto ss = QuantLib::ext::make_shared<SensitivityInMemoryStream>(results.begin(), results.end());
         QuantLib::ext::shared_ptr<InMemoryReport> report =
             QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-        ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*report, ss, inputs_->parConversionThreshold());
+        PricingReportWriter(inputs_->reportNaString()).writeSensitivityReport(*report, ss, inputs_->parConversionThreshold());
         analytic()->addReport("PARCONVERSION", "parConversionSensitivity", report);
 
         if (inputs_->parConversionOutputJacobi()) {

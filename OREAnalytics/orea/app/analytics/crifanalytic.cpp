@@ -17,9 +17,11 @@
 */
 
 #include <orea/app/analytics/crifanalytic.hpp>
+#include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/inputparameters.hpp>
-#include <orea/app/reportwriter.hpp>
+#include <orea/app/reportwriters/pricingreportwriter.hpp>
+#include <orea/app/reportwriters/simmreportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/simm/crifgenerator.hpp>
 #include <orea/simm/crifmarket.hpp>
@@ -208,7 +210,7 @@ void CrifAnalyticImpl::writeCrifReport(CrifAnalyticBase& crifAnalytic,
                                        const QuantLib::ext::shared_ptr<InMemoryReport>& crifReport,
                                        const QuantLib::ext::shared_ptr<Crif>& crif,
                                        const QuantLib::ext::shared_ptr<PortfolioFieldGetter>& fieldGetter) {
-    ReportWriter(inputs->reportNaString()).writeCrifReport(crifReport, crif);
+    SimmReportWriter(inputs->reportNaString()).writeCrifReport(crifReport, crif);
 }
 
 void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -239,7 +241,7 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
     auto marketConfig = inputs_->marketConfig("pricing");
     // NPV report before applying SIMM exemptions
     auto npvWithoutReport = QuantLib::ext::make_shared<InMemoryReport>();
-    ReportWriter(inputs_->reportNaString())
+    PricingReportWriter(inputs_->reportNaString())
         .writeNpv(*npvWithoutReport, crifAnalytic->baseCurrency(), analytic()->market(), marketConfig,
                   analytic()->portfolio());
     analytic()->addReport(LABEL, "npv_no_simm_exemptions", npvWithoutReport);
@@ -275,13 +277,13 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
 
     // NPV report after applying SIMM exemptions
     auto npvWithReport = QuantLib::ext::make_shared<InMemoryReport>();
-    ReportWriter(inputs_->reportNaString())
+    PricingReportWriter(inputs_->reportNaString())
         .writeNpv(*npvWithReport, crifAnalytic->baseCurrency(), analytic()->market(), marketConfig,
                   analytic()->portfolio());
     analytic()->addReport(LABEL, "npv_with_simm_exemptions", npvWithReport);
     // CF report after applying SIMM exemptions
     auto cfWithReport = QuantLib::ext::make_shared<InMemoryReport>();
-    ReportWriter(inputs_->reportNaString())
+    PricingReportWriter(inputs_->reportNaString())
         .writeCashflow(*cfWithReport, crifAnalytic->baseCurrency(), analytic()->portfolio(), analytic()->market(),
                        marketConfig);
     analytic()->addReport(LABEL, "cashflow_with_simm_exemptions", cfWithReport);

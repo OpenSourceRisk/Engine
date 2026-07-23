@@ -31,6 +31,7 @@
 
 namespace ore {
 namespace data {
+class Underlying;
 using std::string;
 
 //! Serializable Asian Option

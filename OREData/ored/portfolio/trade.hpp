@@ -23,20 +23,15 @@
 
 #pragma once
 
-#include <ored/portfolio/cashflowutils.hpp>
-#include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/envelope.hpp>
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/instrumentwrapper.hpp>
-#include <ored/portfolio/premiumdata.hpp>
 #include <ored/portfolio/tradeactions.hpp>
-#include <ored/portfolio/tradefactory.hpp>
 #include <ored/utilities/parsers.hpp>
 
 #include <ql/cashflow.hpp>
 #include <ql/instrument.hpp>
 #include <ql/time/date.hpp>
-#include <ql/cashflow.hpp>
 
 namespace ore {
 namespace data {
@@ -44,6 +39,15 @@ using ore::data::XMLNode;
 using ore::data::XMLSerializable;
 using QuantLib::Date;
 using std::string;
+
+// forward declarations (used only via shared_ptr / reference / return type below)
+class EngineFactory;
+class EngineBuilder;
+class ReferenceDataManager;
+class PremiumData;
+class Market;
+struct TradeCashflowReportData;
+
 
 //! Trade base class
 /*! Instrument interface to pricing and risk applications

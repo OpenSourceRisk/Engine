@@ -29,6 +29,8 @@
 namespace ore {
 namespace data {
 
+class Underlying;
+
 using namespace ore::data;
 
 class EuropeanOptionBarrier : public ScriptedTrade {

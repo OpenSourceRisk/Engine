@@ -65,6 +65,11 @@ app/oreapp.cpp
 app/parameters.cpp
 app/portfolioanalyser.cpp
 app/reportwriter.cpp
+app/reportwriters/capitalreportwriter.cpp
+app/reportwriters/pricingreportwriter.cpp
+app/reportwriters/scenarioreportwriter.cpp
+app/reportwriters/simmreportwriter.cpp
+app/reportwriters/xvareportwriter.cpp
 app/zerosensitivityloader.cpp
 cube/cube_io.cpp
 cube/cubecsvreader.cpp
@@ -288,6 +293,11 @@ app/oreapp.hpp
 app/parameters.hpp
 app/portfolioanalyser.hpp
 app/reportwriter.hpp
+app/reportwriters/capitalreportwriter.hpp
+app/reportwriters/pricingreportwriter.hpp
+app/reportwriters/scenarioreportwriter.hpp
+app/reportwriters/simmreportwriter.hpp
+app/reportwriters/xvareportwriter.hpp
 app/structuredanalyticserror.hpp
 app/structuredanalyticswarning.hpp
 app/zerosensitivityloader.hpp

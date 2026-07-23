@@ -38,7 +38,6 @@
 #include <iostream>
 #include <vector>
 
-
 namespace ore {
 namespace analytics {
 
@@ -47,8 +46,8 @@ class SensiCube : public NPVSensiCube {
 public:
     SensiCube(const std::set<std::string>& ids, const QuantLib::Date& asof, QuantLib::Size samples)
         : asof_(asof), dates_(1, asof), samples_(samples), t0Data_(ids.size()),
-          tradeNPVs_(ids.size(), map<Size, QuantLib::Real>()) {
-        Size pos = 0;
+          tradeNPVs_(ids.size(), std::map<QuantLib::Size, QuantLib::Real>()) {
+        QuantLib::Size pos = 0;
         for (const auto& id : ids) {
             idIdx_[id] = pos++; 
         }
@@ -59,7 +58,7 @@ public:
     QuantLib::Size samples() const override { return samples_; }
 
     //! Get the vector of ids for this cube
-    const std::map<std::string, Size>& idsAndIndexes() const override { return idIdx_; }
+    const std::map<std::string, QuantLib::Size>& idsAndIndexes() const override { return idIdx_; }
 
     //! Get the vector of dates for this cube
     const std::vector<QuantLib::Date>& dates() const override { return dates_; }
@@ -68,19 +67,19 @@ public:
     QuantLib::Date asof() const override { return asof_; }
 
     //! Get a T0 value from the cube
-    Real getT0(Size i, Size d) const override {
+    QuantLib::Real getT0(QuantLib::Size i, QuantLib::Size d) const override {
         this->check(i, 0, 0, d);
         return this->t0Data_[i];
     }
 
     //! Set a value in the cube
-    void setT0(Real value, Size i, Size d) override {
+    void setT0(QuantLib::Real value, QuantLib::Size i, QuantLib::Size d) override {
         this->check(i, 0, 0, d);
         this->t0Data_[i] = static_cast<QuantLib::Real>(value);
     }
 
     //! Get a value from the cube
-    Real get(Size i, Size j, Size k, Size d) const override {
+    QuantLib::Real get(QuantLib::Size i, QuantLib::Size j, QuantLib::Size k, QuantLib::Size d) const override {
         this->check(i, j, k, d);
 
         auto itr = this->tradeNPVs_[i].find(k);
@@ -92,7 +91,7 @@ public:
     }
 
     //! Set a value in the cube
-    void set(Real value, Size i, Size j, Size k, Size d) override {
+    void set(QuantLib::Real value, QuantLib::Size i, QuantLib::Size j, QuantLib::Size k, QuantLib::Size d) override {
         this->check(i, j, k, d);
         QuantLib::Real castValue = static_cast<QuantLib::Real>(value);
         if (boost::math::epsilon_difference<QuantLib::Real>(castValue, t0Data_[i]) > 42) {
@@ -101,14 +100,14 @@ public:
         }
     }
 
-    void removeT0(Size i) override {
+    void removeT0(QuantLib::Size i) override {
         this->check(i, 0, 0, 0);
         this->t0Data_[i] = 0.0;
     }
 
-    void remove(Size i, Size k, bool useT0) override {
+    void remove(QuantLib::Size i, QuantLib::Size k, bool useT0) override {
         // we can ignore useT0 since get() return the t0 value anyhow if missing k
-        if (k != QuantLib::Null<Size>()) {
+        if (k != QuantLib::Null<QuantLib::Size>()) {
             this->check(i, 0, k, 0);
             this->tradeNPVs_[i].erase(k);
         } else {
@@ -123,7 +122,7 @@ public:
     bool usesDoublePrecision() const override;
 
 private:
-    std::map<std::string, Size> idIdx_;
+    std::map<std::string, QuantLib::Size> idIdx_;
     QuantLib::Date asof_;
     std::vector<QuantLib::Date> dates_;
     QuantLib::Size samples_;

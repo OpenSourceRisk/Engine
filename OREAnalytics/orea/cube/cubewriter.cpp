@@ -23,6 +23,7 @@
 #include <charconv>
 
 using QuantLib::Date;
+using QuantLib::Size;
 using std::string;
 using std::vector;
 

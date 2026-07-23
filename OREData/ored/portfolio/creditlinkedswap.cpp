@@ -24,6 +24,8 @@
 #include <ored/portfolio/creditlinkedswap.hpp>
 
 #include <ored/portfolio/builders/creditlinkedswap.hpp>
+#include <ored/portfolio/legdata.hpp>
+#include <qle/instruments/creditlinkedswap.hpp>
 
 namespace ore {
 namespace data {

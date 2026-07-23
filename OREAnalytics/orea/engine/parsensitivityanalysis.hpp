@@ -26,15 +26,11 @@
 #include <orea/cube/npvcube.hpp>
 #include <orea/engine/sensitivityanalysis.hpp>
 #include <orea/engine/parsensitivityinstrumentbuilder.hpp>
-#include <orea/scenario/scenariosimmarket.hpp>
-#include <orea/scenario/scenariosimmarketparameters.hpp>
+#include <orea/scenario/scenario.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
-#include <orea/scenario/sensitivityscenariogenerator.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/portfolio/portfolio.hpp>
-#include <ored/report/report.hpp>
 
-#include <ql/instruments/inflationcapfloor.hpp>
 #include <ql/math/matrixutilities/sparsematrix.hpp>
 
 #include <boost/numeric/ublas/vector.hpp>
@@ -44,10 +40,19 @@
 #include <tuple>
 
 namespace ore {
+namespace data {
+class Report;
+}
+} // namespace ore
+
+namespace ore {
 namespace analytics {
 using namespace std;
 using namespace QuantLib;
 using namespace ore::data;
+
+class ScenarioSimMarket;
+class ScenarioSimMarketParameters;
 
 //! Par Sensitivity Analysis
 /*!
@@ -56,23 +61,23 @@ using namespace ore::data;
 */
 class ParSensitivityAnalysis {
 public:
-    typedef std::map<std::pair<ore::analytics::RiskFactorKey, ore::analytics::RiskFactorKey>, Real> ParContainer;
+    typedef std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> ParContainer;
 
     //! Threshold for small diagonal elements in par conversion matrix regularisation
     static constexpr QuantLib::Real regularisationThreshold = 0.01;
 
     //! Constructor
     ParSensitivityAnalysis(const QuantLib::Date& asof,
-                           const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams,
-                           const ore::analytics::SensitivityScenarioData& sensitivityData,
+                           const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketParams,
+                           const SensitivityScenarioData& sensitivityData,
                            const string& marketConfiguration = Market::defaultConfiguration,
                            const bool continueOnError = false,
-                           const std::set<ore::analytics::RiskFactorKey::KeyType>& typesDisabled = {});
+                           const std::set<RiskFactorKey::KeyType>& typesDisabled = {});
 
     virtual ~ParSensitivityAnalysis() {}
 
     //! Compute par instrument sensitivities
-    void computeParInstrumentSensitivities(const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket);
+    void computeParInstrumentSensitivities(const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket);
 
     //! Return computed par sensitivities. Empty if they have not been computed yet.
     const ParContainer& parSensitivities() const { return parSensi_; }
@@ -81,24 +86,24 @@ public:
     void alignPillars();
 
     //! Returns true if risk factor type is applicable for par conversion
-    static bool isParType(ore::analytics::RiskFactorKey::KeyType type);
+    static bool isParType(RiskFactorKey::KeyType type);
 
     //! get / set the relevant scenarios (if empty, these are ignored)
-    const std::set<ore::analytics::RiskFactorKey>& relevantRiskFactors() const { return relevantRiskFactors_; }
-    std::set<ore::analytics::RiskFactorKey>& relevantRiskFactors() { return relevantRiskFactors_; }
+    const std::set<RiskFactorKey>& relevantRiskFactors() const { return relevantRiskFactors_; }
+    std::set<RiskFactorKey>& relevantRiskFactors() { return relevantRiskFactors_; }
 
     //! Return the zero rate and par rate absolute shift size for each risk factor key
-    std::map<ore::analytics::RiskFactorKey, std::pair<QuantLib::Real, QuantLib::Real>> shiftSizes() const {
+    std::map<RiskFactorKey, std::pair<QuantLib::Real, QuantLib::Real>> shiftSizes() const {
         return shiftSizes_;
     }
 
     /*! Disable par conversion for the given set of risk factor key types. May be called multiple times in order to
         add key types that should not be considered for par conversion.
     */
-    void disable(const std::set<ore::analytics::RiskFactorKey::KeyType>& types);
+    void disable(const std::set<RiskFactorKey::KeyType>& types);
 
     //! Return the set of key types disabled for this instance of ParSensitivityAnalysis.
-    const std::set<ore::analytics::RiskFactorKey::KeyType>& typesDisabled() const { return typesDisabled_; }
+    const std::set<RiskFactorKey::KeyType>& typesDisabled() const { return typesDisabled_; }
 
     const ParSensitivityInstrumentBuilder::Instruments& parInstruments() const { return instruments_; }
 
@@ -109,27 +114,27 @@ private:
     void augmentRelevantRiskFactors();
 
     //! Populate `shiftSizes_` for \p key given the implied fair par rate \p parRate
-    void populateShiftSizes(const ore::analytics::RiskFactorKey& key, QuantLib::Real parRate,
-                            const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket);
+    void populateShiftSizes(const RiskFactorKey& key, QuantLib::Real parRate,
+                            const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket);
 
     //! As of date for the calculation of the par sensitivities
     QuantLib::Date asof_;
     //! Simulation market parameters
-    QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketParams_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketParams_;
     //! Sensitivity data
-    ore::analytics::SensitivityScenarioData sensitivityData_;
+    SensitivityScenarioData sensitivityData_;
     //! sensitivity of par rates w.r.t. raw rate shifts (including optionlet/cap volatility)
     ParContainer parSensi_;
     ParSensitivityInstrumentBuilder::Instruments instruments_;
 
     std::string marketConfiguration_;
     bool continueOnError_;
-    std::set<ore::analytics::RiskFactorKey> relevantRiskFactors_;
+    std::set<RiskFactorKey> relevantRiskFactors_;
 
-    static std::set<ore::analytics::RiskFactorKey::KeyType> parTypes_;
+    static std::set<RiskFactorKey::KeyType> parTypes_;
 
     //! Set of risk factor types disabled for this instance of ParSensitivityAnalysis.
-    std::set<ore::analytics::RiskFactorKey::KeyType> typesDisabled_;
+    std::set<RiskFactorKey::KeyType> typesDisabled_;
 
     std::string parConversionExcludeFixings_;
 
@@ -143,9 +148,9 @@ private:
         shift being configured as `Relative` in `sensitivityData_`, we take the fair implied par rate and multiply it
         by the configured relative zero rate shift size to give the par rate absolute shift size.
     */
-    std::map<ore::analytics::RiskFactorKey, std::pair<QuantLib::Real, QuantLib::Real>> shiftSizes_;
+    std::map<RiskFactorKey, std::pair<QuantLib::Real, QuantLib::Real>> shiftSizes_;
     // Store the base and scenario (shifted) par rate for each risk factor key
-    std::map<ore::analytics::RiskFactorKey, std::pair<QuantLib::Real, QuantLib::Real>> parRatesBaseAndScenarioValue_;
+    std::map<RiskFactorKey, std::pair<QuantLib::Real, QuantLib::Real>> parRatesBaseAndScenarioValue_;
 };
 
 //! ParSensitivityConverter class
@@ -187,16 +192,16 @@ public:
     */
     ParSensitivityConverter(
         const ParSensitivityAnalysis::ParContainer& parSensitivities,
-        const std::map<ore::analytics::RiskFactorKey, std::pair<QuantLib::Real, QuantLib::Real>>& shiftSizes);
+        const std::map<RiskFactorKey, std::pair<QuantLib::Real, QuantLib::Real>>& shiftSizes);
 
     //! Inspectors
     //@{
     //! Return the set of raw, i.e. zero, risk factor keys
     //! The ordering in this set defines the order of the columns in the Jacobi matrix
-    const std::set<ore::analytics::RiskFactorKey>& rawKeys() { return rawKeys_; }
+    const std::set<RiskFactorKey>& rawKeys() { return rawKeys_; }
     //! Return the set of par risk factor keys
     //! The ordering in this set defines the order of the rows in the Jacobi matrix
-    const std::set<ore::analytics::RiskFactorKey>& parKeys() { return parKeys_; }
+    const std::set<RiskFactorKey>& parKeys() { return parKeys_; }
     //@}
 
     //! Takes an array of zero sensitivities and returns an array of par sensitivities
@@ -226,19 +231,19 @@ public:
     }
 
 private:
-    std::set<ore::analytics::RiskFactorKey> rawKeys_;
-    std::set<ore::analytics::RiskFactorKey> parKeys_;
+    std::set<RiskFactorKey> rawKeys_;
+    std::set<RiskFactorKey> parKeys_;
     // transposed inverse Jacobian, i.e. the matrix we use for the zero-par conversion effectively
     QuantLib::SparseMatrix jacobi_transp_inv_;
     //! Vector of absolute zero shift sizes
     boost::numeric::ublas::vector<QuantLib::Real> zeroShifts_;
     //! Vector of absolute par shift sizes
     boost::numeric::ublas::vector<QuantLib::Real> parShifts_;
-    std::map<ore::analytics::RiskFactorKey, std::pair<QuantLib::Real, QuantLib::Real>> parRatesBaseAndScenarioValue_;
+    std::map<RiskFactorKey, std::pair<QuantLib::Real, QuantLib::Real>> parRatesBaseAndScenarioValue_;
 };
 
 //! Write par instrument sensitivity report
-void writeParConversionMatrix(const ore::analytics::ParSensitivityAnalysis::ParContainer& parSensitivities,
+void writeParConversionMatrix(const ParSensitivityAnalysis::ParContainer& parSensitivities,
                               ore::data::Report& reportOut);
 
 } // namespace analytics
