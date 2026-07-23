@@ -40,7 +40,7 @@ using namespace QuantLib;
   date in the reference curve. */
 class SpreadedDiscountCurve final : public YieldTermStructure, public LazyObject {
 public:
-    enum class Interpolation { logLinear, linearZero };
+    enum class Interpolation { logLinear, linearZero, logCubic };
     enum class Extrapolation { flatFwd, flatZero };
     //! times should be consistent with reference ts day counter
     SpreadedDiscountCurve(const Handle<YieldTermStructure>& referenceCurve, const std::vector<Time>& times,
