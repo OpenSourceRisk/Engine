@@ -299,7 +299,8 @@ std::tuple<std::vector<Real>, Real, Real, Size> SabrParametricVolatility::calibr
     Interpolation m = LinearFlat().interpolate(marketSmile.strikes.begin(),
         marketSmile.strikes.end(), convertedMarketQuotes.begin());
     m.enableExtrapolation();
-    Real atmVol = m(marketSmile.forward);
+    Real fwdForAtmVol = marketSmile.fwdForAtmVol ? *marketSmile.fwdForAtmVol : marketSmile.forward;
+    Real atmVol = m(fwdForAtmVol);
 
     // if there are no free parameters, we pass back fixed parameters (maybe implied alpha) as the result
 
