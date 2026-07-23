@@ -1,9 +1,6 @@
 name: C/C++ CI Ubuntu
 
 on:
-  push:
-    tags:
-       - 'v*'
   workflow_dispatch:
 
 jobs:
