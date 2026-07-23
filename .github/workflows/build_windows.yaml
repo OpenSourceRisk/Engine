@@ -44,6 +44,11 @@ jobs:
             boost-lib: 64
             python-wheel: "cp313"
             python-version: "3.13"
+          - arch: AMD64
+            platform: x64
+            boost-lib: 64
+            python-wheel: "cp314"
+            python-version: "3.14"
 
     steps:
     - uses: actions/checkout@v5
@@ -93,7 +98,7 @@ jobs:
         cmake ..
     - name: Set up Boost
       run: |
-        $Url = "https://archives.boost.io/release/1.80.0/binaries/boost_1_80_0-msvc-14.3-${{ matrix.boost-lib }}.exe"
+        $Url = "https://archives.boost.io/release/1.83.0/binaries/boost_1_83_0-msvc-14.3-${{ matrix.boost-lib }}.exe"
         (New-Object System.Net.WebClient).DownloadFile($Url, "$env:TEMP\boost.exe")
         Start-Process -Wait -FilePath "$env:TEMP\boost.exe" "/SILENT","/SP-","/SUPPRESSMSGBOXES","/DIR=C:\local\boost"
         choco install -y ninja
@@ -122,7 +127,7 @@ jobs:
         cd ${{ github.workspace }}\ORE-SWIG
         python setup.py wrap
     - name: Build ORE Wheels
-      uses: pypa/cibuildwheel@v2.22.0
+      uses: pypa/cibuildwheel@v3.4.1
       env:
         BOOST: C:\local\boost
         BOOST_LIB64: C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.3
