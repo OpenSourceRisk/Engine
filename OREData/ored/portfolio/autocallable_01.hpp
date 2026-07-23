@@ -30,6 +30,8 @@
 namespace ore {
 namespace data {
 
+class Underlying;
+
 class Autocallable_01 : public ScriptedTrade {
 public:
     Autocallable_01() : ScriptedTrade("Autocallable_01") {}

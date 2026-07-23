@@ -30,6 +30,8 @@
 namespace ore {
 namespace data {
 
+class Underlying;
+
 using namespace ore::data;
 
 class DoubleDigitalOption : public ScriptedTrade {

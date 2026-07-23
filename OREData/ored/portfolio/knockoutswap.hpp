@@ -26,6 +26,7 @@
 #include <ored/portfolio/scriptedtrade.hpp>
 
 #include <ored/portfolio/barrierdata.hpp>
+#include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/trade.hpp>
 
 namespace ore {

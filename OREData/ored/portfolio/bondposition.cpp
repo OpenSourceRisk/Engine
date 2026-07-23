@@ -18,6 +18,7 @@
 
 #include <ored/portfolio/bondposition.hpp>
 #include <ored/portfolio/referencedata.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 
 namespace ore {
 namespace data {

@@ -25,11 +25,13 @@
 namespace ore {
 namespace analytics {
 
-JointNPVSensiCube::JointNPVSensiCube(const QuantLib::ext::shared_ptr<NPVSensiCube>& cube1,
-                                     const QuantLib::ext::shared_ptr<NPVSensiCube>& cube2, const std::set<std::string>& ids)
+using namespace QuantLib;
+
+JointNPVSensiCube::JointNPVSensiCube(const ext::shared_ptr<NPVSensiCube>& cube1,
+                                     const ext::shared_ptr<NPVSensiCube>& cube2, const std::set<std::string>& ids)
     : JointNPVSensiCube({cube1, cube2}, ids) {}
 
-JointNPVSensiCube::JointNPVSensiCube(const std::vector<QuantLib::ext::shared_ptr<NPVSensiCube>>& cubes,
+JointNPVSensiCube::JointNPVSensiCube(const std::vector<ext::shared_ptr<NPVSensiCube>>& cubes,
                                      const std::set<std::string>& ids)
     : NPVSensiCube(), cubes_(cubes) {
 
@@ -96,11 +98,11 @@ Size JointNPVSensiCube::depth() const { return cubes_[0]->depth(); }
 
 const std::map<std::string, Size>& JointNPVSensiCube::idsAndIndexes() const { return idIdx_; }
 
-const std::vector<QuantLib::Date>& JointNPVSensiCube::dates() const { return cubes_[0]->dates(); }
+const std::vector<Date>& JointNPVSensiCube::dates() const { return cubes_[0]->dates(); }
 
-QuantLib::Date JointNPVSensiCube::asof() const { return cubes_[0]->asof(); }
+Date JointNPVSensiCube::asof() const { return cubes_[0]->asof(); }
 
-const std::pair<QuantLib::ext::shared_ptr<NPVSensiCube>, Size>& JointNPVSensiCube::cubeAndId(Size id) const {
+const std::pair<ext::shared_ptr<NPVSensiCube>, Size>& JointNPVSensiCube::cubeAndId(Size id) const {
     QL_REQUIRE(id < cubeAndId_.size(),
                "JointNPVSensiCube: id (" << id << ") out of range, have " << cubeAndId_.size() << " ids");
     return cubeAndId_[id];
@@ -126,13 +128,13 @@ void JointNPVSensiCube::set(Real value, Size id, Size date, Size sample, Size de
     c.first->set(value, c.second, date, sample, depth);
 }
 
-std::map<QuantLib::Size, QuantLib::Real> JointNPVSensiCube::getTradeNPVs(Size tradeIdx) const {
+std::map<Size, Real> JointNPVSensiCube::getTradeNPVs(Size tradeIdx) const {
     const auto& c = cubeAndId(tradeIdx);
     return c.first->getTradeNPVs(c.second);
 }
 
-std::set<QuantLib::Size> JointNPVSensiCube::relevantScenarios() const {
-    std::set<QuantLib::Size> tmp;
+std::set<Size> JointNPVSensiCube::relevantScenarios() const {
+    std::set<Size> tmp;
     for (auto const& c : cubes_) {
         auto r = c->relevantScenarios();
         tmp.insert(r.begin(), r.end());

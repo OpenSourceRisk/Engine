@@ -70,7 +70,7 @@ AnalyticFactory::build(const string& subAnalytic,
     if (useCache && s && s->analytics().size() > 0) {
         // if not buildNew then we first check if we already have this analytic in the AnalyticsManager
         const auto& it = find_if(s->analytics().begin(), s->analytics().end(),
-                    [&builder](const pair<string, ext::shared_ptr<Analytic>>& ac) { return builder.first == ac.first; });
+                    [&builder](const pair<string, QuantLib::ext::shared_ptr<Analytic>>& ac) { return builder.first == ac.first; });
         if (it != s->analytics().end())
             a = it->second;
     }

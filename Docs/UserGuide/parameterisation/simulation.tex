@@ -690,7 +690,7 @@ If no day counter is specified for a given risk factor then the default Actual36
 
 For Yield Curves, there are several choices for the interpolation and extrapolation:
 \begin{itemize}
-\item Interpolation: This can be LogLinear or LinearZero. If not given, the value defaults to LogLinear.
+\item Interpolation: This can be LogLinear, LinearZero or LogCubic. If not given, the value defaults to LogLinear. LogLinear and LogCubic interpolate the discount factors (log-linearly resp.\ with a monotonic log-cubic spline), while LinearZero interpolates the continuously compounded zero rates linearly.
 \item Extrapolation: This can be FlatFwd or FlatZero. If not given, the value defaults to FlatFwd.
 \item RollDown: This can be ForwardForward or ConstantDiscounts. If not given, the value defaults to ForwardForward.
 \end{itemize}

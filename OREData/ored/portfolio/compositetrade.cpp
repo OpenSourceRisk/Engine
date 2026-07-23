@@ -21,6 +21,8 @@
 #include <ored/portfolio/tradefactory.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/cashflowutils.hpp>
 
 #include <boost/algorithm/string/case_conv.hpp>
 

@@ -100,8 +100,10 @@ private:
     // std::map<std::pair<QuantLib::Size, QuantLib::Size>, QuantLib::Real>
     // swaptionVega(QuantLib::Real vega, const QuantLib::Date& expiry, const QuantLib::Date& maturity, const QuantLib::Date& referenceDate, const QuantLib::DayCounter& dc) const;
 
-    std::map<QuantLib::Size, QuantLib::Real>
-    bucketMapping(QuantLib::Real value, const QuantLib::Date& date, const std::vector<Real>& timeGrid, const QuantLib::Date& referenceDate, const QuantLib::DayCounter& dc) const;
+    std::map<QuantLib::Size, QuantLib::Real> bucketMapping(QuantLib::Real value, const QuantLib::Date& date,
+                                                           const std::vector<QuantLib::Real>& timeGrid,
+                                                           const QuantLib::Date& referenceDate,
+                                                           const QuantLib::DayCounter& dc) const;
   
     std::vector<std::string> currencies_;
     QuantLib::Size nCurveTenors_;
@@ -109,9 +111,9 @@ private:
     QuantLib::Size nSwaptionTerms_;
     QuantLib::Size nFxExpiries_;
     QuantLib::Size firstCubeIndexToUse_;
-    std::vector<Real> swaptionExpiryTimes_;
-    std::vector<Real> swaptionTermTimes_;
-    std::vector<Real> fxExpiryTimes_;
+    std::vector<QuantLib::Real> swaptionExpiryTimes_;
+    std::vector<QuantLib::Real> swaptionTermTimes_;
+    std::vector<QuantLib::Real> fxExpiryTimes_;
     QuantLib::Size nc_, nco_;
     QuantLib::Size nx_, nxo_;
 

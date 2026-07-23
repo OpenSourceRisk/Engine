@@ -23,7 +23,14 @@
 
 #include <orea/app/analytic.hpp>
 #include <orea/app/inputvariables.hpp>
-#include <ored/portfolio/counterpartymanager.hpp>
+
+namespace ore {
+namespace data {
+class NettingSetManager;
+class CollateralBalances;
+class CounterpartyManager;
+}
+}
 
 namespace ore {
 namespace analytics {

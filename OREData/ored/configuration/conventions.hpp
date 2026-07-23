@@ -1389,7 +1389,8 @@ public:
     //! Detailed constructor
     CommodityForwardConvention(const string& id, const string& spotDays = "", const string& pointsFactor = "",
                                const string& advanceCalendar = "", const string& spotRelative = "",
-                               BusinessDayConvention bdc = Following, bool outright = true);
+                               BusinessDayConvention bdc = Following, bool outright = true,
+                               const string& deliveryLocation = "");
     //@}
 
     //! \name Inspectors
@@ -1401,6 +1402,7 @@ public:
     bool spotRelative() const { return spotRelative_; }
     BusinessDayConvention bdc() const { return bdc_; }
     bool outright() const { return outright_; }
+    const string& deliveryLocation() const { return deliveryLocation_; }
     //@}
 
     //! \name Serialisation
@@ -1423,6 +1425,7 @@ private:
     string strPointsFactor_;
     string strAdvanceCalendar_;
     string strSpotRelative_;
+    string deliveryLocation_;
 };
 
 /*! Container for storing commodity future conventions
@@ -1646,7 +1649,8 @@ public:
                               const AveragingData& averagingData = AveragingData(),
                               QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
                               const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = QuantLib::ext::nullopt,
-                              const std::string& indexName = "", const std::string& optionFrequency = "");
+                              const std::string& indexName = "", const std::string& optionFrequency = "",
+                              const string& deliveryLocation = "");
 
     //! N-th weekday based constructor
     CommodityFutureConvention(const std::string& id, const std::string& nth, const std::string& weekday,
@@ -1663,7 +1667,7 @@ public:
                               const AveragingData& averagingData = AveragingData(),
                               QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
                               const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = QuantLib::ext::nullopt,
-                              const std::string& indexName = "", const std::string& optionFrequency = "");
+                              const std::string& indexName = "", const std::string& optionFrequency = "", const std::string& deliveryLocation = "");
 
     //! Calendar days before based constructor
     CommodityFutureConvention(const std::string& id, const CalendarDaysBefore& calendarDaysBefore,
@@ -1680,7 +1684,7 @@ public:
                               const AveragingData& averagingData = AveragingData(),
                               QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
                               const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = QuantLib::ext::nullopt,
-                              const std::string& indexName = "", const std::string& optionFrequency = "");
+                              const std::string& indexName = "", const std::string& optionFrequency = "", const std::string& deliveryLocation = "");
 
     //! Business days before based constructor
     CommodityFutureConvention(const std::string& id, const BusinessDaysAfter& businessDaysAfter,
@@ -1697,7 +1701,7 @@ public:
                               const AveragingData& averagingData = AveragingData(),
                               QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
                               const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = QuantLib::ext::nullopt,
-                              const std::string& indexName = "", const std::string& optionFrequency = "");
+                              const std::string& indexName = "", const std::string& optionFrequency = "", const std::string& deliveryLocation = "");
 
     //! \name Inspectors
     //@{
@@ -1740,6 +1744,7 @@ public:
     QuantLib::Natural optionCalendarDaysBefore() const { return optionCalendarDaysBefore_; }
     QuantLib::Natural optionMinBusinessDaysBefore() const { return optionMinBusinessDaysBefore_; }
     const std::string& savingsTime() const { return savingsTime_; }
+    const std::string& deliveryLocation() const { return deliveryLocation_; }
     const std::set<QuantLib::Month>& validContractMonths() const { return validContractMonths_; }
     bool balanceOfTheMonth() const { return balanceOfTheMonth_; }
     Calendar balanceOfTheMonthPricingCalendar() const { return balanceOfTheMonthPricingCalendar_; }
@@ -1815,6 +1820,7 @@ private:
 
     std::set<QuantLib::Month> validContractMonths_;
     std::string savingsTime_;
+    std::string deliveryLocation_;
     // If its averaging Future but the front month is spot averaged and
     // balance of the month price is the average price of the remaining
     // future days in contract

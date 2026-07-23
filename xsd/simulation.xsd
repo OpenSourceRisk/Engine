@@ -1721,6 +1721,7 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="LogLinear"/>
       <xs:enumeration value="LinearZero"/>
+      <xs:enumeration value="LogCubic"/>
     </xs:restriction>
   </xs:simpleType>
 

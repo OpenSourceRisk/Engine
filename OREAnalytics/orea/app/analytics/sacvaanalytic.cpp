@@ -20,10 +20,13 @@
 #include <orea/app/analytics/sacvaanalytic.hpp>
 #include <orea/app/inputparameters.hpp>
 #include <orea/engine/standardapproachcvacalculator.hpp>
-#include <orea/app/reportwriter.hpp>
+#include <orea/app/reportwriters/capitalreportwriter.hpp>
 #include <orea/engine/parsensitivitycubestream.hpp>
 #include <orea/engine/sacvasensitivityloader.hpp>
+#include <orea/engine/standardapproachcvacalculator.hpp>
+#include <orea/simm/simmbasicnamemapper.hpp>
 #include <ored/portfolio/counterpartymanager.hpp>
+#include <ored/portfolio/nettingsetmanager.hpp>
 #include <ored/report/inmemoryreport.hpp>
 #include <ored/utilities/parsers.hpp>
 
@@ -205,7 +208,7 @@ void SaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::I
 
         CONSOLEW("SA-CVA: Scaled CVA Sensitivity Report");
 	    auto cvaSensiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-	    ReportWriter(inputs_->reportNaString()).writeCvaSensiReport(cvaLoader.cvaSensitivityRecords(), *cvaSensiReport);
+	    CapitalReportWriter(inputs_->reportNaString()).writeCvaSensiReport(cvaLoader.cvaSensitivityRecords(), *cvaSensiReport);
 	    analytic()->addReport(label(), "cva_sensitivities", cvaSensiReport);
 	    CONSOLE("OK");
     }
@@ -213,7 +216,7 @@ void SaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::I
     // Report the net CVA sensis, even if we loaded them from a report
     CONSOLEW("SA-CVA: SACVA Sensitivity Report");
     auto saCvaSensiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-    ReportWriter(inputs_->reportNaString()).writeSaCvaSensiReport(cvaSensis, *saCvaSensiReport);
+    CapitalReportWriter(inputs_->reportNaString()).writeSaCvaSensiReport(cvaSensis, *saCvaSensiReport);
     analytic()->addReport(label(), "sacva_sensitivities", saCvaSensiReport);
     CONSOLE("OK");
 

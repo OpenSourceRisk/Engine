@@ -48,6 +48,7 @@
 
 #include <qle/version.hpp>
 #include <qle/gitversion.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/time/calendars/all.hpp>

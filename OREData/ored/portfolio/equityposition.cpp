@@ -17,8 +17,8 @@
 */
 
 #include <ored/portfolio/equityposition.hpp>
-
 #include <ored/portfolio/tradefactory.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 
 #include <qle/indexes/equityindex.hpp>
 

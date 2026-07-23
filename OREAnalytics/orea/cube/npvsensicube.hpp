@@ -49,10 +49,10 @@ public:
     QuantLib::Size depth() const override { return 1; }
 
     //! Convenience method to get a value from the cube using \p id and \p sample only
-    Real get(QuantLib::Size id, QuantLib::Size sample) const { return this->get(id, 0, sample, 0); }
+    QuantLib::Real get(QuantLib::Size id, QuantLib::Size sample) const { return this->get(id, 0, sample, 0); }
 
     //! Convenience method to get a value from the cube using \p id and \p sample only
-    Real get(const std::string& id, QuantLib::Size sample) const { return this->get(id, asof(), sample, 0); };
+    QuantLib::Real get(const std::string& id, QuantLib::Size sample) const { return this->get(id, asof(), sample, 0); };
 
     //! Convenience method to set a value in the cube using \p id and \p sample only
     void set(QuantLib::Real value, QuantLib::Size id, QuantLib::Size sample) { this->set(value, id, 0, sample, 0); }
@@ -63,12 +63,12 @@ public:
     }
 
     //! Return the index of the trade in the cube
-    Size getTradeIndex(const std::string& tradeId) const { return index(tradeId); }
+    QuantLib::Size getTradeIndex(const std::string& tradeId) const { return index(tradeId); }
 
     /*! Return a map for the trade ID at index \p tradeIdx where the map key is the index of the
         risk factor shift and the map value is the NPV under that shift
     */
-    virtual std::map<QuantLib::Size, QuantLib::Real> getTradeNPVs(Size tradeIdx) const = 0;
+    virtual std::map<QuantLib::Size, QuantLib::Real> getTradeNPVs(QuantLib::Size tradeIdx) const = 0;
 
     /*! Return a map for the \p tradeId where the map key is the index of the
         risk factor shift and the map value is the NPV under that shift

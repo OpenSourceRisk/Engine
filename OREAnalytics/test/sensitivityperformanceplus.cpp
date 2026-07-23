@@ -22,7 +22,7 @@
 #include "testportfolio.hpp"
 
 #include <boost/timer/timer.hpp>
-#include <orea/app/reportwriter.hpp>
+#include <orea/app/reportwriters/pricingreportwriter.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
@@ -842,7 +842,7 @@ void BT_Benchmark(bool crossGammas, ObservationMode::Mode om) {
     CSVFileReport cgReport("crossgammReport");
     auto baseCurrency = sa->simMarketData()->baseCcy();
     auto ss = QuantLib::ext::make_shared<SensitivityCubeStream>(sa->sensiCube(), baseCurrency);
-    ReportWriter().writeSensitivityReport(cgReport, ss, 0.000001, initMarket, Market::defaultConfiguration);
+    PricingReportWriter().writeSensitivityReport(cgReport, ss, 0.000001, initMarket, Market::defaultConfiguration);
     timer.stop();
 
     Real elapsed = timer.elapsed().wall * 1e-9;

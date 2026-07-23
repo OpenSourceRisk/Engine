@@ -56,6 +56,7 @@
 #include <qle/utilities/creditcurves.hpp>
 #include <qle/utilities/creditindexconstituentcurvecalibration.hpp>
 #include <qle/utilities/time.hpp>
+#include <ored/portfolio/premiumdata.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;

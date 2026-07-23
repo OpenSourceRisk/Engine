@@ -51,6 +51,9 @@
 #include <ql/types.hpp>
 
 namespace ore {
+namespace data {
+class EngineData;
+}
 namespace analytics {
 
 class XvaEngineCG : public ore::data::ProgressReporter {

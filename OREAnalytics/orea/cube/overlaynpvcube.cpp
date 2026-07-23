@@ -26,6 +26,9 @@
 namespace ore {
 namespace analytics {
 
+using QuantLib::Real;
+using QuantLib::Size;
+
 OverlayNPVCube::OverlayNPVCube(const QuantLib::ext::shared_ptr<NPVCube>& cube,
                                const std::map<std::string, double>& pricingNpvs)
     : cube_(cube) {

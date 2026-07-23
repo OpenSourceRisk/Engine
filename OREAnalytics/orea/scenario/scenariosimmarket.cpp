@@ -346,8 +346,9 @@ makeYieldCurve(const std::string& curveId, const bool spreaded, const Handle<Yie
     if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister && !spreaded) {
         return QuantLib::ext::shared_ptr<YieldTermStructure>(QuantLib::ext::make_shared<QuantExt::InterpolatedDiscountCurve>(
             yieldCurveTimes, quotes, 0, cal, dc,
-            interpolation == "LogLinear" ? QuantExt::InterpolatedDiscountCurve::Interpolation::logLinear
-                                         : QuantExt::InterpolatedDiscountCurve::Interpolation::linearZero,
+            interpolation == "LogLinear"   ? QuantExt::InterpolatedDiscountCurve::Interpolation::logLinear
+            : interpolation == "LogCubic" ? QuantExt::InterpolatedDiscountCurve::Interpolation::logCubic
+                                          : QuantExt::InterpolatedDiscountCurve::Interpolation::linearZero,
             extrapolation == "FlatZero" ? QuantExt::InterpolatedDiscountCurve::Extrapolation::flatZero
                                         : QuantExt::InterpolatedDiscountCurve::Extrapolation::flatFwd));
     } else {
@@ -355,8 +356,9 @@ makeYieldCurve(const std::string& curveId, const bool spreaded, const Handle<Yie
             checkDayCounterConsistency(curveId, initMarketTs->dayCounter(), dc);
             auto sdc = QuantLib::ext::make_shared<QuantExt::SpreadedDiscountCurve>(
                 initMarketTs, yieldCurveTimes, quotes,
-                interpolation == "LogLinear" ? QuantExt::SpreadedDiscountCurve::Interpolation::logLinear
-                                             : QuantExt::SpreadedDiscountCurve::Interpolation::linearZero,
+                interpolation == "LogLinear"   ? QuantExt::SpreadedDiscountCurve::Interpolation::logLinear
+                : interpolation == "LogCubic" ? QuantExt::SpreadedDiscountCurve::Interpolation::logCubic
+                                              : QuantExt::SpreadedDiscountCurve::Interpolation::linearZero,
                 extrapolation == "FlatZero" ? SpreadedDiscountCurve::Extrapolation::flatZero
                                             : SpreadedDiscountCurve::Extrapolation::flatFwd,
                 yieldCurveRollDown);
@@ -365,8 +367,9 @@ makeYieldCurve(const std::string& curveId, const bool spreaded, const Handle<Yie
         } else {
             auto idc = QuantLib::ext::make_shared<QuantExt::InterpolatedDiscountCurve2>(
                 yieldCurveTimes, quotes, dc,
-                interpolation == "LogLinear" ? QuantExt::InterpolatedDiscountCurve2::Interpolation::logLinear
-                                             : QuantExt::InterpolatedDiscountCurve2::Interpolation::linearZero,
+                interpolation == "LogLinear"   ? QuantExt::InterpolatedDiscountCurve2::Interpolation::logLinear
+                : interpolation == "LogCubic" ? QuantExt::InterpolatedDiscountCurve2::Interpolation::logCubic
+                                              : QuantExt::InterpolatedDiscountCurve2::Interpolation::linearZero,
                 extrapolation == "FlatZero" ? InterpolatedDiscountCurve2::Extrapolation::flatZero
                                             : InterpolatedDiscountCurve2::Extrapolation::flatFwd);
             idc->setAdjustReferenceDate(false);
@@ -472,9 +475,10 @@ ScenarioSimMarket::ScenarioSimMarket(
     };
 
     // check ssm parameters
-    QL_REQUIRE(parameters_->interpolation() == "LogLinear" || parameters_->interpolation() == "LinearZero",
+    QL_REQUIRE(parameters_->interpolation() == "LogLinear" || parameters_->interpolation() == "LinearZero" ||
+                   parameters_->interpolation() == "LogCubic",
                "ScenarioSimMarket: Interpolation (" << parameters_->interpolation()
-                                                    << ") must be set to 'LogLinear' or 'LinearZero'");
+                                                    << ") must be set to 'LogLinear', 'LinearZero' or 'LogCubic'");
     QL_REQUIRE(parameters_->extrapolation() == "FlatZero" || parameters_->extrapolation() == "FlatFwd",
                "ScenarioSimMarket: YieldCurves / Extrapolation ('" << parameters_->extrapolation()
                                                                    << "') must be set to 'FlatZero' or 'FlatFwd'");

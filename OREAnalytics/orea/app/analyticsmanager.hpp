@@ -49,7 +49,8 @@ public:
     const std::set<std::string>& validAnalytics();
     const std::set<std::string>& requestedAnalytics();
     const QuantLib::ext::shared_ptr<Analytic>& getAnalytic(const std::string& type) const;
-    Size numberOfAnalytics() { return analytics_.size(); }
+    QuantLib::Size numberOfAnalytics() { return analytics_.size(); }
+
     const QuantLib::ext::shared_ptr<InputParameters>& inputs() { return inputs_; }
     std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> todaysMarketParams();
     void runAnalytics(const QuantLib::ext::shared_ptr<MarketCalibrationReportBase>& marketCalibrationReport = nullptr);
@@ -74,7 +75,7 @@ public:
     // with custom names
     void toFile(const Analytic::analytic_reports& reports, const std::string& outputPath,
                 const std::map<std::string, std::string>& reportNames = {}, const char sep = ',',
-                const bool commentCharacter = false, char quoteChar = '\0', const string& nullString = "#N/A",
+                const bool commentCharacter = false, char quoteChar = '\0', const std::string& nullString = "#N/A",
                 const std::set<std::string>& lowerHeaderReportNames = {});
 
 private:
