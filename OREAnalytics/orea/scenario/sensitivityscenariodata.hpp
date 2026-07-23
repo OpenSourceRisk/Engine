@@ -71,6 +71,18 @@ public:
         vector<ScenarioCurvePillar> shiftTenors;
     };
 
+    //! Commodity curve shift data. An optional fixing calendar and business day convention allow
+    //! configured shift tenors that fall on the same fixing date (e.g. weekend delivery pillars fixed
+    //! on the preceding business day) to be combined into one fixing-calendar bucket. Absence of a
+    //! configured calendar preserves existing (unbucketed) scenario generation.
+    struct CommodityCurveShiftData : CurveShiftData {
+        CommodityCurveShiftData() : CurveShiftData() {}
+        CommodityCurveShiftData(const CurveShiftData& d) : CurveShiftData(d) {}
+        virtual ~CommodityCurveShiftData() {}
+        std::optional<QuantLib::Calendar> fixingCalendar;
+        QuantLib::BusinessDayConvention fixingConvention = QuantLib::Preceding;
+    };
+
     // Have and own data type, later add shape profile buckets, at moment
     // parallel shift off the intraday shape
     struct IntradayPowerShiftData : ShiftData {
@@ -193,7 +205,7 @@ public:
         return dividendYieldShiftData_;
     }
     const map<string, string>& commodityCurrencies() const { return commodityCurrencies_; }
-    const map<string, QuantLib::ext::shared_ptr<CurveShiftData>>& commodityCurveShiftData() const {
+    const map<string, QuantLib::ext::shared_ptr<CommodityCurveShiftData>>& commodityCurveShiftData() const {
         return commodityCurveShiftData_;
     }
     const map<string, QuantLib::ext::shared_ptr<IntradayPowerShiftData>>& intradayPowerCurveShiftData() const {
@@ -255,7 +267,7 @@ public:
     map<string, QuantLib::ext::shared_ptr<CurveShiftData>>& dividendYieldShiftData() { return dividendYieldShiftData_; }
     map<string, QuantLib::ext::shared_ptr<VolShiftData>>& equityVolShiftData() { return equityVolShiftData_; }
     map<string, string>& commodityCurrencies() { return commodityCurrencies_; }
-    map<string, QuantLib::ext::shared_ptr<CurveShiftData>>& commodityCurveShiftData() { return commodityCurveShiftData_; }
+    map<string, QuantLib::ext::shared_ptr<CommodityCurveShiftData>>& commodityCurveShiftData() { return commodityCurveShiftData_; }
     map<string, QuantLib::ext::shared_ptr<IntradayPowerShiftData>>& intradayPowerCurveShiftData() {
         return intradayPowerCurveShiftData_;
     }
@@ -318,7 +330,7 @@ public:
     }
     void addEquityVolShiftData(const string& s, const QuantLib::ext::shared_ptr<VolShiftData>& d) { equityVolShiftData_[s] = d; }
     void addCommodityCurrencies(const string& s, const string& d) { commodityCurrencies_[s] = d; }
-    void addCommodityCurveShiftData(const string& s, const QuantLib::ext::shared_ptr<CurveShiftData>& d) {
+    void addCommodityCurveShiftData(const string& s, const QuantLib::ext::shared_ptr<CommodityCurveShiftData>& d) {
         commodityCurveShiftData_[s] = d;
     }
     void addIntradayPowerCurveShiftData(const string& s, const QuantLib::ext::shared_ptr<IntradayPowerShiftData>& d) {
@@ -392,7 +404,7 @@ protected:
     map<string, QuantLib::ext::shared_ptr<VolShiftData>> equityVolShiftData_;                          // key: equity name
     map<string, QuantLib::ext::shared_ptr<CurveShiftData>> dividendYieldShiftData_; // key: equity name
     map<string, std::string> commodityCurrencies_;
-    map<string, QuantLib::ext::shared_ptr<CurveShiftData>> commodityCurveShiftData_;
+    map<string, QuantLib::ext::shared_ptr<CommodityCurveShiftData>> commodityCurveShiftData_;
     map<string, QuantLib::ext::shared_ptr<IntradayPowerShiftData>> intradayPowerCurveShiftData_;
     map<string, QuantLib::ext::shared_ptr<VolShiftData>> correlationShiftData_;
     map<string, QuantLib::ext::shared_ptr<VolShiftData>> commodityVolShiftData_;

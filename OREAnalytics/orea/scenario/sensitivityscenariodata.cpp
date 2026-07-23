@@ -511,9 +511,24 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
              child = XMLUtils::getNextSibling(child)) {
             string name = XMLUtils::getAttribute(child, "name");
             commodityCurrencies_[name] = XMLUtils::getChildValue(child, "Currency", true);
-            CurveShiftData data;
+            CommodityCurveShiftData data;
             curveShiftDataFromXML(child, data);
-            commodityCurveShiftData_[name] = QuantLib::ext::make_shared<CurveShiftData>(data);
+            // Absence of Calendar preserves existing (unbucketed) behaviour and XML round trips.
+            if (XMLNode* calNode = XMLUtils::getChildNode(child, "Calendar")) {
+                data.fixingCalendar = ore::data::parseCalendar(XMLUtils::getNodeValue(calNode));
+                data.fixingConvention =
+                    XMLUtils::getChildNode(child, "BusinessDayConvention")
+                        ? ore::data::parseBusinessDayConvention(
+                              XMLUtils::getChildValue(child, "BusinessDayConvention", true))
+                        : Preceding;
+            } else {
+                // A BusinessDayConvention without a Calendar is ineffective/contradictory configuration
+                // and must fail clearly rather than being silently ignored.
+                QL_REQUIRE(!XMLUtils::getChildNode(child, "BusinessDayConvention"),
+                           "SensitivityScenarioData: commodity curve '"
+                               << name << "' configures BusinessDayConvention without a Calendar");
+            }
+            commodityCurveShiftData_[name] = QuantLib::ext::make_shared<CommodityCurveShiftData>(data);
         }
     }
 
@@ -951,6 +966,12 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) const {
             XMLUtils::addAttribute(doc, node, "name", kv.first);
             XMLUtils::addChild(doc, node, "Currency", commodityCurrencies_.find(kv.first)->second);
             curveShiftDataToXML(doc, node, *kv.second);
+            // Only emit the fixing convention when a calendar was explicitly configured, so that
+            // unchanged sensitivity files round trip without new default elements.
+            if (kv.second->fixingCalendar) {
+                XMLUtils::addChild(doc, node, "Calendar", to_string(*kv.second->fixingCalendar));
+                XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(kv.second->fixingConvention));
+            }
         }
     }
 
