@@ -138,6 +138,7 @@ public:
     */
     bool capFloorVolUseCapAtm() const { return capFloorVolUseCapAtm_; }
     const string& capFloorVolSmileDynamics(const string& key) const;
+    string capFloorVolSmileForwardInteraction(const string& key) const;
 
     bool simulateYoYInflationCapFloorVols() const {
         return paramsSimulate(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility);
@@ -336,6 +337,7 @@ public:
         capFloorVolUseCapAtm_ = capFloorVolUseCapAtm;
     }
     void setCapFloorVolSmileDynamics(const string& key, const string& smileDynamics);
+    void setCapFloorVolSmileForwardInteraction(const string& key, const string& smileForwardInteraction);
 
     void setSimulateYoYInflationCapFloorVols(bool simulate);
     void setYoYInflationCapFloorVolNames(vector<string> names);
@@ -517,6 +519,7 @@ private:
     bool capFloorVolAdjustOptionletPillars_;
     bool capFloorVolUseCapAtm_;
     map<string, string> capFloorVolSmileDynamics_;
+    map<string, string> capFloorVolSmileForwardInteraction_;
 
     map<string, vector<Period>> yoyInflationCapFloorVolExpiries_;
     map<std::string, std::vector<QuantLib::Rate>> yoyInflationCapFloorVolStrikes_;

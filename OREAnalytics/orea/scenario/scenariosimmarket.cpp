@@ -148,6 +148,8 @@ void processException(const std::exception& e, const std::string& curveId = "",
     }
 }
 
+using SabrSettings = SabrStrippedOptionletAdapterBase::Settings;
+
 template <typename TimeInterpolator>
 bool createSabrAdapter(
     RelinkableHandle<OptionletVolatilityStructure> rhOvs,
@@ -156,9 +158,9 @@ bool createSabrAdapter(
     const vector<Time>& bumpTimes,
     ext::shared_ptr<OptionletVolatilityStructure> initMktOvs,
     const string& name,
-    const ext::shared_ptr<IborIndex>& initMktIndex,
-    const ext::shared_ptr<IborIndex>& ssmIndex,
-    const Period& rateCompPeriod)
+    const ext::shared_ptr<IborIndex>& index,
+    const Period& rateCompPeriod,
+    ext::optional<SabrSettings> sabrSettings)
 {
     QL_REQUIRE(initMktOvs, "createSabrAdapter: initial market optionlet is null in for name " << name);
     if (auto sabr = ext::dynamic_pointer_cast<SabrStrippedOptionletAdapter<TimeInterpolator>>(initMktOvs)) {
@@ -201,7 +203,7 @@ bool createSabrAdapter(
         auto ssmSabr = ext::make_shared<SabrStrippedOptionletAdapter<TimeInterpolator>>(optionlet, sabr->modelVariant(),
             TimeInterpolator(), sabr->volatilityType(), sabr->displacement(), sabr->modelDisplacement(),
             modelParameters, sabr->maxCalibrationAttempts(), sabr->exitEarlyErrorThreshold(),
-            sabr->maxAcceptableError(), initMktIndex, rateCompPeriod, sabr->residualCorrection(), ssmIndex);
+            sabr->maxAcceptableError(), index, rateCompPeriod, sabr->residualCorrection(), sabrSettings);
 
         // Trigger calibration and then amend parameters for response to updates.
         using PVPC = QuantExt::ParametricVolatility::ParameterCalibration;
@@ -229,12 +231,12 @@ bool tryCreateSabrAdapter(
     const vector<Time>& bumpTimes,
     ext::shared_ptr<OptionletVolatilityStructure> initMktOvs,
     const string& name,
-    const ext::shared_ptr<IborIndex>& initMktIndex,
-    const ext::shared_ptr<IborIndex>& ssmIndex,
-    const Period& rateCompPeriod)
+    const ext::shared_ptr<IborIndex>& index,
+    const Period& rateCompPeriod,
+    ext::optional<SabrSettings> sabrSettings)
 {
     return (createSabrAdapter<TimeInterpolators>(rhOvs, optionlet, bumpQuotes, bumpTimes, initMktOvs, name,
-        initMktIndex, ssmIndex, rateCompPeriod) || ...);
+        index, rateCompPeriod, sabrSettings) || ...);
 }
 
 // Helper function to sort and check uniqueness. Can be used below with strikes or expiries for example.
@@ -4340,27 +4342,86 @@ Handle<OptionletVolatilityStructure> ScenarioSimMarket::createSabrOptionletVol(R
     writeSimData(simDataTmp, absoluteSimDataTmp, rfKeyType, name, coordinates);
     simDataWritten = true;
 
-    // We pass the SSM Ibor index into the SSM SABR surface below for reading / querying volatilities. It will react to 
-    // changes in the index's forward curve giving the SABR adjusted delta. If this is not wanted, we could just pass 
-    // in the initial market's Ibor index instead in its place.
+    // The capFloorVolSmileForwardInteraction will determine how we populate sabrSettings below.
+    using FSI = ForwardSmileInteraction;
+    const string& fsiStr = parameters_->capFloorVolSmileForwardInteraction(name);
+    FSI fsi = parseForwardSmileInteraction(fsiStr);
+    if (fsi == FSI::None)
+        fsi = FSI::SABR_Standard;
+    QL_REQUIRE(fsi == FSI::SABR_Standard || fsi == FSI::SABR_PreserveAtmVolatility, "ScenarioSimMarket: "
+        "expected SABR_Standard or SABR_PreserveAtmVolatility but got: " << fsiStr);
+
+    // We have the initial market and SSM index at this point.
+    // We will use them below to populate the sabrSettings.
     auto oreIndexName = IndexNameTranslator::instance().oreName(index->name());
     const auto& initMktIndex = *bc.initMarket->iborIndex(oreIndexName, bc.configuration);
     const auto& ssmIndex = *iborIndex(oreIndexName, bc.configuration);
 
-    // If useSpreadedTermStructures_ is false, we create a new StrippedOptionlet to feed to the SABR surface below.
-    // If useSpreadedTermStructures_ is true, we reuse the initial market's SABR StrippedOptionletBase.
+    using SabrSettings = SabrStrippedOptionletAdapterBase::Settings;
+    ext::optional<SabrSettings> sabrSettings;
     ext::shared_ptr<QuantLib::StrippedOptionlet> optionlet;
+    ext::shared_ptr<IborIndex> iborIndexCalib;
     if (!useSpreadedTermStructures_) {
+        // If useSpreadedTermStructures_ is false, we create a new StrippedOptionlet to feed to the SABR surface below.
         optionlet = ext::make_shared<QuantLib::StrippedOptionlet>(conventions.settleDays, baseOvs->calendar(),
             baseOvs->businessDayConvention(), ssmIndex, optionDates, sabrSoabStrikes, atmVolRelQuotes,
             baseOvs->dayCounter(), baseOvs->volatilityType(), baseOvs->displacement(),
             baseOvs->useEffectiveVolatility(), atmStrikes);
+
+        // We need a copy of the SSM index linked to the starting state of its SSM forward curve and that does not 
+        // update as the SSM index's forward curve quotes change.
+        auto initMktFwdYts = initMktIndex->forwardingTermStructure();
+        auto ssmInitFwdYts = copyYieldCurve(oreIndexName, RiskFactorKey::KeyType::IndexCurve,
+            initMktFwdYts, initMktIndex->fixingCalendar());
+        auto ssmInitIndex = ssmIndex->clone(ssmInitFwdYts);
+
+        // Population of sabrSettings.
+        if (fsi == FSI::SABR_Standard) {
+            // We do not want to trigger recalibrations when the SSM index's forward curve changes.
+            iborIndexCalib = ssmInitIndex;
+            // We pass the SSM Ibor index into the SSM SABR surface below for reading / querying volatilities i.e. set 
+            // `iborIndexRead` equal to it. It will react to changes in the index's forward curve giving the SABR 
+            // adjusted delta. `iborIndexAtmVol` is nullptr as we don't need it for SABR_Standard.
+            sabrSettings = SabrSettings{ ssmIndex, nullptr };
+        } else if (fsi == FSI::SABR_PreserveAtmVolatility) {
+            // We want to trigger recalibrations when the SSM index's forward curve changes.
+            // Note the recalibrations are set in tryCreateSabrAdapter to only re-imply alpha.
+            iborIndexCalib = ssmIndex;
+            // Don't need special index for reading volatilities => set `iborIndexRead` to nullptr. It will default to 
+            // using the main calibration index, here the SSM index.
+            // We set `iborIndexAtmVol` to the initial "frozen" SSM index so that we will read the same ATM 
+            // volatilities when the SSM index's forward curve changes and triggers a recalibration.
+            sabrSettings = SabrSettings{ nullptr, ssmInitIndex };
+        }
+
+    } else {
+        // If useSpreadedTermStructures_ is true, we reuse the initial market's SABR StrippedOptionletBase.
+        // So, we purposely leave optionlet as a null pointer and let tryCreateSabrAdapter deal with it.
+
+        // Population of sabrSettings.
+        if (fsi == FSI::SABR_Standard) {
+            // We do not want to trigger recalibrations when the SSM index's forward curve changes.
+            iborIndexCalib = initMktIndex;
+            // We pass the SSM Ibor index into the SSM SABR surface below for reading / querying volatilities i.e. set 
+            // `iborIndexRead` equal to it. It will react to changes in the index's forward curve giving the SABR 
+            // adjusted delta. `iborIndexAtmVol` is nullptr as we don't need it for SABR_Standard.
+            sabrSettings = SabrSettings{ ssmIndex, nullptr };
+        } else if (fsi == FSI::SABR_PreserveAtmVolatility) {
+            // We want to trigger recalibrations when the SSM index's forward curve changes.
+            // Note the recalibrations are set in tryCreateSabrAdapter to only re-imply alpha.
+            iborIndexCalib = ssmIndex;
+            // Don't need special index for reading volatilities => set `iborIndexRead` to nullptr. It will default to 
+            // using the main calibration index, here the SSM index.
+            // We set `iborIndexAtmVol` to the initial market index so that we will read the same ATM volatilities 
+            // when the SSM index's forward curve changes and triggers a recalibration.
+            sabrSettings = SabrSettings{ nullptr, initMktIndex };
+        }
     }
 
     // Try to create a SabrStrippedOptionletAdapter for the optionlet above.
     RelinkableHandle<OptionletVolatilityStructure> hOvs;
     bool isSuccess = tryCreateSabrAdapter<Linear, LinearFlat, Cubic, CubicFlat, BackwardFlat>(
-        hOvs, optionlet, quotes, optionTimes, *baseOvs, name, initMktIndex, ssmIndex, rateCompPeriod);
+        hOvs, optionlet, quotes, optionTimes, *baseOvs, name, iborIndexCalib, rateCompPeriod, sabrSettings);
     if (!isSuccess) {
         QL_FAIL("ScenarioSimMarket: expected SabrStrippedOptionletAdapter for stickySabr optionlet vol for name "
             << name << ". T0 cap floor vol surface should be of a SABR variant. "
@@ -4376,6 +4437,75 @@ Handle<OptionletVolatilityStructure> ScenarioSimMarket::createSabrOptionletVol(R
     }
 
     return hOvs;
+}
+
+const vector<vector<Real>>& ScenarioSimMarket::findCoordinates(RiskFactorKey::KeyType rfKeyType,
+    const string& rfName) const {
+
+    // Find the CoordinateData in the set that is not less than our search element.
+    auto it = coordinatesData_.lower_bound(CoordinateData{ rfKeyType, rfName, {} });
+
+    // Check that we have a match on the key type and name that we are looking for.
+    QL_REQUIRE(it != coordinatesData_.end() && std::get<0>(*it) == rfKeyType && std::get<1>(*it) == rfName,
+        "ScenarioSimMarket: coordinates not found for risk factor (" << rfKeyType << ", " << rfName << ")");
+
+    // Check that we don't have duplicates for the same key type and name.
+    auto itNext = std::next(it);
+    QL_REQUIRE(itNext == coordinatesData_.end() || std::get<0>(*itNext) != rfKeyType || std::get<1>(*itNext) != rfName,
+        "ScenarioSimMarket: duplicate coordinates found for risk factor (" << rfKeyType << ", " << rfName << ")");
+
+    return std::get<2>(*it);
+}
+
+const vector<Real>& ScenarioSimMarket::find1DCoordinates(RiskFactorKey::KeyType rfKeyType, const string& rfName) const {
+
+    const auto& coordinates = findCoordinates(rfKeyType, rfName);
+    QL_REQUIRE(coordinates.size() == 1, "ScenarioSimMarket: find1DCoordinates expected a 1-D set of coordinates "
+        " for risk factor (" << rfKeyType << ", " << rfName << ")");
+
+    return coordinates.front();
+}
+
+Handle<YieldTermStructure> ScenarioSimMarket::copyYieldCurve(const string& curveId, RiskFactorKey::KeyType rfKeyType,
+    const Handle<YieldTermStructure>& initMktYts, const Calendar& calendar) const {
+
+    // Get the stored coordinates, i.e. set of pillar times, for the yield curve.
+    const auto& coordinates = find1DCoordinates(rfKeyType, curveId);
+
+    // Elements used to create discount factor curve via makeYieldCurve below.
+    // Note: SSM coordinates and quotes omit the time zero pillar.
+    auto nYtsNodes = coordinates.size() + 1;
+    DayCounter dc = initMktYts->dayCounter();
+    Calendar cal = calendar.empty() ? TARGET() : calendar;
+    vector<Time> times;
+    vector<Handle<Quote>> quotes;
+    times.reserve(nYtsNodes);
+    quotes.reserve(nYtsNodes);
+    times.push_back(0.0);
+    quotes.emplace_back(ext::make_shared<SimpleQuote>(1.0));
+
+    for (Size i = 0; i < nYtsNodes - 1; ++i) {
+        times.push_back(coordinates[i]);
+        RiskFactorKey rfKey{rfKeyType, curveId, i};
+        // simData_ gives the quotes that I want, i.e. 1 when useSpreadedTermStructures_ is true, and the actual 
+        // discount factor when useSpreadedTermStructures_ false. Can only see a use for this method in the latter 
+        // case but we cover both cases.
+        auto it = simData_.find(rfKey);
+        QL_REQUIRE(it != simData_.end(), "ScenarioSimMarket::copyYieldCurve: could not find discount "
+            "factor for risk factor " << rfKey << " in the stored quotes.");
+        Real df = it->second->value();
+        quotes.emplace_back(ext::make_shared<SimpleQuote>(df));
+    }
+
+    // Make a copy of the yield curve.
+    auto ycrd = parseYieldCurveRollDown(parameters_->yieldCurveRollDown());
+    ext::shared_ptr<YieldTermStructure> yts = makeYieldCurve(curveId, useSpreadedTermStructures_, initMktYts, times,
+        quotes, dc, calendar, parameters_->interpolation(), parameters_->extrapolation(), ycrd);
+
+    if (initMktYts->allowsExtrapolation())
+        yts->enableExtrapolation();
+
+    return Handle<YieldTermStructure>(yts);
 }
 
 } // namespace analytics

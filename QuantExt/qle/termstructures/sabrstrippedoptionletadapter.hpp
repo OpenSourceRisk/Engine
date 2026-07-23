@@ -44,6 +44,22 @@ namespace QuantExt {
 
 class SabrStrippedOptionletAdapterBase {
 public:
+    /*! Struct that allows the user to pass parameters to the constructor of the SabrStrippedOptionletAdapter to
+        influence how it behaves when market data elements that it depends on are updated. Currently, the primary use
+        case for this is sensitivity analysis and influencing the various deltas that can be calculated.
+    */
+    struct Settings {
+        /*! Ibor index used in `smileSectionImpl` to provide the forward rate when this structure is building its smile
+            sections. Updating the forward curve associated with this index, and changing nothing else, will lead to
+            the existing calibrated SABR parameters being used to build new smile sections with the new forward rate.
+            This is effectively the standard smile adjusted SABR delta from Hagan 2002.
+            Note that this SabrStrippedOptionletAdapter does not register with this `iborIndexRead`.
+        */
+        QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexRead = nullptr;
+        //! Ibor index to determine the forward used for reading the ATM optionlet volatility for the calibration.
+        QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexAtmVol = nullptr;
+    };
+
     using SliceParamInfo = SabrParametricVolatility::SliceParamInfo;
     using ModelParamData = std::vector<SliceParamInfo>;
     using ResidualCorrection = SabrParametricVolatility::ResidualCorrection;
@@ -62,16 +78,11 @@ public:
     /*! Constructor that does not take a reference date. The settlement days is derived from \p sob and the term
         structure will be a \e moving term structure.
 
-        The `iborIndexCalib`, if given, is used to provide the forward rates during the calibration of the SABR model.
-        If `iborIndexCalib` is not provided, the forward rates are taken from the underlying stripped optionlet base 
-        using linear interpolation. The `iborIndexRead` parameter, if given, is used in `smileSectionImpl` to provide
-        the forward rate when this structure is being asked for a volatility at a given strike. It is generally not 
-        provided, and the forward rate is obtained from `iborIndexCalib`, if given, and otherwise from the underlying
-        stripped optionlet base via linear interpolation. However, for sensitivity analysis for example, it can be 
-        convenient to provide an `iborIndexRead` that is linked to a forward curve that is bumped, so that the forward
-        rate used in the volatility calculation is consistent with the bumped forward curve and all other parameters 
-        remain the same. This gives the smile adjusted or SABR delta for the optionlet sensitivity. Omitting it and 
-        using the `iborIndexCalib` for both calibration and reading will give the model or sticky strike delta.
+        The `iborIndex`, if given, is used to provide the forward rates during the calibration of the SABR model.
+        If `iborIndex` is not provided, the forward rates are taken from the underlying stripped optionlet base 
+        using linear interpolation.
+
+        See the `Settings` struct for information on the `settings` parameter.
     */
     SabrStrippedOptionletAdapter(
         const QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
@@ -84,10 +95,10 @@ public:
         const QuantLib::Size maxCalibrationAttempts = 10,
         const QuantLib::Real exitEarlyErrorThreshold = 0.005,
         const QuantLib::Real maxAcceptableError = 0.05,
-        QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexCalib = nullptr,
+        QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndex = nullptr,
         QuantLib::Period rateCompPeriod = 0 * QuantLib::Days,
         QuantLib::ext::optional<ResidualCorrection> residualCorrection = QuantLib::ext::nullopt,
-        QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexRead = nullptr);
+        QuantLib::ext::optional<Settings> settings = QuantLib::ext::nullopt);
 
     /*! Constructor taking an explicit \p referenceDate and the term structure will therefore be not \e moving.
      */
@@ -103,10 +114,10 @@ public:
         const QuantLib::Size maxCalibrationAttempts = 10,
         const QuantLib::Real exitEarlyErrorThreshold = 0.005,
         const QuantLib::Real maxAcceptableError = 0.05,
-        QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexCalib = nullptr,
+        QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndex = nullptr,
         QuantLib::Period rateCompPeriod = 0 * QuantLib::Days,
         QuantLib::ext::optional<ResidualCorrection> residualCorrection = QuantLib::ext::nullopt,
-        QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexRead = nullptr);
+        QuantLib::ext::optional<Settings> settings = QuantLib::ext::nullopt);
 
     //! \name TermStructure interface
     //@{
@@ -158,6 +169,7 @@ public:
     QuantLib::Real exitEarlyErrorThreshold() const { return exitEarlyErrorThreshold_; }
     QuantLib::Real maxAcceptableError() const { return maxAcceptableError_; }
     QuantLib::ext::optional<ResidualCorrection> residualCorrection() const { return residualCorrection_; }
+    QuantLib::ext::optional<Settings> settings() const { return settings_; }
     //@}
 
     // Trigger a calibration and then reset the model parameters using the template provided.
@@ -191,10 +203,10 @@ private:
     QuantLib::Size maxCalibrationAttempts_;
     QuantLib::Real exitEarlyErrorThreshold_;
     QuantLib::Real maxAcceptableError_;
-    QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexCalib_;
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndex_;
     QuantLib::Period rateCompPeriod_;
     QuantLib::ext::optional<ResidualCorrection> residualCorrection_;
-    QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexRead_;
+    QuantLib::ext::optional<Settings> settings_;
 
     //! State
     mutable std::map<Real, QuantLib::ext::shared_ptr<ParametricVolatilitySmileSection>> cache_;
@@ -222,22 +234,21 @@ SabrStrippedOptionletAdapter<TimeInterpolator>::SabrStrippedOptionletAdapter(
     const QuantLib::Size maxCalibrationAttempts,
     const QuantLib::Real exitEarlyErrorThreshold,
     const QuantLib::Real maxAcceptableError,
-    QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexCalib,
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndex,
     QuantLib::Period rateCompPeriod,
     QuantLib::ext::optional<ResidualCorrection> residualCorrection,
-    QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexRead)
+    QuantLib::ext::optional<Settings> settings)
     : OptionletVolatilityStructure(sob->settlementDays(), sob->calendar(), sob->businessDayConvention(),
       sob->dayCounter()), optionletBase_(sob), ti_(ti), modelVariant_(modelVariant),
       outputVolatilityType_(outputVolatilityType), outputDisplacement_(outputDisplacement),
       initialModelParameters_(initialModelParameters), maxCalibrationAttempts_(maxCalibrationAttempts),
       exitEarlyErrorThreshold_(exitEarlyErrorThreshold), maxAcceptableError_(maxAcceptableError),
-      iborIndexCalib_(std::move(iborIndexCalib)), rateCompPeriod_(std::move(rateCompPeriod)),
-      residualCorrection_(std::move(residualCorrection)),
-      iborIndexRead_(iborIndexRead ? std::move(iborIndexRead) : iborIndexCalib_) {
+      iborIndex_(std::move(iborIndex)), rateCompPeriod_(std::move(rateCompPeriod)),
+      residualCorrection_(std::move(residualCorrection)), settings_(std::move(settings)) {
     registerWith(optionletBase_);
-    // We only want to react to changes in the Ibor index used for calibration.
-    if (iborIndexCalib_)
-        registerWith(iborIndexCalib_);
+    // We react to changes in the main Ibor index used for calibration.
+    if (iborIndex_)
+        registerWith(iborIndex_);
 }
 
 template <class TimeInterpolator>
@@ -253,21 +264,21 @@ SabrStrippedOptionletAdapter<TimeInterpolator>::SabrStrippedOptionletAdapter(
     const QuantLib::Size maxCalibrationAttempts,
     const QuantLib::Real exitEarlyErrorThreshold,
     const QuantLib::Real maxAcceptableError,
-    QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexCalib,
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndex,
     QuantLib::Period rateCompPeriod,
     QuantLib::ext::optional<ResidualCorrection> residualCorrection,
-    QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndexRead)
+    QuantLib::ext::optional<Settings> settings)
     : OptionletVolatilityStructure(referenceDate, sob->calendar(), sob->businessDayConvention(), sob->dayCounter()),
       optionletBase_(sob), ti_(ti), modelVariant_(modelVariant), outputVolatilityType_(outputVolatilityType),
       outputDisplacement_(outputDisplacement), initialModelParameters_(initialModelParameters),
       maxCalibrationAttempts_(maxCalibrationAttempts), exitEarlyErrorThreshold_(exitEarlyErrorThreshold),
-      maxAcceptableError_(maxAcceptableError), iborIndexCalib_(std::move(iborIndexCalib)),
+      maxAcceptableError_(maxAcceptableError), iborIndex_(std::move(iborIndex)),
       rateCompPeriod_(std::move(rateCompPeriod)), residualCorrection_(std::move(residualCorrection)),
-      iborIndexRead_(iborIndexRead ? std::move(iborIndexRead) : iborIndexCalib_) {
+      settings_(std::move(settings)) {
     registerWith(optionletBase_);
-    // We only want to react to changes in the Ibor index used for calibration.
-    if (iborIndexCalib_)
-        registerWith(iborIndexCalib_);
+    // We react to changes in the main Ibor index used for calibration.
+    if (iborIndex_)
+        registerWith(iborIndex_);
 }
 
 template <class TimeInterpolator>
@@ -312,7 +323,7 @@ inline void SabrStrippedOptionletAdapter<TimeInterpolator>::performCalculations(
 
     // If an Ibor index is not provided, we use interpolation of the optionlet base structure's ATM rates.
     const auto& fixingTimes = optionletBase_->optionletFixingTimes();
-    if (!iborIndexCalib_) {
+    if (!iborIndex_) {
         atmInterpolation_ = std::make_unique<FlatExtrapolation>(QuantLib::ext::make_shared<LinearInterpolation>(
             fixingTimes.begin(), fixingTimes.end(), optionletBase_->atmOptionletRates().begin()));
         atmInterpolation_->enableExtrapolation();
@@ -328,10 +339,17 @@ inline void SabrStrippedOptionletAdapter<TimeInterpolator>::performCalculations(
     SabrParametricVolatility::ParamInfo modelParameters;
     const auto& fixingDates = optionletBase_->optionletFixingDates();
     for (Size i = 0; i < fixingTimes.size(); ++i) {
-        Real forward = atmRate(fixingTimes[i], iborIndexCalib_, fixingDates[i]);
+        Real forward = atmRate(fixingTimes[i], iborIndex_, fixingDates[i]);
+
+        // Forward for reading ATM volatility.
+        QuantLib::ext::optional<QuantLib::Real> fwdForAtmVol;
+        if (settings_ && settings_->iborIndexAtmVol) {
+            fwdForAtmVol = atmRate(fixingTimes[i], settings_->iborIndexAtmVol, fixingDates[i]);
+        }
+
         marketSmiles.push_back(ParametricVolatility::MarketSmile{fixingTimes[i], Null<Real>(), forward,
             optionletBase_->displacement(), {}, optionletBase_->optionletStrikes(i),
-            optionletBase_->optionletVolatilities(i)});
+            optionletBase_->optionletVolatilities(i), fwdForAtmVol});
 
         if (!initialModelParameters_.empty()) {
             const auto& mp = initialModelParameters_[nInitMp == 1 ? 0 : i];
@@ -434,21 +452,23 @@ SabrStrippedOptionletAdapter<TimeInterpolator>::smileSectionImpl(QuantLib::Time 
     calculate();
 
     // The following logic is to avoid returning a smile section based on a stale forward. So, if iborIndexRead_ is 
-    // non-null and is different from iborIndexCalib_ (if it is the same as iborIndexCalib_, this structure reacts to 
+    // non-null and is different from iborIndex_ (if it is the same as iborIndex_, this structure reacts to 
     // it and will clear the cache anyway in performCalculations), we check that the forward rate calculated from 
     // iborIndexRead_ is the same as the forward rate used in the cached smile section. If it is not, we create a new
     // smile section with the updated forward rate.
     Real forward;
     auto c = cache_.find(optionTime);
     if (c != cache_.end()) {
-        if (!iborIndexRead_ || iborIndexCalib_ == iborIndexRead_)
+        if ((!settings_ || !settings_->iborIndexRead) || iborIndex_ == settings_->iborIndexRead)
             return c->second;
 
-        forward = atmRate(optionTime, iborIndexRead_);
+        // Only here if settings_->iborIndexRead is non-null and different from iborIndex_.
+        forward = atmRate(optionTime, settings_->iborIndexRead);
         if (QuantLib::close(forward, c->second->atmLevel()))
             return c->second;
     } else {
-        forward = atmRate(optionTime, iborIndexRead_);
+        const auto& indexRead = settings_ && settings_->iborIndexRead ? settings_->iborIndexRead : iborIndex_;
+        forward = atmRate(optionTime, indexRead);
     }
 
     // Create new smile section.

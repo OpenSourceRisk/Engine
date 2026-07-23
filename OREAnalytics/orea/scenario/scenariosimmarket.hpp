@@ -190,7 +190,8 @@ protected:
     std::map<RiskFactorKey, Real> absoluteSimData_;
 
     // hold meta data for the scenarios stored in simData_, absoluteSimData_
-    std::set<std::tuple<RiskFactorKey::KeyType, std::string, std::vector<std::vector<Real>>>> coordinatesData_;
+    using CoordinateData = std::tuple<RiskFactorKey::KeyType, std::string, std::vector<std::vector<Real>>>;
+    std::set<CoordinateData> coordinatesData_;
 
     bool cacheSimData_;
     bool allowPartialScenarios_;
@@ -273,6 +274,18 @@ private:
         const BuildContext& context, const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
         const QuantLib::Handle<QuantLib::OptionletVolatilityStructure>& baseOvs, const QuantLib::Period& rateCompPeriod,
         const QuantLib::ext::shared_ptr<QuantExt::ProxyOptionletVolatility>& proxy);
+
+    // Helpers to find coordinates given a risk factor key type and an ID.
+    const std::vector<std::vector<QuantLib::Real>>& findCoordinates(QuantExt::RiskFactorKey::KeyType rfKeyType,
+        const std::string& rfName) const;
+    const std::vector<QuantLib::Real>& find1DCoordinates(QuantExt::RiskFactorKey::KeyType rfKeyType,
+        const std::string& rfName) const;
+
+    // Make a copy of a base scenario sim market yield curve not connected to the associated quotes.
+    QuantLib::Handle<QuantLib::YieldTermStructure> copyYieldCurve(const std::string& curveId,
+        QuantExt::RiskFactorKey::KeyType rfKeyType,
+        const QuantLib::Handle<QuantLib::YieldTermStructure>& initMktYts,
+        const QuantLib::Calendar& calendar = {}) const;
 };
 } // namespace analytics
 } // namespace ore

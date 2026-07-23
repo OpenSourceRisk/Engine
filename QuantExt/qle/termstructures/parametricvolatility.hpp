@@ -49,6 +49,8 @@ public:
         std::vector<QuantLib::Option::Type> optionTypes;
         std::vector<QuantLib::Real> strikes;
         std::vector<QuantLib::Real> marketQuotes;
+        // If provided, use this to read off the ATM volatility for the calibration.
+        QuantLib::ext::optional<QuantLib::Real> fwdForAtmVol = QuantLib::ext::nullopt;
     };
 
     /*! Allow for a residual correction to be applied to the model output smile where for each slice the residuals are:
