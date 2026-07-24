@@ -26,11 +26,12 @@ namespace QuantExt {
 using namespace QuantLib;
 
 ParametricVolatility::ParametricVolatility(const std::vector<MarketSmile>& marketSmiles,
-                                           const MarketModelType marketModelType,
-                                           const MarketQuoteType inputMarketQuoteType,
-                                           const Handle<YieldTermStructure> discountCurve)
-    : marketSmiles_(marketSmiles), marketModelType_(marketModelType),
-      inputMarketQuoteType_(inputMarketQuoteType), discountCurve_(std::move(discountCurve)) {}
+                                           MarketModelType marketModelType,
+                                           MarketQuoteType inputMarketQuoteType,
+                                           Handle<YieldTermStructure> discountCurve,
+                                           QuantLib::ext::optional<ResidualCorrection> residualCorrection)
+    : marketSmiles_(marketSmiles), marketModelType_(marketModelType), inputMarketQuoteType_(inputMarketQuoteType),
+      discountCurve_(std::move(discountCurve)), residualCorrection_(std::move(residualCorrection)) {}
 
 Real ParametricVolatility::convert(const Real inputQuote, const MarketQuoteType inputMarketQuoteType,
                                    const Real inputLognormalShift,
@@ -154,6 +155,33 @@ std::ostream& operator<<(std::ostream& os, QuantExt::ParametricVolatility::Param
     default:
         QL_FAIL("operator<<(ParametricVolatility::ParameterCalibration): enum value "
                 << static_cast<int>(c) << " not handled. This is an internal error.");
+    }
+}
+
+PVRCDimension parseParametricVolResidualCorrectionDimension(const std::string& s) {
+    if (s == "AbsoluteStrike") {
+        return PVRCDimension::AbsoluteStrike;
+    } else if (s == "StrikeMinusForward") {
+        return PVRCDimension::StrikeMinusForward;
+    } else if (s == "StrikeOverForward") {
+        return PVRCDimension::StrikeOverForward;
+    } else {
+        QL_FAIL("parseParametricVolResidualCorrectionDimension: '" << s << "' not recognized."
+            " Expected one of AbsoluteStrike, StrikeMinusForward, StrikeOverForward.");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, PVRCDimension dimension) {
+    switch (dimension) {
+    case PVRCDimension::AbsoluteStrike:
+        return os << "AbsoluteStrike";
+    case PVRCDimension::StrikeMinusForward:
+        return os << "StrikeMinusForward";
+    case PVRCDimension::StrikeOverForward:
+        return os << "StrikeOverForward";
+    default:
+        QL_FAIL("operator<<(ParametricVolatility::ResidualCorrection::Dimension): enum value "
+            << static_cast<int>(dimension) << " not handled. This is an internal error.");
     }
 }
 

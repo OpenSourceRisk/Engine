@@ -45,16 +45,28 @@ enum YieldCurveRollDown { ConstantDiscounts, ForwardForward };
 //! Price Curve Roll Down
 enum PriceCurveRollDown { Forward, Spot };
 
+//! Interaction between forward and smile in parametric volatility models.
+enum class ForwardSmileInteraction {
+    //! No defined interaction.
+    None,
+    //! Standard SABR delta interaction.
+    SABR_Standard,
+    //! In SABR context, when forward moves, \f$alpha\f$ is re-calibrated such that ATM volatility is preserved.
+    SABR_PreserveAtmVolatility
+};
+
 /*! @} */
 
 Stickyness parseStickyness(const std::string& s);
 ReactionToTimeDecay parseDecayMode(const std::string& s);
 YieldCurveRollDown parseYieldCurveRollDown(const std::string& s);
 PriceCurveRollDown parsePriceCurveRollDown(const std::string& s);
+ForwardSmileInteraction parseForwardSmileInteraction(const std::string& s);
 
 std::ostream& operator<<(std::ostream& out, const Stickyness t);
 std::ostream& operator<<(std::ostream& out, const ReactionToTimeDecay t);
 std::ostream& operator<<(std::ostream& out, const YieldCurveRollDown t);
+std::ostream& operator<<(std::ostream& out, ForwardSmileInteraction fsi);
 
 } // namespace QuantExt
 

@@ -138,10 +138,24 @@
       <xs:element type="xs:float" name="MaxAcceptableError"/>
     </xs:all>
   </xs:complexType>
+  <xs:complexType name="parametricSmileConfigResidualCorrection">
+    <xs:all>
+      <xs:element name="Dimension">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="AbsoluteStrike"/>
+            <xs:enumeration value="StrikeMinusForward"/>
+            <xs:enumeration value="StrikeOverForward"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+    </xs:all>
+  </xs:complexType>
   <xs:complexType name="parametricSmileConfig">
     <xs:all>
       <xs:element type="parametricSmileConfigParameters" name="Parameters"/>
       <xs:element type="parametricSmileConfigCalibration" name="Calibration"/>
+      <xs:element type="parametricSmileConfigResidualCorrection" name="ResidualCorrection" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
   <xs:complexType name="fxSpots">

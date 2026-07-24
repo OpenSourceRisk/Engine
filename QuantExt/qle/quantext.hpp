@@ -498,6 +498,7 @@
 #include <qle/quotes/basecorrelationquote.hpp>
 #include <qle/quotes/bondfuturequote.hpp>
 #include <qle/quotes/compositevectorquote.hpp>
+#include <qle/quotes/derivedquote.hpp>
 #include <qle/quotes/exceptionquote.hpp>
 #include <qle/quotes/logquote.hpp>
 #include <qle/termstructures/adjusteddefaultcurve.hpp>
@@ -631,9 +632,9 @@
 #include <qle/termstructures/spreadedswaptionvolatility.hpp>
 #include <qle/termstructures/spreadedyoyvolsurface.hpp>
 #include <qle/termstructures/strippedcpivolatilitystructure.hpp>
-#include <qle/termstructures/strippedoptionlet.hpp>
 #include <qle/termstructures/strippedoptionletadapter.hpp>
 #include <qle/termstructures/strippedoptionletadapter2.hpp>
+#include <qle/termstructures/strippedoptionletbasebumped.hpp>
 #include <qle/termstructures/strippedyoyinflationoptionletvol.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/survivalprobabilitycurve.hpp>

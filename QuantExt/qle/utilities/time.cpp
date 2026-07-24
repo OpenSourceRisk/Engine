@@ -126,4 +126,29 @@ QuantLib::Integer daylightSavingCorrection(const std::string& location, const Qu
     return result;
 }
 
+Date dateFromTime(const TermStructure& ts, Time t) {
+
+    const Date& refDate = ts.referenceDate();
+
+    // Initial estimate assuming Actual 365 Fixed.
+    Date result = refDate + Period(t * 365.0, Days);
+    Time resultTime = ts.timeFromReference(result);
+    if (close(resultTime, t))
+        return result;
+
+    // Adjust until result is the last date whose time is <= t.
+    if (resultTime > t) {
+        while (resultTime > t)
+            resultTime = ts.timeFromReference(--result);
+    } else {
+        while (ts.timeFromReference(result + 1) <= t)
+            ++result;
+    }
+
+    // Return the date whose time is closest to optionTime.
+    Time timeBelow = ts.timeFromReference(result);
+    Time timeAbove = ts.timeFromReference(result + 1);
+    return (t - timeBelow <= timeAbove - t) ? result : result + 1;
+}
+
 } // namespace QuantExt

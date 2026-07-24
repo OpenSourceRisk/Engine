@@ -25,6 +25,7 @@
 #include <ql/time/date.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
+#include <ql/termstructure.hpp>
 
 namespace QuantExt {
 
@@ -49,5 +50,9 @@ QuantLib::Period tenorFromLength(const QuantLib::Real length);
 */
 QuantLib::Integer daylightSavingCorrection(const std::string& location, const QuantLib::Date& start,
                                            const QuantLib::Date& end);
+
+// Given a term structure and a time `t`, return the corresponding date, or closest date, that yields `t` as the time 
+// from the reference date of the term structure.
+QuantLib::Date dateFromTime(const QuantLib::TermStructure& ts, QuantLib::Time t);
 
 } // namespace QuantExt

@@ -46,4 +46,11 @@ Real getOisAtmLevel(const QuantLib::ext::shared_ptr<OvernightIndex>& on, const D
 Real getBMAAtmLevel(const QuantLib::ext::shared_ptr<BMAIndex>& bma, const Date& fixingDate,
                     const Period& rateComputationPeriod);
 
+/**
+ * Utility function for calculating the rate on a given \p fixingDate from a given Ibor index, \p index.
+ */
+QuantLib::Rate getIndexRate(const QuantLib::Date& fixingDate,
+    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
+    const QuantLib::Period& rateComputationPeriod = 0 * QuantLib::Days);
+
 } // namespace QuantExt
