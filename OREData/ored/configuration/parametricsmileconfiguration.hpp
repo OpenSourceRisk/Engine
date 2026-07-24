@@ -58,6 +58,17 @@ public:
         double maxAcceptableError = 0.05;
     };
 
+    class ResidualCorrection : public XMLSerializable {
+    public:
+        using Dimension = QuantExt::ParametricVolatility::ResidualCorrection::Dimension;
+
+        void fromXML(ore::data::XMLNode* node) override;
+        ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+        QuantExt::ParametricVolatility::ResidualCorrection convert() const;
+
+        Dimension dimension = Dimension::AbsoluteStrike;
+    };
+
     ParametricSmileConfiguration() {}
     ParametricSmileConfiguration(std::vector<Parameter> parameters, Calibration calibration);
 
@@ -72,11 +83,13 @@ public:
     const Parameter& parameter(const std::string& name) const;
     const std::vector<Parameter>& parameters() const { return parameters_; }
     const Calibration& calibration() const;
+    const QuantLib::ext::optional<ResidualCorrection>& residualCorrection() const { return residualCorrection_; }
     //@}
 
 private:
     std::vector<Parameter> parameters_;
     Calibration calibration_;
+    QuantLib::ext::optional<ResidualCorrection> residualCorrection_;
 };
 
 } // namespace data

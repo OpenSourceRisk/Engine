@@ -30,7 +30,7 @@ SpreadedSmileSection2::SpreadedSmileSection2(const QuantLib::ext::shared_ptr<Smi
                    base->volatilityType() == ShiftedLognormal ? base->shift() : 0.0),
       fwdfwd_(false), base_(base), volSpreads_(volSpreads), strikes_(strikes),
       strikesRelativeToAtm_(strikesRelativeToAtm), baseAtmLevel_(baseAtmLevel), simulatedAtmLevel_(simulatedAtmLevel),
-      stickyAbsMoney_(stickyAbsMoney) {
+      stickyAbsMoney_(stickyAbsMoney), anchorBaseAtmLevel_(Null<Real>()), anchorSimulatedAtmLevel_(Null<Real>()) {
     registerWith(base_);
     QL_REQUIRE(!strikes_.empty(), "SpreadedSmileSection2: strikes empty");
     QL_REQUIRE(strikes_.size() == volSpreads_.size(), "SpreadedSmileSection2: strike spreads ("
@@ -100,20 +100,29 @@ Volatility SpreadedSmileSection2::volatilityImpl(Rate strike) const {
     if (strike == Null<Real>()) {
         strike = getSafeAtmLevel();
     }
+
     Real effStrike;
     if (stickyAbsMoney_) {
         effStrike = strike - (getSafeAtmLevel() - getSafeBaseAtmLevel());
     } else {
         effStrike = strike;
     }
+
     Real tmp;
     if (volSpreads_.size() == 1) {
-        tmp= base_->volatility(effStrike) + volSpreads_.front();
-    } else if (strikesRelativeToAtm_) {
-        tmp= std::max(1E-8, base_->volatility(effStrike) + volSpreadInterpolation_(strike - getSafeAtmLevel()));
+        tmp = base_->volatility(effStrike) + volSpreads_.front();
+    } else if (stickyAbsMoney_) {
+        if (strikesRelativeToAtm_)
+            tmp = base_->volatility(effStrike) + volSpreadInterpolation_(strike - getSafeBaseAtmLevel());
+        else
+            tmp = base_->volatility(effStrike) + volSpreadInterpolation_(effStrike);
     } else {
-        tmp= std::max(1E-8, base_->volatility(effStrike) + volSpreadInterpolation_(strike));
+        if (strikesRelativeToAtm_)
+            tmp = base_->volatility(effStrike) + volSpreadInterpolation_(strike - getSafeAtmLevel());
+        else
+            tmp = base_->volatility(effStrike) + volSpreadInterpolation_(strike);
     }
+    tmp = std::max(1E-8, tmp);
 
     if(!fwdfwd_)
         return tmp;

@@ -32,6 +32,7 @@
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/iborfallbackconfig.hpp>
 
+#include <qle/termstructures/proxyoptionletvolatility.hpp>
 #include <qle/utilities/scenarioinformation.hpp>
 
 #include <map>
@@ -189,7 +190,8 @@ protected:
     std::map<RiskFactorKey, Real> absoluteSimData_;
 
     // hold meta data for the scenarios stored in simData_, absoluteSimData_
-    std::set<std::tuple<RiskFactorKey::KeyType, std::string, std::vector<std::vector<Real>>>> coordinatesData_;
+    using CoordinateData = std::tuple<RiskFactorKey::KeyType, std::string, std::vector<std::vector<Real>>>;
+    std::set<CoordinateData> coordinatesData_;
 
     bool cacheSimData_;
     bool allowPartialScenarios_;
@@ -236,6 +238,54 @@ private:
 
     void createBondFutureVol(QuantExt::RiskFactorKey::KeyType rfKeyType, const std::string& name, bool simulate,
         bool& simDataWritten, const BuildContext& context);
+
+    // Helpers for creating optionlet volatilities.
+    struct CapFloorConventions {
+        QuantLib::Natural settleDays = 0;
+        bool isOis = false;
+        QuantLib::Calendar indexCalendar;
+        QuantLib::Size onSettlementDays = 0;
+    };
+    CapFloorConventions getCapFloorConventions(const std::string& name,
+        const ore::data::CurveConfigurations& curveConfigs,
+        const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index) const;
+    std::vector<QuantLib::Date> getOptionDates(const std::vector<QuantLib::Period>& optionTenors,
+        const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index, const CapFloorConventions& conv,
+        const QuantLib::ext::shared_ptr<QuantLib::OptionletVolatilityStructure>& baseOvs,
+        const QuantLib::Period& rateCompPeriod, const std::string& name) const;
+    std::vector<QuantLib::Rate> getAtmStrikes(const std::vector<QuantLib::Period>& optionTenors,
+        const std::vector<QuantLib::Date>& optionDates, const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
+        const CapFloorConventions& conv, const QuantLib::Period& rateCompPeriod, const std::string& name,
+        const std::string& configuration, const QuantLib::ext::shared_ptr<ore::data::Market>& initMarket) const;
+    std::vector<QuantLib::Real> getProxyAdjustments(const std::vector<QuantLib::Period>& optionTenors,
+        const std::vector<QuantLib::Date>& optionDates,
+        const QuantLib::ext::shared_ptr<QuantExt::ProxyOptionletVolatility>& proxy) const;
+    void createOptionletVol(QuantExt::RiskFactorKey::KeyType rfKeyType, const std::string& name, bool simulate,
+        bool& simDataWritten, const BuildContext& context);
+    QuantLib::Handle<QuantLib::OptionletVolatilityStructure> createNonSimulatedOptionletVol(
+        const QuantLib::ext::shared_ptr<QuantLib::OptionletVolatilityStructure>& baseOvs, const std::string& name);
+    QuantLib::Handle<QuantLib::OptionletVolatilityStructure> createOptionletVol(
+        QuantExt::RiskFactorKey::KeyType rfKeyType, const std::string& name, bool& simDataWritten,
+        const BuildContext& context, const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
+        const QuantLib::Handle<QuantLib::OptionletVolatilityStructure>& baseOvs,
+        const QuantLib::Period& rateCompPeriod, QuantExt::Stickyness stickyness);
+    QuantLib::Handle<QuantLib::OptionletVolatilityStructure> createSabrOptionletVol(
+        QuantExt::RiskFactorKey::KeyType rfKeyType, const std::string& name, bool& simDataWritten,
+        const BuildContext& context, const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
+        const QuantLib::Handle<QuantLib::OptionletVolatilityStructure>& baseOvs, const QuantLib::Period& rateCompPeriod,
+        const QuantLib::ext::shared_ptr<QuantExt::ProxyOptionletVolatility>& proxy);
+
+    // Helpers to find coordinates given a risk factor key type and an ID.
+    const std::vector<std::vector<QuantLib::Real>>& findCoordinates(QuantExt::RiskFactorKey::KeyType rfKeyType,
+        const std::string& rfName) const;
+    const std::vector<QuantLib::Real>& find1DCoordinates(QuantExt::RiskFactorKey::KeyType rfKeyType,
+        const std::string& rfName) const;
+
+    // Make a copy of a base scenario sim market yield curve not connected to the associated quotes.
+    QuantLib::Handle<QuantLib::YieldTermStructure> copyYieldCurve(const std::string& curveId,
+        QuantExt::RiskFactorKey::KeyType rfKeyType,
+        const QuantLib::Handle<QuantLib::YieldTermStructure>& initMktYts,
+        const QuantLib::Calendar& calendar = {}) const;
 };
 } // namespace analytics
 } // namespace ore

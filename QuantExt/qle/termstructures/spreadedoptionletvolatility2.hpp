@@ -22,74 +22,83 @@
 */
 
 #pragma once
-
 #include <qle/termstructures/dynamicstype.hpp>
-
 #include <ql/math/interpolations/interpolation2d.hpp>
 #include <ql/quote.hpp>
 #include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
 
-#include <boost/smart_ptr/shared_ptr.hpp>
-
 namespace QuantExt {
-using namespace QuantLib;
 
-class SpreadedOptionletVolatility2 : public OptionletVolatilityStructure, public LazyObject {
+class SpreadedOptionletVolatility2 : public QuantLib::OptionletVolatilityStructure, public QuantLib::LazyObject {
 public:
-    SpreadedOptionletVolatility2(const Handle<OptionletVolatilityStructure>& baseVol,
-                                 const std::vector<Date>& optionDates, const std::vector<Real>& strikes,
-                                 const std::vector<std::vector<Handle<Quote>>>& volSpreads,
-                                 ReactionToTimeDecay decayMode);
-    BusinessDayConvention businessDayConvention() const override;
-    Rate minStrike() const override;
-    Rate maxStrike() const override;
-    Date maxDate() const override;
-    VolatilityType volatilityType() const override;
-    Real displacement() const override;
+    SpreadedOptionletVolatility2(
+        const QuantLib::Handle<OptionletVolatilityStructure>& baseVol,
+        const std::vector<QuantLib::Date>& optionDates,
+        const std::vector<QuantLib::Real>& strikes,
+        const std::vector<std::vector<QuantLib::Handle<QuantLib::Quote>>>& volSpreads,
+        ReactionToTimeDecay decayMode,
+        Stickyness stickyness = StickyStrike,
+        QuantLib::ext::shared_ptr<QuantLib::IborIndex> index = nullptr,
+        QuantLib::ext::shared_ptr<QuantLib::IborIndex> initIndex = nullptr,
+        QuantLib::Period rateComputationPeriod = 0 * QuantLib::Days);
+
+    QuantLib::BusinessDayConvention businessDayConvention() const override;
+    QuantLib::Rate minStrike() const override;
+    QuantLib::Rate maxStrike() const override;
+    QuantLib::Date maxDate() const override;
+    QuantLib::VolatilityType volatilityType() const override;
+    QuantLib::Real displacement() const override;
     void update() override;
     void deepUpdate() override;
     bool useEffectiveVolatility() const override;
 
 protected:
-    QuantLib::ext::shared_ptr<SmileSection> smileSectionImpl(Time optionTime) const override;
-    Volatility volatilityImpl(Time optionTime, Rate strike) const override;
+    QuantLib::ext::shared_ptr<QuantLib::SmileSection> smileSectionImpl(QuantLib::Time optionTime) const override;
+    QuantLib::Volatility volatilityImpl(QuantLib::Time optionTime, QuantLib::Rate strike) const override;
     void performCalculations() const override;
 
-    const Handle<OptionletVolatilityStructure>& baseVol() const { return baseVol_; }
-    const std::vector<Real>& strikes() const { return strikes_; }
-    const std::vector<Real>& optionTimes() const { return optionTimes_; }
-    const Matrix& volSpreadValues() const { return volSpreadValues_; }
+    const QuantLib::Handle<QuantLib::OptionletVolatilityStructure>& baseVol() const { return baseVol_; }
+    const std::vector<QuantLib::Real>& strikes() const { return strikes_; }
+    const std::vector<QuantLib::Real>& optionTimes() const { return optionTimes_; }
+    const QuantLib::Matrix& volSpreadValues() const { return volSpreadValues_; }
 
-    Handle<OptionletVolatilityStructure> baseVol_;
-    std::vector<Date> optionDates_;
-    std::vector<Real> strikes_;
-    std::vector<std::vector<Handle<Quote>>> volSpreads_;
+    QuantLib::Handle<QuantLib::OptionletVolatilityStructure> baseVol_;
+    std::vector<QuantLib::Date> optionDates_;
+    std::vector<QuantLib::Real> strikes_;
+    std::vector<std::vector<QuantLib::Handle<QuantLib::Quote>>> volSpreads_;
     ReactionToTimeDecay decayMode_;
+    Stickyness stickyness_;
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> index_;
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> initIndex_;
+    QuantLib::Period rateComputationPeriod_;
 
-    mutable std::vector<Real> optionTimes_;
-    mutable Matrix volSpreadValues_;
-    mutable Interpolation2D volSpreadInterpolation_;
-    mutable Date originalRefDate_, actualRefDate_;
-    mutable Real t0_;
+    mutable std::vector<QuantLib::Real> optionTimes_;
+    mutable QuantLib::Matrix volSpreadValues_;
+    mutable QuantLib::Interpolation2D volSpreadInterpolation_;
+    mutable QuantLib::Date originalRefDate_, actualRefDate_;
+    mutable QuantLib::Real t0_;
 };
 
 class AtmAdjustedSpreadedOptionletVolatility2 : public SpreadedOptionletVolatility2 {
 public:
     AtmAdjustedSpreadedOptionletVolatility2(
-        const Handle<OptionletVolatilityStructure>& baseVol, const std::vector<Date>& optionDates,
-        const std::vector<Real>& strikes, const std::vector<std::vector<Handle<Quote>>>& volSpreads,
+        const QuantLib::Handle<QuantLib::OptionletVolatilityStructure>& baseVol,
+        const std::vector<QuantLib::Date>& optionDates,
+        const std::vector<QuantLib::Real>& strikes,
+        const std::vector<std::vector<QuantLib::Handle<QuantLib::Quote>>>& volSpreads,
         const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& baseIndex,
         const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& targetIndex,
         const QuantLib::Period& baseRateComputationPeriod = 0 * QuantLib::Days,
-        const QuantLib::Period& targetRateComputationPeriod = 0 * QuantLib::Days, Real scalingFactor = 1.0,
-        ReactionToTimeDecay decayMode = ReactionToTimeDecay::ForwardForwardVariance);
+        const QuantLib::Period& targetRateComputationPeriod = 0 * QuantLib::Days,
+        QuantLib::Real scalingFactor = 1.0,
+        ReactionToTimeDecay decayMode = ForwardForwardVariance);
     void update() override;
     void deepUpdate() override;
 
 protected:
-    QuantLib::ext::shared_ptr<SmileSection> smileSectionImpl(const QuantLib::Date& fixingDate) const override;
-    QuantLib::ext::shared_ptr<SmileSection> smileSectionImpl(Time optionTime) const override;
-    Volatility volatilityImpl(Time optionTime, Rate strike) const override;
+    QuantLib::ext::shared_ptr<QuantLib::SmileSection> smileSectionImpl(const QuantLib::Date& fixingDate) const override;
+    QuantLib::ext::shared_ptr<QuantLib::SmileSection> smileSectionImpl(QuantLib::Time optionTime) const override;
+    QuantLib::Volatility volatilityImpl(QuantLib::Time optionTime, QuantLib::Rate strike) const override;
     void performCalculations() const override;
 
 private:
@@ -97,9 +106,8 @@ private:
     QuantLib::ext::shared_ptr<QuantLib::IborIndex> targetIndex_;
     QuantLib::Period baseRateComputationPeriod_;
     QuantLib::Period targetRateComputationPeriod_;
-    Real scalingFactor_;
-    //
-    mutable std::map<Time, QuantLib::ext::shared_ptr<SmileSection>> smileSectionCache_;
+    QuantLib::Real scalingFactor_;
+    mutable std::map<QuantLib::Time, QuantLib::ext::shared_ptr<QuantLib::SmileSection>> smileSectionCache_;
 };
 
 } // namespace QuantExt
