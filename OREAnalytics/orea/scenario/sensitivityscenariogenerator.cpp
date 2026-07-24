@@ -2340,7 +2340,7 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
             continue;
 
         // Get the sensitivity data for this name
-        SensitivityScenarioData::CurveShiftData data = *c.second;
+        SensitivityScenarioData::CommodityCurveShiftData data = *c.second;
         if (!isScenarioRelevant(up, data))
             continue;
         ShiftType shiftType = getShiftType(data);
@@ -2349,25 +2349,68 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
         // Get the times at which we want to apply the shifts
         QL_REQUIRE(!data.shiftTenors.empty(), "Commodity curve shift tenors have not been given");
         vector<Time> shiftTimes(data.shiftTenors.size());
+        vector<Period> shiftPeriods(data.shiftTenors.size());
         for (Size j = 0; j < data.shiftTenors.size(); ++j) {
             auto p = std::get_if<Period>(&data.shiftTenors[j]);
             QL_REQUIRE(p != nullptr,
                        "Unsupported sensitivity shift tenor type '" << data.shiftTenors[j]
                                                                     << "' for commodity curve '" << name << "'");
+            shiftPeriods[j] = *p;
             shiftTimes[j] = dc.yearFraction(asof, asof + *p);
         }
 
         // Can we store a valid shift size?
         bool validShiftSize = vectorSubset(times, shiftTimes);
 
-        // Generate the scenarios for each shift
-        for (Size j = 0; j < data.shiftTenors.size(); ++j) {
+        vector<vector<Size>> buckets; // member tenor indices per bucket, in configured tenor order
+        vector<Date> fixingDates;
+        if (data.fixingCalendar) {
+            fixingDates.resize(shiftPeriods.size());
+            map<Date, Size> bucketIndex; // fixing date -> position in `buckets`, in first-seen order
+            for (Size j = 0; j < shiftPeriods.size(); ++j) {
+                fixingDates[j] = data.fixingCalendar->adjust(asof + shiftPeriods[j], data.fixingConvention);
+                auto [it, inserted] = bucketIndex.try_emplace(fixingDates[j], buckets.size());
+                if (inserted)
+                    buckets.push_back({});
+                buckets[it->second].push_back(j);
+            }
+        } else {
+            for (Size j = 0; j < shiftPeriods.size(); ++j)
+                buckets.push_back({j});
+        }
+
+        // Generate one scenario per fixing-calendar bucket
+        for (const auto& members : buckets) {
+            Size fixingTenorIndex = members.front();
+            if (data.fixingCalendar) {
+                fixingTenorIndex = Null<Size>();
+                for (Size j : members) {
+                    if (asof + shiftPeriods[j] == fixingDates[j]) {
+                        if (fixingTenorIndex != Null<Size>()) {
+                            QL_FAIL("Commodity curve '"
+                                    << name << "': fixing-calendar bucket for fixing date " << fixingDates[j]
+                                    << " has multiple fixing tenors ('" << data.shiftTenors[fixingTenorIndex]
+                                    << "' and '" << data.shiftTenors[j] << "')");
+                        }
+                        fixingTenorIndex = j;
+                    }
+                }
+                if (fixingTenorIndex == Null<Size>()) {
+                    ostringstream memberTenors;
+                    for (Size k = 0; k < members.size(); ++k)
+                        memberTenors << (k > 0 ? ", " : "") << data.shiftTenors[members[k]];
+                    QL_FAIL("Commodity curve '" << name << "': fixing-calendar bucket for fixing date "
+                                                << fixingDates[members.front()]
+                                                << " has no fixing tenor among configured tenors ("
+                                                << memberTenors.str() << ")");
+                }
+            }
 
             QuantLib::ext::shared_ptr<Scenario> scenario =
                 sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
 
-            // Apply shift at tenor point j
-            applyShift(j, shiftSize, up, shiftType, shiftTimes, basePrices, times, shiftedPrices, true);
+            // Apply one shift across all member tenor points of the bucket
+            applyShift(members, shiftSize, up, shiftType, shiftTimes, basePrices, times, shiftedPrices, true);
 
             // store shifted commodity price curve in the scenario
             for (Size k = 0; k < times.size(); ++k) {
@@ -2381,17 +2424,17 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
                     scenario->add(key, shiftedPrices[k]);
                 }
 
-                // Possibly store valid shift size
-                if (validShiftSize && shiftTimes[j] == times[k]) {
-                    // store values with shift tenor index
-                    RiskFactorKey key(RFType::CommodityCurve, name, j);
+                // Possibly store valid shift size, keyed by the bucket's fixing tenor
+                if (validShiftSize && shiftTimes[fixingTenorIndex] == times[k]) {
+                    RiskFactorKey key(RFType::CommodityCurve, name, fixingTenorIndex);
                     storeShiftData(key, basePrices[k], shiftedPrices[k]);
                 }
             }
 
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
-            scenarioDescriptions_.push_back(commodityCurveScenarioDescription(name, j, up, getShiftScheme(data)));
+            scenarioDescriptions_.push_back(
+                commodityCurveScenarioDescription(name, fixingTenorIndex, up, getShiftScheme(data)));
             scenario->label(to_string(scenarioDescriptions_.back()));
             DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
         }

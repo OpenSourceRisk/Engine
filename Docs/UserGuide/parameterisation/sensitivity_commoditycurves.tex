@@ -1,0 +1,39 @@
+Commodity curve sensitivity configuration is provided in a \lstinline!CommodityCurves! block under
+\lstinline!SensitivityAnalysis!. In addition to the common curve sensitivity fields, a
+\lstinline!CommodityCurve! entry supports:
+
+\begin{itemize}
+\item \lstinline!Calendar! [Optional]: Commodity fixing calendar.
+\item \lstinline!BusinessDayConvention! [Optional]: Fixing convention. It requires \lstinline!Calendar! and
+  defaults to \lstinline!Preceding! when omitted.
+\end{itemize}
+
+\subsubsection*{Fixing-Calendar Buckets}
+
+With \lstinline!Calendar!, ORE adds each shift tenor to the as-of date, adjusts the resulting date, and
+groups tenors with the same fixing date. Each group produces one scenario under its fixing tenor: the
+unique tenor whose unadjusted date equals the fixing date. Absorbed tenors have no separate scenario or
+sensitivity row; the fixing-tenor scenario applies the configured shift at full weight across the group,
+tapering only towards adjacent non-members. Missing or duplicate fixing tenors are configuration errors.
+Without \lstinline!Calendar!, commodity sensitivities and XML serialization are unchanged.
+
+For example, under \lstinline!WeekendsOnly! and \lstinline!Preceding!, Friday \lstinline!1D! and weekend
+\lstinline!2D! and \lstinline!3D! form one bucket reported as \lstinline!1D!; Monday \lstinline!4D!
+remains separate.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\scriptsize]{xml}
+<CommodityCurves>
+  <CommodityCurve name="COMDTY_GOLD_USD">
+    <Currency>USD</Currency>
+    <ShiftType>Absolute</ShiftType>
+    <ShiftSize>0.01</ShiftSize>
+    <ShiftTenors>1D,2D,3D,4D</ShiftTenors>
+    <Calendar>WeekendsOnly</Calendar>
+    <BusinessDayConvention>Preceding</BusinessDayConvention>
+  </CommodityCurve>
+</CommodityCurves>
+\end{minted}
+\caption{Commodity curve sensitivity configuration with fixing-calendar bucketing}
+\label{lst:sensitivity_commodity_curves}
+\end{longlisting}
