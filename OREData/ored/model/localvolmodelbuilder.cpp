@@ -69,10 +69,11 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> LocalVolModelBuilder::
 
     for (Size l = 0; l < processes_.size(); ++l) {
 
-        Handle<LocalVolTermStructure> localVol;
+        Handle<LocalVolTermStructure> localVol(
+            QuantLib::ext::make_shared<LocalConstantVol>(0, NullCalendar(), 0.10, ActualActual(ActualActual::ISDA)));
+
         if (dontCalibrate_) {
-            localVol = Handle<LocalVolTermStructure>(QuantLib::ext::make_shared<LocalConstantVol>(
-                0, NullCalendar(), 0.10, ActualActual(ActualActual::ISDA)));
+            // nothing to do
         } else if (lvType_ == Type::AndreasenHuge) {
 
             // for checking arbitrage free input prices, just for logging purposes at this point
@@ -124,32 +125,35 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> LocalVolModelBuilder::
                 }
             }
 
-            // arbitrage check
-            QuantExt::CarrMadanSurface cmCheck(checkMaturities, checkMoneynesses, processes_[l]->x0(), atmForwards,
-                                               callPrices);
-            if (!cmCheck.arbitrageFree()) {
-                DLOG("Andreasen-Huge local vol calibration for process #" << l << ": input vol is not arbitrage free.");
-                TLOG("time,moneyness,callSpread,butterfly,calendar");
-                for (Size i = 0; i < checkMaturities.size(); ++i)
-                    for (Size j = 0; j < checkMoneynesses.size(); ++j)
-                        TLOG(checkMaturities[i] << "," << checkMoneynesses[j] << "," << std::boolalpha
-                                                << cmCheck.callSpreadArbitrage()[i][j] << ","
-                                                << cmCheck.butterflyArbitrage()[i][j] << ","
-                                                << cmCheck.calendarArbitrage()[i][j]);
-            }
+            if (!checkMaturities.empty()) {
+                // arbitrage check
+                QuantExt::CarrMadanSurface cmCheck(checkMaturities, checkMoneynesses, processes_[l]->x0(), atmForwards,
+                                                   callPrices);
+                if (!cmCheck.arbitrageFree()) {
+                    DLOG("Andreasen-Huge local vol calibration for process #" << l
+                                                                              << ": input vol is not arbitrage free.");
+                    TLOG("time,moneyness,callSpread,butterfly,calendar");
+                    for (Size i = 0; i < checkMaturities.size(); ++i)
+                        for (Size j = 0; j < checkMoneynesses.size(); ++j)
+                            TLOG(checkMaturities[i] << "," << checkMoneynesses[j] << "," << std::boolalpha
+                                                    << cmCheck.callSpreadArbitrage()[i][j] << ","
+                                                    << cmCheck.butterflyArbitrage()[i][j] << ","
+                                                    << cmCheck.calendarArbitrage()[i][j]);
+                }
 
-            // TODO using some hardcoded values here, expose to configuration?
-            auto ah = QuantLib::ext::make_shared<AndreasenHugeVolatilityInterpl>(
-                calSet, processes_[l]->stateVariable(), processes_[l]->riskFreeRate(), processes_[l]->dividendYield(),
-                AndreasenHugeVolatilityInterpl::CubicSpline, AndreasenHugeVolatilityInterpl::Call, 500, Null<Real>(),
-                Null<Real>());
-            localVol = Handle<LocalVolTermStructure>(QuantLib::ext::make_shared<AndreasenHugeLocalVolAdapter>(ah));
-            DLOG("Andreasen-Huge local vol calibration for process #"
-                 << l
-                 << ": "
-                    "calibration error min="
-                 << std::scientific << std::setprecision(6) << std::get<0>(ah->calibrationError())
-                 << " max=" << std::get<1>(ah->calibrationError()) << " avg=" << std::get<2>(ah->calibrationError()));
+                // TODO using some hardcoded values here, expose to configuration?
+                auto ah = QuantLib::ext::make_shared<AndreasenHugeVolatilityInterpl>(
+                    calSet, processes_[l]->stateVariable(), processes_[l]->riskFreeRate(),
+                    processes_[l]->dividendYield(), AndreasenHugeVolatilityInterpl::CubicSpline,
+                    AndreasenHugeVolatilityInterpl::Call, 500, Null<Real>(), Null<Real>());
+                localVol = Handle<LocalVolTermStructure>(QuantLib::ext::make_shared<AndreasenHugeLocalVolAdapter>(ah));
+                DLOG("Andreasen-Huge local vol calibration for process #"
+                     << l
+                     << ": "
+                        "calibration error min="
+                     << std::scientific << std::setprecision(6) << std::get<0>(ah->calibrationError()) << " max="
+                     << std::get<1>(ah->calibrationError()) << " avg=" << std::get<2>(ah->calibrationError()));
+            }
         } else if (lvType_ == Type::Dupire) {
             localVol = Handle<LocalVolTermStructure>(QuantLib::ext::make_shared<LocalVolSurface>(
                 processes_[l]->blackVolatility(), processes_[l]->riskFreeRate(), processes_[l]->dividendYield(),

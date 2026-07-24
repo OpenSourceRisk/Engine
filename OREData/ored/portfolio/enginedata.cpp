@@ -139,6 +139,23 @@ vector<string> EngineData::products() const {
     return res;
 }
 
+void EngineData::setModelParameters(const std::string& productName,
+    const std::map<std::string, std::string>& params) {
+    // overrides are read first, so we should set here if it exists
+    if (engineDataOverride_)
+        engineDataOverride_->setModelParameters(productName, params);
+    else
+        modelParams_[productName] = params;
+}
+
+void EngineData::setEngineParameters(const std::string& productName, const std::map<std::string, std::string>& params) {
+    // overrides are read first, so we should set here if it exists
+    if (engineDataOverride_)
+        engineDataOverride_->setEngineParameters(productName, params);
+    else
+        engineParams_[productName] = params;
+}
+
 bool operator==(const EngineData& lhs, const EngineData& rhs) {
     vector<string> products = lhs.products();
     // this assumes they are both sorted the same

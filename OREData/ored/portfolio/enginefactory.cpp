@@ -214,8 +214,9 @@ QuantLib::ext::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tr
     QL_REQUIRE(engineData_->hasProduct(tradeType),
                "No Pricing Engine configuration was provided for trade type " << tradeType);
 
-    const string& model = engineData_->model(tradeType);
-    const string& engine = engineData_->engine(tradeType);
+    const EngineData& ed = *engineData_; // force calls to the const version of the engineData_ methods
+    const string& model = ed.model(tradeType);
+    const string& engine = ed.engine(tradeType);
     typedef pair<tuple<string, string, set<string>>, QuantLib::ext::shared_ptr<EngineBuilder>> map_type;
     auto pred = [&model, &engine, &tradeType](const map_type& v) -> bool {
         const set<string>& types = std::get<2>(v.first);
