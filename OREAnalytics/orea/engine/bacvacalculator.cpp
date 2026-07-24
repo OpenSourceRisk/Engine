@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/app/reportwriter.hpp>
+#include <orea/app/reportwriters/capitalreportwriter.hpp>
 #include <ored/report/inmemoryreport.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <orea/engine/bacvacalculator.hpp>

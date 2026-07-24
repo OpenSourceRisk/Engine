@@ -35,6 +35,7 @@
 #include <orea/engine/sensitivityinmemorystream.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
 #include <orea/engine/bufferedsensitivitystream.hpp>
+#include <orea/engine/sensitivityaggregator.hpp>
 #include <orea/engine/decomposedsensitivitystream.hpp>
 #include <orea/engine/sensitivityreportstream.hpp>
 %}
@@ -269,5 +270,83 @@ public:
 // --- Template instantiations for SensitivityCubeStream vector constructor ---
 
 %template(SensitivityCubeVector) std::vector<QuantLib::ext::shared_ptr<ore::analytics::SensitivityCube>>;
+
+// --- SensitivityAggregator ---
+
+%shared_ptr(ore::analytics::SensitivityAggregator)
+
+namespace ore { namespace analytics {
+
+class SensitivityAggregator {
+public:
+    SensitivityAggregator(const std::map<std::string, std::set<std::pair<std::string, Size>>>& categories);
+
+    void aggregate(ore::analytics::SensitivityStream& ss,
+                   const QuantLib::ext::shared_ptr<ore::analytics::ScenarioFilter>& filter =
+                       QuantLib::ext::make_shared<ore::analytics::ScenarioFilter>());
+
+    void reset();
+
+    const std::set<ore::analytics::SensitivityRecord>& sensitivities(const std::string& category) const;
+
+    typedef std::pair<QuantExt::RiskFactorKey, QuantExt::RiskFactorKey> CrossPair;
+
+    void generateDeltaGamma(const std::string& category,
+                            std::map<QuantExt::RiskFactorKey, Real>& deltas,
+                            std::map<std::pair<QuantExt::RiskFactorKey, QuantExt::RiskFactorKey>, Real>& gammas);
+
+    %extend {
+        SensitivityAggregator(const std::map<std::string, std::vector<std::string>>& categories) {
+            std::map<std::string, std::set<std::pair<std::string, QuantLib::Size>>> cats;
+            for (auto const& p : categories) {
+                std::set<std::pair<std::string, QuantLib::Size>> s;
+                for (auto const& t : p.second) {
+                    s.insert(std::make_pair(t, 0));
+                }
+                cats[p.first] = s;
+            }
+            return new ore::analytics::SensitivityAggregator(cats);
+        }
+
+        SensitivityAggregator(const std::map<std::string, std::vector<std::pair<std::string, QuantLib::Size>>>& categories) {
+            std::map<std::string, std::set<std::pair<std::string, QuantLib::Size>>> cats;
+            for (auto const& p : categories) {
+                std::set<std::pair<std::string, QuantLib::Size>> s(p.second.begin(), p.second.end());
+                cats[p.first] = s;
+            }
+            return new ore::analytics::SensitivityAggregator(cats);
+        }
+
+        std::pair<std::map<QuantExt::RiskFactorKey, Real>,
+                  std::map<std::pair<QuantExt::RiskFactorKey, QuantExt::RiskFactorKey>, Real>>
+        getDeltaGamma(const std::string& category) {
+            std::map<QuantExt::RiskFactorKey, Real> deltas;
+            std::map<std::pair<QuantExt::RiskFactorKey, QuantExt::RiskFactorKey>, Real> gammas;
+            $self->generateDeltaGamma(category, deltas, gammas);
+            return std::make_pair(deltas, gammas);
+        }
+    }
+};
+
+}}
+
+// --- Template instantiations for SensitivityAggregator and related types ---
+
+%template(StringVectorMap) std::map<std::string, std::vector<std::string>>;
+%template(StringSizePairVector) std::vector<std::pair<std::string, QuantLib::Size>>;
+%template(StringStringSizePairVectorMap) std::map<std::string, std::vector<std::pair<std::string, QuantLib::Size>>>;
+
+%template(StringSizePair) std::pair<std::string, QuantLib::Size>;
+%template(StringSizePairSet) std::set<std::pair<std::string, QuantLib::Size>>;
+%template(StringStringSizePairSetMap) std::map<std::string, std::set<std::pair<std::string, QuantLib::Size>>>;
+
+%template(SensitivityRecordSet) std::set<ore::analytics::SensitivityRecord>;
+
+%template(RiskFactorKeyPair) std::pair<QuantExt::RiskFactorKey, QuantExt::RiskFactorKey>;
+%template(RiskFactorKeyRealMap) std::map<QuantExt::RiskFactorKey, Real>;
+%template(RiskFactorKeyPairRealMap) std::map<std::pair<QuantExt::RiskFactorKey, QuantExt::RiskFactorKey>, Real>;
+
+%template(DeltaGammaPair) std::pair<std::map<QuantExt::RiskFactorKey, Real>,
+                                   std::map<std::pair<QuantExt::RiskFactorKey, QuantExt::RiskFactorKey>, Real>>;
 
 #endif

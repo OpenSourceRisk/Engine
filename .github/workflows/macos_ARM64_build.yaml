@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-latest
     strategy:
       fail-fast: false
       matrix:
@@ -25,6 +25,8 @@ jobs:
             python-version: "3.12"
           - python-wheel: "cp313"
             python-version: "3.13"
+          - python-wheel: "cp314"
+            python-version: "3.14"
     steps:
     - uses: actions/checkout@v5
       with:
@@ -79,15 +81,15 @@ jobs:
         pwd
         python setup.py wrap
     - name: Build Wheels
-      uses: pypa/cibuildwheel@v2.22.0
+      uses: pypa/cibuildwheel@v3.3.0
       env:
         #CIBW_SKIP: cp36-*
         CIBW_BUILD: ${{ matrix.python-wheel }}-*
         #CIBW_BUILD: cp311-macosx_arm64
         CIBW_ARCHS_MACOS: arm64
-        MACOSX_DEPLOYMENT_TARGET: "14.7"
-        CIBW_ENVIRONMENT: MACOSX_DEPLOYMENT_TARGET=14.7
-        CXXFLAGS: -std=c++20 -g0 -O3 -mmacosx-version-min=14.7
+        MACOSX_DEPLOYMENT_TARGET: "15.0"
+        CIBW_ENVIRONMENT: MACOSX_DEPLOYMENT_TARGET=15.0
+        CXXFLAGS: -std=c++20 -g0 -O3 -mmacosx-version-min=15.0
         CIBW_BUILD_VERBOSITY: 2
         CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
           DYLD_LIBRARY_PATH=/usr/local/lib delocate-listdeps {wheel} &&

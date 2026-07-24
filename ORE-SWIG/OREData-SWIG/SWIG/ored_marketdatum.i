@@ -288,13 +288,11 @@ public:
 
 class MMFutureQuote : public MarketDatum {
 public:
-    MMFutureQuote(Real value, Date asofDate, const std::string& name,
-                  MarketDatum::QuoteType quoteType, std::string ccy, std::string expiry,
-                  std::string contract = "", Period tenor = 3 * Months);
+    MMFutureQuote(Real value, const Date& asofDate, const std::string& name,
+                  MarketDatum::QuoteType quoteType, const std::string& ccy, const std::string& expiry,
+                  const std::string& contract = "", const Period& tenor = 3 * Months);
     const std::string& ccy() const;
-    const std::string expiry() const;
-    Natural expiryYear() const;
-    Month expiryMonth() const;
+    const std::string& expiry() const;
     const std::string& contract() const;
     const Period& tenor() const;
     %extend {
@@ -306,13 +304,11 @@ public:
 
 class OIFutureQuote : public MarketDatum {
 public:
-    OIFutureQuote(Real value, Date asofDate, const std::string& name,
-                  MarketDatum::QuoteType quoteType, std::string ccy, std::string expiry,
-                  std::string contract = "", Period tenor = 3 * Months);
+    OIFutureQuote(Real value, const Date& asofDate, const std::string& name,
+                  MarketDatum::QuoteType quoteType, const std::string& ccy, const std::string& contractMonth,
+                  const std::string& contract = "", const Period& tenor = 3 * Months);
     const std::string& ccy() const;
-    const std::string expiry() const;
-    Natural expiryYear() const;
-    Month expiryMonth() const;
+    const std::string& contractMonth() const;
     const std::string& contract() const;
     const Period& tenor() const;
     %extend {

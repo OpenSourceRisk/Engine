@@ -31,21 +31,23 @@ namespace analytics {
 class OverlayNPVCube : public NPVCube {
 public:
     OverlayNPVCube(const QuantLib::ext::shared_ptr<NPVCube>& cube, const std::map<std::string, double>& pricingNpvs);
-    Size numIds() const override;
-    Size numDates() const override;
-    Size samples() const override;
-    Size depth() const override;
-    const std::map<std::string, Size>& idsAndIndexes() const override;
+    QuantLib::Size numIds() const override;
+    QuantLib::Size numDates() const override;
+    QuantLib::Size samples() const override;
+    QuantLib::Size depth() const override;
+    const std::map<std::string, QuantLib::Size>& idsAndIndexes() const override;
     const std::vector<QuantLib::Date>& dates() const override;
     QuantLib::Date asof() const override;
-    Real getT0(Size id, Size depth = 0) const override;
-    void setT0(Real value, Size id, Size depth = 0) override;
-    Real get(Size id, Size date, Size sample, Size depth = 0) const override;
-    void set(Real value, Size id, Size date, Size sample, Size depth = 0) override;
+    QuantLib::Real getT0(QuantLib::Size id, QuantLib::Size depth = 0) const override;
+    void setT0(QuantLib::Real value, QuantLib::Size id, QuantLib::Size depth = 0) override;
+    QuantLib::Real get(QuantLib::Size id, QuantLib::Size date, QuantLib::Size sample,
+                       QuantLib::Size depth = 0) const override;
+    void set(QuantLib::Real value, QuantLib::Size id, QuantLib::Size date, QuantLib::Size sample,
+             QuantLib::Size depth = 0) override;
     bool usesDoublePrecision() const override;
 
 private:
-    double correction(Size id, Size depth) const;
+    double correction(QuantLib::Size id, QuantLib::Size depth) const;
 
     QuantLib::ext::shared_ptr<NPVCube> cube_;
     std::vector<double> pricingNpvs_;

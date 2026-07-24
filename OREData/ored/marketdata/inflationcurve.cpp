@@ -46,6 +46,8 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                                map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
                                const bool buildCalibrationInfo) {
 
+    spec_ = spec;
+
     try {
 
         const QuantLib::ext::shared_ptr<InflationCurveConfig>& config =

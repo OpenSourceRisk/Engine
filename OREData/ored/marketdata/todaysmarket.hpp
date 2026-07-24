@@ -23,13 +23,7 @@
 
 #pragma once
 
-#include <ored/configuration/conventions.hpp>
-#include <ored/configuration/curveconfigurations.hpp>
-#include <ored/marketdata/curvespec.hpp>
-#include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/marketimpl.hpp>
-#include <ored/marketdata/todaysmarketcalibrationinfo.hpp>
-#include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/marketdata/dependencygraph.hpp>
 
 #include <boost/graph/adjacency_list.hpp>
@@ -42,6 +36,11 @@
 
 namespace ore {
 namespace data {
+
+class CurveConfigurations;
+class Loader;
+struct TodaysMarketCalibrationInfo;
+class TodaysMarketParameters;
 
 class ReferenceDataManager;
 class YieldCurve;

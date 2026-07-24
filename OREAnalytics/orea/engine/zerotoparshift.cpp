@@ -25,6 +25,7 @@
 #include <orea/engine/parsensitivityinstrumentbuilder.hpp>
 #include <orea/engine/parsensitivityutilities.hpp>
 #include <orea/engine/zerotoparshift.hpp>
+#include <orea/scenario/scenariosimmarket.hpp>
 #include <ored/utilities/to_string.hpp>
 
 namespace ore {
@@ -63,14 +64,14 @@ ZeroToParShiftConverter::ZeroToParShiftConverter(const ParSensitivityInstrumentB
 
 class SimMarketReseter {
 public:
-    SimMarketReseter(const ext::shared_ptr<ScenarioSimMarket>& simMarket) : simMarket_(simMarket) {
+    SimMarketReseter(const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket) : simMarket_(simMarket) {
         simMarket_->reset();
     }
     ~SimMarketReseter() { simMarket_->reset(); }
-    const ext::shared_ptr<ScenarioSimMarket>& market() const { return simMarket_; }
+    const QuantLib::ext::shared_ptr<ScenarioSimMarket>& market() const { return simMarket_; }
 
 private:
-    ext::shared_ptr<ScenarioSimMarket> simMarket_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket_;
 };
 
 std::unordered_map<RiskFactorKey, double>

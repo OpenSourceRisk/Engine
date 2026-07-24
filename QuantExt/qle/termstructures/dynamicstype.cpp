@@ -24,6 +24,9 @@
 
 namespace QuantExt {
 
+using std::map;
+using std::string;
+
 Stickyness parseStickyness(const std::string& s) {
     static std::map<std::string, Stickyness> m = {
         {"StickyStrike", StickyStrike}, {"StickyMoneyness", StickyMoneyness}, {"StickySABR", StickySABR}};
@@ -71,6 +74,22 @@ PriceCurveRollDown parsePriceCurveRollDown(const std::string& s) {
     }
 }
 
+ForwardSmileInteraction parseForwardSmileInteraction(const string& s) {
+
+    static const map<string, ForwardSmileInteraction> m = {
+        {"None", ForwardSmileInteraction::None},
+        {"SABR_Standard", ForwardSmileInteraction::SABR_Standard},
+        {"SABR_PreserveAtmVolatility", ForwardSmileInteraction::SABR_PreserveAtmVolatility}
+    };
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("ForwardSmileInteraction \"" << s << "\" not recognized");
+    }
+}
+
 std::ostream& operator<<(std::ostream& out, const Stickyness t) {
     switch (t) {
     case StickyStrike:
@@ -114,6 +133,19 @@ std::ostream& operator<<(std::ostream& out, const PriceCurveRollDown t) {
         return out << "Spot";
     default:
         return out << "Unknown yield curve roll down type (" << t << ")";
+    }
+}
+
+std::ostream& operator<<(std::ostream& out, ForwardSmileInteraction fsi) {
+    switch (fsi) {
+    case ForwardSmileInteraction::None:
+        return out << "None";
+    case ForwardSmileInteraction::SABR_Standard:
+        return out << "SABR_Standard";
+    case ForwardSmileInteraction::SABR_PreserveAtmVolatility:
+        return out << "SABR_PreserveAtmVolatility";
+    default:
+        return out << "Unknown ForwardSmileInteraction type (" << static_cast<int>(fsi) << ")";
     }
 }
 

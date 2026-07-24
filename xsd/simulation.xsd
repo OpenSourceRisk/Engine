@@ -1116,6 +1116,15 @@
                 </xs:simpleContent>
               </xs:complexType>
             </xs:element>
+            <xs:element name="SmileForwardInteraction" maxOccurs="unbounded" minOccurs="0">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="key" type="xs:string"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
@@ -1712,6 +1721,7 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="LogLinear"/>
       <xs:enumeration value="LinearZero"/>
+      <xs:enumeration value="LogCubic"/>
     </xs:restriction>
   </xs:simpleType>
 

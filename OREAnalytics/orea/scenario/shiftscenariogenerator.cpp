@@ -241,6 +241,72 @@ void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftTy
     }
 }
 
+void ShiftScenarioGenerator::applyShift(const vector<Size>& js, Real shiftSize, bool up, ShiftType shiftType,
+                                        const vector<Time>& tenors, const vector<Real>& values,
+                                        const vector<Time>& times, vector<Real>& shiftedValues, bool initialise) {
+
+    QL_REQUIRE(!js.empty(), "applyShift: at least one tenor point index required");
+
+    if (js.size() == 1)
+        return applyShift(js.front(), shiftSize, up, shiftType, tenors, values, times, shiftedValues, initialise);
+
+    Size loIdx = js.front();
+    Size hiIdx = js.back();
+    QL_REQUIRE(hiIdx < tenors.size(), "index out of range");
+    QL_REQUIRE(times.size() == values.size(), "vector size mismatch");
+    QL_REQUIRE(shiftedValues.size() == values.size(), "shifted values vector size does not match input");
+
+    QL_REQUIRE(hiIdx - loIdx + 1 == js.size(), "applyShift: tenor point indices must be contiguous");
+    for (Size i = 0; i < js.size(); ++i)
+        QL_REQUIRE(js[i] == loIdx + i, "applyShift: tenor point indices must be sorted and contiguous");
+
+    if (initialise) {
+        for (Size i = 0; i < values.size(); ++i)
+            shiftedValues[i] = values[i];
+    }
+
+    // Apply full weight between the group's first and last members, tapering only towards the
+    // immediately neighbouring non-member tenor.
+    Time tLo = tenors[loIdx];
+    Time tHi = tenors[hiIdx];
+    bool hasLeftNeighbor = loIdx > 0;
+    bool hasRightNeighbor = hiIdx < tenors.size() - 1;
+    Time tPrev = hasLeftNeighbor ? tenors[loIdx - 1] : Time();
+    Time tNext = hasRightNeighbor ? tenors[hiIdx + 1] : Time();
+    bool leftTaperDegenerate = hasLeftNeighbor && close_enough(tLo, tPrev);
+    bool rightTaperDegenerate = hasRightNeighbor && close_enough(tHi, tNext);
+
+    for (Size k = 0; k < times.size(); k++) {
+        Real w = 0.0;
+        if (times[k] >= tLo && times[k] <= tHi)
+            w = 1.0;
+        else if (times[k] < tLo) {
+            if (!hasLeftNeighbor) // flat extrapolation to the left
+                w = 1.0;
+            else if (leftTaperDegenerate)
+                w = 1.0;
+            else if (times[k] >= tPrev) // linear interpolation in tPrev < times[k] < tLo
+                w = (times[k] - tPrev) / (tLo - tPrev);
+        } else { // times[k] > tHi
+            if (!hasRightNeighbor) // flat extrapolation to the right
+                w = 1.0;
+            else if (rightTaperDegenerate)
+                w = 1.0;
+            else if (times[k] <= tNext) // linear interpolation in tHi < times[k] < tNext
+                w = (tNext - times[k]) / (tNext - tHi);
+        }
+        if (!up)
+            w *= -1.0;
+        if (shiftType == ShiftType::EqualTo) {
+            Real shiftDiff = shiftSize - shiftedValues[k];
+            shiftedValues[k] += w * shiftDiff;
+        } else if (shiftType == ShiftType::Absolute)
+            shiftedValues[k] += w * shiftSize;
+        else
+            shiftedValues[k] += values[k] * (w * shiftSize);
+    }
+}
+
 void ShiftScenarioGenerator::applyShift(Size i, Size j, Real shiftSize, bool up, ShiftType shiftType,
                                         const vector<Time>& shiftX, const vector<Time>& shiftY,
                                         const vector<Time>& dataX, const vector<Time>& dataY,

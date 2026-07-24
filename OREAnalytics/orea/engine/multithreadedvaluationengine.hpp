@@ -32,6 +32,9 @@
 #include <ored/marketdata/loader.hpp>
 
 namespace ore {
+namespace data {
+class EngineData;
+}
 namespace analytics {
 
 class MultiThreadedValuationEngine : public ore::data::ProgressReporter {

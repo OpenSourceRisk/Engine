@@ -49,12 +49,24 @@ template <typename T> const vector<T>& lookup(const map<string, vector<T>>& m, c
 }
 
 template <typename T> const T& lookup(const map<string, T>& m, const string& k) {
-    if (m.count(k) > 0) {
-        return m.at(k);
-    } else if (m.count(std::string()) > 0) {
-        return m.at(std::string());
-    } else
-        QL_FAIL("ScenarioSimMarketParameters: no result for key \"" << k << "\" found.");
+    if (auto it = m.find(k); it != m.end())
+        return it->second;
+
+    if (auto it = m.find(""); it != m.end())
+        return it->second;
+
+    QL_FAIL("ScenarioSimMarketParameters: no result for key \"" << k << "\" found.");
+}
+
+template <typename T, typename U>
+T lookup(const map<string, T>& m, const string& k, U&& defaultValue) {
+    if (auto it = m.find(k); it != m.end())
+        return it->second;
+
+    if (auto it = m.find(""); it != m.end())
+        return it->second;
+
+    return T(std::forward<U>(defaultValue));
 }
 
 } // namespace
@@ -211,6 +223,9 @@ const string& ScenarioSimMarketParameters::yieldVolSmileDynamics(const string& k
 const string& ScenarioSimMarketParameters::capFloorVolSmileDynamics(const string& key) const {
     return lookup(capFloorVolSmileDynamics_, key);
 }
+string ScenarioSimMarketParameters::capFloorVolSmileForwardInteraction(const string& key) const {
+    return lookup(capFloorVolSmileForwardInteraction_, key, "None");
+}
 const string& ScenarioSimMarketParameters::yoyInflationCapFloorVolSmileDynamics(const string& key) const {
     return lookup(yoyInflationCapFloorVolSmileDynamics_, key);
 }
@@ -358,6 +373,10 @@ void ScenarioSimMarketParameters::setCdsVolSmileDynamics(const string& key, cons
 }
 void ScenarioSimMarketParameters::setCapFloorVolSmileDynamics(const string& key, const string& smileDynamics) {
     capFloorVolSmileDynamics_[key] = smileDynamics;
+}
+void ScenarioSimMarketParameters::setCapFloorVolSmileForwardInteraction(const string& key,
+    const string& smileForwardInteraction) {
+    capFloorVolSmileForwardInteraction_[key] = smileForwardInteraction;
 }
 void ScenarioSimMarketParameters::setYieldVolSmileDynamics(const string& key, const string& smileDynamics) {
     yieldVolSmileDynamics_[key] = smileDynamics;
@@ -1081,10 +1100,10 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
             setSimulateCapFloorVols(ore::data::parseBool(XMLUtils::getNodeValue(capVolSimNode)));
 
         // All cap floor keys
-	auto ccys = XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", false);
-	auto keys = XMLUtils::getChildrenValues(nodeChild, "Keys", "Key", false);
-	if(!ccys.empty()) {
-	    keys.insert(keys.end(), ccys.begin(), ccys.end());
+        auto ccys = XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", false);
+        auto keys = XMLUtils::getChildrenValues(nodeChild, "Keys", "Key", false);
+        if(!ccys.empty()) {
+            keys.insert(keys.end(), ccys.begin(), ccys.end());
             WLOG("ScenarioSimMarketParameters: CapFloorVolatilities/Currencies is deprecated, use Keys instead.");
         }
         setCapFloorVolKeys(keys);
@@ -1094,7 +1113,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         // - <Expiries key="CCY">t_1,...,t_n</Expiries> for currency specific expiries
         // - <Expiries>t_1,...,t_n</Expiries> or <Expiries key="">t_1,...,t_n</Expiries> for default set of expiries
         // Only need a default expiry set if every currency has not been given an expiry set explicitly
-	// instead of key, ccy is supported as an derprecated attribute
+        // instead of key, ccy is supported as an derprecated attribute
         vector<XMLNode*> expiryNodes = XMLUtils::getChildrenNodes(nodeChild, "Expiries");
         QL_REQUIRE(expiryNodes.size() > 0, "CapFloorVolatilities needs at least one Expiries node");
         set<string> keysCheck(keys.begin(), keys.end());
@@ -1173,6 +1192,12 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         for (XMLNode* smileDynamicsNode : smileDynamicsNodes) {
             string key = XMLUtils::getAttribute(smileDynamicsNode, "key");
             capFloorVolSmileDynamics_.insert(make_pair(key, XMLUtils::getNodeValue(smileDynamicsNode)));
+        }
+
+        auto sfiNodes = XMLUtils::getChildrenNodes(nodeChild, "SmileForwardInteraction");
+        for (XMLNode* sfiNode : sfiNodes) {
+            capFloorVolSmileForwardInteraction_.emplace(XMLUtils::getAttribute(sfiNode, "key"),
+                XMLUtils::getNodeValue(sfiNode));
         }
     }
 
@@ -1910,6 +1935,10 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, capFloorVolatilitiesNode, "UseCapAtm", capFloorVolUseCapAtm_);
         for (auto it = capFloorVolSmileDynamics_.begin(); it != capFloorVolSmileDynamics_.end(); it++) {
             XMLUtils::addChild(doc, capFloorVolatilitiesNode, "SmileDynamics", it->second, "key", it->first);
+        }
+        for (auto it = capFloorVolSmileForwardInteraction_.begin();
+            it != capFloorVolSmileForwardInteraction_.end(); it++) {
+            XMLUtils::addChild(doc, capFloorVolatilitiesNode, "SmileForwardInteraction", it->second, "key", it->first);
         }
     }
 

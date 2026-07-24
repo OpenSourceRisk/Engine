@@ -29,6 +29,7 @@ using ore::analytics::parseScenarioCurvePillar;
 %shared_ptr(ore::analytics::SensitivityScenarioData);
 %shared_ptr(ore::analytics::SensitivityScenarioData::ShiftData);
 %shared_ptr(ore::analytics::SensitivityScenarioData::CurveShiftData);
+%shared_ptr(ore::analytics::SensitivityScenarioData::CommodityCurveShiftData);
 %shared_ptr(ore::analytics::SensitivityScenarioData::VolShiftData);
 %shared_ptr(ore::analytics::SensitivityScenarioData::CdsVolShiftData);
 %shared_ptr(ore::analytics::SensitivityScenarioData::BaseCorrelationShiftData);
@@ -42,6 +43,7 @@ using ore::analytics::parseScenarioCurvePillar;
 %template(StringShiftSchemeMap) std::map<std::string, QuantExt::ShiftScheme>;
 %template(StringRealMap) std::map<std::string, Real>;
 %template(StringCurveShiftDataMap) std::map<std::string, ext::shared_ptr<ore::analytics::SensitivityScenarioData::CurveShiftData>>;
+%template(StringCommodityCurveShiftDataMap) std::map<std::string, ext::shared_ptr<ore::analytics::SensitivityScenarioData::CommodityCurveShiftData>>;
 %template(StringSpotShiftDataMap) std::map<std::string, ext::shared_ptr<ore::analytics::SensitivityScenarioData::SpotShiftData>>;
 %template(StringCapFloorVolShiftDataMap) std::map<std::string, ext::shared_ptr<ore::analytics::SensitivityScenarioData::CapFloorVolShiftData>>;
 %template(StringGenericYieldVolShiftDataMap) std::map<std::string, ext::shared_ptr<ore::analytics::SensitivityScenarioData::GenericYieldVolShiftData>>;
@@ -54,6 +56,9 @@ using ore::analytics::parseScenarioCurvePillar;
 
 %rename (SensitivityScenarioDataCurveShiftData) ore::analytics::SensitivityScenarioData::CurveShiftData;
 %feature ("flatnested") CurveShiftData;
+
+%rename (SensitivityScenarioDataCommodityCurveShiftData) ore::analytics::SensitivityScenarioData::CommodityCurveShiftData;
+%feature ("flatnested") CommodityCurveShiftData;
 
 %rename (SensitivityScenarioDataSpotShiftData) ore::analytics::SensitivityScenarioData::SpotShiftData;
 %feature ("flatnested") SpotShiftData;
@@ -97,6 +102,12 @@ class SensitivityScenarioData : public ore::data::XMLSerializable {
     struct CurveShiftData : ShiftData {
         CurveShiftData() : ShiftData() {}
         CurveShiftData(const ShiftData& d) : ShiftData(d) {}
+    };
+
+    struct CommodityCurveShiftData : CurveShiftData {
+        CommodityCurveShiftData() : CurveShiftData() {}
+        CommodityCurveShiftData(const CurveShiftData& d) : CurveShiftData(d) {}
+        QuantLib::BusinessDayConvention fixingConvention;
     };
 
     using SpotShiftData = ShiftData;
@@ -177,7 +188,7 @@ class SensitivityScenarioData : public ore::data::XMLSerializable {
     const std::map<std::string, ext::shared_ptr<SensitivityScenarioData::VolShiftData>>& equityVolShiftData() const;
     const std::map<std::string, ext::shared_ptr<SensitivityScenarioData::CurveShiftData>>& dividendYieldShiftData() const;
     const std::map<std::string, std::string>& commodityCurrencies() const;
-    const std::map<std::string, ext::shared_ptr<SensitivityScenarioData::CurveShiftData>>& commodityCurveShiftData() const;
+    const std::map<std::string, ext::shared_ptr<SensitivityScenarioData::CommodityCurveShiftData>>& commodityCurveShiftData() const;
     const std::map<std::string, ext::shared_ptr<SensitivityScenarioData::VolShiftData>>& commodityVolShiftData() const;
     const std::map<std::string, ext::shared_ptr<SensitivityScenarioData::VolShiftData>>& correlationShiftData() const;
     const std::map<std::string, ext::shared_ptr<SensitivityScenarioData::SpotShiftData>>& securityShiftData() const;
@@ -208,7 +219,7 @@ class SensitivityScenarioData : public ore::data::XMLSerializable {
     std::map<std::string, ext::shared_ptr<SensitivityScenarioData::CurveShiftData>>& dividendYieldShiftData();
     std::map<std::string, ext::shared_ptr<SensitivityScenarioData::VolShiftData>>& equityVolShiftData();
     std::map<std::string, std::string>& commodityCurrencies();
-    std::map<std::string, ext::shared_ptr<SensitivityScenarioData::CurveShiftData>>& commodityCurveShiftData();
+    std::map<std::string, ext::shared_ptr<SensitivityScenarioData::CommodityCurveShiftData>>& commodityCurveShiftData();
     std::map<std::string, ext::shared_ptr<SensitivityScenarioData::VolShiftData>>& commodityVolShiftData();
     std::map<std::string, ext::shared_ptr<SensitivityScenarioData::VolShiftData>>& correlationShiftData();
     std::map<std::string, ext::shared_ptr<SensitivityScenarioData::SpotShiftData>>& securityShiftData();
@@ -237,7 +248,7 @@ class SensitivityScenarioData : public ore::data::XMLSerializable {
     void addEquityVolShiftData(const std::string& s, const ext::shared_ptr<VolShiftData>& d);
     void addCommodityCurrencies(const std::string& s, const string& d);
     void addCorrelationShiftData(const std::string& s, const ext::shared_ptr<VolShiftData>& d);
-    void addCommodityCurveShiftData(const std::string& s, const ext::shared_ptr<CurveShiftData>& d);
+    void addCommodityCurveShiftData(const std::string& s, const ext::shared_ptr<CommodityCurveShiftData>& d);
     void addCommodityVolShiftData(const std::string& s, const ext::shared_ptr<VolShiftData>& d);
     void addSecurityShiftData(const string& s, const ext::shared_ptr<SpotShiftData>& d);
     void addBondFutureVolShiftData(const std::string& s, const QuantLib::ext::shared_ptr<VolShiftData>& d);
@@ -285,6 +296,34 @@ class SensitivityScenarioData : public ore::data::XMLSerializable {
                 self.setShiftTenorPillars(list(value))
             else:
                 self.setShiftTenors(list(value))
+    %}
+}
+
+// fixingCalendar is std::optional<QuantLib::Calendar> on the C++ side; expose it via helper
+// methods (rather than a raw data member) and surface it as a Pythonic optional property.
+%extend ore::analytics::SensitivityScenarioData::CommodityCurveShiftData {
+    bool hasFixingCalendar() const {
+        return $self->fixingCalendar.has_value();
+    }
+    QuantLib::Calendar getFixingCalendar() const {
+        return $self->fixingCalendar ? *$self->fixingCalendar : QuantLib::Calendar();
+    }
+    void setFixingCalendar(const QuantLib::Calendar& c) {
+        $self->fixingCalendar = c;
+    }
+    void clearFixingCalendar() {
+        $self->fixingCalendar = std::nullopt;
+    }
+    %pythoncode %{
+        @property
+        def fixingCalendar(self):
+            return self.getFixingCalendar() if self.hasFixingCalendar() else None
+        @fixingCalendar.setter
+        def fixingCalendar(self, value):
+            if value is None:
+                self.clearFixingCalendar()
+            else:
+                self.setFixingCalendar(value)
     %}
 }
 

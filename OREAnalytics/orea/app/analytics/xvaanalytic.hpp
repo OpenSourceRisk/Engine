@@ -23,16 +23,25 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
-#include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/inputvariables.hpp>
-#include <orea/engine/valuationcalculator.hpp>
-#include <orea/engine/sensitivitystoragemanager.hpp>
 #include <orea/engine/xvaenginecg.hpp>
+
+namespace ore {
+namespace data {
+class CollateralBalances;
+class NettingSetManager;
+}
+}
 
 namespace ore {
 namespace analytics {
 
 class InputParameters;
+class CreditSimulationParameters;
+class SensitivityStorageManager;
+class DynamicInitialMarginCalculator;
+class CubeInterpretation;
+class PostProcess;
 
 struct XvaVariables : public InputVariables {
     void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
@@ -84,7 +93,7 @@ struct XvaVariables : public InputVariables {
     bool cubeNpvOverlay_ = false;
     QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> exposureSimMarketParams_;
     QuantLib::ext::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData_;
-    QuantLib::ext::shared_ptr<CrossAssetModelData> crossAssetModelData_;
+    QuantLib::ext::shared_ptr<ore::data::CrossAssetModelData> crossAssetModelData_;
     QuantLib::ext::shared_ptr<ore::data::EngineData> simulationPricingEngine_, amcPricingEngine_, amcCgPricingEngine_;
     QuantLib::ext::shared_ptr<ore::data::NettingSetManager> nettingSetManager_;
     QuantLib::ext::shared_ptr<ore::data::CollateralBalances> collateralBalances_;

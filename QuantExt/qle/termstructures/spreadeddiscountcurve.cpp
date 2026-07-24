@@ -40,6 +40,10 @@ SpreadedDiscountCurve::SpreadedDiscountCurve(const Handle<YieldTermStructure>& r
     }
     if (interpolation_ == Interpolation::logLinear) {
         dataInterpolation_ = QuantLib::ext::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
+    } else if (interpolation_ == Interpolation::logCubic) {
+        dataInterpolation_ = QuantLib::ext::make_shared<LogCubicInterpolation>(
+            times_.begin(), times_.end(), data_.begin(), CubicInterpolation::Spline, true,
+            CubicInterpolation::SecondDerivative, 0.0, CubicInterpolation::SecondDerivative, 0.0);
     } else {
         dataInterpolation_ = QuantLib::ext::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin());
     }
@@ -96,15 +100,15 @@ DiscountFactor SpreadedDiscountCurve::getDiscount(Time t, bool includeSpread) co
     Time tMax = this->times_.back();
     if (t <= tMax) {
         Real tmp = includeSpread ? (*dataInterpolation_)(t, true) : 1.0;
-        if (interpolation_ == Interpolation::logLinear)
-            return refDf * tmp;
-        else
+        if (interpolation_ == Interpolation::linearZero)
             return refDf * std::exp(-tmp * t);
+        else
+            return refDf * tmp;
     }
 
     DiscountFactor dMax =
         includeSpread
-            ? interpolation_ == Interpolation::logLinear ? this->data_.back() : std::exp(-this->data_.back() * tMax)
+            ? interpolation_ == Interpolation::linearZero ? std::exp(-this->data_.back() * tMax) : this->data_.back()
             : 1.0;
     if (extrapolation_ == Extrapolation::flatFwd) {
         Rate instFwdMax = includeSpread ? -(*dataInterpolation_).derivative(tMax) / dMax : 0.0;

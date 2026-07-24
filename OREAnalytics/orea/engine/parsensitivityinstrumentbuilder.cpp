@@ -24,6 +24,7 @@
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/parsensitivityinstrumentbuilder.hpp>
 #include <orea/engine/valuationengine.hpp>
+#include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <ored/marketdata/inflationcurve.hpp>
@@ -1098,6 +1099,7 @@ std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityI
         QuantLib::ext::dynamic_pointer_cast<FutureConvention>(convention);
     Handle<YieldTermStructure> indexTs =
         Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.00, Actual365Fixed()));
+    term.setConvention(futureConvention);
     if (market == nullptr) {
         if (!singleCurve)
             parHelperDependencies.emplace(RiskFactorKey::KeyType::IndexCurve,

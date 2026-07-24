@@ -30,6 +30,8 @@
 namespace ore {
 namespace data {
 
+class Underlying;
+
 //! Serializable ForwardVolatilityAgreement
 /*!
   \ingroup tradedata

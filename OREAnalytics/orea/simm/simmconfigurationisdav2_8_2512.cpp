@@ -65,11 +65,13 @@ QuantLib::Real SimmConfiguration_ISDA_V2_8_2512::weight(const CrifRecord::RiskTy
     return SimmConfigurationBase::weight(rt, qualifier, label_1);
 }
 
-QuantLib::Real SimmConfiguration_ISDA_V2_8_2512::correlation(const CrifRecord::RiskType& firstRt, const string& firstQualifier,
-                                                        const string& firstLabel_1, const string& firstLabel_2,
-                                                        const CrifRecord::RiskType& secondRt, const string& secondQualifier,
-                                                        const string& secondLabel_1, const string& secondLabel_2,
-                                                        const std::string& calculationCurrency) const {
+QuantLib::Real SimmConfiguration_ISDA_V2_8_2512::correlation(const CrifRecord::RiskType& firstRt,
+                                                             const string& firstQualifier, const string& firstBucket,
+                                                             const string& firstLabel_1, const string& firstLabel_2,
+                                                             const CrifRecord::RiskType& secondRt,
+                                                             const string& secondQualifier, const string& secondBucket,
+                                                             const string& secondLabel_1, const string& secondLabel_2,
+                                                             const std::string& calculationCurrency) const {
 
     if (firstRt == CrifRecord::RiskType::FX && secondRt == CrifRecord::RiskType::FX) {
         QL_REQUIRE(calculationCurrency != "", "no calculation currency provided corr");
@@ -85,8 +87,9 @@ QuantLib::Real SimmConfiguration_ISDA_V2_8_2512::correlation(const CrifRecord::R
         }
     }
 
-    return SimmConfigurationBase::correlation(firstRt, firstQualifier, firstLabel_1, firstLabel_2, secondRt,
-                                              secondQualifier, secondLabel_1, secondLabel_2);
+    return SimmConfigurationBase::correlation(firstRt, firstQualifier, firstBucket, firstLabel_1, firstLabel_2,
+                                              secondRt, secondQualifier, secondBucket, secondLabel_1, secondLabel_2,
+                                              calculationCurrency);
 }
 
 SimmConfiguration_ISDA_V2_8_2512::SimmConfiguration_ISDA_V2_8_2512(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
@@ -1304,7 +1307,7 @@ SimmConfiguration_ISDA_V2_8_2512::SimmConfiguration_ISDA_V2_8_2512(const QuantLi
 is the historical volatility ratio for the interest-rate risk class (see page 8 section 11(d)
 of the ISDA-SIMM-v2.8+2512 documentation).
 */
-QuantLib::Real SimmConfiguration_ISDA_V2_8_2512::curvatureMarginScaling() const { return pow(hvr_ir_, -2.0); }
+QuantLib::Real SimmConfiguration_ISDA_V2_8_2512::curvatureMarginScaling() const { return std::pow(hvr_ir_, -2.0); }
 
 void SimmConfiguration_ISDA_V2_8_2512::addLabels2(const CrifRecord::RiskType& rt, const string& label_2) {
     // Call the shared implementation

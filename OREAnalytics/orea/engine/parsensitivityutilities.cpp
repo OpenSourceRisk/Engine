@@ -48,6 +48,8 @@
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
 #include <ql/termstructures/volatility/optionlet/constantoptionletvol.hpp>
+#include <ql/time/period.hpp>
+#include <ql/types.hpp>
 #include <qle/cashflows/blackovernightindexedcouponpricer.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 

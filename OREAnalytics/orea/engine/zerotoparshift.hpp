@@ -48,7 +48,7 @@ private:
     std::unordered_map<RiskFactorKey, double> parRates() const;
 
     ParSensitivityInstrumentBuilder::Instruments instruments_;
-    ext::shared_ptr<ScenarioSimMarket> simMarket_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket_;
     std::unordered_map<RiskFactorKey, double> baseValues_;
 };
 

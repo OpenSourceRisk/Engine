@@ -22,39 +22,50 @@
 
 #pragma once
 
-#include <ored/marketdata/todaysmarketparameters.hpp>
-#include <ored/marketdata/inmemoryloader.hpp>
-#include <ored/portfolio/nettingsetmanager.hpp>
 #include <ored/utilities/timer.hpp>
-
-#include <orea/aggregation/collateralaccount.hpp>
-#include <orea/aggregation/collatexposurehelper.hpp>
-#include <orea/aggregation/postprocess.hpp>
-#include <orea/cube/cubeinterpretation.hpp>
-#include <orea/cube/cube_io.hpp>
-#include <orea/engine/sensitivitycubestream.hpp>
-#include <orea/engine/parsensitivitycubestream.hpp>
-#include <orea/scenario/scenariosimmarketparameters.hpp>
-
-#include <orea/app/marketcalibrationreport.hpp>
 #include <orea/app/inputvariables.hpp>
+#include <orea/scenario/scenario.hpp>
 
 #include <ql/any.hpp>
-#include <iostream>
+#include <ql/errors.hpp>
+#include <ql/time/date.hpp>
+#include <ql/shared_ptr.hpp>
+
+#include <set>
+#include <vector>
+#include <map>
 
 namespace ore {
 namespace data {
 class CrossAssetModelData;
 class InMemoryReport;
-}; // namespace ore
+class InMemoryLoader;
+class Portfolio;
+class CurveConfigurations;
+class EngineData;
+class TodaysMarketParameters;
+class Loader;
+class EngineFactory;
+class MarketImpl;
+class Market;
 }; // namespace data
+}; // namespace ore
 
 namespace ore {
 namespace analytics {
 
 class InputParameters;
+class MarketCalibrationReportBase;
 class AnalyticsManager;
 class StressTestScenarioData;
+class ScenarioSimMarketParameters;
+class SensitivityScenarioData;
+class ScenarioGeneratorData;
+class ParSensitivityCubeStream;
+class AggregationScenarioData;
+class MarketCalibrationReportBase;
+class NPVCubeWithMetaData;
+
 class Analytic {
 public:
     class Impl;
@@ -82,7 +93,7 @@ public:
         QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiScenarioData;
         QuantLib::ext::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData;
         QuantLib::ext::shared_ptr<ore::data::CrossAssetModelData> crossAssetModelData;
-        QuantLib::ext::shared_ptr<CurveConfigurations> curveConfig;
+        QuantLib::ext::shared_ptr<ore::data::CurveConfigurations> curveConfig;
         QuantLib::ext::shared_ptr<ore::data::EngineData> engineData;
         QuantLib::Date asofDate;
     };
@@ -134,13 +145,11 @@ public:
     const QuantLib::ext::weak_ptr<AnalyticsManager>& analyticsManager() const { return analyticsManager_; }
     const QuantLib::ext::shared_ptr<ore::data::Market>& market() const { return market_; };
     // To allow SWIG wrapping
-    QuantLib::ext::shared_ptr<MarketImpl> getMarket() const {        
-        return QuantLib::ext::dynamic_pointer_cast<MarketImpl>(market_);
-    }
+    QuantLib::ext::shared_ptr<ore::data::MarketImpl> getMarket() const;
     const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio() const { return portfolio_; };
     void setInputs(const QuantLib::ext::shared_ptr<InputParameters>& inputs) { inputs_ = inputs; }
-    void setMarket(const QuantLib::ext::shared_ptr<ore::data::Market>& market) { market_ = market; };
-    void setPortfolio(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio) { portfolio_ = portfolio; };
+    void setMarket(const QuantLib::ext::shared_ptr<ore::data::Market>& market) { market_ = market; }
+    void setPortfolio(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio) { portfolio_ = portfolio; }
     std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> todaysMarketParams();
     const QuantLib::ext::shared_ptr<ore::data::Loader>& loader() const { return loader_; };
     Configurations& configurations() { return configurations_; }
@@ -174,12 +183,12 @@ public:
 
     std::vector<QuantLib::ext::shared_ptr<Analytic>> allDependentAnalytics() const;
     
-    const Timer& getTimer();
+    const ore::data::Timer& getTimer();
     void startTimer(const std::string& key) { timer_.start(key); }
     QuantLib::ext::optional<boost::timer::cpu_timer> stopTimer(const std::string& key, const bool returnTimer = false) {
         return timer_.stop(key, returnTimer);
     }
-    void addTimer(const std::string& key, const Timer& timer) { timer_.addTimer(key, timer); }
+    void addTimer(const std::string& key, const ore::data::Timer& timer) { timer_.addTimer(key, timer); }
 
     void setApplySimmExemptions(bool flag) { applySimmExemptions_ = flag; }
     bool applySimmExemptions() const { return applySimmExemptions_; }
@@ -226,7 +235,7 @@ protected:
     //! and that parent/calling analytic will be writing its own set of intermediate reports
     bool writeIntermediateReports_ = true;
 
-    Timer timer_;
+    ore::data::Timer timer_;
 
     QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
     QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> offsetSimMarketParams_;
@@ -264,7 +273,7 @@ public:
     //! build an engine factory
     virtual QuantLib::ext::shared_ptr<ore::data::EngineFactory> engineFactory();
 
-    void setLabel(const string& label) { label_ = label; }
+    void setLabel(const std::string& label) { label_ = label; }
     const std::string& label() const { return label_; };
 
     void setAnalytic(Analytic* analytic) { analytic_ = analytic; }
@@ -347,7 +356,7 @@ template <class T> inline QuantLib::ext::shared_ptr<T> Analytic::Impl::dependent
     return analytic;
 }
 
-QuantLib::ext::shared_ptr<ore::data::Loader> implyBondSpreads(const Date& asof,
+QuantLib::ext::shared_ptr<ore::data::Loader> implyBondSpreads(const QuantLib::Date& asof,
                  const QuantLib::ext::shared_ptr<InputParameters>& params,
                  const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
                  const QuantLib::ext::shared_ptr<ore::data::Loader>& loader,
@@ -355,4 +364,4 @@ QuantLib::ext::shared_ptr<ore::data::Loader> implyBondSpreads(const Date& asof,
                  const std::string& excludeRegex);
 
 } // namespace analytics
-} // namespace oreplus
+} // namespace ore

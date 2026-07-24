@@ -25,6 +25,7 @@
 
 #include <ored/portfolio/optiondata.hpp>
 #include <ored/portfolio/trade.hpp>
+#include <ored/portfolio/underlying.hpp>
 
 #include <qle/indexes/genericindex.hpp>
 

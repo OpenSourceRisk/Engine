@@ -309,7 +309,7 @@ void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurve
         capletVol_ = QuantLib::ext::make_shared<QuantExt::SabrStrippedOptionletAdapter<INTMETH>>(                      \
             asof, transform(*optionletStripper), *sabrModelVariant, INTINSTANCE, outputVolType, outputDisplacement,    \
             config.modelShift(), initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold,              \
-            maxAcceptableError);                                                                                       \
+            maxAcceptableError, index, rateComputationPeriod, residualCorrection);                                     \
     }
 
 void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,
@@ -343,33 +343,42 @@ void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveC
     auto additionalPenalties = getPenaltyFunction(smoothnessLambda);
 
     // Get configuration values for parametric smile
-    std::vector<std::vector<std::pair<Real, QuantExt::ParametricVolatility::ParameterCalibration>>>
-        initialModelParameters;
+    SabrStrippedOptionletAdapterBase::ModelParamData initialModelParameters;
     Size maxCalibrationAttempts = 10;
     Real exitEarlyErrorThreshold = 0.005;
     Real maxAcceptableError = 0.05;
-    if (config.parametricSmileConfiguration()) {
-        auto alpha = config.parametricSmileConfiguration()->parameter("alpha");
-        auto beta = config.parametricSmileConfiguration()->parameter("beta");
-        auto nu = config.parametricSmileConfiguration()->parameter("nu");
-        auto rho = config.parametricSmileConfiguration()->parameter("rho");
-        QL_REQUIRE(alpha.initialValue.size() == beta.initialValue.size() &&
-                       alpha.initialValue.size() == nu.initialValue.size() &&
-                       alpha.initialValue.size() == rho.initialValue.size(),
-                   "CapFloorVolCurve: parametric smile config: alpha size ("
-                       << alpha.initialValue.size() << ") beta size (" << beta.initialValue.size() << ") nu size ("
-                       << nu.initialValue.size() << ") rho size (" << rho.initialValue.size() << ") must match");
-        for (Size i = 0; i < alpha.initialValue.size(); ++i) {
-            initialModelParameters.push_back(
-                std::vector<std::pair<Real, QuantExt::ParametricVolatility::ParameterCalibration>>());
-            initialModelParameters.back().push_back(std::make_pair(alpha.initialValue[i], alpha.calibration));
-            initialModelParameters.back().push_back(std::make_pair(beta.initialValue[i], beta.calibration));
-            initialModelParameters.back().push_back(std::make_pair(nu.initialValue[i], nu.calibration));
-            initialModelParameters.back().push_back(std::make_pair(rho.initialValue[i], rho.calibration));
+    ext::optional<ParametricVolatility::ResidualCorrection> residualCorrection;
+    const auto& psConfig = config.parametricSmileConfiguration();
+    if (psConfig) {
+        const auto& alpha = psConfig->parameter("alpha");
+        const auto& beta = psConfig->parameter("beta");
+        const auto& nu = psConfig->parameter("nu");
+        const auto& rho = psConfig->parameter("rho");
+
+        const Size n = alpha.initialValue.size();
+        QL_REQUIRE(n == beta.initialValue.size() && n == nu.initialValue.size() && n == rho.initialValue.size(),
+            "CapFloorVolCurve: parametric smile config: alpha size (" << n << ") beta size (" <<
+            beta.initialValue.size() << ") nu size (" << nu.initialValue.size() << ") rho size (" <<
+            rho.initialValue.size() << ") must match");
+
+        initialModelParameters.reserve(n);
+        for (Size i = 0; i < n; ++i) {
+            initialModelParameters.emplace_back(SabrParametricVolatility::SliceParamInfo{
+                {alpha.initialValue[i], alpha.calibration},
+                {beta.initialValue[i], beta.calibration},
+                {nu.initialValue[i], nu.calibration},
+                {rho.initialValue[i], rho.calibration}
+            });
         }
-        maxCalibrationAttempts = config.parametricSmileConfiguration()->calibration().maxCalibrationAttempts;
-        exitEarlyErrorThreshold = config.parametricSmileConfiguration()->calibration().exitEarlyErrorThreshold;
-        maxAcceptableError = config.parametricSmileConfiguration()->calibration().maxAcceptableError;
+
+        const auto& calibConfig = psConfig->calibration();
+        maxCalibrationAttempts = calibConfig.maxCalibrationAttempts;
+        exitEarlyErrorThreshold = calibConfig.exitEarlyErrorThreshold;
+        maxAcceptableError = calibConfig.maxAcceptableError;
+
+        const auto& rcConfig = psConfig->residualCorrection();
+        if (rcConfig)
+            residualCorrection = rcConfig->convert();
     }
 
     // On optionlets is the newly added interpolation approach whereas on term volatilities is legacy
@@ -395,6 +404,8 @@ void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveC
         optVolType = outputVolType;
         optDisplacement = outputDisplacement;
     }
+
+    const auto& rateComputationPeriod = config.rateComputationPeriod();
 
     if (onOpt) {
         if (config.timeInterpolation() == "Linear") {
@@ -619,33 +630,42 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
     QL_REQUIRE(config.optionalQuotes() == false, "Optional quotes for optionlet volatilities are not supported.");
 
     // Get configuration values for parametric smile
-    std::vector<std::vector<std::pair<Real, QuantExt::ParametricVolatility::ParameterCalibration>>>
-        initialModelParameters;
+    SabrStrippedOptionletAdapterBase::ModelParamData initialModelParameters;
     Size maxCalibrationAttempts = 10;
     Real exitEarlyErrorThreshold = 0.005;
     Real maxAcceptableError = 0.05;
-    if (config.parametricSmileConfiguration()) {
-        auto alpha = config.parametricSmileConfiguration()->parameter("alpha");
-        auto beta = config.parametricSmileConfiguration()->parameter("beta");
-        auto nu = config.parametricSmileConfiguration()->parameter("nu");
-        auto rho = config.parametricSmileConfiguration()->parameter("rho");
-        QL_REQUIRE(alpha.initialValue.size() == beta.initialValue.size() &&
-                       alpha.initialValue.size() == nu.initialValue.size() &&
-                       alpha.initialValue.size() == rho.initialValue.size(),
-                   "CapFloorVolCurve: parametric smile config: alpha size ("
-                       << alpha.initialValue.size() << ") beta size (" << beta.initialValue.size() << ") nu size ("
-                       << nu.initialValue.size() << ") rho size (" << rho.initialValue.size() << ") must match");
-        for (Size i = 0; i < alpha.initialValue.size(); ++i) {
-            initialModelParameters.push_back(
-                std::vector<std::pair<Real, QuantExt::ParametricVolatility::ParameterCalibration>>());
-            initialModelParameters.back().push_back(std::make_pair(alpha.initialValue[i], alpha.calibration));
-            initialModelParameters.back().push_back(std::make_pair(beta.initialValue[i], beta.calibration));
-            initialModelParameters.back().push_back(std::make_pair(nu.initialValue[i], nu.calibration));
-            initialModelParameters.back().push_back(std::make_pair(rho.initialValue[i], rho.calibration));
+    ext::optional<ParametricVolatility::ResidualCorrection> residualCorrection;
+    const auto& psConfig = config.parametricSmileConfiguration();
+    if (psConfig) {
+        const auto& alpha = psConfig->parameter("alpha");
+        const auto& beta = psConfig->parameter("beta");
+        const auto& nu = psConfig->parameter("nu");
+        const auto& rho = psConfig->parameter("rho");
+
+        const Size n = alpha.initialValue.size();
+        QL_REQUIRE(n == beta.initialValue.size() && n == nu.initialValue.size() && n == rho.initialValue.size(),
+            "CapFloorVolCurve: parametric smile config: alpha size (" << n << ") beta size (" <<
+            beta.initialValue.size() << ") nu size (" << nu.initialValue.size() << ") rho size (" <<
+            rho.initialValue.size() << ") must match");
+
+        initialModelParameters.reserve(n);
+        for (Size i = 0; i < n; ++i) {
+            initialModelParameters.emplace_back(SabrParametricVolatility::SliceParamInfo{
+                {alpha.initialValue[i], alpha.calibration},
+                {beta.initialValue[i], beta.calibration},
+                {nu.initialValue[i], nu.calibration},
+                {rho.initialValue[i], rho.calibration}
+            });
         }
-        maxCalibrationAttempts = config.parametricSmileConfiguration()->calibration().maxCalibrationAttempts;
-        exitEarlyErrorThreshold = config.parametricSmileConfiguration()->calibration().exitEarlyErrorThreshold;
-        maxAcceptableError = config.parametricSmileConfiguration()->calibration().maxAcceptableError;
+
+        const auto& calibConfig = psConfig->calibration();
+        maxCalibrationAttempts = calibConfig.maxCalibrationAttempts;
+        exitEarlyErrorThreshold = calibConfig.exitEarlyErrorThreshold;
+        maxAcceptableError = calibConfig.maxAcceptableError;
+
+        const auto& rcConfig = psConfig->residualCorrection();
+        if (rcConfig)
+            residualCorrection = rcConfig->convert();
     }
 
     // Load optionlet vol surface
@@ -875,6 +895,8 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
         config.settleDays(), config.calendar(), config.businessDayConvention(), iborIndex, fixingDates, strikes_vec,
         vols_vec, config.dayCounter(), volType, shift, config.useEffectiveVolatility());
 
+    const auto& rateComputationPeriod = config.rateComputationPeriod();
+
     // This is not pretty but can't think of a better way (with template functions and or classes)
     if (config.timeInterpolation() == "Linear") {
         if (config.strikeInterpolation() == "Linear") {
@@ -890,7 +912,8 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
         } else if (sabrModelVariant) {
             capletVol_ = QuantLib::ext::make_shared<QuantExt::SabrStrippedOptionletAdapter<Linear>>(
                 asof, optionletSurface, *sabrModelVariant, Linear(), outputVolType, outputDisplacement, config.modelShift(),
-                initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError);
+                initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError,
+                iborIndex, rateComputationPeriod, residualCorrection);
         } else {
             QL_FAIL("Optionlet vol config " << config.curveID() << " has unexpected strike interpolation "
                                             << config.strikeInterpolation());
@@ -912,7 +935,7 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
             capletVol_ = QuantLib::ext::make_shared<QuantExt::SabrStrippedOptionletAdapter<LinearFlat>>(
                 asof, optionletSurface, *sabrModelVariant, LinearFlat(), outputVolType, outputDisplacement,
                 config.modelShift(), initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold,
-                maxAcceptableError);
+                maxAcceptableError, iborIndex, rateComputationPeriod, residualCorrection);
         } else {
             QL_FAIL("Optionlet vol config " << config.curveID() << " has unexpected strike interpolation "
                                             << config.strikeInterpolation());
@@ -934,7 +957,7 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
             capletVol_ = QuantLib::ext::make_shared<QuantExt::SabrStrippedOptionletAdapter<BackwardFlat>>(
                 asof, optionletSurface, *sabrModelVariant, BackwardFlat(), outputVolType, outputDisplacement,
                 config.modelShift(), initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold,
-                maxAcceptableError);
+                maxAcceptableError, iborIndex, rateComputationPeriod, residualCorrection);
         } else {
             QL_FAIL("Optionlet vol config " << config.curveID() << " has unexpected strike interpolation "
                                             << config.strikeInterpolation());
@@ -953,7 +976,8 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
         } else if (sabrModelVariant) {
             capletVol_ = QuantLib::ext::make_shared<QuantExt::SabrStrippedOptionletAdapter<Cubic>>(
                 asof, optionletSurface, *sabrModelVariant, Cubic(), outputVolType, outputDisplacement, config.modelShift(),
-                initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError);
+                initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError,
+                iborIndex, rateComputationPeriod, residualCorrection);
         } else {
             QL_FAIL("Optionlet vol config " << config.curveID() << " has unexpected strike interpolation "
                                             << config.strikeInterpolation());
@@ -974,7 +998,8 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
         } else if (sabrModelVariant) {
             capletVol_ = QuantLib::ext::make_shared<QuantExt::SabrStrippedOptionletAdapter<CubicFlat>>(
                 asof, optionletSurface, *sabrModelVariant, CubicFlat(), outputVolType, outputDisplacement, config.modelShift(),
-                initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError);
+                initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError,
+                iborIndex, rateComputationPeriod, residualCorrection);
         } else {
             QL_FAIL("Optionlet vol config " << config.curveID() << " has unexpected strike interpolation "
                                             << config.strikeInterpolation());

@@ -25,7 +25,15 @@ jobs:
             python-version: "3.12"
           - python-wheel: "cp313"
             python-version: "3.13"
+          - python-wheel: "3.14"
+            python-version: "3.14"
     steps:
+    - name: Free Disk Space on Runner 
+      run: |
+        df -h
+        sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL || true
+        docker system prune -af || true
+        df -h
     - name: Checkout ORE
       uses: actions/checkout@v5
       with:
@@ -44,7 +52,7 @@ jobs:
     - name: Set Swap Space
       uses: pierotofy/set-swap-space@master
       with:
-        swap-size-gb: 10
+        swap-size-gb: 15
     - name: Install eigen
       run: |
         curl -O -L https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.gz
@@ -72,7 +80,7 @@ jobs:
          cd ORE-SWIG/Wheels
          chmod +x before_all_linux.sh
     - name: Build ORE wheels
-      uses: pypa/cibuildwheel@v3.2.1
+      uses: pypa/cibuildwheel@v3.3.1
       env:
         #CIBW_BUILD: "*-manylinux_x86_64"
         #CIBW_SKIP: cp36-* pp*

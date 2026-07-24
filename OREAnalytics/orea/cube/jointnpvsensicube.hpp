@@ -30,11 +30,6 @@
 namespace ore {
 namespace analytics {
 
-using namespace ore::analytics;
-
-using QuantLib::Real;
-using QuantLib::Size;
-
 class JointNPVSensiCube : public NPVSensiCube {
 public:
     /*! ctor for two input cubes */
@@ -49,33 +44,35 @@ public:
                       const std::set<std::string>& ids = {});
 
     //! Return the length of each dimension
-    Size numIds() const override;
-    Size numDates() const override;
-    Size samples() const override;
-    Size depth() const override;
+    QuantLib::Size numIds() const override;
+    QuantLib::Size numDates() const override;
+    QuantLib::Size samples() const override;
+    QuantLib::Size depth() const override;
 
-    const std::map<std::string, Size>& idsAndIndexes() const override;
+    const std::map<std::string, QuantLib::Size>& idsAndIndexes() const override;
     const std::vector<QuantLib::Date>& dates() const override;
     QuantLib::Date asof() const override;
 
-    Real getT0(Size id, Size depth = 0) const override;
-    void setT0(Real value, Size id, Size depth = 0) override;
+    QuantLib::Real getT0(QuantLib::Size id, QuantLib::Size depth = 0) const override;
+    void setT0(QuantLib::Real value, QuantLib::Size id, QuantLib::Size depth = 0) override;
 
-    Real get(Size id, Size date, Size sample, Size depth = 0) const override;
-    void set(Real value, Size id, Size date, Size sample, Size depth = 0) override;
+    QuantLib::Real get(QuantLib::Size id, QuantLib::Size date, QuantLib::Size sample,
+                       QuantLib::Size depth = 0) const override;
+    void set(QuantLib::Real value, QuantLib::Size id, QuantLib::Size date, QuantLib::Size sample,
+             QuantLib::Size depth = 0) override;
 
-    std::map<QuantLib::Size, QuantLib::Real> getTradeNPVs(Size tradeIdx) const override;
+    std::map<QuantLib::Size, QuantLib::Real> getTradeNPVs(QuantLib::Size tradeIdx) const override;
     std::set<QuantLib::Size> relevantScenarios() const override;
 
-    void removeT0(Size id) override;
-    void remove(Size id, Size sample, bool useT0) override;
+    void removeT0(QuantLib::Size id) override;
+    void remove(QuantLib::Size id, QuantLib::Size sample, bool useT0) override;
 
     bool usesDoublePrecision() const override;
 
 private:
-    const std::pair<QuantLib::ext::shared_ptr<NPVSensiCube>, Size>& cubeAndId(Size id) const;
-    std::map<std::string, Size> idIdx_;
-    std::vector<std::pair<QuantLib::ext::shared_ptr<NPVSensiCube>, Size>> cubeAndId_;
+    const std::pair<QuantLib::ext::shared_ptr<NPVSensiCube>, QuantLib::Size>& cubeAndId(QuantLib::Size id) const;
+    std::map<std::string, QuantLib::Size> idIdx_;
+    std::vector<std::pair<QuantLib::ext::shared_ptr<NPVSensiCube>, QuantLib::Size>> cubeAndId_;
     const std::vector<QuantLib::ext::shared_ptr<NPVSensiCube>> cubes_;
 };
 

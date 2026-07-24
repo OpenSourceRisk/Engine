@@ -48,6 +48,7 @@
 
 #include <qle/version.hpp>
 #include <qle/gitversion.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/time/calendars/all.hpp>
@@ -232,7 +233,7 @@ QuantLib::ext::shared_ptr<CSVLoader> OREApp::buildCsvLoader(const QuantLib::ext:
     if (tmp != "")
         dividendFiles = getFileNames(tmp, inputPath);
     else {
-        WLOG("dividend data file not found");
+        LOG("dividend data file not found");
     }
 
     tmp = params->getString("setup", "fixingCutoff", false);
@@ -240,9 +241,9 @@ QuantLib::ext::shared_ptr<CSVLoader> OREApp::buildCsvLoader(const QuantLib::ext:
     if (tmp != "")
         cutoff = parseDate(tmp);
     else {
-        WLOG("fixing cutoff date not set");
+        LOG("fixing cutoff date not set");
     }
-    
+
     auto loader = QuantLib::ext::make_shared<CSVLoader>(implyTodaysFixings, cutoff);
     loader->fromFiles(marketFiles, fixingFiles, dividendFiles);
 
@@ -655,7 +656,7 @@ std::string OREAppInputParameters::loadParameterString(const std::string& analyt
     return params_->getString(analytic, param, mandatory);
 }
 
-std::vector<std::string> OREAppInputParameters::loadParameterXMLString(const std::string& rawString) {
+std::vector<std::string> OREAppInputParameters::constructFilePaths(const string& rawString) {
     if (rawString.empty())
         return {rawString};
     vector<string> fileNames;
@@ -664,12 +665,15 @@ std::vector<std::string> OREAppInputParameters::loadParameterXMLString(const std
         boost::trim(*it);
         *it = (setupVariables_.inputPath_ / *it).generic_string();
     }
-    std::vector<std::string> result;
-    for (auto file : fileNames) {
-        XMLDocument doc(file);
-        result.push_back(doc.toString());
-    }
-    return result;
+    return fileNames;
+}
+
+std::vector<std::string> OREAppInputParameters::loadParameterXMLString(const string& rawString) {
+    return constructFilePaths(rawString);
+}
+
+std::vector<std::string> OREAppInputParameters::loadParameterCSVString(const string& rawString) {
+    return constructFilePaths(rawString);
 }
 
 void OREAppInputParameters::loadParameters() {
@@ -769,8 +773,6 @@ void OREAppInputParameters::loadParameters() {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
             LOG("Loading sensitivity scenario sim market parameters from file: " << file);
             setSensiSimMarketParamsFromFile(file);
-        } else {
-            WLOG("ScenarioSimMarket parameters for sensitivity not loaded");
         }
 
         tmp = params_->getString("sensitivity", "sensitivityConfigFile", false);
@@ -778,8 +780,6 @@ void OREAppInputParameters::loadParameters() {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
             LOG("Load sensitivity scenario data from file: " << file);
             setSensiScenarioDataFromFile(file);
-        } else {
-            WLOG("Sensitivity scenario data not loaded");
         }
 
         tmp = params_->getString("sensitivity", "pricingEnginesFile", false);
@@ -1129,8 +1129,6 @@ void OREAppInputParameters::loadParameters() {
                 string file = (setupVariables_.inputPath_ / tmp).generic_string();
                 LOG("Loading sensitivity scenario sim market parameters from file: " << file);
                 setSensiSimMarketParamsFromFile(file);
-            } else {
-                WLOG("ScenarioSimMarket parameters for sensitivity not loaded");
             }
 
             tmp = params_->getString("crif", "sensitivityConfigFile", false);
@@ -1138,8 +1136,6 @@ void OREAppInputParameters::loadParameters() {
                 string file = (setupVariables_.inputPath_ / tmp).generic_string();
                 LOG("Load sensitivity scenario data from file: " << file);
                 setSensiScenarioDataFromFile(file);
-            } else {
-                WLOG("Sensitivity scenario data not loaded");
             }
 
             auto nameMapper = QuantLib::ext::make_shared<SimmBasicNameMapper>();
@@ -1752,8 +1748,6 @@ void OREAppInputParameters::loadParameters() {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
             LOG("Loading sensitivity scenario sim market parameters from file: " << file);
             setSensiSimMarketParamsFromFile(file);
-        } else {
-            WLOG("ScenarioSimMarket parameters for sensitivity not loaded");
         }
 
         tmp = params_->getString("crif", "sensitivityConfigFile", false);
@@ -1761,36 +1755,34 @@ void OREAppInputParameters::loadParameters() {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
             LOG("Load sensitivity scenario data from file: " << file);
             setSensiScenarioDataFromFile(file);
-        } else {
-            WLOG("Sensitivity scenario data not loaded");
         }
 
-	    tmp = params_->getString("crif", "simmVersion", false);
+        tmp = params_->getString("crif", "simmVersion", false);
         if (tmp != "") {
             setSimmVersion(tmp);
         }
 
-	    auto nameMapper = QuantLib::ext::make_shared<SimmBasicNameMapper>();
-	    tmp = params_->getString("setup", "nameMappingInputFile", false);
-	    if (tmp.empty())
-	        tmp = params_->getString("crif", "nameMappingInputFile", false);
-	    if (tmp != "") {
-	       string fileName = (setupVariables_.inputPath_ / tmp).generic_string();
-	       LOG("simmNameMapper file name: " << fileName);
-	       nameMapper->fromFile(fileName);
-	    }
-	    simmNameMapper_ = nameMapper;
+        auto nameMapper = QuantLib::ext::make_shared<SimmBasicNameMapper>();
+        tmp = params_->getString("setup", "nameMappingInputFile", false);
+        if (tmp.empty())
+            tmp = params_->getString("crif", "nameMappingInputFile", false);
+        if (tmp != "") {
+           string fileName = (setupVariables_.inputPath_ / tmp).generic_string();
+           LOG("simmNameMapper file name: " << fileName);
+           nameMapper->fromFile(fileName);
+        }
+        simmNameMapper_ = nameMapper;
 
-	    auto bucketMapper = QuantLib::ext::make_shared<SimmBucketMapperBase>();
-	    tmp = params_->getString("setup", "bucketMappingInputFile", false);
-	    if (tmp.empty())
-	        tmp = params_->getString("crif", "bucketMappingInputFile", false);
-	    if (tmp != "") {
-	       string fileName = (setupVariables_.inputPath_ / tmp).generic_string();
-	       LOG("simmBucketMapper file name: " << fileName);
-	       bucketMapper->fromFile(fileName);
-	    }
-	    simmBucketMapper_ = bucketMapper;
+        auto bucketMapper = QuantLib::ext::make_shared<SimmBucketMapperBase>();
+        tmp = params_->getString("setup", "bucketMappingInputFile", false);
+        if (tmp.empty())
+            tmp = params_->getString("crif", "bucketMappingInputFile", false);
+        if (tmp != "") {
+           string fileName = (setupVariables_.inputPath_ / tmp).generic_string();
+           LOG("simmBucketMapper file name: " << fileName);
+           bucketMapper->fromFile(fileName);
+        }
+        simmBucketMapper_ = bucketMapper;
     }
 
     if (analytics().size() == 0) {

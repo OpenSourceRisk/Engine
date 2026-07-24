@@ -572,6 +572,10 @@ class Analytic {
  public:
     ext::shared_ptr<ore::data::MarketImpl> getMarket() const;
     const ext::shared_ptr<ore::data::Portfolio>& portfolio() const;
+    void addReport(const std::string& key, const std::string& subKey,
+                   const ext::shared_ptr<ore::data::InMemoryReport>& report);
+    ext::shared_ptr<ore::data::InMemoryReport> getReport(
+        const std::string& key, const std::string& subKey);
 };
 
 class MarketDataLoader {

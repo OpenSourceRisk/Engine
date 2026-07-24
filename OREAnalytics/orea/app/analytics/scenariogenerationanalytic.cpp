@@ -17,22 +17,24 @@
 */
 
 #include <orea/app/analytics/scenariogenerationanalytic.hpp>
+#include <orea/app/analytics/utilities.hpp>
 #include <orea/app/inputparameters.hpp>
-#include <orea/app/reportwriter.hpp>
+#include <orea/app/reportwriters/scenarioreportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
-#include <orea/app/analytics/utilities.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <orea/scenario/crossassetmodelscenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/scenario/scenariogeneratortransform.hpp>
 #include <orea/scenario/scenariowriter.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
+#include <orea/scenario/stressscenariogenerator.hpp>
 #include <qle/methods/pathgeneratorfactory.hpp>
 
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/report/inmemoryreport.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 
 using namespace ore::data;
 using namespace std::filesystem;
@@ -224,14 +226,14 @@ void ScenarioGenerationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr
     if (sgVars->scenarioOutputStatistics_) {
         auto statsReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         scenarioGenerator->reset();
-        ReportWriter().writeScenarioStatistics(scenarioGenerator, keys, samples_, grid_->dates(), *statsReport);
+        ScenarioReportWriter().writeScenarioStatistics(scenarioGenerator, keys, samples_, grid_->dates(), *statsReport);
         analytic()->addReport("SCENARIO_GENERATION", "scenario_statistics", statsReport);
     }
 
     if (sgVars->scenarioOutputDistributions_) {
         auto distributionReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         scenarioGenerator->reset();
-        ReportWriter().writeScenarioDistributions(scenarioGenerator, keys, samples_, grid_->dates(),
+        ScenarioReportWriter().writeScenarioDistributions(scenarioGenerator, keys, samples_, grid_->dates(),
                                                   sgVars->scenarioDistributionSteps_, *distributionReport);
         analytic()->addReport("SCENARIO_GENERATION", "scenario_distribution", distributionReport);
     }

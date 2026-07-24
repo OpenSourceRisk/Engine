@@ -319,6 +319,7 @@ pricingengines/discountingriskybondenginemultistate.cpp
 pricingengines/discountingswapenginedeltagamma.cpp
 pricingengines/discretizedconvertible.cpp
 pricingengines/fdblackscholesvanillaengine.cpp
+pricingengines/fxdigitalcallspreadengine.cpp
 pricingengines/fdcallablebondevents.cpp
 pricingengines/fdconvertiblebondevents.cpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.cpp
@@ -456,8 +457,8 @@ termstructures/spreadedsmilesection2.cpp
 termstructures/spreadedsurvivalprobabilitytermstructure.cpp
 termstructures/spreadedswaptionvolatility.cpp
 termstructures/spreadedyoyvolsurface.cpp
-termstructures/strippedoptionlet.cpp
 termstructures/strippedoptionletadapter2.cpp
+termstructures/strippedoptionletbasebumped.cpp
 termstructures/strippedyoyinflationoptionletvol.cpp
 termstructures/subperiodsswaphelper.cpp
 termstructures/svimodeltraits.cpp
@@ -960,6 +961,7 @@ pricingengines/numericalintegrationindexcdsoptionengine.hpp
 pricingengines/numericlgmbgsflexiswapengine.hpp
 pricingengines/numericlgmcallablebondengine.hpp
 pricingengines/numericlgmflexiswapengine.hpp
+pricingengines/fxdigitalcallspreadengine.hpp
 pricingengines/numericlgmmultilegoptionengine.hpp
 pricingengines/pairwisevarianceswapengine.hpp
 pricingengines/paymentdiscountingengine.hpp
@@ -980,6 +982,7 @@ python_integration/pythonfunctions.hpp
 quotes/basecorrelationquote.hpp
 quotes/bondfuturequote.hpp
 quotes/compositevectorquote.hpp
+quotes/derivedquote.hpp
 quotes/exceptionquote.hpp
 quotes/logquote.hpp
 termstructures/adjusteddefaultcurve.hpp
@@ -1113,9 +1116,9 @@ termstructures/spreadedsurvivalprobabilitytermstructure.hpp
 termstructures/spreadedswaptionvolatility.hpp
 termstructures/spreadedyoyvolsurface.hpp
 termstructures/strippedcpivolatilitystructure.hpp
-termstructures/strippedoptionlet.hpp
 termstructures/strippedoptionletadapter.hpp
 termstructures/strippedoptionletadapter2.hpp
+termstructures/strippedoptionletbasebumped.hpp
 termstructures/strippedyoyinflationoptionletvol.hpp
 termstructures/subperiodsswaphelper.hpp
 termstructures/survivalprobabilitycurve.hpp

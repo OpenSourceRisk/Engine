@@ -28,12 +28,12 @@
 %include ored_portfolio.i
 
 %shared_ptr(ore::analytics::Crif)
-%shared_ptr(ore::analytics::CrifLoader)
-%shared_ptr(ore::analytics::CsvFileCrifLoader)
-%shared_ptr(ore::analytics::CsvBufferCrifLoader)
 %shared_ptr(ore::analytics::SimmConfiguration)
 %shared_ptr(ore::analytics::SimmConfigurationBase)
 %shared_ptr(ore::analytics::SimmConfiguration_ISDA_V2_6)
+%shared_ptr(ore::analytics::SimmConfiguration_ISDA_V2_7_2412)
+%shared_ptr(ore::analytics::SimmConfiguration_ISDA_V2_8_2506)
+%shared_ptr(ore::analytics::SimmConfiguration_ISDA_V2_8_2512)
 %shared_ptr(ore::analytics::SimmBucketMapper)
 %shared_ptr(ore::analytics::SimmBucketMapperBase)
 %shared_ptr(ore::analytics::SimmCalculator)
@@ -254,37 +254,6 @@ class CrifRecord {
 namespace ore {
 namespace analytics {
 
-class Crif {
-  public:
-    enum class CrifType { FRTB, SIMM, SACCR, Empty };
-
-    Crif();
-    CrifType type() const;
-    void addRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false,
-                   bool sortFxVolQualifer = true);
-    void clear();
-    bool empty() const;
-    size_t size() const;
-    const bool hasCrifRecords() const;
-    const bool hasSimmParameters() const;
-};
-
-%extend Crif {
-    std::vector<ore::analytics::CrifRecord> records() const {
-        std::vector<ore::analytics::CrifRecord> result;
-        result.reserve($self->size());
-        for (auto it = $self->cbegin(); it != $self->cend(); ++it)
-            result.push_back(it->toCrifRecord());
-        return result;
-    }
-    %pythoncode %{
-        def __iter__(self):
-            return iter(self.records())
-        def __len__(self):
-            return int(self.size())
-    %}
-}
-
 class SimmConfiguration {
   public:
     enum class SimmSide { Call, Post };
@@ -297,6 +266,179 @@ class SimmBucketMapper {
     virtual std::string bucket(const CrifRecord::RiskType& riskType, const std::string& qualifier) const = 0;
     virtual bool hasBuckets(const CrifRecord::RiskType& riskType) const = 0;
 };
+
+class Crif {
+  public:
+    enum class CrifType { FRTB, SIMM, SACCR, Empty };
+
+    Crif();
+    Crif(const QuantLib::ext::shared_ptr<SimmConfiguration>& configuration,
+         const std::vector<std::set<std::string>>& additionalHeaders = {}, bool updateMapper = false,
+         bool aggregateTrades = true, bool allowUseCounterpartyTrade = true, char eol = '\n', char delim = '\t',
+         char quoteChar = '\0', char escapeChar = '\\', const std::string& nullString = "#N/A");
+    CrifType type() const;
+    void addRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false,
+                   bool sortFxVolQualifer = true);
+    void clear();
+    bool empty() const;
+    size_t size() const;
+    const bool hasCrifRecords() const;
+    const bool hasSimmParameters() const;
+
+    // CSV loading (replaces the former CrifLoader / CsvFileCrifLoader / CsvBufferCrifLoader classes).
+    // Call setCsvLoaderConfig() to configure parsing, then fromCSVFile()/fromCSVString() to populate.
+    void setCsvLoaderConfig(const ext::shared_ptr<SimmConfiguration>& configuration,
+                            const std::vector<std::set<std::string>>& additionalHeaders = {}, bool updateMapper = false,
+                            bool aggregateTrades = true, bool allowUseCounterpartyTrade = true, char eol = '\n',
+                            char delim = '\t', char quoteChar = '\0', char escapeChar = '\\',
+                            const std::string& nullString = "#N/A");
+    void fromCSVFile(const std::string& fileName);
+    void fromCSVString(const std::string& buffer);
+};
+
+class SimmConfiguration_ISDA_V2_6 : public SimmConfigurationBase {
+  public:
+    SimmConfiguration_ISDA_V2_6(const ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
+                                const QuantLib::Size& mporDays = 10,
+                                const std::string& name = "SIMM ISDA 2.6 (16 August 2023)",
+                                const std::string version = "2.6");
+  %extend {
+    SimmConfiguration_ISDA_V2_6() {
+      auto mapper = QuantLib::ext::make_shared<ore::analytics::SimmBucketMapperBase>();
+      return new ore::analytics::SimmConfiguration_ISDA_V2_6(mapper);
+    }
+    SimmConfiguration_ISDA_V2_6(const ext::shared_ptr<ore::analytics::SimmBucketMapperBase>& simmBucketMapper,
+                  const QuantLib::Size& mporDays = 10,
+                  const std::string& name = "SIMM ISDA 2.6 (16 August 2023)",
+                  const std::string version = "2.6") {
+      return new ore::analytics::SimmConfiguration_ISDA_V2_6(
+        QuantLib::ext::static_pointer_cast<ore::analytics::SimmBucketMapper>(simmBucketMapper), mporDays, name, version);
+    }
+  }
+};
+
+class SimmConfiguration_ISDA_V2_7_2412 : public SimmConfigurationBase {
+  public:
+    SimmConfiguration_ISDA_V2_7_2412(const ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
+                                const QuantLib::Size& mporDays = 10,
+                                const std::string& name = "SIMM ISDA 2.7+2412 (12 July 2025)",
+                                const std::string version = "2.7+2412");
+  %extend {
+    SimmConfiguration_ISDA_V2_7_2412() {
+      auto mapper = QuantLib::ext::make_shared<ore::analytics::SimmBucketMapperBase>();
+      return new ore::analytics::SimmConfiguration_ISDA_V2_7_2412(mapper);
+    }
+    SimmConfiguration_ISDA_V2_7_2412(const ext::shared_ptr<ore::analytics::SimmBucketMapperBase>& simmBucketMapper,
+                  const QuantLib::Size& mporDays = 10,
+                  const std::string& name = "SIMM ISDA 2.7+2412 (12 July 2025)",
+                  const std::string version = "2.7+2412") {
+      return new ore::analytics::SimmConfiguration_ISDA_V2_7_2412(
+        QuantLib::ext::static_pointer_cast<ore::analytics::SimmBucketMapper>(simmBucketMapper), mporDays, name, version);
+    }
+  }
+};
+
+class SimmConfiguration_ISDA_V2_8_2506 : public SimmConfigurationBase {
+  public:
+    SimmConfiguration_ISDA_V2_8_2506(const ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
+                                const QuantLib::Size& mporDays = 10,
+                                const std::string& name = "SIMM ISDA 2.8+2506 (06 December 2025)",
+                                const std::string version = "2.8+2506");
+  %extend {
+    SimmConfiguration_ISDA_V2_8_2506() {
+      auto mapper = QuantLib::ext::make_shared<ore::analytics::SimmBucketMapperBase>();
+      return new ore::analytics::SimmConfiguration_ISDA_V2_8_2506(mapper);
+    }
+    SimmConfiguration_ISDA_V2_8_2506(const ext::shared_ptr<ore::analytics::SimmBucketMapperBase>& simmBucketMapper,
+                  const QuantLib::Size& mporDays = 10,
+                  const std::string& name = "SIMM ISDA 2.8+2506 (06 December 2025)",
+                  const std::string version = "2.8+2506") {
+      return new ore::analytics::SimmConfiguration_ISDA_V2_8_2506(
+        QuantLib::ext::static_pointer_cast<ore::analytics::SimmBucketMapper>(simmBucketMapper), mporDays, name, version);
+    }
+  }
+};
+
+class SimmConfiguration_ISDA_V2_8_2512 : public SimmConfigurationBase {
+  public:
+    SimmConfiguration_ISDA_V2_8_2512(const ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
+                                const QuantLib::Size& mporDays = 10,
+                                const std::string& name = "SIMM ISDA 2.8+2512 (11 July 2026)",
+                                const std::string version = "2.8+2512");
+  %extend {
+    SimmConfiguration_ISDA_V2_8_2512() {
+      auto mapper = QuantLib::ext::make_shared<ore::analytics::SimmBucketMapperBase>();
+      return new ore::analytics::SimmConfiguration_ISDA_V2_8_2512(mapper);
+    }
+    SimmConfiguration_ISDA_V2_8_2512(const ext::shared_ptr<ore::analytics::SimmBucketMapperBase>& simmBucketMapper,
+                  const QuantLib::Size& mporDays = 10,
+                  const std::string& name = "SIMM ISDA 2.8+2512 (11 July 2026)",
+                  const std::string version = "2.8+2512") {
+      return new ore::analytics::SimmConfiguration_ISDA_V2_8_2512(
+        QuantLib::ext::static_pointer_cast<ore::analytics::SimmBucketMapper>(simmBucketMapper), mporDays, name, version);
+    }
+  }
+};
+
+%extend Crif {
+    std::vector<ore::analytics::CrifRecord> records() const {
+        std::vector<ore::analytics::CrifRecord> result;
+        result.reserve($self->size());
+        for (auto it = $self->cbegin(); it != $self->cend(); ++it)
+            result.push_back(it->toCrifRecord());
+        return result;
+    }
+
+    // Overloads accepting the concrete SIMM configuration so Python callers do
+    // not have to up-cast to the abstract SimmConfiguration base.
+    void setCsvLoaderConfig(const ext::shared_ptr<ore::analytics::SimmConfiguration_ISDA_V2_6>& configuration,
+                            const std::vector<std::set<std::string>>& additionalHeaders = {}, bool updateMapper = false,
+                            bool aggregateTrades = true, bool allowUseCounterpartyTrade = true, char eol = '\n',
+                            char delim = '\t', char quoteChar = '\0', char escapeChar = '\\',
+                            const std::string& nullString = "#N/A") {
+        $self->setCsvLoaderConfig(
+            QuantLib::ext::static_pointer_cast<ore::analytics::SimmConfiguration>(configuration),
+            additionalHeaders, updateMapper, aggregateTrades, allowUseCounterpartyTrade,
+            eol, delim, quoteChar, escapeChar, nullString);
+    }
+    void setCsvLoaderConfig(const ext::shared_ptr<ore::analytics::SimmConfiguration_ISDA_V2_7_2412>& configuration,
+                            const std::vector<std::set<std::string>>& additionalHeaders = {}, bool updateMapper = false,
+                            bool aggregateTrades = true, bool allowUseCounterpartyTrade = true, char eol = '\n',
+                            char delim = '\t', char quoteChar = '\0', char escapeChar = '\\',
+                            const std::string& nullString = "#N/A") {
+        $self->setCsvLoaderConfig(
+            QuantLib::ext::static_pointer_cast<ore::analytics::SimmConfiguration>(configuration),
+            additionalHeaders, updateMapper, aggregateTrades, allowUseCounterpartyTrade,
+            eol, delim, quoteChar, escapeChar, nullString);
+    }
+    void setCsvLoaderConfig(const ext::shared_ptr<ore::analytics::SimmConfiguration_ISDA_V2_8_2506>& configuration,
+                            const std::vector<std::set<std::string>>& additionalHeaders = {}, bool updateMapper = false,
+                            bool aggregateTrades = true, bool allowUseCounterpartyTrade = true, char eol = '\n',
+                            char delim = '\t', char quoteChar = '\0', char escapeChar = '\\',
+                            const std::string& nullString = "#N/A") {
+        $self->setCsvLoaderConfig(
+            QuantLib::ext::static_pointer_cast<ore::analytics::SimmConfiguration>(configuration),
+            additionalHeaders, updateMapper, aggregateTrades, allowUseCounterpartyTrade,
+            eol, delim, quoteChar, escapeChar, nullString);
+    }
+    void setCsvLoaderConfig(const ext::shared_ptr<ore::analytics::SimmConfiguration_ISDA_V2_8_2512>& configuration,
+                            const std::vector<std::set<std::string>>& additionalHeaders = {}, bool updateMapper = false,
+                            bool aggregateTrades = true, bool allowUseCounterpartyTrade = true, char eol = '\n',
+                            char delim = '\t', char quoteChar = '\0', char escapeChar = '\\',
+                            const std::string& nullString = "#N/A") {
+        $self->setCsvLoaderConfig(
+            QuantLib::ext::static_pointer_cast<ore::analytics::SimmConfiguration>(configuration),
+            additionalHeaders, updateMapper, aggregateTrades, allowUseCounterpartyTrade,
+            eol, delim, quoteChar, escapeChar, nullString);
+    }
+
+    %pythoncode %{
+        def __iter__(self):
+            return iter(self.records())
+        def __len__(self):
+            return int(self.size())
+    %}
+}
 
 class SimmBucketMapperBase : public SimmBucketMapper {
   public:
@@ -401,27 +543,6 @@ class SimmConfigurationBase : public SimmConfiguration {
     QuantLib::Size mporDays() const;
 };
 
-class SimmConfiguration_ISDA_V2_6 : public SimmConfigurationBase {
-  public:
-    SimmConfiguration_ISDA_V2_6(const ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
-                                const QuantLib::Size& mporDays = 10,
-                                const std::string& name = "SIMM ISDA 2.6 (16 August 2023)",
-                                const std::string version = "2.6");
-  %extend {
-    SimmConfiguration_ISDA_V2_6() {
-      auto mapper = QuantLib::ext::make_shared<ore::analytics::SimmBucketMapperBase>();
-      return new ore::analytics::SimmConfiguration_ISDA_V2_6(mapper);
-    }
-    SimmConfiguration_ISDA_V2_6(const ext::shared_ptr<ore::analytics::SimmBucketMapperBase>& simmBucketMapper,
-                  const QuantLib::Size& mporDays = 10,
-                  const std::string& name = "SIMM ISDA 2.6 (16 August 2023)",
-                  const std::string version = "2.6") {
-      return new ore::analytics::SimmConfiguration_ISDA_V2_6(
-        QuantLib::ext::static_pointer_cast<ore::analytics::SimmBucketMapper>(simmBucketMapper), mporDays, name, version);
-    }
-  }
-};
-
 class SimmResults {
   public:
     SimmResults(const std::string& resultCcy = "", const std::string& calcCcy = "");
@@ -440,62 +561,6 @@ class SimmResults {
     const std::string& calculationCurrency() const;
 };
 
-%nodefaultctor CrifLoader;
-class CrifLoader {
-  public:
-    virtual ~CrifLoader();
-    virtual ext::shared_ptr<Crif> loadCrif();
-    const ext::shared_ptr<SimmConfiguration>& simmConfiguration();
-};
-
-class CsvFileCrifLoader : public CrifLoader {
-  public:
-  CsvFileCrifLoader(const std::string& filename,
-            const ext::shared_ptr<SimmConfiguration>& configuration,
-            const std::vector<std::set<std::string>>& additionalHeaders = {}, bool updateMapper = false,
-            bool aggregateTrades = true, bool allowUseCounterpartyTrade = true, char eol = '\n',
-            char delim = '\t', char quoteChar = '\0', char escapeChar = '\\',
-            const std::string& nullString = "#N/A");
-  %extend {
-    CsvFileCrifLoader(const std::string& filename,
-              const ext::shared_ptr<ore::analytics::SimmConfiguration_ISDA_V2_6>& configuration,
-              const std::vector<std::set<std::string>>& additionalHeaders = {}, bool updateMapper = false,
-              bool aggregateTrades = true, bool allowUseCounterpartyTrade = true, char eol = '\n',
-              char delim = '\t', char quoteChar = '\0', char escapeChar = '\\',
-              const std::string& nullString = "#N/A") {
-      return new ore::analytics::CsvFileCrifLoader(
-          filename,
-          QuantLib::ext::static_pointer_cast<ore::analytics::SimmConfiguration>(configuration),
-          additionalHeaders, updateMapper, aggregateTrades, allowUseCounterpartyTrade,
-          eol, delim, quoteChar, escapeChar, nullString);
-    }
-  }
-};
-
-class CsvBufferCrifLoader : public CrifLoader {
-  public:
-  CsvBufferCrifLoader(const std::string& buffer,
-            const ext::shared_ptr<SimmConfiguration>& configuration,
-            const std::vector<std::set<std::string>>& additionalHeaders = {}, bool updateMapper = false,
-            bool aggregateTrades = true, bool allowUseCounterpartyTrade = true, char eol = '\n',
-            char delim = '\t', char quoteChar = '\0', char escapeChar = '\\',
-            const std::string& nullString = "#N/A");
-  %extend {
-    CsvBufferCrifLoader(const std::string& buffer,
-              const ext::shared_ptr<ore::analytics::SimmConfiguration_ISDA_V2_6>& configuration,
-              const std::vector<std::set<std::string>>& additionalHeaders = {}, bool updateMapper = false,
-              bool aggregateTrades = true, bool allowUseCounterpartyTrade = true, char eol = '\n',
-              char delim = '\t', char quoteChar = '\0', char escapeChar = '\\',
-              const std::string& nullString = "#N/A") {
-      return new ore::analytics::CsvBufferCrifLoader(
-          buffer,
-          QuantLib::ext::static_pointer_cast<ore::analytics::SimmConfiguration>(configuration),
-          additionalHeaders, updateMapper, aggregateTrades, allowUseCounterpartyTrade,
-          eol, delim, quoteChar, escapeChar, nullString);
-    }
-  }
-};
-
 %nodefaultctor SimmCalculator;
 class SimmCalculator {
   public:
@@ -512,6 +577,21 @@ class SimmCalculator {
         }
         SimmCalculator(const ext::shared_ptr<ore::analytics::Crif>& crif,
              const ext::shared_ptr<ore::analytics::SimmConfiguration_ISDA_V2_6>& simmConfiguration) {
+      return new ore::analytics::SimmCalculator(
+        crif, QuantLib::ext::static_pointer_cast<ore::analytics::SimmConfiguration>(simmConfiguration));
+        }
+        SimmCalculator(const ext::shared_ptr<ore::analytics::Crif>& crif,
+             const ext::shared_ptr<ore::analytics::SimmConfiguration_ISDA_V2_7_2412>& simmConfiguration) {
+      return new ore::analytics::SimmCalculator(
+        crif, QuantLib::ext::static_pointer_cast<ore::analytics::SimmConfiguration>(simmConfiguration));
+        }
+        SimmCalculator(const ext::shared_ptr<ore::analytics::Crif>& crif,
+             const ext::shared_ptr<ore::analytics::SimmConfiguration_ISDA_V2_8_2506>& simmConfiguration) {
+      return new ore::analytics::SimmCalculator(
+        crif, QuantLib::ext::static_pointer_cast<ore::analytics::SimmConfiguration>(simmConfiguration));
+        }
+        SimmCalculator(const ext::shared_ptr<ore::analytics::Crif>& crif,
+             const ext::shared_ptr<ore::analytics::SimmConfiguration_ISDA_V2_8_2512>& simmConfiguration) {
       return new ore::analytics::SimmCalculator(
         crif, QuantLib::ext::static_pointer_cast<ore::analytics::SimmConfiguration>(simmConfiguration));
         }

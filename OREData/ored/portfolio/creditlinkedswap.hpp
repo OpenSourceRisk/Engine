@@ -23,8 +23,7 @@
 
 #pragma once
 
-#include <qle/instruments/creditlinkedswap.hpp>
-
+#include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/trade.hpp>
 
 namespace ore {

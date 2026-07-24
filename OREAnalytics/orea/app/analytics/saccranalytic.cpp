@@ -19,7 +19,8 @@
 #include <ored/portfolio/structuredconfigurationwarning.hpp>
 #include <orea/app/analytics/saccranalytic.hpp>
 #include <orea/app/inputparameters.hpp>
-#include <orea/app/reportwriter.hpp>
+#include <orea/app/reportwriters/capitalreportwriter.hpp>
+#include <orea/app/reportwriters/pricingreportwriter.hpp>
 #include <orea/engine/saccrtradedata.hpp>
 #include <orea/engine/saccrcrifgenerator.hpp>
 #include <orea/engine/saccrcalculator.hpp>
@@ -94,7 +95,7 @@ void SaCcrAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoad
     analytic()->buildPortfolio();
 
     auto marketConfig = inputs_->marketConfig("pricing");
-    // For the additional results and cashflows, we do not take them from the CRIF analytic/s since we need these
+    // For the additional results and cashflows, we do not take them from the CRIF analytic/since we need these
     // for validation for all trades regardless of the CalculateIMAmount flag of each netting set
     if (analytic()->getWriteIntermediateReports()) {
         if (inputs_->outputAdditionalResults()) {
@@ -111,7 +112,7 @@ void SaCcrAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoad
         std::filesystem::path cfReportPath = inputs_->resultsPath() / "cashflow.csv";
         CSVFileReport cfReport(cfReportPath.string(), ',', false, inputs_->csvQuoteChar(), inputs_->reportNaString(),
                                false);
-        ReportWriter(inputs_->reportNaString())
+        PricingReportWriter(inputs_->reportNaString())
             .writeCashflow(cfReport, inputs_->baseCurrency(), analytic()->portfolio(), analytic()->market(),
                            marketConfig);
     }
@@ -149,13 +150,13 @@ void SaCcrAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoad
 
     auto crifReport = QuantLib::ext::make_shared<InMemoryReport>();
     path crifReportPath = inputs_->resultsPath() / "capital_crif.csv";
-    ReportWriter(inputs_->reportNaString())
+    CapitalReportWriter(inputs_->reportNaString())
         .writeCapitalCrifReport(*crifReport, saccrCrif, inputs_->baseCurrency(), inputs_->csvQuoteChar());
     crifReport->toFile(crifReportPath.string(), ',', false, inputs_->csvQuoteChar(), inputs_->reportNaString());
     analytic()->stopTimer("Capital CRIF generation");
 
     QuantLib::ext::shared_ptr<InMemoryReport> saccrDetailReport = QuantLib::ext::make_shared<InMemoryReport>();
-    ReportWriter(inputs_->reportNaString()).writeSaccrTradeDetailReport(*saccrDetailReport, saccrTradeData);
+    CapitalReportWriter(inputs_->reportNaString()).writeSaccrTradeDetailReport(*saccrDetailReport, saccrTradeData);
     if (saccrAnalytic->getWriteIntermediateReports()) {
         path saccrDetailPath = inputs_->resultsPath() / "saccrdetail.csv";
         saccrDetailReport->toFile(saccrDetailPath.string(), ',', false, inputs_->csvQuoteChar(),
