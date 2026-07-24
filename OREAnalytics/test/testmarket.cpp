@@ -2106,7 +2106,8 @@ QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigura
     zinfData.shiftSize = 0.0001;
     zinfData.shiftTenors = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years};
 
-    auto commodityShiftData = QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftData>();
+    auto commodityShiftData =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::CommodityCurveShiftData>();
     commodityShiftData->shiftType = ShiftType::Relative;
     commodityShiftData->shiftSize = 0.01;
     commodityShiftData->shiftTenors = {0 * Days, 1 * Years, 2 * Years, 5 * Years};

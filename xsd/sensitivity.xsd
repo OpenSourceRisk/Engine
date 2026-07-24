@@ -585,6 +585,8 @@
       <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element type="xs:string" name="ShiftTenors"/>
       <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
+      <xs:element type="calendar" name="Calendar" minOccurs="0"/>
+      <xs:element type="businessDayConvention" name="BusinessDayConvention" minOccurs="0"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="name" use="required"/>
   </xs:complexType>
