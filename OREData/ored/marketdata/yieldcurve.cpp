@@ -2157,9 +2157,9 @@ void YieldCurve::buildBondYieldShiftedCurve(const std::size_t index) {
     Real thisDuration = Null<Real>();
 
     auto engineData = QuantLib::ext::make_shared<EngineData>();
-    engineData->model("Bond") = "DiscountedCashflows";
-    engineData->engine("Bond") = "DiscountingRiskyBondEngine";
-    engineData->engineParameters("Bond") = {{"TimestepPeriod", "3M"}};
+    engineData->setModel("Bond", "DiscountedCashflows");
+    engineData->setEngine("Bond", "DiscountingRiskyBondEngine");
+    engineData->setEngineParameters("Bond", {{"TimestepPeriod", "3M"}});
 
     //  needed to link the ibors in case bond is a floater
     std::map<std::string, Handle<YieldTermStructure>> iborCurveMapping;

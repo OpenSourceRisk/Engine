@@ -154,6 +154,8 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     analytic()->setMarket(t0SimMarket_);
     analytic()->buildPortfolio();
 
+    fixingManager->initialise(analytic()->portfolio(), t0SimMarket_);
+
     QuantLib::ext::shared_ptr<InMemoryReport> t0NpvReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     PricingReportWriter(inputs_->reportNaString())
         .writeNpv(*t0NpvReport, effectiveResultCurrency, analytic()->market(), marketConfig,
@@ -290,6 +292,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
      ***********************************************************************************************/
 
     Date d1 = mporDate();
+    fixingManager->update(d1);
     Settings::instance().evaluationDate() = d1;
     analytic()->configurations().asofDate = d1;
     auto simMarket1 = sai->scenarioSimMarket();
@@ -297,7 +300,6 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     analytic()->setMarket(simMarket1);
     sgen1->setScenario(t1Scenario);
     simMarket1->scenarioGenerator() = sgen1;
-    fixingManager->update(d1);
     simMarket1->update(d1);
     analytic()->buildPortfolio();
 
@@ -325,10 +327,9 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
      * 6. Price the t0 portfolio as of t1 using the t1 market for the actual P&L calculation
      *
      ***************************************************************************************/
-        
+
     sgen1->setScenario(sai->scenarioSimMarket()->baseScenario());
     simMarket1->scenarioGenerator() = sgen1;
-    fixingManager->update(d1);
     simMarket1->update(d1);
 
     analytic()->buildPortfolio();
