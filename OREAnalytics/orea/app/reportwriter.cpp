@@ -2402,17 +2402,21 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
 
     std::set<string> t0Ids;
     for (Size i = 0; i < t0NpvReport->rows(); ++i) {
+        string tradeId = "unknown", tradeType = "unknown";
         try {
-            string tradeId = boost::get<string>(t0NpvReport->data(tradeIdColumn, i));
+            tradeId = boost::get<string>(t0NpvReport->data(tradeIdColumn, i));
             t0Ids.insert(tradeId);
             string tradeId2 = boost::get<string>(t0m1p0NpvReport->data(tradeIdColumn, i));
             string tradeId3 = boost::get<string>(t1m0p0NpvReport->data(tradeIdColumn, i));
-            QL_REQUIRE(tradeId == tradeId2 && tradeId == tradeId3, "inconsistent ordering of NPV reports");
-            string tradeType = boost::get<string>(t0NpvReport->data(tradeTypeColumn, i));
+            QL_REQUIRE(tradeId == tradeId2 && tradeId == tradeId3,
+                       "inconsistent ordering of npv reports, got non-matching trade ids "
+                           << tradeId << ", " << tradeId2 << "," << tradeId3);
+            tradeType = boost::get<string>(t0NpvReport->data(tradeTypeColumn, i));
             Date maturityDate = boost::get<Date>(t0NpvReport->data(maturityDateColumn, i));
             Real maturityTime = boost::get<Real>(t0NpvReport->data(maturityTimeColumn, i));
             string ccy = boost::get<string>(t0NpvReport->data(baseCcyColumn, i));
-            QL_REQUIRE(ccy == baseCurrency, "inconsistent NPV and base currencies");
+            QL_REQUIRE(ccy == baseCurrency,
+                       "inconsistent npv ccy (" << ccy << ") and base ccy (" << baseCurrency << ") for trade " << tradeId);
             Real t0Npv = boost::get<Real>(t0NpvReport->data(npvBaseColumn, i));
             Real t0m1p0Npv = boost::get<Real>(t0m1p0NpvReport->data(npvBaseColumn, i));
             Real t1m0p0Npv = boost::get<Real>(t1m0p0NpvReport->data(npvBaseColumn, i));
@@ -2432,7 +2436,7 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
             Real theta = t1m0p0Npv - t0Npv + periodFlow;
             Real dirtyPnl = t1m1p1Npv - t0Npv;
             Real cleanPnl = dirtyPnl + periodFlow;
-            LOG("PnL report, writing line " << i << " tradeId " << tradeId);
+            DLOG("PnL report, writing line " << i << " tradeId " << tradeId);
         
             report.next()
                 .add(tradeId)
@@ -2461,52 +2465,57 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
                 .add(ccy);
 
         } catch (std::exception& e) {
-          ALOG("Error writing PnL report line: " << e.what()); 
+            StructuredTradeErrorMessage(tradeId, tradeType, "Error writing pnl report", e.what()).log();
         }
     }
 
     for (const auto& tId : t1IdMap) {
         auto it = t0Ids.find(tId.first);
         if (it == t0Ids.end()) {
+            string tradeId = "unknown", tradeType = "unknown";
+            try {
+                tradeId = tId.first;
+                Size loc = tId.second;
+                tradeType = boost::get<string>(t1m1p1NpvReport->data(tradeTypeColumn, loc));
+                Date maturityDate = boost::get<Date>(t1m1p1NpvReport->data(maturityDateColumn, loc));
+                Real maturityTime = boost::get<Real>(t1m1p1NpvReport->data(maturityTimeColumn, loc));
+                string ccy = boost::get<string>(t1m1p1NpvReport->data(baseCcyColumn, loc));
+                QL_REQUIRE(ccy == baseCurrency, "inconsistent npv ccy (" << ccy << ") and base ccy (" << baseCurrency
+                                                                         << ") for " << tradeId);
 
-          string tradeId = tId.first;
-          Size loc = tId.second;
-          string tradeType = boost::get<string>(t1m1p1NpvReport->data(tradeTypeColumn, loc));
-          Date maturityDate = boost::get<Date>(t1m1p1NpvReport->data(maturityDateColumn, loc));
-          Real maturityTime = boost::get<Real>(t1m1p1NpvReport->data(maturityTimeColumn, loc));
-          string ccy = boost::get<string>(t1m1p1NpvReport->data(baseCcyColumn, loc));
-          QL_REQUIRE(ccy == baseCurrency, "inconsistent NPV and base currencies");
+                Real t1m0p1Npv = boost::get<Real>(t1m0p1NpvReport->data(npvBaseColumn, loc));
+                Real t1m1p1Npv = boost::get<Real>(t1m1p1NpvReport->data(npvBaseColumn, loc));
+                Real day1Pnl = t1m1p1Npv - t1m0p1Npv;
+                DLOG("PnL report, writing line " << loc << " tradeId " << tradeId);
 
-          Real t1m0p1Npv = boost::get<Real>(t1m0p1NpvReport->data(npvBaseColumn, loc));
-          Real t1m1p1Npv = boost::get<Real>(t1m1p1NpvReport->data(npvBaseColumn, loc));
-          Real day1Pnl = t1m1p1Npv - t1m0p1Npv;
-          LOG("PnL report, writing line " << loc << " tradeId " << tradeId);
-
-          report.next()
-              .add(tradeId)
-              .add(tradeType)
-              .add(maturityDate)
-              .add(maturityTime)
-              .add(startDate)
-              .add(endDate)
-              .add(0.0)
-              .add(0.0)
-              .add(0.0)
-              .add(0.0)
-              .add(t1m0p1Npv)
-              .add(t1m1p1Npv)
-              .add(day1Pnl)
-              .add(0.0)
-              .add(0.0)
-              .add(t1m1p1Npv)
-              .add(0.0)
-              .add(0.0)
-              .add(0.0)
-              .add(0.0)
-              .add(0.0)
-              .add(t1m1p1Npv)
-              .add(t1m1p1Npv)
-              .add(ccy);
+                report.next()
+                    .add(tradeId)
+                    .add(tradeType)
+                    .add(maturityDate)
+                    .add(maturityTime)
+                    .add(startDate)
+                    .add(endDate)
+                    .add(0.0)
+                    .add(0.0)
+                    .add(0.0)
+                    .add(0.0)
+                    .add(t1m0p1Npv)
+                    .add(t1m1p1Npv)
+                    .add(day1Pnl)
+                    .add(0.0)
+                    .add(0.0)
+                    .add(t1m1p1Npv)
+                    .add(0.0)
+                    .add(0.0)
+                    .add(0.0)
+                    .add(0.0)
+                    .add(0.0)
+                    .add(t1m1p1Npv)
+                    .add(t1m1p1Npv)
+                    .add(ccy);
+            } catch (std::exception& e) {
+                StructuredTradeErrorMessage(tradeId, tradeType, "Error writing pnl report", e.what()).log();
+            }
         }
     }
 
