@@ -578,7 +578,6 @@ currencies/configurablecurrency.hpp
 currencies/currencycomparator.hpp
 currencies/europe.hpp
 currencies/metals.hpp
-gitversion.hpp
 indexes/behicp.hpp
 indexes/bmaindexwrapper.hpp
 indexes/bondindex.hpp
@@ -1164,24 +1163,41 @@ utilities/solvers.hpp
 utilities/time.hpp
 version.hpp)
 
-writeAll("qle" "${CMAKE_CURRENT_LIST_DIR}/quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")
-add_library(${QLE_LIB_NAME} ${QuantExt_SRC} ${QuantExt_HDR} "quantext.hpp")
+# Put the generated git version header in the build directory so as not to pollute the source tree.
+set(GIT_VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/gitversion.hpp")
+
+# Add the generated git version header to the list of headers written in quantext.hpp.
+set(QuantExt_PUBLIC_HDR ${QuantExt_HDR})
+list(APPEND QuantExt_PUBLIC_HDR "gitversion.hpp")
+writeAll("qle" "${CMAKE_CURRENT_LIST_DIR}/quantext.hpp" "auto_link.hpp" "${QuantExt_PUBLIC_HDR}")
+
+# Create the QuantExt library target.
+add_library(${QLE_LIB_NAME} ${QuantExt_SRC} ${QuantExt_HDR} "${GIT_VERSION_HEADER}" "quantext.hpp")
+
 # This adds Ore::QuantExt as an alias for the target QuantExt. So Ore::QuantExt can be used in the mono-repo build
 # (locally) and in the split build during CI i.e. build ORE, import ORE CMake targets, build OREPlus.
 add_library(${ORE_PACKAGE_NAME}::${QLE_LIB_NAME} ALIAS ${QLE_LIB_NAME})
 
-add_custom_target(gitVersionGeneration ALL
-    COMMAND ${CMAKE_COMMAND}
-            -D IN_FILE=${CMAKE_CURRENT_LIST_DIR}/gitversion.hpp.in
-            -D OUT_FILE=${CMAKE_CURRENT_LIST_DIR}/gitversion.hpp
-            -D GIT_HASH=${GIT_HASH}
-            -P "${PROJECT_SOURCE_DIR}/cmake/generateGitVersion.cmake"
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+# Always generate the git version header, even if it is up to date, to ensure that the git hash is always correct.
+add_custom_target(gitVersionGeneration
+    COMMAND
+        "${CMAKE_COMMAND}"
+        "-DIN_FILE=${CMAKE_CURRENT_LIST_DIR}/gitversion.hpp.in"
+        "-DOUT_FILE=${GIT_VERSION_HEADER}"
+        "-DGIT_HASH=${GIT_HASH}"
+        -P "${PROJECT_SOURCE_DIR}/cmake/generateGitVersion.cmake"
+    BYPRODUCTS
+        "${GIT_VERSION_HEADER}"
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    VERBATIM
 )
+
+# Ensure that the git version header is generated before building the QuantExt library.
 add_dependencies(${QLE_LIB_NAME} gitVersionGeneration)
 
 target_include_directories(${QLE_LIB_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/..>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
@@ -1267,4 +1283,10 @@ install(
     DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
+)
+
+# Install the generated header stored in the build tree.
+install(
+    FILES "${GIT_VERSION_HEADER}"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/qle"
 )
