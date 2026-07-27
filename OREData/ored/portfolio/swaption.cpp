@@ -357,14 +357,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
                 maturityType_ = "Fee Settlement Date";
         }
 
-        // 5.4 add unconditional premiums, build instrument (as swap) and exit
-
-        std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
-        std::vector<Real> additionalMultipliers;
-        Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, Position::Long ? 1.0 : -1.0,
-                                           optionData_.premiumData(), positionType_ == Position::Long ? -1.0 : 1.0,
-                                           parseCurrency(npvCurrency_), discountCurve, engineFactory,
-                                           engineFactory->configuration(MarketContext::pricing));
+        // 5.4 build instrument (as swap), then add unconditional premiums and exit
 
         QuantLib::ext::shared_ptr<Instrument> swap;
         if (isXccy) {
@@ -387,6 +380,14 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
             addProductModelEngine(*builder);
         }
 
+        std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
+        std::vector<Real> additionalMultipliers;
+        Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers,
+                                           positionType_ == Position::Long ? 1.0 : -1.0,
+                                           optionData_.premiumData(), positionType_ == Position::Long ? -1.0 : 1.0,
+                                           parseCurrency(npvCurrency_), discountCurve, engineFactory,
+                                           engineFactory->configuration(MarketContext::pricing));
+
         instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(swap, positionType_ == Position::Long ? 1.0 : -1.0,
                                                                     additionalInstruments, additionalMultipliers);
         maturity_ = std::max(maturity_, lastPremiumDate);
@@ -406,17 +407,18 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         legPayers_.push_back(false);
         maturity_ = today;
         maturityType_ = "Today";
-        std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
-        std::vector<Real> additionalMultipliers;
-        Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, Position::Long ? 1.0 : -1.0,
-                                           optionData_.premiumData(), positionType_ == Position::Long ? -1.0 : 1.0,
-                                           parseCurrency(npvCurrency_), discountCurve, engineFactory,
-                                           engineFactory->configuration(MarketContext::pricing));
         auto builder = QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(engineFactory->builder("Swap"));
         auto swap = QuantLib::ext::make_shared<QuantLib::Swap>(legs_, legPayers_);
         swap->setPricingEngine(builder->engine(parseCurrency(npvCurrency_),
                                                envelope().additionalField("discount_curve", false),
                                                envelope().additionalField("security_spread", false), {}));
+        std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
+        std::vector<Real> additionalMultipliers;
+        Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers,
+                                           positionType_ == Position::Long ? 1.0 : -1.0,
+                                           optionData_.premiumData(), positionType_ == Position::Long ? -1.0 : 1.0,
+                                           parseCurrency(npvCurrency_), discountCurve, engineFactory,
+                                           engineFactory->configuration(MarketContext::pricing));
         instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(swap, positionType_ == Position::Long ? 1.0 : -1.0,
                                                                     additionalInstruments, additionalMultipliers);
         setSensitivityTemplate(*builder);
@@ -604,7 +606,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     std::vector<Real> additionalMultipliers;
     Real multiplier = positionType_ == Position::Long ? 1.0 : -1.0;
     Date lastPremiumDate =
-        addPremiums(additionalInstruments, additionalMultipliers, Position::Long ? 1.0 : -1.0,
+        addPremiums(additionalInstruments, additionalMultipliers, multiplier,
                     optionData_.premiumData(), -multiplier, parseCurrency(npvCurrency_), discountCurve, engineFactory,
                     swaptionBuilder->configuration(MarketContext::pricing));
 
