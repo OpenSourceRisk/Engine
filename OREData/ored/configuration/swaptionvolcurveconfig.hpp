@@ -52,12 +52,14 @@ public:
                                   // Only required for smile
                                   const vector<string>& smileOptionTenors = vector<string>(),
                                   const vector<string>& smileSwapTenors = vector<string>(),
-                                  const vector<string>& smileSpreads = vector<string>())
+                                  const vector<string>& smileSpreads = vector<string>(),
+                                  const QuantLib::ext::optional<ParametricSmileConfiguration>&
+                                    parametricSmileConfiguration = QuantLib::ext::nullopt)
         : GenericYieldVolatilityCurveConfig("Swap", "SwaptionVolatility", "SWAPTION", "", curveID, curveDescription, "",
                                             dimension, volatilityType, outputVolatilityType, interpolation,
                                             extrapolation, optionTenors, swapTenors, dayCounter, calendar,
                                             businessDayConvention, shortSwapIndexBase, swapIndexBase, smileOptionTenors,
-                                            smileSwapTenors, smileSpreads) {}
+                                            smileSwapTenors, smileSpreads, parametricSmileConfiguration) {}
     //! Detailled constructor for proxy config
     SwaptionVolatilityCurveConfig(const string& curveID, const string& curveDescription,
                                   const string& proxySourceCurveId, const string& proxySourceShortSwapIndexBase,

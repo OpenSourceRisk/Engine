@@ -780,6 +780,32 @@ public:
                                   const std::string& proxyTargetSwapIndexBase);
 };
 
+%extend SwaptionVolatilityCurveConfig {
+    SwaptionVolatilityCurveConfig(const std::string& curveID, const std::string& curveDescription,
+                                  const GenericYieldVolatilityCurveConfig::Dimension dimension,
+                                  const GenericYieldVolatilityCurveConfig::VolatilityType volatilityType,
+                                  const GenericYieldVolatilityCurveConfig::VolatilityType outputVolatilityType,
+                                  const GenericYieldVolatilityCurveConfig::Interpolation interpolation,
+                                  const GenericYieldVolatilityCurveConfig::Extrapolation extrapolation,
+                                  const std::vector<std::string>& optionTenors,
+                                  const std::vector<std::string>& swapTenors,
+                                  const QuantLib::DayCounter& dayCounter,
+                                  const QuantLib::Calendar& calendar,
+                                  const QuantLib::BusinessDayConvention& businessDayConvention,
+                                  const std::string& shortSwapIndexBase,
+                                  const std::string& swapIndexBase,
+                                  const std::vector<std::string>& smileOptionTenors,
+                                  const std::vector<std::string>& smileSwapTenors,
+                                  const std::vector<std::string>& smileSpreads,
+                                  const ParametricSmileConfiguration& parametricSmileConfiguration) {
+        return new ore::data::SwaptionVolatilityCurveConfig(
+            curveID, curveDescription, dimension, volatilityType, outputVolatilityType, interpolation,
+            extrapolation, optionTenors, swapTenors, dayCounter, calendar, businessDayConvention,
+            shortSwapIndexBase, swapIndexBase, smileOptionTenors, smileSwapTenors, smileSpreads,
+            parametricSmileConfiguration);
+    }
+}
+
 class FXVolatilityCurveConfig : public CurveConfig {
 public:
     enum class Dimension { ATM, SmileVannaVolga, SmileDelta, SmileBFRR, SmileAbsolute, ATMTriangulated };
@@ -928,6 +954,31 @@ public:
     std::string toString(VolatilityType type) const;
 
 };
+
+%extend CapFloorVolatilityCurveConfig {
+    CapFloorVolatilityCurveConfig(
+        const std::string& curveID, const std::string& curveDescription,
+        const CapFloorVolatilityCurveConfig::VolatilityType& volatilityType,
+        bool extrapolate, bool flatExtrapolation, bool inlcudeAtm,
+        const std::vector<std::string>& tenors, const std::vector<std::string>& strikes,
+        const QuantLib::DayCounter& dayCounter, QuantLib::Natural settleDays,
+        const QuantLib::Calendar& calendar,
+        const QuantLib::BusinessDayConvention& businessDayConvention,
+        const std::string& index, const QuantLib::Period& rateComputationPeriod,
+        const QuantLib::Size onCapSettlementDays, const std::string& discountCurve,
+        const std::string& interpolationMethod, const std::string& interpolateOn,
+        const std::string& timeInterpolation, const std::string& strikeInterpolation,
+        const std::vector<std::string>& atmTenors, const BootstrapConfig& bootstrapConfig,
+        const std::string& inputType,
+        const ParametricSmileConfiguration& parametricSmileConfiguration) {
+        return new ore::data::CapFloorVolatilityCurveConfig(
+            curveID, curveDescription, volatilityType, extrapolate, flatExtrapolation,
+            inlcudeAtm, tenors, strikes, dayCounter, settleDays, calendar, businessDayConvention,
+            index, rateComputationPeriod, onCapSettlementDays, discountCurve, interpolationMethod,
+            interpolateOn, timeInterpolation, strikeInterpolation, atmTenors, bootstrapConfig,
+            inputType, parametricSmileConfiguration);
+    }
+}
 
 class EquityVolatilityCurveConfig : public CurveConfig {
 public:
