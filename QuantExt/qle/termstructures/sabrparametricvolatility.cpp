@@ -71,6 +71,10 @@ ParametricVolatility::MarketQuoteType SabrParametricVolatility::preferredOutputQ
     }
 }
 
+const std::vector<Real>& SabrParametricVolatility::timeToExpiries() const { return timeToExpiries_; }
+
+const std::vector<Real>& SabrParametricVolatility::underlyingLengths() const { return underlyingLengths_; }
+
 std::vector<Real> SabrParametricVolatility::getGuess(const std::vector<std::pair<Real, ParameterCalibration>>& params,
                                                      const std::vector<Real>& randomSeq, const Real forward,
                                                      const Real lognormalShift) const {

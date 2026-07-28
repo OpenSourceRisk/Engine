@@ -60,10 +60,10 @@ public:
              const QuantLib::Real outputLognormalShift = QuantLib::Null<QuantLib::Real>(),
              const QuantLib::ext::optional<QuantLib::Option::Type> outputOptionType = QuantLib::ext::nullopt) const override;
 
-    // the calculated grid of option expiries and the underlying lenghts
-    const std::vector<Real>& timeToEpiries() const;
-    const std::vector<Real>& underlyingLenghts() const;
-    // calibrated or interpolated model parameters (rows = underlying lenghts, cols = option expiries)
+    // the calculated grid of option expiries and the underlying lengths
+    const std::vector<Real>& timeToExpiries() const;
+    const std::vector<Real>& underlyingLengths() const;
+    // calibrated or interpolated model parameters (rows = underlying lengths, cols = option expiries)
     const QuantLib::Matrix& alpha() const { return alpha_; }
     const QuantLib::Matrix& beta() const { return beta_; }
     const QuantLib::Matrix& nu() const { return nu_; }
