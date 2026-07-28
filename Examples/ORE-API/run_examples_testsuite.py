@@ -3,9 +3,7 @@ import os
 import shutil
 import sys
 import argparse
-import collections
-collections.Callable = collections.abc.Callable
-import nose
+import pytest
 import unittest
 import urllib
 import json
@@ -24,7 +22,7 @@ from Tools.PythonTools.setup_logging import setup_logging  # noqa
 class TestExamples(unittest.TestCase):
     def setUp(self):
         self.logger = logging.getLogger(__name__)
-    
+
     def runexample(self, name):
         self.logger.info('{}: run {}'.format(self._testMethodName, name))
         completed = False
@@ -64,7 +62,7 @@ class TestExamples(unittest.TestCase):
 
         else:
             return
-            #raise ValueError('Expected path ' + default_orexml_path + ' to exist.') 
+            #raise ValueError('Expected path ' + default_orexml_path + ' to exist.')
 
 def get_list_of_examples():
     examples_dir = os.path.normpath(Path(__file__).resolve().parents[1])
@@ -92,4 +90,4 @@ setup_logging()
 create_all_utests()
 
 if __name__ == '__main__':
-    nose.runmodule(name='__main__')
+    sys.exit(pytest.main([__file__]))

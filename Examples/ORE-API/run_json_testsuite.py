@@ -3,9 +3,7 @@ import os
 import sys
 import shutil
 import argparse
-import collections
-collections.Callable = collections.abc.Callable
-import nose
+import pytest
 import unittest
 import urllib
 import json
@@ -40,7 +38,7 @@ class TestExamples(unittest.TestCase):
             return '/'.join(["http://127.0.0.1:5000/file" , full_encode])
         else:
             return path
-        
+
     def checkParam(self, value):
         fileToUri = {"marketDataFile": "marketData",
         "fixingDataFile": "fixingData",
@@ -96,7 +94,7 @@ class TestExamples(unittest.TestCase):
                     for child in analytic.findall('Parameter'):
                         param = self.checkParam(child.get('name'))
                         body["analytics"][analyticType][param] = child.text if str(param) in ignore else self.configureUri(input_dir, child.text)
-            
+
             partial_encode = urllib.parse.quote( os.path.abspath(output_dir), safe='')
             full_encode = urllib.parse.quote(partial_encode, safe='')
             report_dir = '/'.join(["http://127.0.0.1:5000/report" , full_encode])
@@ -105,9 +103,9 @@ class TestExamples(unittest.TestCase):
             response_file_name = 'payload.json'
             with open(os.path.join(output_dir, response_file_name), 'w') as json_file:
                 json.dump(body, json_file)
-            
+
             return body
-                    
+
     def runexample(self, name):
         self.logger.info('{}: run {}'.format(self._testMethodName, name))
         completed = False
@@ -176,4 +174,4 @@ setup_logging()
 create_all_utests()
 
 if __name__ == '__main__':
-    nose.runmodule(name='__main__')
+    sys.exit(pytest.main([__file__]))

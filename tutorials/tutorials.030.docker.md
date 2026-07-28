@@ -62,7 +62,7 @@ Invoke the command below to run the docker container interactively:
 Here are the commands to run the examples:
 
     cd /ore/Examples
-    python3 run_examples_testsuite.py --with-xunitmp --xunitmp-file=examples.xml --processes=8 --process-timeout=3600
+    pytest run_examples_testsuite.py --junitxml=examples.xml -n 8 --timeout=3600
 
 Here are the commands to run all of the unit tests in parallel:
 
