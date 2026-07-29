@@ -55,12 +55,12 @@ void PricingAnalyticImpl::releaseMemory() {
     parAnalysis_.reset();
 }
 
-void PricingAnalyticImpl::setUpConfigurations() {    
+void PricingAnalyticImpl::setUpConfigurations() {
     if (find(begin(analytic()->analyticTypes()), end(analytic()->analyticTypes()), "SENSITIVITY") !=
         end(analytic()->analyticTypes())) {
         analytic()->configurations().simulationConfigRequired = true;
         analytic()->configurations().sensitivityConfigRequired = true;
-    } 
+    }
 
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     analytic()->configurations().simMarketParams = inputs_->sensiSimMarketParams();
@@ -69,8 +69,8 @@ void PricingAnalyticImpl::setUpConfigurations() {
     setGenerateAdditionalResults(true);
 }
 
-void PricingAnalyticImpl::runAnalytic( 
-    const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, 
+void PricingAnalyticImpl::runAnalytic(
+    const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
     const std::set<std::string>& runTypes) {
 
     Settings::instance().evaluationDate() = inputs_->asof();
@@ -257,7 +257,7 @@ void PricingAnalyticImpl::runAnalytic(
             LOG("Sensi analysis - write sensitivity scenario report in memory");
             QuantLib::ext::shared_ptr<InMemoryReport> scenarioReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
             ReportWriter(inputs_->reportNaString())
-                .writeScenarioReport(*scenarioReport, sensiAnalysis_->sensiCubes(),
+                .writeScenarioReport(*scenarioReport, sensiAnalysis_->sensiCubes(), baseCurrency,
                                      inputs_->sensiThreshold());
             analytic()->addReport(type, "sensitivity_scenario", scenarioReport);
 
@@ -304,7 +304,7 @@ void PricingAnalyticImpl::runAnalytic(
                         analytic()->market());
                 }
                 // If the stream is going to be reused - wrap it into a buffered stream to gain some
-                // performance. The cost for this is the memory footpring of the buffer.
+                // performance. The cost for this is the memory footprint of the buffer.
                 QuantLib::ext::shared_ptr<InMemoryReport> parSensiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 ReportWriter(inputs_->reportNaString())
                     .writeSensitivityReport(*parSensiReport, pss, inputs_->sensiThreshold(), analytic()->market(),
@@ -315,7 +315,7 @@ void PricingAnalyticImpl::runAnalytic(
                     QuantLib::ext::shared_ptr<InMemoryReport> jacobiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                     writeParConversionMatrix(parAnalysis_->parSensitivities(), *jacobiReport);
                     analytic()->addReport(type, "jacobi", jacobiReport);
-                    
+
                     QuantLib::ext::shared_ptr<InMemoryReport> jacobiInverseReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                     parConverter->writeConversionMatrix(*jacobiInverseReport);
                     analytic()->addReport(type, "jacobi_inverse", jacobiInverseReport);
@@ -324,7 +324,7 @@ void PricingAnalyticImpl::runAnalytic(
             else {
                 LOG("Sensi Analysis - skip par conversion");
             }
-        
+
             LOG("Sensi Analysis - Completed");
             CONSOLE("OK");
         } else {

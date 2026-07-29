@@ -227,10 +227,10 @@ void ReportWriter::writeCashflowNpv(ore::data::Report& report, const ore::data::
                                     QuantLib::ext::shared_ptr<ore::data::Market> market, const std::string& configuration,
                                     const std::string& baseCcy, const Date& horizon) {
     // Pick the following fields form the in memory report:
-    // - tradeId 
-    // - payment date 
-    // - currency 
-    // - present value 
+    // - tradeId
+    // - payment date
+    // - currency
+    // - present value
     // Then convert PVs into base currency, aggrate per trade if payment date is within the horizon
     // Write the resulting aggregate PV per trade into the report.
 
@@ -244,7 +244,7 @@ void ReportWriter::writeCashflowNpv(ore::data::Report& report, const ore::data::
     QL_REQUIRE(cashflowReport.header(payDateColumn) == "PayDate", "incorrect payment date column " << payDateColumn);
     QL_REQUIRE(cashflowReport.header(ccyColumn) == "Currency", "incorrect currency column " << ccyColumn);
     QL_REQUIRE(cashflowReport.header(pvColumn) == "PresentValue", "incorrect pv column " << pvColumn);
-    
+
     map<string, Real> npvMap;
     Date asof = Settings::instance().evaluationDate();
     for (Size i = 0; i < cashflowReport.rows(); ++i) {
@@ -268,14 +268,14 @@ void ReportWriter::writeCashflowNpv(ore::data::Report& report, const ore::data::
         if (payDate > asof && payDate <= horizon) {
             npvMap[tradeId] += pv * fx;
             DLOG("Cashflow NPV for trade " << tradeId << ": pv " << pv << " fx " << fx << " sum " << npvMap[tradeId]);
-        }   
-    }   
+        }
+    }
 
     LOG("Writing cashflow NPV report for " << asof);
     report.addColumn("TradeId", string())
         .addColumn("PresentValue", double(), 10)
         .addColumn("BaseCurrency", string())
-        .addColumn("Horizon", string());        
+        .addColumn("Horizon", string());
 
     for (auto r: npvMap)
         report.next().add(r.first).add(r.second).add(baseCcy).add(horizon < Date::maxDate() ? ore::data::to_string(horizon) : "infinite");
@@ -445,7 +445,7 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, QuantLib::ext:
         .addColumn("BaselEEE", double())
         .addColumn("TimeWeightedBaselEPE", double(), 2)
         .addColumn("TimeWeightedBaselEEPE", double(), 2);
-    
+
     addTradeExposures(report, postProcess, tradeId);
     report.end();
 }
@@ -804,7 +804,10 @@ void ReportWriter::writeAggregationScenarioData(ore::data::Report& report, const
 
 void ReportWriter::writeScenarioReport(ore::data::Report& report,
                                        const std::vector<QuantLib::ext::shared_ptr<SensitivityCube>>& sensitivityCubes,
+                                       const std::string& baseCurrency,
                                        Real outputThreshold) {
+
+    QL_REQUIRE(!baseCurrency.empty(), "writeScenarioReport: baseCurrency must not be empty");
 
     LOG("Writing Scenario report");
 
@@ -812,6 +815,7 @@ void ReportWriter::writeScenarioReport(ore::data::Report& report,
     report.addColumn("Factor", string());
     report.addColumn("Up/Down", string());
     report.addColumn("Base NPV", double(), 2);
+    report.addColumn("Base Currency", string());
     report.addColumn("ShiftSize_1", double(), 6);
     report.addColumn("ShiftSize_2", double(), 6);
     report.addColumn("Scenario NPV", double(), 2);
@@ -841,6 +845,8 @@ void ReportWriter::writeScenarioReport(ore::data::Report& report,
                     report.add(prettyPrintInternalCurveName(scenarioDescription.factors()));
                     report.add(scenarioDescription.typeString());
                     report.add(baseNpv);
+                    // baseCurrency is constant across all rows: NPVs in the cube are in the simulation base currency
+                    report.add(baseCurrency);
                     report.add(shift1);
                     report.add(shift2);
                     report.add(scenarioNpv);
@@ -1380,7 +1386,7 @@ void ReportWriter::writeCube(ore::data::Report& report, const QuantLib::ext::sha
             .add(static_cast<Size>(0))
             .add(cube->getT0(i));
     }
-    
+
     // Cube
     for (Size i = 0; i < ids.size(); i++) {
         for (Size j = 0; j < cube->numDates(); j++) {
@@ -1592,7 +1598,7 @@ void ReportWriter::writeSIMMData(const ore::analytics::Crif& simmData, const Qua
             break;
         }
     }
-        
+
     // netting set headers
     dataReport->addColumn("Portfolio", string());
     if (hasNettingSetDetails) {
@@ -1625,11 +1631,11 @@ void ReportWriter::writeSIMMData(const ore::analytics::Crif& simmData, const Qua
         // Skip Schedule IM records
         if (cr.imModel == CrifRecord::IMModel::Schedule)
             continue;
-        
+
         // Skip if the CRIF Record type is not SIMM
         if (cr.type() != CrifRecord::RecordType::SIMM)
             continue;
-        
+
         // Same check as above, but for backwards compatibility, if im_model is not used
         // but Risk::Type is PV or Notional
         if (cr.imModel == CrifRecord::IMModel::Empty &&
@@ -2208,7 +2214,7 @@ void ReportWriter::writeIMScheduleTradeReport(const map<string, vector<IMSchedul
             }
             string collectRegsString = escapeCommaSeparatedList(regulationsToString(tradeData.collectRegulations), '\0');
             string postRegsString = escapeCommaSeparatedList(regulationsToString(tradeData.postRegulations), '\0');
-            
+
             report->add(to_string(tradeData.productClass))
                 .add(to_string(tradeData.endDate))
                 .add(tradeData.maturity)
@@ -2232,7 +2238,7 @@ void ReportWriter::writeIMScheduleTradeReport(const map<string, vector<IMSchedul
     LOG("IM Schedule trade results report written.");
 }
 
-Real aggregateTradeFlow(const std::string& tradeId, const Date& d0, const Date& d1, 
+Real aggregateTradeFlow(const std::string& tradeId, const Date& d0, const Date& d1,
             const ext::shared_ptr<InMemoryReport>& cashFlowReport,
             const ext::shared_ptr<ore::data::Market>& market, const std::string& configuration,
             const std::string& baseCurrency)  {
@@ -2258,9 +2264,9 @@ Real aggregateTradeFlow(const std::string& tradeId, const Date& d0, const Date& 
     Real fx = 1.0;
     if (ccy != baseCurrency)
         fx = market->fxRate(ccy + baseCurrency, configuration)->value();
-    flow += fx * amount; 
+    flow += fx * amount;
     }
-    
+
     return flow;
 }
 
@@ -2277,7 +2283,7 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
             const ext::shared_ptr<ore::data::Market>& market,
             const std::string& configuration,
             const ext::shared_ptr<Portfolio>& portfolio) {
-  
+
     LOG("PnL report");
 
     report.addColumn("TradeId", string())
@@ -2311,7 +2317,7 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
     Size maturityTimeColumn = 3;
     Size npvBaseColumn = 6;
     Size baseCcyColumn = 7;
-    
+
     // t0 NPV = NPV(t0;m0;p0)
     QL_REQUIRE(t0NpvReport->rows() == t0m1p0NpvReport->rows(), "different number of rows in npv reports");
     QL_REQUIRE(t0NpvReport->rows() == t1m0p0NpvReport->rows(), "different number of rows in npv reports");
@@ -2382,7 +2388,7 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
             auto it = t1IdMap.find(tradeId);
             Real t1m0p1Npv = it == t1IdMap.end() ? 0.0 : boost::get<Real>(t1m0p1NpvReport->data(npvBaseColumn, it->second));
             Real t1m1p1Npv = it == t1IdMap.end() ? 0.0 : boost::get<Real>(t1m1p1NpvReport->data(npvBaseColumn, it->second));
-            
+
             Real tradeChangePnl = t1m1p1Npv - t1m1p0Npv;
             Real hypotheticalCleanPnl = t0m1p0Npv - t0Npv;
             Real periodFlow = aggregateTradeFlow(tradeId, startDate, endDate, t0CashFlowReport, market, configuration, baseCurrency);
@@ -2394,7 +2400,7 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
             Real dirtyPnl = t1m1p1Npv - t0Npv;
             Real cleanPnl = dirtyPnl + periodFlow;
             LOG("PnL report, writing line " << i << " tradeId " << tradeId);
-        
+
             report.next()
                 .add(tradeId)
                 .add(tradeType)
@@ -2422,7 +2428,7 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
                 .add(ccy);
 
         } catch (std::exception& e) {
-          ALOG("Error writing PnL report line: " << e.what()); 
+          ALOG("Error writing PnL report line: " << e.what());
         }
     }
 
@@ -2557,7 +2563,7 @@ void ReportWriter::writeXvaExplainSummary(ore::data::Report& report, const ore::
         ALOG("Error during xva explain report generation, got " << e.what());
     }
 }
-  
+
 void ReportWriter::writeXmlReport(ore::data::Report& report, std::string header, std::string xml) {
     report.addColumn(header, string());
     report.next().add(xml);
