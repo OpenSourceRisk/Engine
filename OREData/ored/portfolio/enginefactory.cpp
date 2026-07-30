@@ -233,8 +233,17 @@ QuantLib::ext::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tr
     if (auto db = QuantLib::ext::dynamic_pointer_cast<DelegatingEngineBuilder>(builder))
         effectiveTradeType = db->effectiveTradeType();
 
-    auto modelParams = engineData_->modelParameters(effectiveTradeType);
-    auto engineParams = engineData_->engineParameters(effectiveTradeType);
+    std::map<std::string, std::string> modelParams;
+    std::map<std::string, std::string> engineParams;
+    if (ed.hasModelParams(effectiveTradeType))
+        modelParams = ed.modelParameters(effectiveTradeType);
+    else
+        modelParams = engineData_->modelParameters(effectiveTradeType);
+
+    if (ed.hasEngineParams(effectiveTradeType))
+        engineParams = ed.engineParameters(effectiveTradeType);
+    else
+        engineParams = engineData_->engineParameters(effectiveTradeType);
 
     for (auto const& p : modelParameterOverrides_) {
         if (p.applies(effectiveTradeType)) {

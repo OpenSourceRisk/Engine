@@ -1921,9 +1921,9 @@ void YieldCurve::buildFittedBondCurve(const std::size_t index) {
     // the pricing engine here is _not_ used during the curve fitting, for this a local engine is
     // set up within FittedBondDiscountCurve
     auto engineData = QuantLib::ext::make_shared<EngineData>();
-    engineData->model("Bond") = "DiscountedCashflows";
-    engineData->engine("Bond") = "DiscountingRiskyBondEngine";
-    engineData->engineParameters("Bond") = {{"TimestepPeriod", "6M"}};
+    engineData->setModel("Bond", "DiscountedCashflows");
+    engineData->setEngine("Bond", "DiscountingRiskyBondEngine");
+    engineData->setEngineParameters("Bond", {{"TimestepPeriod", "6M"}});
 
     std::map<std::string, Handle<YieldTermStructure>> iborCurveMapping;
     for (auto const& c : curveSegment->indexCurves()) {

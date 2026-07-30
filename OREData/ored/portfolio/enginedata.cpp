@@ -126,6 +126,17 @@ bool EngineData::hasProduct(const std::string& productName) const {
            (model_.find(productName) != model_.end());
 }
 
+bool EngineData::hasModelParams(const std::string& productName) const {
+    return (engineDataOverride_ && engineDataOverride_->hasModelParams(productName)) ||
+           (modelParams_.find(productName) != modelParams_.end());
+}
+
+bool EngineData::hasEngineParams(const std::string& productName) const {
+    return (engineDataOverride_ && engineDataOverride_->hasEngineParams(productName)) ||
+           (engineParams_.find(productName) != engineParams_.end());
+}
+
+
 vector<string> EngineData::products() const {
     vector<string> res;
     for (auto it : model_)

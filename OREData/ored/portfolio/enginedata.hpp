@@ -53,6 +53,8 @@ public:
     //! \name Inspectors
     //@{
     bool hasProduct(const string& productName) const;
+    bool hasModelParams(const string& productName) const;
+    bool hasEngineParams(const string& productName) const;
     const string& model(const string& productName) const {
         if (engineDataOverride_ && engineDataOverride_->hasProduct(productName))
             return engineDataOverride_->model(productName);
