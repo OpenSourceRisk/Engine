@@ -94,7 +94,8 @@ void PricingAnalyticImpl::runAnalytic(
     CONSOLE("OK");
 
     CONSOLEW("Pricing: Build Portfolio");
-    analytic()->buildPortfolio();
+    if(requiresPortfolio)
+        analytic()->buildPortfolio();
     CONSOLE("OK");
 
     // Check coverage

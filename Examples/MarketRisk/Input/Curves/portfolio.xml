@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <Portfolio>
-  <Trade id="SwapLeg">
+  <!-- <Trade id="SwapLeg">
     <TradeType>Swap</TradeType>
     <Envelope>
       <CounterParty>CPTY</CounterParty>
@@ -38,5 +38,5 @@
         </ScheduleData>
       </LegData>
     </SwapData>
-  </Trade>
+  </Trade> -->
 </Portfolio>
