@@ -37,11 +37,11 @@ Instrument Coverage and Pricing:
 Market Data:
 
 - breaking change: overnight index future market datum label to use contract month
+- support contract month codes in money market and overnight interest rate futures
 - add market calibration report for default curves
-- udpate ILS calendar
+- update ILS calendar
 - support intraday power curves
 - add logCubic interpolation in scenario sim market
-- support contract month codes in money market and overnight interest rate futures
 
 Interfaces and Reports:
 
