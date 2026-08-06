@@ -95,18 +95,31 @@ public:
 } // namespace data
 } // namespace ore
 
+%shared_ptr(ore::data::FxData)
+%nodefaultctor ore::data::FxData;
+namespace ore {
+namespace data {
+class FxData {
+public:
+    virtual ~FxData();
+    const std::string& foreignCcy() const;
+    const std::string& domesticCcy() const;
+};
+
+} // namespace data
+} // namespace ore
+
+
 %shared_ptr(ore::data::FxBsData)
 namespace ore {
 namespace data {
-class FxBsData {
+class FxBsData : public FxData {
 public:
     FxBsData();
     FxBsData(std::string foreignCcy, std::string domesticCcy, ore::data::CalibrationType calibrationType, bool calibrateSigma,
              ore::data::ParamType sigmaType, const std::vector<QuantLib::Time>& sigmaTimes, const std::vector<QuantLib::Real>& sigmaValues,
              std::vector<std::string> optionExpiries = std::vector<std::string>(),
              std::vector<std::string> optionStrikes = std::vector<std::string>());
-    const std::string& foreignCcy() const;
-    const std::string& domesticCcy() const;
 };
 
 } // namespace data
