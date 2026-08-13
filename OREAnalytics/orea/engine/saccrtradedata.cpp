@@ -1654,17 +1654,29 @@ string SaccrTradeData::Impl::getBucket(const Contribution& contribution) const {
             bucket = "";
 
     } else if (assetClass == AssetClass::Credit) {
-        // For single name: SubAsset Class for Credit Single Name, e.g., AAA, AA...IG
-        // For index: Concatenation of �Index -� and SubAsset Class, e.g., Index - IG, Index - SG
-        // TODO
-        /// SNRFOR -> IG, AAA-A
-        // PREFT1 -> IG, A, BBB
-        // SECDOM -> SG, BB, B
-        // SUBL2 -> SG, B-CCC
+        // Credit sub-asset class drives the supervisory factor (Basel CRE52.44):
+        //   single name -> rating (AAA, AA, A, BBB, BB, B, CCC)
+        //   index       -> "Index-IG" or "Index-SG"
+        // The rating is sourced from the SIMM bucket mapper (RiskType CreditQ)
+        // if a mapping is configured for the reference-entity qualifier, else we
+        // fall back to the investment-grade default.
+        string quality;
+        auto td = tradeData_.lock();
+        if (td && td->bucketMapper()) {
+            try {
+                if (td->bucketMapper()->hasBuckets(RiskType::CreditQ))
+                    quality = td->bucketMapper()->bucket(RiskType::CreditQ,
+                                                         contribution.underlyingData.qualifier);
+            } catch (...) {
+                quality = "";
+            }
+        }
         if (contribution.underlyingData.isIndex) {
-            bucket = "Index-IG"; // "Index-SG"
+            // investment grade unless the mapped quality is a speculative rating
+            static const std::set<string> sg = {"BB", "B", "CCC", "SG"};
+            bucket = sg.count(quality) ? "Index-SG" : "Index-IG";
         } else {
-            bucket = "IG";
+            bucket = quality.empty() ? "IG" : quality;
         }
     } else if (assetClass == AssetClass::Commodity) {
         // TODO: SubAsset Class for Commodity - same as hedgingSet in many cases, but not always, e.g. HS=Energy,

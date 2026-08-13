@@ -86,6 +86,24 @@ SaccrTradeData::AssetClass riskTypeToAssetClass(const RiskType& rt) {
     }
 }
 
+// Basel CRE52.44 credit supervisory factors. Single-name factors are keyed by
+// the reference-entity rating; if no rating is available the investment-grade
+// default (BBB, the weakest IG rating) is used. Index factors distinguish
+// investment grade from speculative grade.
+Real creditSupervisoryFactor(const std::string& ratingBucket, bool isIndex) {
+    static const std::map<std::string, Real> singleName = {
+        {"AAA", 0.0038}, {"AA", 0.0038}, {"A", 0.0042}, {"BBB", 0.0054},
+        {"BB", 0.0106},  {"B", 0.0160},  {"CCC", 0.0600},
+        {"IG", 0.0054},  {"SG", 0.0106}};
+    if (isIndex) {
+        // ratingBucket is "Index-IG" / "Index-SG" (or a raw rating as fallback)
+        static const std::set<std::string> sg = {"Index-SG", "SG", "BB", "B", "CCC"};
+        return sg.count(ratingBucket) ? 0.0106 : 0.0038;
+    }
+    auto it = singleName.find(ratingBucket);
+    return it != singleName.end() ? it->second : 0.0054; // default: IG (BBB)
+}
+
 } // namespace
 
 namespace ore {
@@ -107,6 +125,7 @@ void SaccrCalculator::clear() {
     addOnHedgingSet_.clear();
     nettingSets_.clear();
     isIndex_.clear();
+    creditQuality_.clear();
     basisHedgingSets_.clear();
     volatilityHedgingSets_.clear();
 }
@@ -217,6 +236,10 @@ void SaccrCalculator::processCrifRecord(const CrifRecord& record) {
             isIndex_[record.qualifier] = true;
         else if (record.riskType == RiskType::EQ_SN || record.riskType == RiskType::CR_SN)
             isIndex_[record.qualifier] = false;
+
+        // capture the credit rating sub-asset class (bucket) for the credit SF
+        if (record.riskType == RiskType::CR_SN || record.riskType == RiskType::CR_IX)
+            creditQuality_[record.qualifier] = record.bucket;
 
         tradeAssetClasses_[record.tradeId] = assetClass;
         assetClasses_[record.nettingSetDetails].insert(assetClass);
@@ -335,7 +358,31 @@ void SaccrCalculator::aggregate() {
             }
             addOnHedgingSet_[it->first] = std::sqrt(addonType * addonType + addonTypeSquared);
         } else if (assetClass == AssetClass::Credit) {
-            // TODO
+            // Basel SA-CCR credit add-on (CRE52.42-52.51). The single credit
+            // hedging set aggregates reference-entity effective notionals via a
+            // systematic/idiosyncratic decomposition:
+            //   AddOn = sqrt( (sum_k rho_k SF_k EN_k)^2
+            //                 + sum_k (1 - rho_k^2) (SF_k EN_k)^2 )
+            // with the supervisory factor SF keyed by the reference-entity
+            // rating (single name) or IG/SG (index), and correlation rho =
+            // 0.50 (single name) / 0.80 (index).
+            Real systematic = 0;
+            Real idiosyncratic = 0;
+            for (const auto& [hedgingSubsetKey, effectiveNotional] : subsetEffectiveNotional_) {
+                string hedgingSubset = std::get<3>(hedgingSubsetKey);
+                HedgingSetKey hedgingSetKey(std::get<0>(hedgingSubsetKey),
+                                            std::get<1>(hedgingSubsetKey),
+                                            std::get<2>(hedgingSubsetKey));
+                if (hedgingSetKey != it->first)
+                    continue;
+                bool isCreditIndex = isIndex_[hedgingSubset];
+                Real supervisoryFactor = creditSupervisoryFactor(creditQuality_[hedgingSubset], isCreditIndex);
+                Real corr = isCreditIndex ? 0.8 : 0.5;
+                Real tmp = supervisoryFactor * effectiveNotional;
+                systematic += corr * tmp;
+                idiosyncratic += (1 - corr * corr) * tmp * tmp;
+            }
+            addOnHedgingSet_[it->first] = std::sqrt(systematic * systematic + idiosyncratic);
         } else
             QL_FAIL("asset class " << assetClass << " not covered");
 
