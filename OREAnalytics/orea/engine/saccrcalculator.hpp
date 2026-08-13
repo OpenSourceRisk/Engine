@@ -148,6 +148,8 @@ private:
     map<HedgingSetKey, Real> effectiveNotional_;
     map<HedgingSubsetKey, Real> subsetEffectiveNotional_;
     map<string, bool> isIndex_;
+    // reference-entity credit rating bucket per qualifier (SA-CCR credit SF)
+    map<string, string> creditQuality_;
 
     vector<NettingSetDetails> nettingSetDetails_;
     map<NettingSetDetails, std::set<SaccrTradeData::AssetClass>> assetClasses_;
