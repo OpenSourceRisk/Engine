@@ -23,6 +23,18 @@
 #include <ql/optional.hpp>
 %}
 
+// SWIG registers its smart-pointer machinery under the bare namespace `ext`:
+// QuantLib-SWIG's common.i sets SWIG_SHARED_PTR_NAMESPACE to `ext`, and the C++
+// alias `namespace ext = QuantLib::ext` it relies on lives inside a %{ %} block
+// that the SWIG parser never sees.  A declaration spelled
+// `QuantLib::ext::shared_ptr<T>` is therefore registered as a type distinct from
+// `ext::shared_ptr<T>` and is wrapped as an opaque pointer instead of a proper
+// proxy, so a value produced by one spelling cannot be passed to the other -- for
+// example OREApp::getCube() to InputParameters::setCube().  Declaring the alias
+// where SWIG can see it collapses both spellings onto the same wrapped type.
+// See https://github.com/OpenSourceRisk/Engine/issues/351
+namespace QuantLib { namespace ext = ::ext; }
+
 
 #if defined(SWIGPYTHON)
 %typemap(in) boost::optional<bool> %{
