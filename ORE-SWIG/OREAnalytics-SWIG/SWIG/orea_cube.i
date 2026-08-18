@@ -33,6 +33,15 @@
 %shared_ptr(ore::analytics::InMemoryCubeOpt<double>);
 %shared_ptr(ore::analytics::JointNPVCube)
 
+// getT0/get carry a default argument on their pure-virtual declarations.
+// compactdefaultargs (on base and overrides alike, so SWIG's abstract check
+// keeps matching them up) generates wrappers that fill the default and call
+// C++ with the full argument list; see the comment at InMemoryCubeOpt.
+%feature("compactdefaultargs") ore::analytics::NPVCube::getT0;
+%feature("compactdefaultargs") ore::analytics::NPVCube::get;
+%feature("compactdefaultargs") ore::analytics::InMemoryCubeOpt::getT0;
+%feature("compactdefaultargs") ore::analytics::InMemoryCubeOpt::get;
+
 namespace ore {
 namespace analytics {
 class NPVCube {
@@ -107,24 +116,39 @@ public:
     }
 };
 
+// The overrides below must repeat the exact spelling of the NPVCube
+// declarations above, or SWIG treats the base's pure virtuals as
+// unimplemented and marks the instantiations abstract, dropping their
+// constructors.  Two aspects matter: the parameter types have to be the
+// bare `Size`/`Real` (the `using QuantLib::Size` that would resolve the
+// qualified spelling sits inside a %{ %} block the SWIG parser never
+// sees), and getT0/get have to carry the base's default argument, because
+// SWIG expands a pure virtual with a default into one required signature
+// per arity.
+// The compactdefaultargs feature declared above the namespace completes
+// the picture: it makes the generated wrappers fill the default themselves
+// and always call C++ with the full argument list.  Without it SWIG emits a
+// reduced-arity call like cube->getT0(i), which does not compile: the C++
+// overrides do not repeat the base's default, and default arguments are
+// resolved against the static type.
 template <typename T> class InMemoryCubeOpt : public ore::analytics::NPVCube {
 public:
     InMemoryCubeOpt(const QuantLib::Date& asof, const std::set<std::string>& ids,
-                    const std::vector<QuantLib::Date>& dates, QuantLib::Size samples, const T& t = T());
+                    const std::vector<QuantLib::Date>& dates, Size samples, const T& t = T());
     InMemoryCubeOpt(const QuantLib::Date& asof, const std::set<std::string>& ids,
-                    const std::vector<QuantLib::Date>& dates, QuantLib::Size samples, QuantLib::Size depth,
+                    const std::vector<QuantLib::Date>& dates, Size samples, Size depth,
                     const T& t = T());
-    QuantLib::Size numIds() const override;
-    QuantLib::Size numDates() const override;
-    QuantLib::Size samples() const override;
-    QuantLib::Size depth() const override;
-    const std::map<std::string, QuantLib::Size>& idsAndIndexes() const override;
+    Size numIds() const override;
+    Size numDates() const override;
+    Size samples() const override;
+    Size depth() const override;
+    const std::map<std::string, Size>& idsAndIndexes() const override;
     const std::vector<QuantLib::Date>& dates() const override;
     QuantLib::Date asof() const override;
-    QuantLib::Real getT0(QuantLib::Size i, QuantLib::Size d) const override;
-    void setT0(QuantLib::Real value, QuantLib::Size i, QuantLib::Size d) override;
-    QuantLib::Real get(QuantLib::Size i, QuantLib::Size j, QuantLib::Size k, QuantLib::Size d) const override;
-    void set(QuantLib::Real value, QuantLib::Size i, QuantLib::Size j, QuantLib::Size k, QuantLib::Size d) override;
+    Real getT0(Size i, Size d = 0) const override;
+    void setT0(Real value, Size i, Size d) override;
+    Real get(Size i, Size j, Size k, Size d = 0) const override;
+    void set(Real value, Size i, Size j, Size k, Size d) override;
 };
 
 } // namespace analytics
