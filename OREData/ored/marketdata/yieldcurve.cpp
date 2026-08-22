@@ -1306,15 +1306,11 @@ void YieldCurve::buildZeroSpreadedCurve(const std::size_t index) {
 
     QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
 
-    // Fill a vector of zero spread quotes.
-    vector<QuantLib::ext::shared_ptr<ZeroQuote>> quotes;
     QuantLib::ext::shared_ptr<ZeroSpreadedYieldCurveSegment> segment =
         QuantLib::ext::dynamic_pointer_cast<ZeroSpreadedYieldCurveSegment>(curveSegments_[index][0]);
     auto quoteIDs = segment->quotes();
 
     Date today = Settings::instance().evaluationDate();
-    vector<Date> dates;
-    vector<Handle<Quote>> quoteHandles;
 
     vector<string> quotesVector;
     quotesVector.reserve(quoteIDs.size());
@@ -1331,6 +1327,9 @@ void YieldCurve::buildZeroSpreadedCurve(const std::size_t index) {
         }
     }
 
+    vector<pair<Date, Handle<Quote>>> nodes;
+    nodes.reserve(marketData.size());
+
     // process market data
     for (const auto& marketQuote : marketData) {
         QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::ZERO,
@@ -1345,13 +1344,23 @@ void YieldCurve::buildZeroSpreadedCurve(const std::size_t index) {
             if (it == quoteIDs.end())
                 continue;
         }
-        quotes.push_back(zeroQuote);
-        dates.push_back(zeroQuote->tenorBased() ? today + zeroQuote->tenor() : zeroQuote->date());
-        quoteHandles.push_back(zeroQuote->quote());
+        nodes.emplace_back(zeroQuote->tenorBased() ? today + zeroQuote->tenor() : zeroQuote->date(),
+                           zeroQuote->quote());
     }
 
-    QL_REQUIRE(!quotes.empty(),
+    QL_REQUIRE(!nodes.empty(),
                "Cannot build curve with spec " << curveSpec_[index]->name() << " because there are no spread quotes");
+
+    std::sort(nodes.begin(), nodes.end(), [](const auto& lhs, const auto& rhs) { return lhs.first < rhs.first; });
+
+    vector<Date> dates;
+    vector<Handle<Quote>> quoteHandles;
+    dates.reserve(nodes.size());
+    quoteHandles.reserve(nodes.size());
+    for (auto& [date, quote] : nodes) {
+        dates.emplace_back(date);
+        quoteHandles.emplace_back(std::move(quote));
+    }
 
     string referenceCurveID = segment->referenceCurveID();
     QuantLib::Handle<YieldTermStructure> referenceCurve;
