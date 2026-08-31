@@ -6,6 +6,7 @@ cube.cpp
 historicalscenariogenerator.cpp
 nettedexpsoure.cpp
 observationmode.cpp
+outputparameters.cpp
 parsensitivityanalysis.cpp
 parsensitivityanalysismanual.cpp
 saccr.cpp
