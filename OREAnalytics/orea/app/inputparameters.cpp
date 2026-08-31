@@ -943,9 +943,24 @@ OutputParameters::OutputParameters(const ext::shared_ptr<Parameters>& params) {
     stressZeroScenarioDataFileName_ = params->getString("stress", "stressZeroScenarioDataFile", false);
     xvaStressTestFileName_ = params->getString("xvaStress", "scenarioOutputFile", false);
     sensitivityStressTestFileName_ = params->getString("sensitivityStress", "scenarioOutputFile", false);
-    varFileName_ = params->getString("parametricVar", "outputFile", false);
-    if (varFileName_.empty())
-        varFileName_ = params->getString("historicalSimulationVar", "outputFile", false);
+    std::string parametricVarOutputFileName = params->getString("parametricVar", "outputFile", false);
+    std::string historicalSimulationVarOutputFileName =
+        params->getString("historicalSimulationVar", "outputFile", false);
+    std::string parametricVarActive = params->getString("parametricVar", "active", false);
+    std::string historicalSimulationVarActive = params->getString("historicalSimulationVar", "active", false);
+    bool bothVarActiveFlagsProvided = !parametricVarActive.empty() && !historicalSimulationVarActive.empty();
+    bool parametricVarIsActive = bothVarActiveFlagsProvided && parseBool(parametricVarActive);
+    bool historicalSimulationVarIsActive = bothVarActiveFlagsProvided && parseBool(historicalSimulationVarActive);
+
+    // If exactly one VaR analytic is active, use its configured output file.
+    // Otherwise retain the historical parametric-first fallback for ambiguous or legacy inputs.
+    if (bothVarActiveFlagsProvided && parametricVarIsActive != historicalSimulationVarIsActive) {
+        varFileName_ = parametricVarIsActive ? parametricVarOutputFileName : historicalSimulationVarOutputFileName;
+    } else {
+        varFileName_ = parametricVarOutputFileName;
+        if (varFileName_.empty())
+            varFileName_ = historicalSimulationVarOutputFileName;
+    }
     parConversionOutputFileName_ = params->getString("zeroToParSensiConversion", "outputFile", false);
     parConversionJacobiFileName_ = params->getString("zeroToParSensiConversion", "jacobiOutputFile", false);
     parConversionJacobiInverseFileName_ = params->getString("zeroToParSensiConversion", "jacobiInverseOutputFile", false);
