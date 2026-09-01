@@ -34,10 +34,10 @@ public:
                                const std::vector<Period>& swapTenors,
                                const std::vector<Real>& strikeSpreads,
                                const std::vector<std::vector<Handle<Quote>>>& volSpreads,
-                               const QuantLib::ext::shared_ptr<SwapIndex>& baseSwapIndexBase = nullptr,
-                               const QuantLib::ext::shared_ptr<SwapIndex>& baseShortSwapIndexBase = nullptr,
-                               const QuantLib::ext::shared_ptr<SwapIndex>& simulatedSwapIndexBase = nullptr,
-                               const QuantLib::ext::shared_ptr<SwapIndex>& simulatedShortSwapIndexBase = nullptr,
+                               const ext::shared_ptr<SwapIndex>& baseSwapIndexBase = nullptr,
+                               const ext::shared_ptr<SwapIndex>& baseShortSwapIndexBase = nullptr,
+                               const ext::shared_ptr<SwapIndex>& simulatedSwapIndexBase = nullptr,
+                               const ext::shared_ptr<SwapIndex>& simulatedShortSwapIndexBase = nullptr,
                                const bool stickyAbsMoney = false);
     const Handle<SwaptionVolatilityStructure>& baseVol();
 };

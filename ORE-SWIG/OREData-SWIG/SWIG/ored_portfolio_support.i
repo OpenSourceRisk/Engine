@@ -42,7 +42,6 @@ using ore::data::CommodityPositionData;
 using ore::data::EquityPositionData;
 using ore::data::EquityOptionUnderlyingData;
 using ore::data::EquityOptionPositionData;
-using ore::data::TreasuryLockData;
 using ore::data::TrancheData;
 using ore::data::RangeBound;
 using ore::data::BasicUnderlying;
@@ -71,7 +70,6 @@ using ore::data::StructuredTradeErrorMessage;
 using ore::data::StructuredTradeWarningMessage;
 %}
 
-%template(NettingSetDetailsVector) std::vector<ore::data::NettingSetDetails>;
 %template(TradeActionVector) std::vector<ext::shared_ptr<ore::data::TradeAction>>;
 %template(BondUnderlyingVector) std::vector<ext::shared_ptr<ore::data::BondUnderlying>>;
 %template(CommodityUnderlyingVector) std::vector<ext::shared_ptr<ore::data::CommodityUnderlying>>;
@@ -101,7 +99,6 @@ using ore::data::StructuredTradeWarningMessage;
 %shared_ptr(ore::data::EquityPositionData)
 %shared_ptr(ore::data::EquityOptionUnderlyingData)
 %shared_ptr(ore::data::EquityOptionPositionData)
-%shared_ptr(ore::data::TreasuryLockData)
 %shared_ptr(ore::data::TrancheData)
 %shared_ptr(ore::data::RangeBound)
 %shared_ptr(ore::data::BasicUnderlying)
@@ -128,6 +125,8 @@ using ore::data::StructuredTradeWarningMessage;
 %shared_ptr(ore::data::StructuredConfigurationWarningMessage)
 %shared_ptr(ore::data::StructuredTradeErrorMessage)
 %shared_ptr(ore::data::StructuredTradeWarningMessage)
+
+%template(NettingSetDetailsVector) std::vector<ore::data::NettingSetDetails>;
 
 namespace ore {
 namespace data {
@@ -236,7 +235,7 @@ public:
     const std::string& nettingSetId() const;
     const NettingSetDetails nettingSetDetails() const;
     bool activeCsaFlag() const;
-    const QuantLib::ext::shared_ptr<CSA>& csaDetails();
+    const ext::shared_ptr<CSA>& csaDetails();
 };
 
 class NettingSetManager : public XMLSerializable {
@@ -248,9 +247,9 @@ public:
     const std::set<NettingSetDetails> calculateIMNettingSets() const;
     bool has(const std::string& id) const;
     bool has(const NettingSetDetails& nettingSetDetails) const;
-    void add(const QuantLib::ext::shared_ptr<NettingSetDefinition>& nettingSet) const;
-    QuantLib::ext::shared_ptr<NettingSetDefinition> get(const std::string& id) const;
-    QuantLib::ext::shared_ptr<NettingSetDefinition> get(const NettingSetDetails& nettingSetDetails) const;
+    void add(const ext::shared_ptr<NettingSetDefinition>& nettingSet) const;
+    ext::shared_ptr<NettingSetDefinition> get(const std::string& id) const;
+    ext::shared_ptr<NettingSetDefinition> get(const NettingSetDetails& nettingSetDetails) const;
     std::vector<NettingSetDetails> uniqueKeys() const;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
@@ -311,9 +310,9 @@ public:
     const bool empty();
     bool has(const std::string& nettingSetId) const;
     bool has(const NettingSetDetails& nettingSetDetails) const;
-    void add(const QuantLib::ext::shared_ptr<CollateralBalance>& cb, const bool overwrite = false);
-    const QuantLib::ext::shared_ptr<CollateralBalance>& get(const std::string& nettingSetId) const;
-    const QuantLib::ext::shared_ptr<CollateralBalance>& get(const NettingSetDetails& nettingSetDetails) const;
+    void add(const ext::shared_ptr<CollateralBalance>& cb, const bool overwrite = false);
+    const ext::shared_ptr<CollateralBalance>& get(const std::string& nettingSetId) const;
+    const ext::shared_ptr<CollateralBalance>& get(const NettingSetDetails& nettingSetDetails) const;
     void currentIM(const std::string& baseCurrency, std::map<std::string, QuantLib::Real>& currentIM);
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
@@ -356,12 +355,12 @@ public:
     void reset();
     const bool empty();
     bool has(std::string id) const;
-    void add(const QuantLib::ext::shared_ptr<CounterpartyInformation>& nettingSet);
+    void add(const ext::shared_ptr<CounterpartyInformation>& nettingSet);
     void addCorrelation(const std::string& cpty1, const std::string& cpty2,
                         QuantLib::Real correlation);
-    QuantLib::ext::shared_ptr<CounterpartyInformation> get(std::string id) const;
+    ext::shared_ptr<CounterpartyInformation> get(std::string id) const;
     std::vector<std::string> uniqueKeys() const;
-    const QuantLib::ext::shared_ptr<CounterpartyCorrelationMatrix>& counterpartyCorrelations() const;
+    const ext::shared_ptr<CounterpartyCorrelationMatrix>& counterpartyCorrelations() const;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
@@ -404,11 +403,11 @@ public:
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
     std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const;
+    underlyingIndices(const ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const;
     bool empty();
     void clear();
-    QuantLib::ext::shared_ptr<QuantExt::BondBasket>
-    build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+    ext::shared_ptr<QuantExt::BondBasket>
+    build(const ext::shared_ptr<EngineFactory>& engineFactory,
           const QuantLib::Currency& ccy, const std::string& reinvestmentEndDate);
 };
 
@@ -420,7 +419,7 @@ public:
     const std::vector<BondUnderlying>& underlyings() const;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
-    void populateFromBondBasketReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& ref);
+    void populateFromBondBasketReferenceData(const ext::shared_ptr<ReferenceDataManager>& ref);
 
     %extend {
         BondPositionData(const QuantLib::Real quantity,
@@ -490,43 +489,16 @@ public:
     }
 };
 
-class TreasuryLockData : public XMLSerializable {
-public:
-    TreasuryLockData();
-    TreasuryLockData(bool payer, const ore::data::BondData& bondData, QuantLib::Real referenceRate,
-                     std::string dayCounter, std::string terminationDate, int paymentGap,
-                     std::string paymentCalendar);
-    bool empty() const;
-    bool payer() const;
-    const ore::data::BondData& bondData() const;
-    const ore::data::BondData& originalBondData() const;
-    QuantLib::Real referenceRate() const;
-    const std::string& dayCounter() const;
-    const std::string& terminationDate() const;
-    int paymentGap() const;
-    const std::string& paymentCalendar() const;
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) const override;
-};
-%extend TreasuryLockData {
-    TreasuryLockData(bool payer, ore::data::BondData bondData, QuantLib::Real referenceRate,
-                     std::string dayCounter, std::string terminationDate, int paymentGap,
-                     std::string paymentCalendar) {
-        return new ore::data::TreasuryLockData(payer, bondData, referenceRate, dayCounter,
-                                               terminationDate, paymentGap, paymentCalendar);
-    }
-}
-
 class TrancheData : public XMLSerializable {
 public:
     TrancheData();
     TrancheData(const std::string& name, double icRatio, double ocRatio,
-                const QuantLib::ext::shared_ptr<LegAdditionalData>& concreteLegData);
+                const ext::shared_ptr<LegAdditionalData>& concreteLegData);
     const std::string name() const;
     double faceAmount();
     double icRatio();
     double ocRatio();
-    const QuantLib::ext::shared_ptr<LegAdditionalData> concreteLegData();
+    const ext::shared_ptr<LegAdditionalData> concreteLegData();
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
@@ -553,23 +525,6 @@ public:
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
-
-%pythoncode %{
-_treasury_lock_data_init = TreasuryLockData.__init__
-
-
-def _compat_treasury_lock_data_init(self, *args):
-    bond_data_type = globals().get('BondData')
-    if len(args) == 7 and bond_data_type is not None and isinstance(args[1], bond_data_type):
-        try:
-            return _treasury_lock_data_init(self, *args)
-        except TypeError:
-            return _treasury_lock_data_init(self)
-    return _treasury_lock_data_init(self, *args)
-
-
-TreasuryLockData.__init__ = _compat_treasury_lock_data_init
-%}
 
 // ore/OREData/ored/portfolio/underlying.hpp
 

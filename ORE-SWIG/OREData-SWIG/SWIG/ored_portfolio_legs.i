@@ -338,7 +338,7 @@ class DigitalCMSLegData : public LegAdditionalData {
 public:
     DigitalCMSLegData();
     DigitalCMSLegData(
-        const QuantLib::ext::shared_ptr<CMSLegData>& underlying,
+        const ext::shared_ptr<CMSLegData>& underlying,
         Position::Type callPosition = Position::Long,
         bool isCallATMIncluded = false,
         const std::vector<double> callStrikes = std::vector<double>(),
@@ -351,7 +351,7 @@ public:
         const std::vector<std::string> putStrikeDates = std::vector<std::string>(),
         const std::vector<double> putPayoffs = std::vector<double>(),
         const std::vector<std::string> putPayoffDates = std::vector<std::string>());
-    const QuantLib::ext::shared_ptr<CMSLegData>& underlying() const;
+    const ext::shared_ptr<CMSLegData>& underlying() const;
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
@@ -427,7 +427,7 @@ class DigitalCMSSpreadLegData : public LegAdditionalData {
 public:
   DigitalCMSSpreadLegData();
   DigitalCMSSpreadLegData(
-    const QuantLib::ext::shared_ptr<CMSSpreadLegData>& underlying, Position::Type callPosition = Position::Long,
+    const ext::shared_ptr<CMSSpreadLegData>& underlying, Position::Type callPosition = Position::Long,
     bool isCallATMIncluded = false, const std::vector<double> callStrikes = std::vector<double>(),
     const std::vector<std::string> callStrikeDates = std::vector<std::string>(), const std::vector<double> callPayoffs = std::vector<double>(),
     const std::vector<std::string> callPayoffDates = std::vector<std::string>(), Position::Type putPosition = Position::Long,
@@ -693,7 +693,7 @@ public:
 class EquityMarginLegData : public LegAdditionalData {
 public:
     EquityMarginLegData();
-    EquityMarginLegData(QuantLib::ext::shared_ptr<ore::data::EquityLegData>& equityLegData, const vector<double>& rates,
+    EquityMarginLegData(ext::shared_ptr<ore::data::EquityLegData>& equityLegData, const vector<double>& rates,
         const vector<string>& rateDates = vector<string>(), const double& initialMarginFactor = QuantExt::Null<double>(),
         const double& multiplier = QuantExt::Null<double>());
     virtual void fromXML(XMLNode* node) override;

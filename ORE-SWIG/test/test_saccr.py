@@ -220,21 +220,20 @@ class SaccrAnalyticConstructTest(unittest.TestCase):
     def test_saccrCalculator_callable_before_run(self) -> None:
         """saccrCalculator() is callable before the analytic has run.
 
-        The QuantLib-SWIG %shared_ptr typemap wraps null shared_ptrs as SWIG
-        objects (not Python None) — this tests the method is accessible and
+        The QuantLib-SWIG %shared_ptr typemap wraps null shared_ptrs as Python
+        None — this tests the method is accessible and
         doesn't raise on a fresh analytic instance.
         """
         analytic = ORE.SaccrAnalytic()
         # Calling the accessor must not raise
         result = analytic.saccrCalculator()
-        # Result is a SWIG-wrapped shared_ptr (not Python None in this SWIG build)
-        self.assertIsNotNone(result)
+        self.assertIsNone(result)
 
     def test_saccrTradeData_callable_before_run(self) -> None:
         """saccrTradeData() is callable before the analytic has run."""
         analytic = ORE.SaccrAnalytic()
         result = analytic.saccrTradeData()
-        self.assertIsNotNone(result)
+        self.assertIsNone(result)
 
 
 if __name__ == "__main__":

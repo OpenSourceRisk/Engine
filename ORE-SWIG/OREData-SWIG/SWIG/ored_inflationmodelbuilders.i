@@ -47,14 +47,14 @@ namespace data {
 class InfDkBuilder : public QuantExt::ModelBuilder {
 public:
     InfDkBuilder(
-        const QuantLib::ext::shared_ptr<ore::data::Market>& market,
-        const QuantLib::ext::shared_ptr<InfDkData>& data,
+        const ext::shared_ptr<ore::data::Market>& market,
+        const ext::shared_ptr<InfDkData>& data,
         const std::string& configuration = Market::defaultConfiguration,
         const std::string& referenceCalibrationGrid = "",
         const bool dontCalibrate = false);
 
     std::string infIndex();
-    std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> optionBasket() const;
+    std::vector<ext::shared_ptr<BlackCalibrationHelper>> optionBasket() const;
     void forceRecalculate() override;
     bool requiresRecalibration() const override;
     void setCalibrationDone() const;
@@ -72,8 +72,8 @@ namespace data {
 class InfJyBuilder : public QuantExt::ModelBuilder {
 public:
     InfJyBuilder(
-        const QuantLib::ext::shared_ptr<ore::data::Market>& market,
-        const QuantLib::ext::shared_ptr<InfJyData>& data,
+        const ext::shared_ptr<ore::data::Market>& market,
+        const ext::shared_ptr<InfJyData>& data,
         const std::string& configuration = Market::defaultConfiguration,
         const std::string& referenceCalibrationGrid = "",
         const bool donCalibrate = false);

@@ -85,9 +85,9 @@ class InterpolatedIborCoupon : public FloatingRateCoupon {
         const ext::shared_ptr<QuantLib::IborIndex>& iborIndex =
             nullptr);
 
-    QuantLib::ext::shared_ptr<QuantExt::InterpolatedIborIndex>
+    ext::shared_ptr<QuantExt::InterpolatedIborIndex>
     interpolatedIborIndex() const;
-    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& iborIndex() const;
+    const ext::shared_ptr<QuantLib::IborIndex>& iborIndex() const;
 
     // Explicitly re-declare key FloatingRateCoupon methods so they are
     // available in Python even in SWIG versions that miss the inheritance.
@@ -140,7 +140,7 @@ class BlackInterpolatedIborCouponPricer : public InterpolatedIborCouponPricer {
         const TimingAdjustment timingAdjustment = Black76,
         const QuantLib::Handle<QuantLib::Quote> correlation =
             QuantLib::Handle<QuantLib::Quote>(
-                QuantLib::ext::shared_ptr<QuantLib::Quote>(
+                ext::shared_ptr<QuantLib::Quote>(
                     new QuantLib::SimpleQuote(1.0))),
         QuantLib::ext::optional<bool> useIndexedCoupon =
             QuantLib::ext::nullopt);
@@ -292,7 +292,7 @@ class OvernightIndexedCouponBase : public FloatingRateCoupon {
     const QuantLib::Date& rateComputationEndDate() const;
     bool observationShift() const;
     bool hasLookback() const;
-    const QuantLib::ext::shared_ptr<QuantLib::OvernightIndex>& overnightIndex() const;
+    const ext::shared_ptr<QuantLib::OvernightIndex>& overnightIndex() const;
     bool canApplyTelescopic() const;
     bool telescopicDates() const;
     bool separateRateCompPeriod() const;

@@ -67,8 +67,8 @@ struct YieldCurveCalibrationInfo {
     std::vector<double> rateHelperQuoteErrors;
 
     %extend {
-        static QuantLib::ext::shared_ptr<ore::data::FittedBondCurveCalibrationInfo>
-        getFullView(const QuantLib::ext::shared_ptr<ore::data::YieldCurveCalibrationInfo>& base) {
+        static ext::shared_ptr<ore::data::FittedBondCurveCalibrationInfo>
+        getFullView(const ext::shared_ptr<ore::data::YieldCurveCalibrationInfo>& base) {
             return QuantLib::ext::dynamic_pointer_cast<ore::data::FittedBondCurveCalibrationInfo>(base);
         }
     }
@@ -123,9 +123,9 @@ public:
 %shared_ptr(ore::data::YieldCurve)
 %shared_ptr(ore::data::DefaultCurve)
 
-%template(YieldCurveSpecVector) std::vector<QuantLib::ext::shared_ptr<ore::data::YieldCurveSpec>>;
-%template(YieldCurveMap) std::map<std::string, QuantLib::ext::shared_ptr<ore::data::YieldCurve>>;
-%template(DefaultCurveMap) std::map<std::string, QuantLib::ext::shared_ptr<ore::data::DefaultCurve>>;
+%template(YieldCurveSpecVector) std::vector<ext::shared_ptr<ore::data::YieldCurveSpec>>;
+%template(YieldCurveMap) std::map<std::string, ext::shared_ptr<ore::data::YieldCurve>>;
+%template(DefaultCurveMap) std::map<std::string, ext::shared_ptr<ore::data::DefaultCurve>>;
 
 %nodefaultctor ore::data::YieldCurve;
 
@@ -141,10 +141,10 @@ public:
         //! use TodaysMarket for multi-curve scenarios.
         YieldCurve(
             const QuantLib::Date& asof,
-            const std::vector<QuantLib::ext::shared_ptr<ore::data::YieldCurveSpec>>& curveSpecs,
+            const std::vector<ext::shared_ptr<ore::data::YieldCurveSpec>>& curveSpecs,
             const ore::data::CurveConfigurations& curveConfigs,
             const ore::data::Loader& loader,
-            const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig =
+            const ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig =
                 QuantLib::ext::make_shared<ore::data::IborFallbackConfig>(
                     ore::data::IborFallbackConfig::defaultConfig()),
             bool buildCalibrationInfo = true) {
@@ -166,7 +166,7 @@ public:
     const QuantLib::Date& asofDate() const;
     const QuantLib::Handle<QuantLib::YieldTermStructure>&
         handle(const std::string& specName = std::string()) const;
-    QuantLib::ext::shared_ptr<ore::data::YieldCurveCalibrationInfo>
+    ext::shared_ptr<ore::data::YieldCurveCalibrationInfo>
         calibrationInfo(const std::string& specName = std::string()) const;
 };
 
@@ -188,16 +188,16 @@ public:
             const ore::data::DefaultCurveSpec& spec,
             const ore::data::Loader& loader,
             const ore::data::CurveConfigurations& curveConfigs,
-            const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr) {
-            std::map<std::string, QuantLib::ext::shared_ptr<ore::data::YieldCurve>> yieldCurves;
-            std::map<std::string, QuantLib::ext::shared_ptr<ore::data::DefaultCurve>> defaultCurves;
+            const ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr) {
+            std::map<std::string, ext::shared_ptr<ore::data::YieldCurve>> yieldCurves;
+            std::map<std::string, ext::shared_ptr<ore::data::DefaultCurve>> defaultCurves;
             return new ore::data::DefaultCurve(asof, spec, loader, curveConfigs,
                                                yieldCurves, defaultCurves, referenceData);
         }
     }
 
     const ore::data::DefaultCurveSpec& spec() const;
-    const QuantLib::ext::shared_ptr<QuantExt::CreditCurve>& creditCurve() const;
+    const ext::shared_ptr<QuantExt::CreditCurve>& creditCurve() const;
     QuantLib::Real recoveryRate();
 };
 

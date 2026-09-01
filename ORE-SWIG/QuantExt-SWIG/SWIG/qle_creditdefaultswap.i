@@ -27,7 +27,7 @@
 %include creditdefaultswap.i
 
 %{
-static QuantLib::ext::shared_ptr<QuantLib::Exercise> qleCloneExercise(const QuantLib::Exercise& exercise) {
+static ext::shared_ptr<QuantLib::Exercise> qleCloneExercise(const QuantLib::Exercise& exercise) {
   switch (exercise.type()) {
   case QuantLib::Exercise::American: {
     const auto& dates = exercise.dates();
@@ -53,11 +53,11 @@ namespace QuantExt {
 class CdsOption : public Instrument {
   public:
     enum StrikeType { Price, Spread };
-    CdsOption(const QuantLib::ext::shared_ptr<QuantLib::CreditDefaultSwap> swap,
-	      const QuantLib::ext::shared_ptr<QuantLib::Exercise>& exercise,
+    CdsOption(const ext::shared_ptr<QuantLib::CreditDefaultSwap> swap,
+	      const ext::shared_ptr<QuantLib::Exercise>& exercise,
 	      bool knocksOut = true, const QuantLib::Real strike = Null<Real>(),
               const QuantExt::CdsOption::StrikeType strikeType = QuantExt::CdsOption::StrikeType::Spread);
-    const QuantLib::ext::shared_ptr<QuantLib::CreditDefaultSwap> underlyingSwap() const;
+    const ext::shared_ptr<QuantLib::CreditDefaultSwap> underlyingSwap() const;
     QuantLib::Rate atmRate() const;
     QuantLib::Real riskyAnnuity() const;
     QuantLib::Volatility impliedVolatility(QuantLib::Real price,

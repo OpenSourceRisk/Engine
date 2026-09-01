@@ -78,14 +78,14 @@ using ore::data::CommodityWorstOfBasketSwap;
 %rename(NewScheduleData) ore::data::ScriptedTradeScriptData::NewScheduleData;
 %rename(CalibrationData) ore::data::ScriptedTradeScriptData::CalibrationData;
 
+%shared_ptr(ore::data::ScriptedTradeScriptData::NewScheduleData)
+%shared_ptr(ore::data::ScriptedTradeScriptData::CalibrationData)
+
 %template(VectorPairString) std::vector<std::pair<std::string, std::string>>;
 %template(ScriptedTradeEventDataVector) std::vector<ext::shared_ptr<ore::data::ScriptedTradeEventData>>;
 %template(ScriptedTradeValueTypeDataVector) std::vector<ext::shared_ptr<ore::data::ScriptedTradeValueTypeData>>;
 %template(ScriptedTradeNewScheduleDataVector) std::vector<ext::shared_ptr<ore::data::ScriptedTradeScriptData::NewScheduleData>>;
 %template(ScriptedTradeCalibrationDataVector) std::vector<ext::shared_ptr<ore::data::ScriptedTradeScriptData::CalibrationData>>;
-
-%shared_ptr(ore::data::ScriptedTradeScriptData::NewScheduleData)
-%shared_ptr(ore::data::ScriptedTradeScriptData::CalibrationData)
 
 %shared_ptr(ore::data::ScriptedTradeEventData)
 %shared_ptr(ore::data::ScriptedTradeValueTypeData)

@@ -40,7 +40,7 @@
 #include <sstream>
 
 struct SafeInterpolationHelper : public QuantLib::Interpolation {
-    static QuantLib::ext::shared_ptr<Impl> get_impl(const QuantLib::Interpolation& interp) {
+    static ext::shared_ptr<Impl> get_impl(const QuantLib::Interpolation& interp) {
         return ((const SafeInterpolationHelper&)(interp)).impl_;
     }
 };
@@ -59,7 +59,7 @@ public:
 };
 
 struct SafeInterpolation2DHelper : public QuantLib::Interpolation2D {
-    static QuantLib::ext::shared_ptr<Impl> get_impl(const QuantLib::Interpolation2D& interp) {
+    static ext::shared_ptr<Impl> get_impl(const QuantLib::Interpolation2D& interp) {
         return ((const SafeInterpolation2DHelper&)(interp)).impl_;
     }
 };

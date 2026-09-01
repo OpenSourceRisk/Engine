@@ -202,7 +202,7 @@ public:
 %shared_ptr(SinglePrecisionInMemoryCubeN);
 %shared_ptr(DoublePrecisionInMemoryCubeN);
 
-%template(DoublePrecisionInMemoryCubeNVector) std::vector<QuantLib::ext::shared_ptr<ore::analytics::InMemoryCubeOpt<double>>>;
+%template(DoublePrecisionInMemoryCubeNVector) std::vector<ext::shared_ptr<ore::analytics::InMemoryCubeOpt<double>>>;
 
 namespace ore {
 namespace analytics {
@@ -210,38 +210,38 @@ class JointNPVCube : public ore::analytics::NPVCube {
 public:
     %extend {
     JointNPVCube(
-        const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& cube1, const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& cube2,
+        const ext::shared_ptr<ore::analytics::NPVCube>& cube1, const ext::shared_ptr<ore::analytics::NPVCube>& cube2,
         const std::set<std::string>& ids = {}, const bool requireUniqueIds = true) {
             return new ore::analytics::JointNPVCube(cube1, cube2, ids, requireUniqueIds);
         }
 
     JointNPVCube(
-        const std::vector<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>>& cubes, const std::set<std::string>& ids = {},
+        const std::vector<ext::shared_ptr<ore::analytics::NPVCube>>& cubes, const std::set<std::string>& ids = {},
         const bool requireUniqueIds = true){
             return new ore::analytics::JointNPVCube(cubes, ids, requireUniqueIds);
         }
 
-        JointNPVCube(const QuantLib::ext::shared_ptr<InMemoryCubeOpt<double>>& cube1,
-                     const QuantLib::ext::shared_ptr<InMemoryCubeOpt<double>>& cube2, const std::set<std::string>& ids = {},
+        JointNPVCube(const ext::shared_ptr<InMemoryCubeOpt<double>>& cube1,
+                     const ext::shared_ptr<InMemoryCubeOpt<double>>& cube2, const std::set<std::string>& ids = {},
                      const bool requireUniqueIds = true) {
             return new ore::analytics::JointNPVCube(cube1, cube2, ids, requireUniqueIds);
         }
 
-        JointNPVCube(const std::vector<QuantLib::ext::shared_ptr<InMemoryCubeOpt<double>>>& cubes,
+        JointNPVCube(const std::vector<ext::shared_ptr<InMemoryCubeOpt<double>>>& cubes,
                      const std::set<std::string>& ids = {}, const bool requireUniqueIds = true) {
-            std::vector<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>> npvCubes(cubes.begin(), cubes.end());
+            std::vector<ext::shared_ptr<ore::analytics::NPVCube>> npvCubes(cubes.begin(), cubes.end());
             return new ore::analytics::JointNPVCube(npvCubes, ids, requireUniqueIds);
         }
 
-        JointNPVCube(const QuantLib::ext::shared_ptr<InMemoryCubeOpt<float>>& cube1,
-                     const QuantLib::ext::shared_ptr<InMemoryCubeOpt<float>>& cube2, const std::set<std::string>& ids = {},
+        JointNPVCube(const ext::shared_ptr<InMemoryCubeOpt<float>>& cube1,
+                     const ext::shared_ptr<InMemoryCubeOpt<float>>& cube2, const std::set<std::string>& ids = {},
                      const bool requireUniqueIds = true) {
             return new ore::analytics::JointNPVCube(cube1, cube2, ids, requireUniqueIds);
         }
 
-        JointNPVCube(const std::vector<QuantLib::ext::shared_ptr<InMemoryCubeOpt<float>>>& cubes,
+        JointNPVCube(const std::vector<ext::shared_ptr<InMemoryCubeOpt<float>>>& cubes,
                      const std::set<std::string>& ids = {}, const bool requireUniqueIds = true) {
-            std::vector<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>> npvCubes(cubes.begin(), cubes.end());
+            std::vector<ext::shared_ptr<ore::analytics::NPVCube>> npvCubes(cubes.begin(), cubes.end());
             return new ore::analytics::JointNPVCube(npvCubes, ids, requireUniqueIds);
         }
     }
@@ -330,6 +330,6 @@ public:
 %template(RiskFactorKeyCrossPair) std::pair<QuantExt::RiskFactorKey, QuantExt::RiskFactorKey>;
 %template(RiskFactorKeySet) std::set<QuantExt::RiskFactorKey>;
 %template(RiskFactorKeyFactorDataMap) std::map<QuantExt::RiskFactorKey, ore::analytics::SensitivityCube::FactorData>;
-%template(SensitivityCubeVector) std::vector<QuantLib::ext::shared_ptr<ore::analytics::SensitivityCube>>;
+%template(SensitivityCubeVector) std::vector<ext::shared_ptr<ore::analytics::SensitivityCube>>;
 
 #endif

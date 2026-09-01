@@ -24,6 +24,7 @@
 %include ored_curveconfig.i
 %include ored_curvespec.i
 %include ored_xmlutils.i
+%include ored_bootstrapconfig.i
 
 %shared_ptr(ore::data::YieldCurveSegment)
 namespace ore {

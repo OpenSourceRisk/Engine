@@ -163,7 +163,7 @@ class MarketImpl {
     QuantLib::Handle<QuantLib::Quote> equitySpot(const std::string& eqName,
                              const std::string& configuration = Market::defaultConfiguration) const;
     %extend {
-      QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> equityCurve(const std::string& indexName,
+      ext::shared_ptr<QuantExt::EquityIndex2> equityCurve(const std::string& indexName,
                                                            const std::string& configuration =
 							   ore::data::Market::defaultConfiguration) const {
           return self->equityCurve(indexName, configuration).currentLink();
@@ -202,7 +202,7 @@ class MarketImpl {
                           const std::string& configuration = Market::defaultConfiguration) const;
 
     %extend {
-      QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> commodityIndex(
+      ext::shared_ptr<QuantExt::CommodityIndex> commodityIndex(
           const std::string& commodityName,
           const std::string& configuration = ore::data::Market::defaultConfiguration) const {
           return self->commodityIndex(commodityName, configuration).currentLink();
@@ -227,21 +227,21 @@ class MarketImpl {
 class TodaysMarket : public MarketImpl {
  public:
   TodaysMarket(const QuantLib::Date& asof,
-         const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& params,
-         const QuantLib::ext::shared_ptr<ore::data::Loader>& loader,
-         const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
+         const ext::shared_ptr<ore::data::TodaysMarketParameters>& params,
+         const ext::shared_ptr<ore::data::Loader>& loader,
+         const ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
                  const bool continueOnError = false,
                  bool loadFixings = true,
                  const bool lazyBuild = false,
-                 const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
+                 const ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
                  const bool preserveQuoteLinkage = false,
-         const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig =
+         const ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig =
            QuantLib::ext::make_shared<ore::data::IborFallbackConfig>(ore::data::IborFallbackConfig::defaultConfig()),
                  const bool buildCalibrationInfo = true,
                  const bool handlePseudoCurrencies = true,
                  const bool useAtParCoupons = true);
 
-  QuantLib::ext::shared_ptr<ore::data::TodaysMarketCalibrationInfo> calibrationInfo() const;
+  ext::shared_ptr<ore::data::TodaysMarketCalibrationInfo> calibrationInfo() const;
 };
 
 // FX triangulation: resolve cross-rate quotes and indices

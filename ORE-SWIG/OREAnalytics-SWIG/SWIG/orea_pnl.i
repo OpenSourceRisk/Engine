@@ -76,14 +76,14 @@ namespace analytics {
 class HistoricalPnlGenerator {
   public:
     HistoricalPnlGenerator(const std::string& baseCurrency, 
-                           const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
-                           const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket,
-                           const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
-                           const QuantLib::ext::shared_ptr<NPVCube>& cube,
-                           const set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>>& modelBuilders = {},
+                           const ext::shared_ptr<ore::data::Portfolio>& portfolio,
+                           const ext::shared_ptr<ScenarioSimMarket>& simMarket,
+                           const ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
+                           const ext::shared_ptr<NPVCube>& cube,
+                           const set<std::pair<string, ext::shared_ptr<QuantExt::ModelBuilder>>>& modelBuilders = {},
                            bool dryRun = false);
 
-    void generateCube(const QuantLib::ext::shared_ptr<ScenarioFilter>& filter, const bool runRiskFactorBreakdown = false);
+    void generateCube(const ext::shared_ptr<ScenarioFilter>& filter, const bool runRiskFactorBreakdown = false);
     
     std::vector<QuantLib::Real> pnl() const;
     std::vector<QuantLib::Real> pnl(const ore::data::TimePeriod& period) const;
@@ -93,7 +93,7 @@ class HistoricalPnlGenerator {
     std::vector<std::vector<QuantLib::Real>> tradeLevelPnl() const;
     std::vector<std::vector<QuantLib::Real>> tradeLevelPnl(const ore::data::TimePeriod& period) const;
     
-    const QuantLib::ext::shared_ptr<NPVCube>& cube() const;
+    const ext::shared_ptr<NPVCube>& cube() const;
 };
 
 }

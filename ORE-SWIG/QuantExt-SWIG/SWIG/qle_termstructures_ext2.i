@@ -415,9 +415,9 @@ class Name : public QuantExt::CommodityBasisPriceTermStructure {
   public:
     Name(const QuantLib::Date& referenceDate,
          const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote> >& basisData,
-         const QuantLib::ext::shared_ptr<QuantExt::FutureExpiryCalculator>& basisFec,
-         const QuantLib::ext::shared_ptr<QuantExt::CommodityIndex>& baseIndex,
-         const QuantLib::ext::shared_ptr<QuantExt::FutureExpiryCalculator>& baseFec,
+         const ext::shared_ptr<QuantExt::FutureExpiryCalculator>& basisFec,
+         const ext::shared_ptr<QuantExt::CommodityIndex>& baseIndex,
+         const ext::shared_ptr<QuantExt::FutureExpiryCalculator>& baseFec,
          bool addBasis = true,
          QuantLib::Size monthOffset = 0,
          bool priceAsHistFixing = true);
@@ -499,7 +499,7 @@ class PiecewiseOptionletCurveLinear : public InterpolatedOptionletCurveLinear {
   public:
     PiecewiseOptionletCurveLinear(
         const QuantLib::Date& referenceDate,
-        const std::vector<QuantLib::ext::shared_ptr<BootstrapHelper<OptionletVolatilityStructure> > >& instruments,
+        const std::vector<ext::shared_ptr<BootstrapHelper<OptionletVolatilityStructure> > >& instruments,
         const QuantLib::Calendar& calendar,
         QuantLib::BusinessDayConvention bdc,
         const QuantLib::DayCounter& dayCounter,

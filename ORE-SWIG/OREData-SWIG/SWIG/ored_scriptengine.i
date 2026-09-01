@@ -179,19 +179,19 @@ public:
 %extend ore::data::ASTNode {
     std::string toString(bool printLocationInfo = false) const {
         // Create a non-owning shared_ptr to call the free function
-        QuantLib::ext::shared_ptr<ore::data::ASTNode> ptr(
+        ext::shared_ptr<ore::data::ASTNode> ptr(
             const_cast<ore::data::ASTNode*>($self), [](ore::data::ASTNode*){});
         return ore::data::to_string(ptr, printLocationInfo);
     }
 
     std::string __str__() const {
-        QuantLib::ext::shared_ptr<ore::data::ASTNode> ptr(
+        ext::shared_ptr<ore::data::ASTNode> ptr(
             const_cast<ore::data::ASTNode*>($self), [](ore::data::ASTNode*){});
         return ore::data::to_string(ptr, false);
     }
 
     std::string __repr__() const {
-        QuantLib::ext::shared_ptr<ore::data::ASTNode> ptr(
+        ext::shared_ptr<ore::data::ASTNode> ptr(
             const_cast<ore::data::ASTNode*>($self), [](ore::data::ASTNode*){});
         return "ASTNode(" + ore::data::to_string(ptr, false) + ")";
     }

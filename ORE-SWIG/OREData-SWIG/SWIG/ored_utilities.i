@@ -89,7 +89,7 @@ void buildCollateralCurveConfig(const std::string& curveId, const std::string& b
                                 const ext::shared_ptr<CurveConfigurations>& curveConfigs);
 
 std::set<std::string> getCollateralisedDiscountCcy(const std::string& ccy,
-                                                   const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs);
+                                                   const ext::shared_ptr<CurveConfigurations>& curveConfigs);
 
 const bool isCollateralCurve(const std::string& id, std::vector<std::string>& tokens);
 

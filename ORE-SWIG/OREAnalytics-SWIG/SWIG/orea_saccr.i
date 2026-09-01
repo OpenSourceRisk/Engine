@@ -162,9 +162,9 @@ public:
     enum class CommodityHedgingSet : char { Energy, Agriculture, Metal, Other };
 
     // Public API
-    void initialise(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio);
+    void initialise(const ext::shared_ptr<ore::data::Portfolio>& portfolio);
     const std::set<ore::data::NettingSetDetails>& nettingSets() const;
-    const std::map<std::string, QuantLib::ext::shared_ptr<ore::analytics::SaccrImpl>>& data() const;
+    const std::map<std::string, ext::shared_ptr<ore::analytics::SaccrImpl>>& data() const;
     QuantLib::Size size() const;
     const std::string& baseCurrency() const;
     const QuantLib::Real NPV(const ore::data::NettingSetDetails& nsd) const;
@@ -177,12 +177,12 @@ class SaccrCalculator {
 public:
     // Simplified constructor — omits the optional reports map
     %extend {
-        SaccrCalculator(const QuantLib::ext::shared_ptr<ore::analytics::Crif>& capitalCrif,
-                        const QuantLib::ext::shared_ptr<ore::analytics::SaccrTradeData>& saccrTradeData,
+        SaccrCalculator(const ext::shared_ptr<ore::analytics::Crif>& capitalCrif,
+                        const ext::shared_ptr<ore::analytics::SaccrTradeData>& saccrTradeData,
                         const std::string& baseCurrency,
-                        const QuantLib::ext::shared_ptr<ore::data::NettingSetManager>& nettingSetManager,
-                        const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager,
-                        const QuantLib::ext::shared_ptr<ore::data::Market>& market) {
+                        const ext::shared_ptr<ore::data::NettingSetManager>& nettingSetManager,
+                        const ext::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager,
+                        const ext::shared_ptr<ore::data::Market>& market) {
             return new ore::analytics::SaccrCalculator(
                 capitalCrif, saccrTradeData, baseCurrency,
                 nettingSetManager, counterpartyManager, market);
@@ -229,7 +229,7 @@ public:
 %template(NettingSetDetailsSet)     std::set<ore::data::NettingSetDetails>;
 %template(SaccrContributionVector)  std::vector<ore::analytics::SaccrContribution>;
 %template(SaccrAssetClassSet)       std::set<ore::analytics::SaccrTradeData::AssetClass>;
-%template(SaccrImplMap)             std::map<std::string, QuantLib::ext::shared_ptr<ore::analytics::SaccrImpl>>;
+%template(SaccrImplMap)             std::map<std::string, ext::shared_ptr<ore::analytics::SaccrImpl>>;
 
 // ---------------------------------------------------------------------------
 // Inject Contribution and Impl as attributes of SaccrTradeData in Python so

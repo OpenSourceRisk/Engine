@@ -193,15 +193,15 @@ struct CpiVolCalibrationInfo {
 
 struct TodaysMarketCalibrationInfo {
     QuantLib::Date asof;
-    std::map<std::string, QuantLib::ext::shared_ptr<ore::data::YieldCurveCalibrationInfo>> yieldCurveCalibrationInfo;
-    std::map<std::string, QuantLib::ext::shared_ptr<ore::data::YieldCurveCalibrationInfo>> dividendCurveCalibrationInfo;
-    std::map<std::string, QuantLib::ext::shared_ptr<ore::data::InflationCurveCalibrationInfo>> inflationCurveCalibrationInfo;
-    std::map<std::string, QuantLib::ext::shared_ptr<ore::data::CommodityCurveCalibrationInfo>> commodityCurveCalibrationInfo;
-    std::map<std::string, QuantLib::ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo>> fxVolCalibrationInfo;
-    std::map<std::string, QuantLib::ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo>> eqVolCalibrationInfo;
-    std::map<std::string, QuantLib::ext::shared_ptr<ore::data::IrVolCalibrationInfo>> irVolCalibrationInfo;
-    std::map<std::string, QuantLib::ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo>> commVolCalibrationInfo;
-    std::map<std::string, QuantLib::ext::shared_ptr<ore::data::CpiVolCalibrationInfo>> cpiVolCalibrationInfo;
+    std::map<std::string, ext::shared_ptr<ore::data::YieldCurveCalibrationInfo>> yieldCurveCalibrationInfo;
+    std::map<std::string, ext::shared_ptr<ore::data::YieldCurveCalibrationInfo>> dividendCurveCalibrationInfo;
+    std::map<std::string, ext::shared_ptr<ore::data::InflationCurveCalibrationInfo>> inflationCurveCalibrationInfo;
+    std::map<std::string, ext::shared_ptr<ore::data::CommodityCurveCalibrationInfo>> commodityCurveCalibrationInfo;
+    std::map<std::string, ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo>> fxVolCalibrationInfo;
+    std::map<std::string, ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo>> eqVolCalibrationInfo;
+    std::map<std::string, ext::shared_ptr<ore::data::IrVolCalibrationInfo>> irVolCalibrationInfo;
+    std::map<std::string, ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo>> commVolCalibrationInfo;
+    std::map<std::string, ext::shared_ptr<ore::data::CpiVolCalibrationInfo>> cpiVolCalibrationInfo;
 };
 
 // ---------------------------------------------------------------------------
@@ -214,11 +214,11 @@ struct TodaysMarketCalibrationInfo {
 class WrappedMarket {
 public:
     %extend {
-        WrappedMarket(const QuantLib::ext::shared_ptr<ore::data::MarketImpl>& market,
+        WrappedMarket(const ext::shared_ptr<ore::data::MarketImpl>& market,
                       const bool handlePseudoCurrencies) {
             return new ore::data::WrappedMarket(market, handlePseudoCurrencies);
         }
-        WrappedMarket(const QuantLib::ext::shared_ptr<ore::data::TodaysMarket>& market,
+        WrappedMarket(const ext::shared_ptr<ore::data::TodaysMarket>& market,
                       const bool handlePseudoCurrencies) {
             return new ore::data::WrappedMarket(market, handlePseudoCurrencies);
         }
@@ -300,16 +300,16 @@ public:
 } // namespace ore
 
 %template(StringYieldCurveCalibrationInfoMap)
-    std::map<std::string, QuantLib::ext::shared_ptr<ore::data::YieldCurveCalibrationInfo>>;
+    std::map<std::string, ext::shared_ptr<ore::data::YieldCurveCalibrationInfo>>;
 %template(StringInflationCurveCalibrationInfoMap)
-    std::map<std::string, QuantLib::ext::shared_ptr<ore::data::InflationCurveCalibrationInfo>>;
+    std::map<std::string, ext::shared_ptr<ore::data::InflationCurveCalibrationInfo>>;
 %template(StringCommodityCurveCalibrationInfoMap)
-    std::map<std::string, QuantLib::ext::shared_ptr<ore::data::CommodityCurveCalibrationInfo>>;
+    std::map<std::string, ext::shared_ptr<ore::data::CommodityCurveCalibrationInfo>>;
 %template(StringFxEqCommVolCalibrationInfoMap)
-    std::map<std::string, QuantLib::ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo>>;
+    std::map<std::string, ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo>>;
 %template(StringIrVolCalibrationInfoMap)
-    std::map<std::string, QuantLib::ext::shared_ptr<ore::data::IrVolCalibrationInfo>>;
+    std::map<std::string, ext::shared_ptr<ore::data::IrVolCalibrationInfo>>;
 %template(StringCpiVolCalibrationInfoMap)
-    std::map<std::string, QuantLib::ext::shared_ptr<ore::data::CpiVolCalibrationInfo>>;
+    std::map<std::string, ext::shared_ptr<ore::data::CpiVolCalibrationInfo>>;
 
 #endif

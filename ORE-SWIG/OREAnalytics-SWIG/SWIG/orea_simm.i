@@ -272,7 +272,7 @@ class Crif {
     enum class CrifType { FRTB, SIMM, SACCR, Empty };
 
     Crif();
-    Crif(const QuantLib::ext::shared_ptr<SimmConfiguration>& configuration,
+    Crif(const ext::shared_ptr<SimmConfiguration>& configuration,
          const std::vector<std::set<std::string>>& additionalHeaders = {}, bool updateMapper = false,
          bool aggregateTrades = true, bool allowUseCounterpartyTrade = true, char eol = '\n', char delim = '\t',
          char quoteChar = '\0', char escapeChar = '\\', const std::string& nullString = "#N/A");

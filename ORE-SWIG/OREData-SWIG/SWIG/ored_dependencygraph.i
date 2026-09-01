@@ -49,15 +49,15 @@ public:
         //! curveConfigs is accepted as non-const shared_ptr for Python convenience.
         DependencyGraph(
             const QuantLib::Date& asof,
-            const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& params,
-            const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
-            const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig =
+            const ext::shared_ptr<ore::data::TodaysMarketParameters>& params,
+            const ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
+            const ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig =
                 QuantLib::ext::make_shared<ore::data::IborFallbackConfig>(
                     ore::data::IborFallbackConfig::defaultConfig()),
-            const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr) {
+            const ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr) {
             return new ore::data::DependencyGraph(
                 asof, params,
-                QuantLib::ext::shared_ptr<const ore::data::CurveConfigurations>(curveConfigs),
+                ext::shared_ptr<const ore::data::CurveConfigurations>(curveConfigs),
                 iborFallbackConfig, referenceData);
         }
 

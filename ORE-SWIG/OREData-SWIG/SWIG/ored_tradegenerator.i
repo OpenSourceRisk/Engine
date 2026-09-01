@@ -66,9 +66,9 @@ public:
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
 private:
-    ore::data::LegData buildOisLeg(QuantLib::ext::shared_ptr<ore::data::Convention> conv, QuantLib::Real notional, std::string maturity, bool isPayer,
+    ore::data::LegData buildOisLeg(ext::shared_ptr<ore::data::Convention> conv, QuantLib::Real notional, std::string maturity, bool isPayer,
                      std::map<std::string, std::string> mapPairs = {});
-    ore::data::LegData buildIborLeg(QuantLib::ext::shared_ptr<ore::data::Convention> conv, QuantLib::Real notional, std::string maturity, bool isPayer,
+    ore::data::LegData buildIborLeg(ext::shared_ptr<ore::data::Convention> conv, QuantLib::Real notional, std::string maturity, bool isPayer,
                      std::map<std::string, std::string> mapPairs = {});
     QuantLib::Date startDate;
 };

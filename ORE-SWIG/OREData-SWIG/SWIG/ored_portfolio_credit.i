@@ -35,7 +35,7 @@
 %shared_ptr(ore::data::IndexCreditDefaultSwap)
 %shared_ptr(ore::data::IndexCreditDefaultSwapOption)
 %template(BasketConstituentDataVector) std::vector<ore::data::BasketConstituent>;
-%template(BasketConstituentVector) std::vector<QuantLib::ext::shared_ptr<ore::data::BasketConstituent>>;
+%template(BasketConstituentVector) std::vector<ext::shared_ptr<ore::data::BasketConstituent>>;
 
 %{
 namespace {
@@ -154,7 +154,7 @@ public:
 class CreditDefaultSwap : public Trade {
 public:
     CreditDefaultSwap(const ore::data::Envelope& env, const ore::data::CreditDefaultSwapData& swap);
-    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
+    void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
@@ -180,7 +180,7 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 %extend BasketData {
-    BasketData(const std::vector<QuantLib::ext::shared_ptr<ore::data::BasketConstituent>>& constituents) {
+    BasketData(const std::vector<ext::shared_ptr<ore::data::BasketConstituent>>& constituents) {
         return new ore::data::BasketData(VECTOR_SWIG_TO_ORE(constituents));
     }
 }
@@ -246,7 +246,7 @@ public:
                  const std::string& protectionStart = std::string(), const std::string& upfrontDate = std::string(),
                  const Real upfrontFee = Null<Real>(), const bool rebatesAccrual = true,
                  Real recoveryRate = Null<Real>());
-    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
+    void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
@@ -286,7 +286,7 @@ public:
                             QuantLib::Real strike = QuantLib::Null<QuantLib::Real>(),
                             const std::string& strikeType = "Spread",
                             bool knockOut = true, const std::string& term = "");
-    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
+    void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
@@ -296,7 +296,7 @@ public:
 class CreditLinkedSwap : public Trade {
 public:
     CreditLinkedSwap();
-    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
+    void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
@@ -333,7 +333,7 @@ class IndexCreditDefaultSwap : public Trade {
 public:
     IndexCreditDefaultSwap();
     IndexCreditDefaultSwap(const ore::data::Envelope& env, const ore::data::IndexCreditDefaultSwapData& swap, const ore::data::BasketData& basket);
-    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
+    void build(const ext::shared_ptr<EngineFactory>&) override;
     QuantLib::Real notional(Trade::NotionalType type = Trade::NotionalType::Default) const override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
@@ -350,7 +350,7 @@ public:
                                   const std::string& strikeType = "Spread",
                                   const QuantLib::Date& tradeDate = QuantLib::Date(),
                                   const QuantLib::Date& fepStartDate = QuantLib::Date());
-    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
+    void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };

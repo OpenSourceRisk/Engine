@@ -84,7 +84,7 @@ public:
 namespace QuantExt {
 class IrLgm1fStateProcess : public StochasticProcess1D {
 public:
-    IrLgm1fStateProcess(const QuantLib::ext::shared_ptr<QuantExt::IrLgm1fParametrization>& parametrization);
+    IrLgm1fStateProcess(const ext::shared_ptr<QuantExt::IrLgm1fParametrization>& parametrization);
     Real x0() const override;
     Real drift(Time t, Real x) const override;
     Real diffusion(Time t, Real x) const override;

@@ -59,48 +59,48 @@ public:
 class SensitivityAnalysis {
 public:
     SensitivityAnalysis(
-        const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
-        const QuantLib::ext::shared_ptr<ore::data::Market>& market, const std::string& marketConfiguration,
-        const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
-        const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
-        const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData,
+        const ext::shared_ptr<ore::data::Portfolio>& portfolio,
+        const ext::shared_ptr<ore::data::Market>& market, const std::string& marketConfiguration,
+        const ext::shared_ptr<ore::data::EngineData>& engineData,
+        const ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
+        const ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData,
         const bool recalibrateModels,
         const bool laxFxConversion = false,
-        const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
-        const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams = nullptr,
+        const ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
+        const ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams = nullptr,
         const bool nonShiftedBaseCurrencyConversion = false,
-        const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
-        const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig =
+        const ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
+        const ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig =
             QuantLib::ext::make_shared<ore::data::IborFallbackConfig>(ore::data::IborFallbackConfig::defaultConfig()),
         const bool continueOnError = false, const bool dryRun = false, const bool useAtParCouponsTrades = true);
 
     void generateSensitivities();
-    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket> simMarket() const;
-    std::vector<QuantLib::ext::shared_ptr<ore::analytics::SensitivityCube>> sensiCubes() const;
-    QuantLib::ext::shared_ptr<ore::analytics::SensitivityCube> sensiCube() const;
+    const ext::shared_ptr<ore::analytics::ScenarioSimMarket> simMarket() const;
+    std::vector<ext::shared_ptr<ore::analytics::SensitivityCube>> sensiCubes() const;
+    ext::shared_ptr<ore::analytics::SensitivityCube> sensiCube() const;
 };
 
 class ParSensitivityAnalysis {
 public:
     ParSensitivityAnalysis(const QuantLib::Date& asof,
-                           const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams,
+                           const ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams,
                            const ore::analytics::SensitivityScenarioData& sensitivityData,
                            const std::string& marketConfiguration = ore::data::Market::defaultConfiguration,
                            const bool continueOnError = false,
                            const std::set<ore::analytics::RiskFactorKey::KeyType>& typesDisabled = {});
-    void computeParInstrumentSensitivities(const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket);
+    void computeParInstrumentSensitivities(const ext::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket);
 };
 
 class ValuationEngine {
 public:
     %extend {
         ValuationEngine(const QuantLib::Date& today,
-                        const QuantLib::ext::shared_ptr<ore::data::DateGrid>& dg,
-                        const QuantLib::ext::shared_ptr<ore::analytics::SimMarket>& simMarket,
+                        const ext::shared_ptr<ore::data::DateGrid>& dg,
+                        const ext::shared_ptr<ore::analytics::SimMarket>& simMarket,
                         const bool recalibrate = true) {
             return new ore::analytics::ValuationEngine(
                 today, dg, simMarket,
-                std::set<std::pair<std::string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>>(), recalibrate);
+                std::set<std::pair<std::string, ext::shared_ptr<QuantExt::ModelBuilder>>>(), recalibrate);
         }
     }
 };
@@ -128,23 +128,23 @@ public:
                        const std::set<std::pair<std::string, QuantLib::Size>>& tradeIds = {}) const override;
 };
 
-void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
-                   const QuantLib::ext::shared_ptr<ore::data::Market>& market, const std::string& marketConfiguration,
-                   const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
-                   const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
-                   const QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData>& stressData,
-                   const QuantLib::ext::shared_ptr<ore::data::Report>& report,
-				   const QuantLib::ext::shared_ptr<ore::data::Loader>& loader = nullptr,
-                   const QuantLib::ext::shared_ptr<ore::data::Report>& cfReport = nullptr, const double threshold = 0.0,
+void runStressTest(const ext::shared_ptr<ore::data::Portfolio>& portfolio,
+                   const ext::shared_ptr<ore::data::Market>& market, const std::string& marketConfiguration,
+                   const ext::shared_ptr<ore::data::EngineData>& engineData,
+                   const ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
+                   const ext::shared_ptr<ore::analytics::StressTestScenarioData>& stressData,
+                   const ext::shared_ptr<ore::data::Report>& report,
+				   const ext::shared_ptr<ore::data::Loader>& loader = nullptr,
+                   const ext::shared_ptr<ore::data::Report>& cfReport = nullptr, const double threshold = 0.0,
                    const Size precision = 2, const bool includePastCashflows = false,
                    const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
                    const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
-                   const QuantLib::ext::shared_ptr<ore::analytics::ScenarioFactory>& scenarioFactory = nullptr,
-                   const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
-                   const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig =
+                   const ext::shared_ptr<ore::analytics::ScenarioFactory>& scenarioFactory = nullptr,
+                   const ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
+                   const ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig =
                        QuantLib::ext::make_shared<ore::data::IborFallbackConfig>(ore::data::IborFallbackConfig::defaultConfig()),
                    bool continueOnError = false,
-                   const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& scenarioReport = nullptr,
+                   const ext::shared_ptr<ore::data::InMemoryReport>& scenarioReport = nullptr,
                    const bool useAtParCouponsTrades = true, const Size nThreads = 1);
 
 } // namespace analytics

@@ -16,30 +16,25 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#ifndef orea_simulation_i
-#define orea_simulation_i
+#ifndef ored_bootstrapconfig_i
+#define ored_bootstrapconfig_i
 
-%include types.i
-%include ored_market.i
-%include ored_portfolio.i
+%include ored_xmlutils.i
 
-%shared_ptr(ore::analytics::FixingManager)
+%shared_ptr(ore::data::BootstrapConfig)
 namespace ore {
-namespace analytics {
-class FixingManager {
+namespace data {
+class BootstrapConfig : public ore::data::XMLSerializable {
 public:
-    enum class Mode { BackwardFlat, Projected };
-    explicit FixingManager(Date today, Mode mode = Mode::BackwardFlat);
-    void initialise(const ext::shared_ptr<ore::data::Portfolio>& portfolio,
-                    const ext::shared_ptr<ore::data::Market>& market,
-                    const std::string& configuration = ore::data::Market::defaultConfiguration);
-    Mode mode() const;
-    const Date& fixingsEnd() const;
-    void update(const Date& d);
-    void reset();
+    BootstrapConfig(QuantLib::Real accuracy = 1.0e-12,
+                    QuantLib::Real globalAccuracy = QuantLib::Null<QuantLib::Real>(),
+                    bool dontThrow = false, QuantLib::Size maxAttempts = 5, QuantLib::Real maxFactor = 2.0,
+                    QuantLib::Real minFactor = 2.0, QuantLib::Size dontThrowSteps = 10, bool global = false,
+                    Real smoothnessLambda = 0.0);
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 };
-
-} // namespace analytics
+} // namespace data
 } // namespace ore
 
 #endif

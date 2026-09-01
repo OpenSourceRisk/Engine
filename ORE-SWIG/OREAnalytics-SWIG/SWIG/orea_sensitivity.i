@@ -135,12 +135,12 @@ namespace ore { namespace analytics {
 
 class SensitivityCubeStream : public ore::analytics::SensitivityStream {
 public:
-    SensitivityCubeStream(const QuantLib::ext::shared_ptr<ore::analytics::SensitivityCube>& cube,
+    SensitivityCubeStream(const ext::shared_ptr<ore::analytics::SensitivityCube>& cube,
                           const std::string& currency,
-                          const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio = nullptr);
-    SensitivityCubeStream(const std::vector<QuantLib::ext::shared_ptr<ore::analytics::SensitivityCube>>& cubes,
+                          const ext::shared_ptr<ore::data::Portfolio>& portfolio = nullptr);
+    SensitivityCubeStream(const std::vector<ext::shared_ptr<ore::analytics::SensitivityCube>>& cubes,
                           const std::string& currency,
-                          const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio = nullptr);
+                          const ext::shared_ptr<ore::data::Portfolio>& portfolio = nullptr);
     ore::analytics::SensitivityRecord next() override;
     void reset() override;
 };
@@ -269,7 +269,7 @@ public:
 
 // --- Template instantiations for SensitivityCubeStream vector constructor ---
 
-%template(SensitivityCubeVector) std::vector<QuantLib::ext::shared_ptr<ore::analytics::SensitivityCube>>;
+%template(SensitivityCubeVector) std::vector<ext::shared_ptr<ore::analytics::SensitivityCube>>;
 
 // --- SensitivityAggregator ---
 
@@ -282,7 +282,7 @@ public:
     SensitivityAggregator(const std::map<std::string, std::set<std::pair<std::string, Size>>>& categories);
 
     void aggregate(ore::analytics::SensitivityStream& ss,
-                   const QuantLib::ext::shared_ptr<ore::analytics::ScenarioFilter>& filter =
+                   const ext::shared_ptr<ore::analytics::ScenarioFilter>& filter =
                        QuantLib::ext::make_shared<ore::analytics::ScenarioFilter>());
 
     void reset();

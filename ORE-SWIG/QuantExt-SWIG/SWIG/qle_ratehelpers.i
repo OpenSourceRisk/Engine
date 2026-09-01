@@ -50,7 +50,7 @@ class CrossCcyBasisMtMResetSwapHelper : public RateHelper {
                                     bool spreadOnForeignCcy = true,
                                     QuantLib::ext::optional<QuantLib::Period> foreignTenor = QuantLib::ext::nullopt,
                                     QuantLib::ext::optional<QuantLib::Period> domesticTenor = QuantLib::ext::nullopt);
-    QuantLib::ext::shared_ptr<QuantExt::CrossCcyBasisMtMResetSwap> swap();
+    ext::shared_ptr<QuantExt::CrossCcyBasisMtMResetSwap> swap();
 };
 }
 
@@ -73,7 +73,7 @@ class CrossCcyBasisSwapHelper : public RateHelper {
                             const bool spreadDiscountCurveGiven,
                             bool eom = false,
                             bool flatIsDomestic = true);
-    QuantLib::ext::shared_ptr<QuantExt::CrossCcyBasisSwap> swap();
+    ext::shared_ptr<QuantExt::CrossCcyBasisSwap> swap();
 };
 }
 
@@ -89,7 +89,7 @@ class TenorBasisSwapHelper : public RateHelper {
                          const bool includeSpread = false, const QuantLib::Period& payFrequency = QuantLib::Period(),
                          const QuantLib::Period& recFrequency = QuantLib::Period(), const bool telescopicValueDates = false,
                          const QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding);
-    QuantLib::ext::shared_ptr<QuantExt::TenorBasisSwap> swap();
+    ext::shared_ptr<QuantExt::TenorBasisSwap> swap();
 };
 }
 
@@ -109,7 +109,7 @@ class SubPeriodsSwapHelper : public RateHelper {
                          const QuantLib::Handle<QuantLib::YieldTermStructure>& discountingCurve =
                              QuantLib::Handle<QuantLib::YieldTermStructure>(),
                          QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding);
-              QuantLib::ext::shared_ptr<QuantExt::SubPeriodsSwap> swap();
+              ext::shared_ptr<QuantExt::SubPeriodsSwap> swap();
 };
             }
 
@@ -133,8 +133,8 @@ class SubPeriodsSwapHelper : public RateHelper {
                        const QuantLib::Handle<QuantLib::YieldTermStructure>& discountingCurve
                              = QuantLib::Handle<QuantLib::YieldTermStructure>(),
                        bool discountCurveGiven = false);
-    QuantLib::ext::shared_ptr<VanillaSwap> longSwap();
-    QuantLib::ext::shared_ptr<VanillaSwap> shortSwap();
+    ext::shared_ptr<VanillaSwap> longSwap();
+    ext::shared_ptr<VanillaSwap> shortSwap();
 };
 }
 
@@ -169,7 +169,7 @@ class CrossCcyFixFloatSwapHelper : public RateHelper {
                                  const QuantLib::Handle<QuantLib::YieldTermStructure>& floatDiscount,
                                  const QuantLib::Handle<QuantLib::Quote>& spread = QuantLib::Handle<QuantLib::Quote>(),
                                  bool endOfMonth = false);
-                  QuantLib::ext::shared_ptr<QuantExt::CrossCcyFixFloatSwap> swap();
+                  ext::shared_ptr<QuantExt::CrossCcyFixFloatSwap> swap();
 };
                 }
 

@@ -1380,7 +1380,7 @@ class NettedCommodityCashFlow : public CommodityCashFlow {
         const std::vector<ext::shared_ptr<QuantExt::CommodityCashFlow>>& underlyingCashflows,
         const std::vector<bool>& isPayer,
         QuantLib::Natural nettingPrecision = QuantLib::Null<QuantLib::Natural>());
-    const std::vector<QuantLib::ext::shared_ptr<QuantExt::CommodityCashFlow>>&
+    const std::vector<ext::shared_ptr<QuantExt::CommodityCashFlow>>&
         underlyingCashflows() const;
     QuantLib::Natural nettingPrecision() const;
     QuantLib::Date date() const override;
@@ -1446,7 +1446,7 @@ class IntradayPowerCashFlow : public QuantLib::CashFlow {
 %{
 QuantLib::Leg _CommodityIndexedLeg(
     const QuantLib::Schedule& schedule,
-    const QuantLib::ext::shared_ptr<QuantExt::CommodityIndex>& index,
+    const ext::shared_ptr<QuantExt::CommodityIndex>& index,
     const std::vector<QuantLib::Real>& quantities,
     QuantLib::Natural paymentLag = 0,
     const QuantLib::Calendar& paymentCalendar = QuantLib::Calendar(),
@@ -1461,12 +1461,12 @@ QuantLib::Leg _CommodityIndexedLeg(
     bool useFuturePrice = false,
     bool useFutureExpiryDate = true,
     QuantLib::Integer futureMonthOffset = 0,
-    const QuantLib::ext::shared_ptr<QuantExt::FutureExpiryCalculator>& calc = nullptr,
+    const ext::shared_ptr<QuantExt::FutureExpiryCalculator>& calc = nullptr,
     bool payAtMaturity = false,
     const std::vector<QuantLib::Date>& pricingDates = {},
     const std::vector<QuantLib::Date>& paymentDates = {},
     QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>(),
-    const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
+    const ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
     bool isAveraging = false,
     const QuantLib::Calendar& pricingCalendar = QuantLib::Calendar(),
     bool includeEndDate = true,
@@ -1544,9 +1544,9 @@ Leg _CommodityIndexedLeg(
 %{
 QuantLib::Leg _IntradayPowerLeg(
     const QuantLib::Schedule& schedule,
-    const QuantLib::ext::shared_ptr<QuantExt::IntradayPowerIndex>& index,
+    const ext::shared_ptr<QuantExt::IntradayPowerIndex>& index,
     const std::vector<QuantLib::Real>& quantities,
-    const QuantLib::ext::shared_ptr<QuantExt::IntradayPowerLoadTermStructure>& loadCurve = nullptr,
+    const ext::shared_ptr<QuantExt::IntradayPowerLoadTermStructure>& loadCurve = nullptr,
     QuantLib::Natural paymentLag = 0,
     const QuantLib::Calendar& paymentCalendar = QuantLib::Calendar(),
     QuantLib::BusinessDayConvention paymentConvention = QuantLib::Following,
@@ -1557,7 +1557,7 @@ QuantLib::Leg _IntradayPowerLeg(
     bool includeStartDate = false,
     bool businessDays = true,
     const std::vector<QuantLib::Date>& paymentDates = {},
-    const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
+    const ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
     QuantExt::IntradayPowerQuantityMode quantityMode =
         QuantExt::IntradayPowerQuantityMode::TotalEnergy,
     QuantLib::Natural avgPricePrecision = QuantLib::Null<QuantLib::Natural>())
@@ -1622,9 +1622,9 @@ class TRSCashFlow : public CashFlow {
                 const Date& fixingStartDate,
                 const Date& fixingEndDate,
                 const Real notional,
-                const QuantLib::ext::shared_ptr<Index>& Index,
+                const ext::shared_ptr<Index>& Index,
                 const Real initialPrice = Null<Real>(),
-                const QuantLib::ext::shared_ptr<FxIndex>& fxIndex = nullptr,
+                const ext::shared_ptr<FxIndex>& fxIndex = nullptr,
                 const bool applyFXIndexFixingDays = false);
 
     Real amount() const override;

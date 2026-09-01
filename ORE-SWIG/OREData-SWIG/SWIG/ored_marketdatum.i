@@ -121,8 +121,19 @@ using ore::data::BondFutureOptionQuote;
 namespace ore {
 namespace data {
 
-class BaseStrike;
-class Expiry;
+class BaseStrike {
+public:
+    virtual ~BaseStrike() {}
+    virtual void fromString(const std::string& strStrike) = 0;
+    virtual std::string toString() const = 0;
+};
+
+class Expiry {
+public:
+    virtual ~Expiry() {}
+    virtual void fromString(const std::string& strExpiry) = 0;
+    virtual std::string toString() const = 0;
+};
 
 ext::shared_ptr<ore::data::MarketDatum> parseMarketDatum(const Date&, const std::string&, const Real&);
 
@@ -888,12 +899,12 @@ public:
         QuoteType quoteType,
         std::string contractName,
         std::string expiry,
-        QuantLib::ext::shared_ptr<BaseStrike> strike,
+        ext::shared_ptr<BaseStrike> strike,
         bool isCall = true);
 
     const std::string& contractName() const;
     const std::string& expiry() const;
-    const QuantLib::ext::shared_ptr<BaseStrike>& strike() const;
+    const ext::shared_ptr<BaseStrike>& strike() const;
     bool isCall();
 
     // Not sure if we still need this type of explicit method to expose downcasting but keep it for consistency.

@@ -49,12 +49,12 @@ namespace QuantExt {
 
 void setCouponPricer(
     const QuantLib::Leg& leg,
-    const QuantLib::ext::shared_ptr<QuantLib::FloatingRateCouponPricer>& pricer);
+    const ext::shared_ptr<QuantLib::FloatingRateCouponPricer>& pricer);
 
 void setCouponPricers(
     const QuantLib::Leg& leg,
     const std::vector<
-        QuantLib::ext::shared_ptr<QuantLib::FloatingRateCouponPricer> >& pricers);
+        ext::shared_ptr<QuantLib::FloatingRateCouponPricer> >& pricers);
 
 %nodefaultctor CashFlows;
 %rename(QLECashFlows) CashFlows;

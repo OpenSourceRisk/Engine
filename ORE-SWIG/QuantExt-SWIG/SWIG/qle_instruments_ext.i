@@ -45,7 +45,7 @@
 namespace QuantExt {
 class BondOption : public QuantLib::Instrument {
   public:
-    BondOption(const QuantLib::ext::shared_ptr<QuantLib::Bond>& underlying,
+    BondOption(const ext::shared_ptr<QuantLib::Bond>& underlying,
                const QuantLib::CallabilitySchedule& putCallSchedule,
                const bool knocksOutOnDefault = false);
     const QuantLib::CallabilitySchedule& callability() const;
@@ -61,11 +61,11 @@ class BondRepo : public QuantLib::Instrument {
   public:
     BondRepo(const QuantLib::Leg& cashLeg,
              const bool cashLegPays,
-             const QuantLib::ext::shared_ptr<QuantLib::Bond>& security,
+             const ext::shared_ptr<QuantLib::Bond>& security,
              const QuantLib::Real securityMultiplier);
     const QuantLib::Leg& cashLeg() const;
     bool cashLegPays() const;
-    QuantLib::ext::shared_ptr<QuantLib::Bond> security() const;
+    ext::shared_ptr<QuantLib::Bond> security() const;
     QuantLib::Real securityMultiplier() const;
 };
 }
@@ -78,7 +78,7 @@ namespace QuantExt {
 class ForwardBond : public QuantLib::Instrument {
   public:
     // Vanilla forward bond constructor
-    ForwardBond(const QuantLib::ext::shared_ptr<QuantLib::Bond>& underlying,
+    ForwardBond(const ext::shared_ptr<QuantLib::Bond>& underlying,
                 QuantLib::Real strikeAmount,
                 const QuantLib::Date& fwdMaturityDate,
                 const QuantLib::Date& fwdSettlementDate,
@@ -90,14 +90,14 @@ class ForwardBond : public QuantLib::Instrument {
                 bool isLong,
                 QuantLib::Real bondNotional = 1.0);
 
-    const QuantLib::ext::shared_ptr<QuantLib::Bond>& underlying();
+    const ext::shared_ptr<QuantLib::Bond>& underlying();
 };
 }
 
 %extend QuantExt::ForwardBond {
     // T-Lock (lock-rate) variant exposed as a named factory function
-    static QuantLib::ext::shared_ptr<QuantExt::ForwardBond> createTLock(
-        const QuantLib::ext::shared_ptr<QuantLib::Bond>& underlying,
+    static ext::shared_ptr<QuantExt::ForwardBond> createTLock(
+        const ext::shared_ptr<QuantLib::Bond>& underlying,
         QuantLib::Real lockRate,
         const QuantLib::DayCounter& lockRateDayCounter,
         bool longInForward,

@@ -45,15 +45,15 @@ public:
     std::vector<std::string> discountCurveNames() const;
 
     std::vector<std::string> yieldCurveNames() const;
-    const map<std::string, std::string>& yieldCurveCurrencies() const;
+    const std::map<std::string, std::string>& yieldCurveCurrencies() const;
     const std::vector<QuantLib::Period>& yieldCurveTenors(const std::string& key) const;
     bool hasYieldCurveTenors(const std::string& key) const;
     std::vector<std::string> indices() const;
-    const map<std::string, std::string>& swapIndices() const;
+    const std::map<std::string, std::string>& swapIndices() const;
     void setSwapIndex(const std::string& key, const std::string& ind);
     const std::string& interpolation() const;
     const std::string& extrapolation() const;
-    const map<std::string, std::vector<QuantLib::Period>>& yieldCurveTenors() const;
+    const std::map<std::string, std::vector<QuantLib::Period>>& yieldCurveTenors() const;
 
     bool simulateFxSpots() const;
     std::vector<std::string> fxCcyPairs() const;
@@ -203,7 +203,7 @@ public:
     void setYieldCurveCurrency(const std::string& key, const std::string& ccy);
     void setYieldCurveTenors(const std::string& key, const std::vector<QuantLib::Period>& p);
     void setIndices(std::vector<std::string> names);
-    map<std::string, std::string>& swapIndices();
+    std::map<std::string, std::string>& swapIndices();
 
     void setSimulateFxSpots(bool simulate);
     void setFxCcyPairs(std::vector<std::string> names);

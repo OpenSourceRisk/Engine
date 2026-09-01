@@ -55,7 +55,7 @@ public:
     enum class Type { Dupire, DupireFloored, AndreasenHuge };
     LocalVolModelBuilder(
         const std::vector<QuantLib::Handle<QuantLib::YieldTermStructure>>& curves,
-        const std::vector<QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>>& processes,
+        const std::vector<ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>>& processes,
         const std::set<QuantLib::Date>& simulationDates = {},
         const std::set<QuantLib::Date>& addDates = {},
         const QuantLib::Size timeStepsPerYear = 1,
@@ -66,7 +66,7 @@ public:
         const QuantLib::Handle<QuantLib::YieldTermStructure>& baseCurve = {});
     LocalVolModelBuilder(
         const QuantLib::Handle<QuantLib::YieldTermStructure>& curve,
-        const QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& process,
+        const ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& process,
         const std::set<QuantLib::Date>& simulationDates = {},
         const std::set<QuantLib::Date>& addDates = {},
         const QuantLib::Size timeStepsPerYear = 1,
@@ -75,7 +75,7 @@ public:
         const std::string& referenceCalibrationGrid = "",
         const bool dontCalibrate = false,
         const QuantLib::Handle<QuantLib::YieldTermStructure>& baseCurve = {});
-    std::vector<QuantLib::ext::shared_ptr<QuantLib::StochasticProcess>> getCalibratedProcesses() const;
+    std::vector<ext::shared_ptr<QuantLib::StochasticProcess>> getCalibratedProcesses() const;
 };
 } // namespace data
 } // namespace ore
