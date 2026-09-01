@@ -40,7 +40,7 @@ namespace QuantExt {
 
 NonStandardYoYInflationCouponPricer::NonStandardYoYInflationCouponPricer(
     const Handle<YieldTermStructure>& nominalTermStructure)
-    : nominalTermStructure_(std::move(nominalTermStructure)) {
+    : nominalTermStructure_(nominalTermStructure) {
     registerWith(nominalTermStructure_);
 }
 

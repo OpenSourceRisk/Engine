@@ -974,7 +974,7 @@ std::size_t BlackScholesCG::npv(const std::size_t amount, const Date& obsdate, c
 
     if (evalState.empty()) {
         std::set<std::size_t> r = npvRegressors(obsdate, std::nullopt);
-        evalState.insert(state.end(), r.begin(), r.end());
+        evalState.insert(evalState.end(), r.begin(), r.end());
         for (auto const& r : addRegressors) {
             if (r != ComputationGraph::nan) {
                 evalState.push_back(r);
