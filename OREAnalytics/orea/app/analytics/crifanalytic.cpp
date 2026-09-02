@@ -99,7 +99,7 @@ void CrifVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParam
         inputs->setSimmBucketMapperFromFile(fileName);
     }
 }
-  
+
 void CrifAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     analytic()->configurations().simMarketParams = inputs_->sensiSimMarketParams();

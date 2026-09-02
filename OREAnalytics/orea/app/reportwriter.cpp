@@ -66,7 +66,10 @@ typedef std::map<Currency, Real, CurrencyComparator> result_type_scalar;
 
 void ReportWriter::writeScenarioReport(ore::data::Report& report,
                                        const std::vector<QuantLib::ext::shared_ptr<SensitivityCube>>& sensitivityCubes,
+                                       const std::string& baseCurrency,
                                        Real outputThreshold) {
+
+    QL_REQUIRE(!baseCurrency.empty(), "writeScenarioReport: baseCurrency must not be empty");
 
     LOG("Writing Scenario report");
 
@@ -78,6 +81,7 @@ void ReportWriter::writeScenarioReport(ore::data::Report& report,
     report.addColumn("ShiftSize_2", double(), 6);
     report.addColumn("Scenario NPV", double(), 2);
     report.addColumn("Difference", double(), 2);
+    report.addColumn("Base Currency", string());
 
     for (auto const& sensitivityCube : sensitivityCubes) {
 
@@ -107,6 +111,8 @@ void ReportWriter::writeScenarioReport(ore::data::Report& report,
                     report.add(shift2);
                     report.add(scenarioNpv);
                     report.add(difference);
+                    // baseCurrency is constant across all rows: NPVs in the cube are in the simulation base currency
+                    report.add(baseCurrency);
                 } else if (!std::isfinite(difference)) {
                     // TODO: is this needed?
                     ALOG("sensitivity scenario for trade " << tradeId << ", factor " << scenarioDescription.factors()
@@ -484,7 +490,7 @@ void ReportWriter::writeCube(ore::data::Report& report, const QuantLib::ext::sha
             .add(static_cast<Size>(0))
             .add(cube->getT0(i));
     }
-    
+
     // Cube
     for (Size i = 0; i < ids.size(); i++) {
         for (Size j = 0; j < cube->numDates(); j++) {
@@ -809,7 +815,7 @@ void ReportWriter::writeIMScheduleTradeReport(const map<string, vector<IMSchedul
             }
             string collectRegsString = escapeCommaSeparatedList(regulationsToString(tradeData.collectRegulations), '\0');
             string postRegsString = escapeCommaSeparatedList(regulationsToString(tradeData.postRegulations), '\0');
-            
+
             report->add(to_string(tradeData.productClass))
                 .add(to_string(tradeData.endDate))
                 .add(tradeData.maturity)
@@ -846,7 +852,7 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
             const ext::shared_ptr<ore::data::Market>& market,
             const std::string& configuration,
             const ext::shared_ptr<Portfolio>& portfolio) {
-  
+
     LOG("PnL report");
 
     report.addColumn("TradeId", string())
@@ -880,7 +886,7 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
     Size maturityTimeColumn = 3;
     Size npvBaseColumn = 6;
     Size baseCcyColumn = 7;
-    
+
     // t0 NPV = NPV(t0;m0;p0)
     QL_REQUIRE(t0NpvReport->rows() == t0m1p0NpvReport->rows(), "different number of rows in npv reports");
     QL_REQUIRE(t0NpvReport->rows() == t1m0p0NpvReport->rows(), "different number of rows in npv reports");
@@ -955,7 +961,7 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
             auto it = t1IdMap.find(tradeId);
             Real t1m0p1Npv = it == t1IdMap.end() ? 0.0 : boost::get<Real>(t1m0p1NpvReport->data(npvBaseColumn, it->second));
             Real t1m1p1Npv = it == t1IdMap.end() ? 0.0 : boost::get<Real>(t1m1p1NpvReport->data(npvBaseColumn, it->second));
-            
+
             Real tradeChangePnl = t1m1p1Npv - t1m1p0Npv;
             Real hypotheticalCleanPnl = t0m1p0Npv - t0Npv;
             auto cfIt = t0TradeCashflows.find(tradeId);
