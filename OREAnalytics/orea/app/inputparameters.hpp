@@ -731,7 +731,7 @@ public:
     void setKvaTheirCvaRiskWeight(Real r) { parameters_.set("xva", "kvaTheirCvaRiskWeight", r); }
     void setfirstMporCollateralAdjustment(const bool constantInitialVm) { parameters_.set("xva", "firstMporCollateralAdjustment", constantInitialVm); }
     // credit simulation
-    void setCreditMigrationAnalytic(bool b) { parameters_.set("xva", "kvaTheirCvaRiskWeight", b); }
+    void setCreditMigrationAnalytic(bool b) { parameters_.set("xva", "creditMigration", b); }
     void setCreditMigrationDistributionGrid(const std::vector<Real>& grid) { parameters_.set("xva", "creditMigrationDistributionGrid", grid); }
     void setCreditSimulationParameters(const QuantLib::ext::shared_ptr<CreditSimulationParameters>& c) { parameters_.set("xva", "creditMigrationConfig", c); }
     void setCreditSimulationParametersFromBuffer(const std::string& xml ) { parameters_.set("xva", "creditMigrationConfig", xml); }
