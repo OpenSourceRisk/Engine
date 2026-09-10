@@ -4,6 +4,7 @@ set(OREAnalytics-Test_SRC aggregationscenariodata.cpp
 amcbermudanswaption.cpp
 cube.cpp
 historicalscenariogenerator.cpp
+kva.cpp
 nettedexpsoure.cpp
 observationmode.cpp
 parsensitivityanalysis.cpp
