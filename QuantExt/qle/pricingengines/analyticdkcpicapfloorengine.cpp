@@ -25,7 +25,7 @@ namespace QuantExt {
 
 using namespace CrossAssetAnalytics;
 
-AnalyticDkCpiCapFloorEngine::AnalyticDkCpiCapFloorEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
+AnalyticDkCpiCapFloorEngine::AnalyticDkCpiCapFloorEngine(const QuantLib::Handle<CrossAssetModel>& model,
                                                          const Size index, const Real baseCPI)
     : model_(model), index_(index) {}
 
@@ -34,7 +34,7 @@ void AnalyticDkCpiCapFloorEngine::calculate() const {
     bool interpolate = arguments_.observationInterpolation == CPI::Linear;
 
     //Date startDate = inflationPeriod(arguments_.startDate - arguments_.observationLag, arguments_.index->frequency()).first;
-    auto zits = model_->infdk(index_)->termStructure();
+    auto zits = model_->infdk(index_)->dkLgmParam()->termStructure();
     Size irIdx = model_->ccyIndex(model_->infdk(index_)->currency());
     auto yts = model_->irlgm1f(irIdx)->termStructure();
 
@@ -70,10 +70,10 @@ void AnalyticDkCpiCapFloorEngine::calculate() const {
 
     m = ZeroInflation::cpiFixing(arguments_.index, arguments_.fixDate, 0*Days, interpolate);
 
-    Real Ht = Hy(index_).eval(*model_, t);
-    Real v = Ht * Ht * zetay(index_).eval(*model_, t) -
-             2.0 * Ht * integral(*model_, P(Hy(index_), ay(index_), ay(index_)), 0.0, t) +
-             integral(*model_, P(Hy(index_), Hy(index_), ay(index_), ay(index_)), 0.0, t);
+    Real Ht = Hy(index_).eval(**model_, t);
+    Real v = Ht * Ht * zetay(index_).eval(**model_, t) -
+             2.0 * Ht * integral(**model_, P(Hy(index_), ay(index_), ay(index_)), 0.0, t) +
+             integral(**model_, P(Hy(index_), Hy(index_), ay(index_), ay(index_)), 0.0, t);
 
     Real discount = yts->discount(arguments_.payDate);
 

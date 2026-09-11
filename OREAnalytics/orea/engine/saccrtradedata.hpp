@@ -12,11 +12,13 @@
 #include <boost/none.hpp>
 #include <ored/portfolio/nettingsetdetails.hpp>
 #include <ored/portfolio/portfolio.hpp>
+#include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/trade.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ql/optional.hpp>
 #include <ql/time/period.hpp>
 #include <ql/utilities/null.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
 
 #include <boost/optional.hpp>
 #include <string>

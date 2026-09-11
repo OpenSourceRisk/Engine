@@ -20,13 +20,18 @@
 
 #include <ql/math/interpolations/loginterpolation.hpp>
 
+#include <ql/time/calendars/nullcalendar.hpp>
+
 namespace QuantExt {
 
 SpreadedDiscountCurve::SpreadedDiscountCurve(const Handle<YieldTermStructure>& referenceCurve,
                                              const std::vector<Time>& times, const std::vector<Handle<Quote>>& quotes,
-                                             const Interpolation interpolation, const Extrapolation extrapolation)
-    : YieldTermStructure(referenceCurve->dayCounter()), referenceCurve_(referenceCurve), times_(times), quotes_(quotes),
-      interpolation_(interpolation), extrapolation_(extrapolation), data_(times_.size(), 1.0) {
+                                             const Interpolation interpolation, const Extrapolation extrapolation,
+                                             const YieldCurveRollDown yieldCurveRollDown)
+    : YieldTermStructure(0, !referenceCurve->calendar().empty() ? referenceCurve->calendar() : NullCalendar(),
+                         referenceCurve->dayCounter()),
+      referenceCurve_(referenceCurve), times_(times), quotes_(quotes), interpolation_(interpolation),
+      extrapolation_(extrapolation), yieldCurveRollDown_(yieldCurveRollDown), data_(times_.size(), 1.0) {
     QL_REQUIRE(times_.size() > 1, "SpreadedDiscountCurve: at least two times required");
     QL_REQUIRE(times_.size() == quotes.size(), "SpreadedDiscountCurve: size of time and quote vectors do not match");
     QL_REQUIRE(times_[0] == 0.0, "SpreadedDiscountCurve: first time must be 0, got " << times_[0]);
@@ -35,6 +40,10 @@ SpreadedDiscountCurve::SpreadedDiscountCurve(const Handle<YieldTermStructure>& r
     }
     if (interpolation_ == Interpolation::logLinear) {
         dataInterpolation_ = QuantLib::ext::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
+    } else if (interpolation_ == Interpolation::logCubic) {
+        dataInterpolation_ = QuantLib::ext::make_shared<LogCubicInterpolation>(
+            times_.begin(), times_.end(), data_.begin(), CubicInterpolation::Spline, true,
+            CubicInterpolation::SecondDerivative, 0.0, CubicInterpolation::SecondDerivative, 0.0);
     } else {
         dataInterpolation_ = QuantLib::ext::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin());
     }
@@ -49,13 +58,12 @@ void SpreadedDiscountCurve::update() {
     TermStructure::update();
 }
 
-const Date& SpreadedDiscountCurve::referenceDate() const { return referenceCurve_->referenceDate(); }
-
-Calendar SpreadedDiscountCurve::calendar() const { return referenceCurve_->calendar(); }
-
-Natural SpreadedDiscountCurve::settlementDays() const { return referenceCurve_->settlementDays(); }
-
 void SpreadedDiscountCurve::performCalculations() const {
+
+    if(!bases_.empty() && basesReferenceDate_ != referenceDate()) {
+        updateBasesOffsets();
+    }
+
     for (Size i = 0; i < times_.size(); ++i) {
         QL_REQUIRE(!quotes_[i].empty(), "SpreadedDiscountCurve: quote at index " << i << " is empty");
         data_[i] = quotes_[i]->value();
@@ -72,49 +80,72 @@ void SpreadedDiscountCurve::performCalculations() const {
     dataInterpolation_->update();
 }
 
-DiscountFactor SpreadedDiscountCurve::discountImpl(Time t) const {
+DiscountFactor SpreadedDiscountCurve::getDiscount(Time t, bool includeSpread) const {
     calculate();
-    Time tMax = this->times_.back();
-    DiscountFactor dMax =
-        interpolation_ == Interpolation::logLinear ? this->data_.back() : std::exp(-this->data_.back() * tMax);
-    if (t <= this->times_.back()) {
-        Real tmp = (*dataInterpolation_)(t, true);
-        if (interpolation_ == Interpolation::logLinear)
-            return referenceCurve_->discount(t) * tmp;
-        else
-            return referenceCurve_->discount(t) * std::exp(-tmp * t);
-    }
-    if (extrapolation_ == Extrapolation::flatFwd) {
-        Rate instFwdMax = -(*dataInterpolation_).derivative(tMax) / dMax;
-        return referenceCurve_->discount(t) * dMax * std::exp(-instFwdMax * (t - tMax));
+
+    DiscountFactor refDf;
+    if (referenceDate() == referenceCurve_->referenceDate()) {
+        refDf = referenceCurve_->discount(t);
     } else {
-        return referenceCurve_->discount(t) * std::pow(dMax, t / tMax);
+        if (yieldCurveRollDown_ == YieldCurveRollDown::ConstantDiscounts) {
+            refDf = referenceCurve_->discount(t);
+        } else if (yieldCurveRollDown_ == YieldCurveRollDown::ForwardForward) {
+            Time t0 = referenceCurve_->timeFromReference(referenceDate());
+            refDf = referenceCurve_->discount(t + t0) / referenceCurve_->discount(t0);
+        } else {
+            QL_FAIL("SpreadedDiscountCurve::getDiscount(): yield curve rolldown not handled, internal error.");
+        }
     }
+
+    Time tMax = this->times_.back();
+    if (t <= tMax) {
+        Real tmp = includeSpread ? (*dataInterpolation_)(t, true) : 1.0;
+        if (interpolation_ == Interpolation::linearZero)
+            return refDf * std::exp(-tmp * t);
+        else
+            return refDf * tmp;
+    }
+
+    DiscountFactor dMax =
+        includeSpread
+            ? interpolation_ == Interpolation::linearZero ? std::exp(-this->data_.back() * tMax) : this->data_.back()
+            : 1.0;
+    if (extrapolation_ == Extrapolation::flatFwd) {
+        Rate instFwdMax = includeSpread ? -(*dataInterpolation_).derivative(tMax) / dMax : 0.0;
+        return refDf * dMax * std::exp(-instFwdMax * (t - tMax));
+    } else {
+        return refDf * std::pow(dMax, t / tMax);
+    }
+}
+
+DiscountFactor SpreadedDiscountCurve::discountImpl(Time t) const { return getDiscount(t, true); }
+Real SpreadedDiscountCurve::discountWithoutSpread(Time t) const { return getDiscount(t, false); }
+
+void SpreadedDiscountCurve::updateBasesOffsets() const {
+    basesOffset_.resize(bases_.size());
+    for (Size i = 0; i < bases_.size(); ++i) {
+        auto c = QuantLib::ext::dynamic_pointer_cast<SpreadedDiscountCurve>(*bases_[i]);
+        QL_REQUIRE(c,
+                   "SpreadedDiscountCurve::updateBasesOffsets(): only SpreadedDiscountCurve is allowed as base curve.");
+        basesOffset_[i].resize(times_.size());
+        for (Size j = 0; j < times_.size(); ++j) {
+            basesOffset_[i][j] = bases_[i].empty() ? 1.0 : c->discountWithoutSpread(times_[j]);
+        }
+    }
+    basesReferenceDate_ = referenceDate();
 }
 
 void SpreadedDiscountCurve::makeThisCurveSpreaded(const std::vector<Handle<YieldTermStructure>>& bases,
                                                   const std::vector<double>& multiplier) {
-
     for (auto const& b : bases_)
         unregisterWith(b);
-
     bases_ = bases;
     multiplier_ = multiplier;
     QL_REQUIRE(bases_.size() == multiplier_.size(), "SpreadedDiscountCurve::makeThisCurveSpreaded(): bases size ("
                                                         << bases_.size() << ") does not match multiplier size ("
                                                         << multiplier_.size() << ")");
-
     for (auto const& b : bases_)
         registerWith(b);
-
-    basesOffset_.resize(bases.size());
-    for (Size i = 0; i < bases_.size(); ++i) {
-        basesOffset_[i].resize(times_.size());
-        for (Size j = 0; j < times_.size(); ++j) {
-            basesOffset_[i][j] = bases_[i].empty() ? 1.0 : bases_[i]->discount(times_[j]);
-        }
-    }
-
     update();
 }
 

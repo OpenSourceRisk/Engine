@@ -29,7 +29,6 @@
     <FixedConvention>Following</FixedConvention>
     <FixedPaymentConvention>Following</FixedPaymentConvention>
     <Rule>Backward</Rule>
-    <RateCutoff>1</RateCutoff>
   </OIS>
   <Swap>
     <Id>EUR-6M-SWAP-CONVENTIONS</Id>

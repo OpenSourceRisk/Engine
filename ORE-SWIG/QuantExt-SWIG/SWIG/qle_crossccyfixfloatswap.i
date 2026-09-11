@@ -42,7 +42,7 @@ class CrossCcyFixFloatSwap : public QuantExt::CrossCcySwap {
                          QuantLib::Real floatNominal,
                          const QuantLib::Currency& floatCurrency,
                          const QuantLib::Schedule& floatSchedule,
-                         const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& floatIndex,
+                         const ext::shared_ptr<QuantLib::IborIndex>& floatIndex,
                          QuantLib::Spread floatSpread,
                          QuantLib::BusinessDayConvention floatPaymentBdc,
                          QuantLib::Natural floatPaymentLag,

@@ -42,6 +42,7 @@ QuantLib::Real getDifferenceScenario(const RiskFactorKey::KeyType keyType, const
     case RiskFactorKey::KeyType::YoYInflationCapFloorVolatility:
     case RiskFactorKey::KeyType::CommodityCurve:
     case RiskFactorKey::KeyType::CommodityVolatility:
+    case RiskFactorKey::KeyType::IntradayPowerCurve:
     case RiskFactorKey::KeyType::SecuritySpread:
     case RiskFactorKey::KeyType::Correlation:
     case RiskFactorKey::KeyType::CPR:
@@ -83,6 +84,7 @@ QuantLib::Real addDifferenceToScenario(const RiskFactorKey::KeyType keyType, con
     case RiskFactorKey::KeyType::YoYInflationCapFloorVolatility:
     case RiskFactorKey::KeyType::CommodityCurve:
     case RiskFactorKey::KeyType::CommodityVolatility:
+    case RiskFactorKey::KeyType::IntradayPowerCurve:
     case RiskFactorKey::KeyType::SecuritySpread:
     case RiskFactorKey::KeyType::Correlation:
     case RiskFactorKey::KeyType::CPR:
@@ -370,6 +372,7 @@ QuantLib::Real sanitizeScenarioValue(const RiskFactorKey::KeyType keyType, const
     case RiskFactorKey::KeyType::CPR:
     case RiskFactorKey::KeyType::SecuritySpread:
     case RiskFactorKey::KeyType::CommodityCurve:
+    case RiskFactorKey::KeyType::IntradayPowerCurve:
     case RiskFactorKey::KeyType::ZeroInflationCurve:
     case RiskFactorKey::KeyType::YoYInflationCurve:
     case RiskFactorKey::KeyType::CreditState:
@@ -391,6 +394,7 @@ QuantLib::Real sanitizeScenarioValue(const RiskFactorKey::KeyType keyType, const
     case RiskFactorKey::KeyType::RecoveryRate:
     case RiskFactorKey::KeyType::CPIIndex:
     case RiskFactorKey::KeyType::SurvivalWeight:
+    case RiskFactorKey::KeyType::BondFutureVolatility:
         return std::max(0.0, rawValue);
 
     case RiskFactorKey::KeyType::DiscountCurve:
@@ -434,6 +438,7 @@ absoluteToSpreadedScenario(const QuantLib::ext::shared_ptr<Scenario>& s,
         case RiskFactorKey::KeyType::YoYInflationCapFloorVolatility:
         case RiskFactorKey::KeyType::CommodityCurve:
         case RiskFactorKey::KeyType::CommodityVolatility:
+        case RiskFactorKey::KeyType::IntradayPowerCurve:
         case RiskFactorKey::KeyType::SecuritySpread:
         case RiskFactorKey::KeyType::Correlation:
         case RiskFactorKey::KeyType::CPR:

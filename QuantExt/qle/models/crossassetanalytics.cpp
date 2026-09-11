@@ -61,10 +61,8 @@ pair<Real, Real> inf_jy_expectation_1(const CrossAssetModel& x, Size i, Time t0,
 
     // 2) Inflation index process drift
     const auto& zts = x.infjy(i)->realRate()->termStructure();
-    bool indexIsInterpolated = true; // model is continouous time, so interpolated = true
-                                     // TODO:remove it later, once we refactored the yoy
-    res.second = std::log(inflationGrowth(zts, t0 + dt, gridDayCounter, indexIsInterpolated) /
-                          inflationGrowth(zts, t0, gridDayCounter, indexIsInterpolated));
+    res.second = std::log(inflationGrowth(zts, t0 + dt, gridDayCounter) /
+                          inflationGrowth(zts, t0, gridDayCounter));
 
     res.second -= 0.5 * (vy(i).eval(x, t0 + dt) - vy(i).eval(x, t0));
 

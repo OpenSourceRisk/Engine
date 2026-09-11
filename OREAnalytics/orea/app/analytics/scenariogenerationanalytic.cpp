@@ -17,8 +17,9 @@
 */
 
 #include <orea/app/analytics/scenariogenerationanalytic.hpp>
+#include <orea/app/analytics/utilities.hpp>
 #include <orea/app/inputparameters.hpp>
-#include <orea/app/reportwriter.hpp>
+#include <orea/app/reportwriters/scenarioreportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
@@ -27,11 +28,13 @@
 #include <orea/scenario/scenariogeneratortransform.hpp>
 #include <orea/scenario/scenariowriter.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
+#include <orea/scenario/stressscenariogenerator.hpp>
 #include <qle/methods/pathgeneratorfactory.hpp>
 
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/report/inmemoryreport.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 
 using namespace ore::data;
 using namespace std::filesystem;
@@ -72,6 +75,8 @@ void ScenarioGenerationVariables::loadVariablesImpl(const QuantLib::ext::shared_
     inputs->loadParameter<Integer>(scenarioPrecision_, analyticStr, "scenarioPrecision", false,
                                     std::function<Integer(const string&)>(parseInteger));
     inputs->loadParameter<string>(amcPathDataOutput_, analyticStr, "amcPathDataOutput", false);
+    inputs->loadParameter<std::vector<QuantExt::RiskFactorKey::KeyType>>(filterRiskKeys_, analyticStr, "filterRiskKeys",
+                                                                         false, parseListOfRiskFactorKeyValues);
 }
 
 ScenarioGenerationType parseScenarioGenerationType(const string& s) {
@@ -111,10 +116,9 @@ void ScenarioGenerationAnalyticImpl::buildScenarioSimMarket() {
 
     std::string configuration = inputs_->marketConfig("simulation");
     simMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
-        analytic()->market(), analytic()->configurations().simMarketParams,
-        QuantLib::ext::make_shared<FixingManager>(inputs_->asof()), configuration, *inputs_->curveConfigs().get(),
-        *analytic()->configurations().todaysMarketParams, inputs_->continueOnError(), false, true, false,
-        inputs_->iborFallbackConfig(), false);
+        analytic()->market(), analytic()->configurations().simMarketParams, configuration,
+        *inputs_->curveConfigs().get(), *analytic()->configurations().todaysMarketParams, inputs_->continueOnError(),
+        false, true, false, inputs_->iborFallbackConfig(), false);
 }
 
 void ScenarioGenerationAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationError,
@@ -122,7 +126,7 @@ void ScenarioGenerationAnalyticImpl::buildScenarioGenerator(const bool continueO
 
     auto sgVars = ext::dynamic_pointer_cast<ScenarioGenerationVariables>(inputVariables_);
     if (sgVars->type_ == ScenarioGenerationType::exposure) {
-        if (!model_)
+        if (model_.empty())
             buildCrossAssetModel(continueOnCalibrationError, allowModelFallbacks);
         ScenarioGeneratorBuilder sgb(analytic()->configurations().scenarioGeneratorData);
         string config = inputs_->marketConfig("simulation");
@@ -156,7 +160,7 @@ void ScenarioGenerationAnalyticImpl::buildScenarioGenerator(const bool continueO
     auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     analytic()->addReport("SCENARIO_GENERATION", "scenario", report);
     scenarioGenerator_ = QuantLib::ext::make_shared<ScenarioWriter>(
-        scenarioGenerator_, report, std::vector<RiskFactorKey>{}, false, sgVars->scenarioPrecision_);
+        scenarioGenerator_, report, std::vector<RiskFactorKey>{}, false, sgVars->scenarioPrecision_, sgVars->filterRiskKeys_);
 }
 
 void ScenarioGenerationAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError,
@@ -172,7 +176,7 @@ void ScenarioGenerationAnalyticImpl::buildCrossAssetModel(const bool continueOnC
                                         false, continueOnCalibrationError, "", "xva cam building", false,
                                         allowModelFallbacks);
 
-    model_ = *modelBuilder.model();
+    model_ = modelBuilder.model();
 }
 
 void ScenarioGenerationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -222,14 +226,14 @@ void ScenarioGenerationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr
     if (sgVars->scenarioOutputStatistics_) {
         auto statsReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         scenarioGenerator->reset();
-        ReportWriter().writeScenarioStatistics(scenarioGenerator, keys, samples_, grid_->dates(), *statsReport);
+        ScenarioReportWriter().writeScenarioStatistics(scenarioGenerator, keys, samples_, grid_->dates(), *statsReport);
         analytic()->addReport("SCENARIO_GENERATION", "scenario_statistics", statsReport);
     }
 
     if (sgVars->scenarioOutputDistributions_) {
         auto distributionReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         scenarioGenerator->reset();
-        ReportWriter().writeScenarioDistributions(scenarioGenerator, keys, samples_, grid_->dates(),
+        ScenarioReportWriter().writeScenarioDistributions(scenarioGenerator, keys, samples_, grid_->dates(),
                                                   sgVars->scenarioDistributionSteps_, *distributionReport);
         analytic()->addReport("SCENARIO_GENERATION", "scenario_distribution", distributionReport);
     }

@@ -65,67 +65,15 @@ namespace ore {
 namespace data {
 
 namespace {
-class ASTRunner : public AcyclicVisitor,
-                  public Visitor<ASTNode>,
-                  public Visitor<OperatorPlusNode>,
-                  public Visitor<OperatorMinusNode>,
-                  public Visitor<OperatorMultiplyNode>,
-                  public Visitor<OperatorDivideNode>,
-                  public Visitor<NegateNode>,
-                  public Visitor<FunctionAbsNode>,
-                  public Visitor<FunctionExpNode>,
-                  public Visitor<FunctionLogNode>,
-                  public Visitor<FunctionSqrtNode>,
-                  public Visitor<FunctionNormalCdfNode>,
-                  public Visitor<FunctionNormalPdfNode>,
-                  public Visitor<FunctionMinNode>,
-                  public Visitor<FunctionMaxNode>,
-                  public Visitor<FunctionFractionNode>,
-                  public Visitor<FunctionRoundNode>,
-                  public Visitor<FunctionPowNode>,
-                  public Visitor<FunctionBlackNode>,
-                  public Visitor<FunctionDcfNode>,
-                  public Visitor<FunctionDaysNode>,
-                  public Visitor<FunctionPayNode>,
-                  public Visitor<FunctionLogPayNode>,
-                  public Visitor<FunctionNpvNode>,
-                  public Visitor<FunctionNpvMemNode>,
-                  public Visitor<HistFixingNode>,
-                  public Visitor<FunctionDiscountNode>,
-                  public Visitor<FunctionFwdCompNode>,
-                  public Visitor<FunctionFwdAvgNode>,
-                  public Visitor<FunctionAboveProbNode>,
-                  public Visitor<FunctionBelowProbNode>,
-                  public Visitor<SortNode>,
-                  public Visitor<PermuteNode>,
-                  public Visitor<ConstantNumberNode>,
-                  public Visitor<VariableNode>,
-                  public Visitor<SizeOpNode>,
-                  public Visitor<FunctionDateIndexNode>,
-                  public Visitor<VarEvaluationNode>,
-                  public Visitor<AssignmentNode>,
-                  public Visitor<RequireNode>,
-                  public Visitor<DeclarationNumberNode>,
-                  public Visitor<SequenceNode>,
-                  public Visitor<ConditionEqNode>,
-                  public Visitor<ConditionNeqNode>,
-                  public Visitor<ConditionLtNode>,
-                  public Visitor<ConditionLeqNode>,
-                  public Visitor<ConditionGtNode>,
-                  public Visitor<ConditionGeqNode>,
-                  public Visitor<ConditionNotNode>,
-                  public Visitor<ConditionAndNode>,
-                  public Visitor<ConditionOrNode>,
-                  public Visitor<IfThenElseNode>,
-                  public Visitor<LoopNode> {
+class ASTRunner : public StAstVisitor {
 public:
     ASTRunner(ComputationGraph& g, const std::vector<std::string>& opLabels,
               const QuantLib::ext::shared_ptr<ModelCG> model,
-              const std::optional<std::set<std::string>>& minimalModelCcys, const bool generatePayLog,
-              const bool includePastCashflows, const std::string& script, bool& interactive, Context& context,
-              ASTNode*& lastVisitedNode, std::set<std::size_t>& keepNodes,
+              const std::optional<std::set<std::string>>& minimalModelCcys, const std::string& localBaseCcy,
+              const bool generatePayLog, const bool includePastCashflows, const std::string& script, bool& interactive,
+              Context& context, ASTNode*& lastVisitedNode, std::set<std::size_t>& keepNodes,
               std::vector<ComputationGraphBuilder::PayLogEntry>& payLogEntries)
-        : g_(g), opLabels_(opLabels), model_(model), minimalModelCcys_(minimalModelCcys),
+        : g_(g), opLabels_(opLabels), model_(model), minimalModelCcys_(minimalModelCcys), localBaseCcy_(localBaseCcy),
           size_(model ? model->size() : 1), generatePayLog_(generatePayLog),
           includePastCashflows_(includePastCashflows), script_(script), interactive_(interactive),
           keepNodes_(keepNodes), payLogEntries_(payLogEntries), context_(context), lastVisitedNode_(lastVisitedNode) {
@@ -1065,8 +1013,8 @@ public:
             QL_REQUIRE(obs <= pay, "observation date (" << obs << ") <= payment date (" << pay << ") required");
             RandomVariable result; // uninitialised, since model dependent
             value.push(result);
-            std::size_t node =
-                pay <= model_->referenceDate() ? cg_const(g_, 0.0) : model_->pay(amount_node, obs, pay, pccy);
+            std::size_t node = pay <= model_->referenceDate() ? cg_const(g_, 0.0)
+                                                              : model_->pay(amount_node, obs, pay, pccy, localBaseCcy_);
             std::size_t cfnode = pay <= model_->referenceDate() ? amount_node : node;
             value_node.push(node);
             TRACE("pay( " << amount << " , " << obsdate << " , " << paydate << " , " << paycurr << " ) (#" << node
@@ -1184,7 +1132,8 @@ public:
         }
         value.push(RandomVariable()); // uninitialized, since model dependent
         std::size_t node = model_->npv(amount_node, obs, regFilter_node, mem, {addRegressor1_node, addRegressor2_node},
-                                       model_->npvRegressors(obs, minimalModelCcys_));
+                                       model_->npvRegressors(obs, minimalModelCcys_, localBaseCcy_, localBaseCcy_),
+                                       model_->npvRegressors(obs, minimalModelCcys_, localBaseCcy_));
         value_node.push(node);
         if (hasMemSlot) {
             TRACE("npvmem( " << amount << " , " << obsdate << " , " << memSlot << " , " << regFilter << " , "
@@ -1385,7 +1334,7 @@ public:
             isAvg, boost::get<IndexVec>(underlying).value, obs, start, end, spreadValue.at(0), gearingValue.at(0),
             static_cast<Integer>(lookbackValue.at(0)), static_cast<Natural>(rateCutoffValue.at(0)),
             static_cast<Natural>(fixingDaysValue.at(0)), includeSpreadBool, capValue.at(0), floorValue.at(0),
-            nakedOptionBool, localCapFloorBool));
+            nakedOptionBool, localCapFloorBool, localBaseCcy_));
 
         TRACE("fwdCompAvg(" << isAvg << " , " << underlying << " , " << obsdate << " , " << startdate << " , "
                             << enddate << " , " << spreadValue.at(0) << " , " << gearingValue.at(0) << " , "
@@ -1426,7 +1375,7 @@ public:
             value_node.push(cg_const(g_,0.0));
         } else {
             value.push(RandomVariable());
-            value_node.push(model_->barrierProbability(und, obs1, obs2, barrierNode, above));
+            value_node.push(model_->barrierProbability(und, obs1, obs2, barrierNode, above, localBaseCcy_));
         }
         TRACE((above ? "above" : "below") << "prob(" << underlying << " , " << obsdate1 << " , " << obsdate2 << " , "
                                           << barrier << " (#" << barrierNode << "))",
@@ -1479,6 +1428,7 @@ public:
     const std::vector<std::string> opLabels_;
     const QuantLib::ext::shared_ptr<ModelCG> model_;
     const std::optional<std::set<std::string>> minimalModelCcys_;
+    const std::string localBaseCcy_; 
     const Size size_;
     const bool generatePayLog_;
     const bool includePastCashflows_;
@@ -1505,8 +1455,9 @@ void ComputationGraphBuilder::run(const bool generatePayLog, const bool includeP
     payLogEntries_.clear();
 
     ASTNode* loc;
-    ASTRunner runner(g_, opLabels_, model_, minimalModelCcys_, generatePayLog, generatePayLog && includePastCashflows,
-                     script, interactive, *context_, loc, keepNodes_, payLogEntries_);
+    ASTRunner runner(g_, opLabels_, model_, minimalModelCcys_, localBaseCcy_, generatePayLog,
+                     generatePayLog && includePastCashflows, script, interactive, *context_, loc, keepNodes_,
+                     payLogEntries_);
 
     randomvariable_output_pattern pattern;
     if (model_ == nullptr || model_->type() == ModelCG::Type::MC) {

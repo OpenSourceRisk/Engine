@@ -38,14 +38,12 @@ using std::string;
 class FxOption : public VanillaOptionTrade {
 public:
     //! Default constructor
-    FxOption() : VanillaOptionTrade(AssetClass::FX) { tradeType_ = "FxOption"; }
+    FxOption() : VanillaOptionTrade("FxOption", AssetClass::FX) {}
     //! Constructor
     FxOption(const Envelope& env, const OptionData& option, const string& boughtCurrency, double boughtAmount,
              const string& soldCurrency, double soldAmount, const std::string& fxIndex = "", double delta = 0.0)
-        : VanillaOptionTrade(env, AssetClass::FX, option, boughtCurrency, soldCurrency, boughtAmount,
-                             TradeStrike(soldAmount / boughtAmount, soldCurrency)), fxIndex_(fxIndex), delta_(delta) {
-        tradeType_ = "FxOption";
-    }
+        : VanillaOptionTrade("FxOption", env, AssetClass::FX, option, boughtCurrency, soldCurrency, boughtAmount,
+                             TradeStrike(soldAmount / boughtAmount, soldCurrency)), fxIndex_(fxIndex), delta_(delta) {}
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;

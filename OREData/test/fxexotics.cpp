@@ -159,8 +159,6 @@ BOOST_AUTO_TEST_CASE(testFXDigitalOptionPrice) {
         QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
         engineData->model("FxDigitalOption") = "GarmanKohlhagen";
         engineData->engine("FxDigitalOption") = "AnalyticEuropeanEngine";
-        engineData->model("FxDigitalOptionEuropeanCS") = "GarmanKohlhagen";
-        engineData->engine("FxDigitalOptionEuropeanCS") = "AnalyticCashSettledEuropeanEngine";
 
         QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
@@ -770,8 +768,6 @@ BOOST_AUTO_TEST_CASE(testFXDigitalBarrierOptionParity) {
             engineData->engineParameters("FxDigitalBarrierOption") = engineParamMap;
             engineData->model("FxDigitalOption") = "GarmanKohlhagen";
             engineData->engine("FxDigitalOption") = "AnalyticEuropeanEngine";
-            engineData->model("FxDigitalOptionEuropeanCS") = "GarmanKohlhagen";
-            engineData->engine("FxDigitalOptionEuropeanCS") = "AnalyticCashSettledEuropeanEngine";
             QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
             fxOption.build(engineFactory);
@@ -861,8 +857,6 @@ BOOST_AUTO_TEST_CASE(testFXDigitalBarrierOptionTouched) {
                 engineData->engineParameters("FxDigitalBarrierOption") = engineParamMap;
                 engineData->model("FxDigitalOption") = "GarmanKohlhagen";
                 engineData->engine("FxDigitalOption") = "AnalyticEuropeanEngine";
-                engineData->model("FxDigitalOptionEuropeanCS") = "GarmanKohlhagen";
-                engineData->engine("FxDigitalOptionEuropeanCS") = "AnalyticCashSettledEuropeanEngine";
                 QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
                 fxOption.build(engineFactory);

@@ -22,6 +22,31 @@
 %include vectors.i
 %include ored_crossassetmodeldata.i
 
+// ---------------------------------------------------------------------------
+// CalibrationConfiguration
+// ---------------------------------------------------------------------------
+
+%shared_ptr(ore::data::CalibrationConfiguration)
+namespace ore {
+namespace data {
+class CalibrationConfiguration : public ore::data::XMLSerializable {
+public:
+    CalibrationConfiguration(QuantLib::Real rmseTolerance = 0.0001,
+                             QuantLib::Size maxIterations = 50);
+    QuantLib::Real rmseTolerance() const;
+    QuantLib::Size maxIterations() const;
+    void add(const std::string& name, QuantLib::Real lowerBound, QuantLib::Real upperBound);
+    std::pair<QuantLib::Real, QuantLib::Real> boundaries(const std::string& name) const;
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+};
+} // namespace data
+} // namespace ore
+
+// ---------------------------------------------------------------------------
+// IrLgmData / builder hierarchy
+// ---------------------------------------------------------------------------
+
 %shared_ptr(ore::data::IrLgmData)
 namespace ore {
 namespace data {
@@ -45,10 +70,10 @@ public:
     Real error() const;
     std::string qualifier();
     std::string ccy();
-    QuantLib::ext::shared_ptr<QuantExt::IrModel> model() const;
+    QuantLib::Handle<QuantExt::IrModel> model() const;
     RelinkableHandle<YieldTermStructure> discountCurve();
-    QuantLib::ext::shared_ptr<QuantExt::Parametrization> parametrization() const;
-    std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> swaptionBasket() const;
+    ext::shared_ptr<QuantExt::Parametrization> parametrization() const;
+    std::vector<ext::shared_ptr<BlackCalibrationHelper>> swaptionBasket() const;
     void forceRecalculate() override;
     bool requiresRecalibration() const override;
     void recalibrate() const override;
@@ -63,8 +88,8 @@ namespace ore {
 namespace data {
 class LgmBuilder : public IrModelBuilder {
 public:
-    LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market,
-               const QuantLib::ext::shared_ptr<IrLgmData>& data,
+    LgmBuilder(const ext::shared_ptr<ore::data::Market>& market,
+               const ext::shared_ptr<IrLgmData>& data,
                const std::string& configuration = Market::defaultConfiguration,
                Real bootstrapTolerance = 0.001,
                const bool continueOnError = false,
@@ -76,6 +101,7 @@ public:
                const bool allowChangingFallbacksUnderScenarios = false,
                const bool allowModelFallbacks = false,
                const bool dontCalibrate = false);
+    QuantLib::Handle<QuantExt::LGM> modelAsLgm() const;
 };
 
 } // namespace data
@@ -86,8 +112,8 @@ namespace ore {
 namespace data {
 class HwBuilder : public IrModelBuilder {
 public:
-    HwBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market,
-              const QuantLib::ext::shared_ptr<HwModelData>& data,
+    HwBuilder(const ext::shared_ptr<ore::data::Market>& market,
+              const ext::shared_ptr<HwModelData>& data,
               const QuantExt::IrModel::Measure measure = QuantExt::IrModel::Measure::BA,
               const QuantExt::HwModel::Discretization discretization = QuantExt::HwModel::Discretization::Euler,
               const bool evaluateBankAccount = true,
@@ -102,6 +128,7 @@ public:
               const bool allowChangingFallbacksUnderScenarios = false,
               const bool allowModelFallbacks = false,
               const bool dontCalibrate = false);
+    QuantLib::Handle<QuantExt::HwModel> modelAsHw() const;
 };
 
 } // namespace data
@@ -112,15 +139,15 @@ namespace ore {
 namespace data {
 class FxBsBuilder : public ModelBuilder {
 public:
-    FxBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market,
-                const QuantLib::ext::shared_ptr<FxBsData>& data,
+    FxBsBuilder(const ext::shared_ptr<ore::data::Market>& market,
+                const ext::shared_ptr<FxBsData>& data,
                 const std::string& configuration = Market::defaultConfiguration,
                 const std::string& referenceCalibrationGrid = "",
                 const std::string& id = "unknown");
     Real error() const;
     std::string foreignCurrency();
-    QuantLib::ext::shared_ptr<QuantExt::FxBsParametrization> parametrization() const;
-    std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> optionBasket() const;
+    ext::shared_ptr<QuantExt::FxBsParametrization> parametrization() const;
+    std::vector<ext::shared_ptr<BlackCalibrationHelper>> optionBasket() const;
     void forceRecalculate() override;
     bool requiresRecalibration() const override;
     void setCalibrationDone() const;
@@ -136,7 +163,7 @@ namespace data {
 class CrossAssetModelBuilder : public ModelBuilder {
 public:
     Handle<QuantExt::CrossAssetModel> model() const;
-    const QuantLib::ext::shared_ptr<ore::data::CrossAssetModelData>& modelData() const;
+    const ext::shared_ptr<ore::data::CrossAssetModelData>& modelData() const;
     const std::vector<Real>& swaptionCalibrationErrors();
     const std::vector<Real>& fxOptionCalibrationErrors();
     const std::vector<Real>& eqOptionCalibrationErrors();
@@ -148,6 +175,129 @@ public:
     void newCalcWithoutRecalibration() const override;
 };
 
+} // namespace data
+} // namespace ore
+
+// ---------------------------------------------------------------------------
+// HestonModelCalibration
+// ---------------------------------------------------------------------------
+
+%shared_ptr(ore::data::HestonModelCalibration)
+namespace ore {
+namespace data {
+class HestonModelCalibration {
+public:
+    HestonModelCalibration(
+        const std::string& indexName,
+        const ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
+        const std::vector<QuantLib::Period>& expiries = {},
+        const std::vector<QuantLib::Real>& moneyness = {-2.0, -1.0, 0.0, 1.0, 2.0},
+        const std::vector<QuantLib::Period>& varianceTerms = {},
+        const std::vector<QuantLib::Real>& initialValues = {0.04, 1.0, 0.5, -0.9, 0.04},
+        const std::vector<bool>& fixedValues = {false, false, false, false, false},
+        const std::string& calibrationMethod = "ConstantBestFit",
+        const std::vector<QuantLib::Real>& maximumInitialValues = {0.1, 20.0, 3.0, 0.9, 0.1},
+        QuantLib::Real relaxedFellerConstraint = 1.0,
+        QuantLib::Size maxCalibrationAttempts = 0,
+        QuantLib::Real earlyExitThreshold = 0.005,
+        QuantLib::Real maxAcceptableError = 0.05,
+        const HestonProcess::Discretization& discretization = HestonProcess::QuadraticExponential,
+        const bool dontCalibrate = false);
+
+    ext::shared_ptr<QuantLib::HestonModel> model();
+};
+} // namespace data
+} // namespace ore
+
+// ---------------------------------------------------------------------------
+// HestonModelBuilder
+// ---------------------------------------------------------------------------
+
+%shared_ptr(ore::data::HestonModelBuilder)
+namespace ore {
+namespace data {
+class HestonModelBuilder : public AssetModelBuilderBase {
+public:
+    HestonModelBuilder(
+        const std::vector<std::string>& indices,
+        const std::vector<QuantLib::Handle<QuantLib::YieldTermStructure>>& curves,
+        const std::vector<ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>>& processes,
+        const std::set<QuantLib::Date>& simulationDates = {},
+        const std::set<QuantLib::Date>& addDates = {},
+        const QuantLib::Size timeStepsPerYear = 1,
+        const std::vector<QuantLib::Period>& calibrationExpiries = {},
+        const std::vector<QuantLib::Real>& calibrationMoneyness = {-2.0, -1.0, 0.0, 1.0, 2.0},
+        const std::vector<QuantLib::Period>& calibrationVarianceTerms = {},
+        const std::vector<QuantLib::Real>& initialValues = {0.04, 1.0, 0.5, -0.5, 0.04},
+        const std::vector<bool>& fixedValues = {false, false, false, false, false},
+        const std::string& calibrationMethod = "ConstantBestFit",
+        const std::vector<QuantLib::Real>& maximumInitialValues = {0.1, 20.0, 10.0, 0.9, 0.1},
+        QuantLib::Real relaxedFellerConstraint = 1.0,
+        QuantLib::Size maxCalibrationAttempts = 50,
+        QuantLib::Real earlyExitThreshold = 0.005,
+        QuantLib::Real maxAcceptableError = 0.05,
+        const HestonProcess::Discretization& discretization = HestonProcess::QuadraticExponential,
+        const std::string& referenceCalibrationGrid = "",
+        const bool dontCalibrate = false,
+        const QuantLib::Handle<QuantLib::YieldTermStructure>& baseCurve = {});
+
+    std::vector<ext::shared_ptr<QuantLib::StochasticProcess>> getCalibratedProcesses() const;
+    void forceRecalculate() override;
+    bool requiresRecalibration() const override;
+};
+} // namespace data
+} // namespace ore
+
+// ---------------------------------------------------------------------------
+// EqBsBuilder
+// ---------------------------------------------------------------------------
+
+%shared_ptr(ore::data::EqBsBuilder)
+namespace ore {
+namespace data {
+class EqBsBuilder : public QuantExt::ModelBuilder {
+public:
+    EqBsBuilder(const ext::shared_ptr<ore::data::Market>& market,
+                const ext::shared_ptr<EqBsData>& data,
+                const QuantLib::Currency& baseCcy,
+                const std::string& configuration = Market::defaultConfiguration,
+                const std::string& referenceCalibrationGrid = "",
+                const std::string& id = "unknown");
+
+    QuantLib::Real error() const;
+    std::string eqName();
+    ext::shared_ptr<QuantExt::EqBsParametrization> parametrization() const;
+    std::vector<ext::shared_ptr<BlackCalibrationHelper>> optionBasket() const;
+    void forceRecalculate() override;
+    bool requiresRecalibration() const override;
+    void setCalibrationDone() const;
+};
+} // namespace data
+} // namespace ore
+
+// ---------------------------------------------------------------------------
+// CommoditySchwartzModelBuilder
+// ---------------------------------------------------------------------------
+
+%shared_ptr(ore::data::CommoditySchwartzModelBuilder)
+namespace ore {
+namespace data {
+class CommoditySchwartzModelBuilder : public QuantExt::ModelBuilder {
+public:
+    CommoditySchwartzModelBuilder(
+        const ext::shared_ptr<ore::data::Market>& market,
+        const ext::shared_ptr<CommoditySchwartzData>& data,
+        const Currency& baseCcy,
+        const std::string& configuration = Market::defaultConfiguration,
+        const std::string& referenceCalibrationGrid = "");
+
+    QuantLib::Real error() const;
+    std::string name();
+    std::vector<ext::shared_ptr<BlackCalibrationHelper>> optionBasket() const;
+    void forceRecalculate() override;
+    bool requiresRecalibration() const override;
+    void setCalibrationDone() const;
+};
 } // namespace data
 } // namespace ore
 

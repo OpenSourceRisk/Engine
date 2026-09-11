@@ -22,6 +22,7 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/inputvariables.hpp>
 #include <orea/simm/imschedulecalculator.hpp>
 
 namespace ore {
@@ -29,11 +30,15 @@ namespace analytics {
     
 class InputParameters;
 
+struct IMScheduleVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+};
+
 class IMScheduleAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "IM_SCHEDULE";
 
-    IMScheduleAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
+    IMScheduleAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs, QuantLib::ext::make_shared<IMScheduleVariables>()) {
         setLabel(LABEL);
     }
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,

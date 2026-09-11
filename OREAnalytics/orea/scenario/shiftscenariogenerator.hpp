@@ -44,7 +44,7 @@ class ShiftScenarioGenerator : public ScenarioGenerator {
 public:
     class ScenarioDescription {
     public:
-        enum class Type { Base, Up, Down, Cross };
+        enum class Type { Base, Up, Down, Cross, Theta };
         //! Constructor
         ScenarioDescription(Type type)
             : type_(type), key1_(RiskFactorKey()), indexDesc1_(""), key2_(RiskFactorKey()), indexDesc2_("") {}
@@ -145,6 +145,35 @@ public:
         //! Resulting shifted curve with same tenor structure as the input curve
         vector<Real>& shiftedValues,
         //! Initialise shiftedValues vector before applying this shift j (yes for sensitivity, no for stress)
+        bool initialise);
+
+    //! Apply one shift across a group of shift curve tenor points known to share a single risk factor,
+    //! public to allow test suite access
+    /*!
+      Generalises the single point applyShift() above: weight one is applied to every curve grid
+      point between the group's first and last member, tapering to zero only between the group's
+      boundary and the immediately neighbouring non-member shift tenor. A single-element group
+      reproduces the single point applyShift() exactly, including its flat extrapolation at the
+      first and last configured shift tenor.
+     */
+    void applyShift(
+        //! Increasing shift curve tenor point indices that share one risk factor
+        const vector<Size>& js,
+        //! Shift size interpreted as either absolute or relative shift
+        Real shiftSize,
+        //! Upwards shift if true, otherwise downwards
+        bool up,
+        //! Absolute: newValue = oldValue + shiftSize. Relative: newValue = oldValue * (1 + shiftSize)
+        ShiftType type,
+        //! Shift tenors expressed as times
+        const vector<Time>& shiftTimes,
+        //! Input curve values such as zero rates
+        const vector<Real>& values,
+        //! Tenor points of the input curve, expressed as times
+        const vector<Time>& times,
+        //! Resulting shifted curve with same tenor structure as the input curve
+        vector<Real>& shiftedValues,
+        //! Initialise shiftedValues vector before applying this shift (yes for sensitivity, no for stress)
         bool initialise);
 
     //! Apply 2d shift to 2d matrix such as swaption volatilities, public to allow test suite access

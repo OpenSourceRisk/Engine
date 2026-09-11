@@ -48,8 +48,8 @@ using namespace QuantLib;
 
    For the methodology, see Andersen, Piterbarg, Interest Rate Modelling, ch. 19.4.
 
-   The underlying may only contain simple cahsflows, fixed coupons and standard ibor coupons (i.e. without cap/floor or
-   in arrears fixings). */
+   The underlying may only contain simple cahsflows, fixed coupons and standard ibor or overnight coupons
+   (i.e. without cap/floor or in arrears fixings). */
 
 class RepresentativeSwaptionMatcher {
 public:
@@ -76,7 +76,7 @@ private:
     const Handle<YieldTermStructure> discountCurve_;
     const Real reversion_, volatility_, flatRate_;
     //
-    QuantLib::ext::shared_ptr<LGM> model_;
+    QuantLib::Handle<LGM> model_;
     Leg modelLinkedUnderlying_;
     std::vector<bool> modelLinkedUnderlyingIsPayer_;
 

@@ -46,7 +46,7 @@ ext::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(
     const std::string& s,
     const Handle<ZeroInflationTermStructure>& h = Handle<ZeroInflationTermStructure>());
 
-QuantLib::ext::shared_ptr<QuantExt::FxIndex> parseFxIndex(const std::string& s);
+ext::shared_ptr<QuantExt::FxIndex> parseFxIndex(const std::string& s);
 
 Calendar parseCalendar(const std::string& s);
 QuantLib::Period parsePeriod(const std::string& s);

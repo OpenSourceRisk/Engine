@@ -7,7 +7,7 @@
 \begin{document}
 
 \title{ORE Product Catalogue \\ [1ex] \large Payoffs, Trade Input, Pricing}
-\date{30 January 2026}
+\date{30 April 2026}
 \maketitle
 
 \newpage
@@ -35,6 +35,7 @@ September 2024 & Acadia & updates for release 13\\
 January 2025 & Acadia & separate user guide, risk methodology, product catalogue\\
 October 2025 & Acadia & updates for release 14\\
 January 2026 & Acadia & updates for release 15\\
+April 2026 & Acadia & updates for release 16\\
 \hline
 \end{supertabular}
 \end{center}
@@ -106,6 +107,7 @@ followed by a similar length elaboration of the pricing methodology applied per 
 \input{tradedata/forwardbond}
 \input{tradedata/bondForward_refdata}
 \input{tradedata/bondfuture}
+\input{tradedata/bondfutureoption}
 \input{tradedata/bondrepo}
 \input{tradedata/bondoption}
 \input{tradedata/bondoption_refdata}
@@ -125,6 +127,7 @@ followed by a similar length elaboration of the pricing methodology applied per 
 \input{tradedata/creditlinkedswap}
 
 \input{tradedata/commodityforward}
+\input{tradedata/intradaypowerforward}
 \input{tradedata/commodityswap}
 \input{tradedata/commodityswaption}
 \input{tradedata/commodityoption}
@@ -143,6 +146,7 @@ followed by a similar length elaboration of the pricing methodology applied per 
 \input{tradedata/performanceoption_01}
 \input{tradedata/window_barrieroption}
 \input{tradedata/generic_barrieroption}
+\input{tradedata/forwardvolatilityagreement}
 \input{tradedata/bestentryoption}
 \input{tradedata/basketoption}
 \input{tradedata/worstofbasketswap}
@@ -184,6 +188,7 @@ followed by a similar length elaboration of the pricing methodology applied per 
 \input{tradecomponents/rangeaccrualleg}
 \input{tradecomponents/commodityfixedleg}
 \input{tradecomponents/commodityfloatingleg}
+\input{tradecomponents/intradaypowerfloatingleg}
 \input{tradecomponents/equitymarginleg}
 \input{tradecomponents/cdsreferenceinformation}
 \input{tradecomponents/basketdata}
@@ -239,6 +244,7 @@ methodology is applied to the cap/floor components.
 \input{pricing/ir_flexiswap.tex}
 \input{pricing/cr_bgs.tex}
 \input{pricing/ir_formulacouponirs.tex}
+\input{pricing/ir_rangeaccrualleg.tex}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 \subsection{Foreign Exchange Derivatives}
@@ -324,6 +330,7 @@ curves by cash flow currency and forwarding curves per index, see \ref{sec:curve
 \input{pricing/com_apo.tex}
 \input{pricing/com_spreadoption.tex}
 \input{pricing/com_varianceswap.tex}
+\input{pricing/intradaypower.tex}
 %\input{pricing/com_pm_forward.tex}
 %\input{pricing/com_pm_option.tex}
 

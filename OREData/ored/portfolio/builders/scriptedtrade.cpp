@@ -250,7 +250,8 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
 
     // 17 compile the processes (needed for BlackScholes, LocalVol only)
 
-    if (modelParam_ == "BlackScholes" || modelParam_ == "LocalVolDupire" || modelParam_ == "LocalVolAndreasenHuge" || modelParam_ == "Heston")
+    if (modelParam_ == "BlackScholes" || modelParam_ == "LocalVolDupire" || modelParam_ == "LocalVolAndreasenHuge" ||
+        modelParam_ == "Heston")
         setupBlackScholesProcesses();
 
     // 18 setup IR reversion values (needed for Gaussian CAM only)
@@ -306,6 +307,7 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
 
     DLOG("built model          : " << modelParam_ << " / " << engineParam_);
     DLOG("useCg                = " << std::boolalpha << useCg_);
+    DLOG("enableCgOptimization = " << std::boolalpha << enableCgOptimization_);
     DLOG("useAd                = " << std::boolalpha << useAd_);
     DLOG("useExternalDevice    = " << std::boolalpha << useExternalComputeDevice_);
     DLOG("useDblPrecExtCalc    = " << std::boolalpha << useDoublePrecisionForExternalCalculation_);
@@ -313,7 +315,7 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
     DLOG("externalDevice       = " << (useExternalComputeDevice_ ? externalComputeDevice_ : "na"));
     DLOG("calibration          = " << calibration_);
     DLOG("base ccy             = " << baseCcy_);
-    DLOG("model base (npv) ccy = " << (model_ != nullptr ? model_->baseCcy() : modelCG_->baseCcy()));
+    DLOG("model base (npv) ccy = " << (model_ != nullptr ? model_->baseCcy() : modelCG_->baseCurrency()));
     DLOG("ccys                 = " << modelCcys_.size());
     DLOG("eq,fx,com indices    = " << modelIndices_.size());
     DLOG("ir indices           = " << irIndices_.size());
@@ -363,37 +365,26 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
         engine = QuantLib::ext::make_shared<ScriptedInstrumentPricingEngine>(
             script.npv(), script.results(), model_, ast_, context, script.code(), interactive_, amcCam_ != nullptr,
             std::set<std::string>(script.stickyCloseOutStates().begin(), script.stickyCloseOutStates().end()),
-            generateAdditionalResults(), includePastCashflows_, staticNpvMem_);
+            generateAdditionalResults(), generateAdditionalResultsPathLevel_, includePastCashflows_, staticNpvMem_);
     } else if (modelCG_) {
-        auto rt = globalParameters_.find("RunType");
-        std::string runType = rt != globalParameters_.end() ? rt->second : "<<no run type set>>";
-        bool useCachedSensis = useAd_ && (runType == "SensitivityDelta");
-        bool useExternalDev = useExternalComputeDevice_ && !generateAdditionalResults() && !useCachedSensis;
-        if (useAd_ && !useCachedSensis) {
-            WLOG("Will not apply AD although useAD is configured, because runType ("
-                 << runType << ") does not match SensitivitiyDelta");
-        }
-        if (useExternalComputeDevice_ && !useExternalDev) {
-            WLOG("Will not use exxternal compute deivce although useExternalComputeDevice is configured, because we "
-                 "are either applying AD ("
-                 << std::boolalpha << useCachedSensis << ") or we are generating add results ("
-                 << generateAdditionalResults() << "), both of which do not support external devices at the moment.");
-        }
         engine = QuantLib::ext::make_shared<ScriptedInstrumentPricingEngineCG>(
             script.npv(), script.results(), modelCG_, std::set<std::string>(modelCcys_.begin(), modelCcys_.end()),
-            script.amcCgComponents(), script.amcCgTargetValue(), script.amcCgTargetDerivative(), ast_, context, params_,
-            indicatorSmoothingForValues_, indicatorSmoothingForDerivatives_, sqrtSmoothingForDerivatives_,
-            script.code(), interactive_, buildingAmcCg_, generateAdditionalResults(), includePastCashflows_,
-            useCachedSensis, useExternalDev, useDoublePrecisionForExternalCalculation_);
-        if (useExternalDev) {
+            baseCcy_, script.amcCgComponents(), script.amcCgTargetValue(), script.amcCgTargetDerivative(), ast_,
+            context, params_, indicatorSmoothingForValues_, indicatorSmoothingForDerivatives_,
+            sqrtSmoothingForDerivatives_, script.code(), interactive_, buildingAmcCg_, generateAdditionalResults(),
+            generateAdditionalResultsPathLevel_, includePastCashflows_, useAd_, useExternalComputeDevice_,
+            useDoublePrecisionForExternalCalculation_);
+        if (useExternalComputeDevice_) {
             ComputeEnvironment::instance().selectContext(externalComputeDevice_);
         }
     }
 
-    LOG("engine built for model " << modelParam_ << " / " << engineParam_ << ", modelSize = " << modelSize_
-                                  << ", interactive = " << interactive_ << ", amcEnabled = " << buildingAmc_
-                                  << ", amccgEnabled = " << buildingAmcCg_
-                                  << ", generateAdditionalResults = " << generateAdditionalResults());
+    LOG("engine built for runType " << runType_ << ", model " << modelParam_ << " / " << engineParam_
+                                    << ", modelSize = " << modelSize_ << ", interactive = " << interactive_
+                                    << ", amcEnabled = " << buildingAmc_ << ", amccgEnabled = " << buildingAmcCg_
+                                    << ", generateAdditionalResults = " << generateAdditionalResults()
+                                    << ", generateAdditionalResultsPathLevel = "
+                                    << generateAdditionalResultsPathLevel_);
     return engine;
 }
 
@@ -564,6 +555,10 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
     sqrtSmoothingForDerivatives_ =
         parseReal(engineParameter("SqrtSmoothingForDerivatives", getModelEngineQualifiers(), false, "1E-8"));
     referenceCalibrationGrid_ = modelParameter("ReferenceCalibrationGrid", getModelEngineQualifiers(), false, "");
+    generateAdditionalResultsPathLevel_ =
+        parseBool(engineParameter("AdditionalResultsPathLevel", getModelEngineQualifiers(), false, "false"));
+    enableCgOptimization_ =
+        parseBool(engineParameter("EnableCgOptimization", getModelEngineQualifiers(), false, "false"));
 
     // usage of ad or an external device implies usage of cg
     if (useAd_ || useExternalComputeDevice_)
@@ -588,35 +583,38 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
             parseListOfValues<Real>(engineParameter("CalibrationMoneyness", getModelEngineQualifiers()), &parseReal);
     } else if (modelParam_ == "Heston") {
         calibrationMoneyness_ =
-	  parseListOfValues<Real>(engineParameter("CalibrationMoneyness", getModelEngineQualifiers(), false, "-2.0,-1.5,-1.0,-0.5,0.0,0.5,1.0,1.5,2.0"), &parseReal);
-        hestonCalibrationExpiries_ =
-	  parseListOfValues<Period>(engineParameter("Heston.CalibrationExpiries", getModelEngineQualifiers(),false,""), &parsePeriod);
-        hestonCalibrationVarianceTerms_ =
-	  parseListOfValues<Period>(engineParameter("Heston.CalibrationVarianceTerms", getModelEngineQualifiers(), false, ""), &parsePeriod);
-        hestonInitialValues_ =
-	  parseListOfValues<Real>(engineParameter("Heston.InitialValues", getModelEngineQualifiers(), false, "0.04,1.0,0.5,-0.5,0.04"), &parseReal);
-        hestonFixedValues_ =
-	  parseListOfValues<bool>(engineParameter("Heston.FixedValues", getModelEngineQualifiers(), false, "N,N,N,N,N"), &parseBool);
-        hestonRelaxedFellerConstraint_ = parseReal(engineParameter("Heston.RelaxedFellerConstraint", getModelEngineQualifiers(), false, "0.25"));
-        hestonMaxCalibrationAttempts_ = parseInteger(engineParameter("Heston.MaxCalibrationAttempts", getModelEngineQualifiers(), false, "0"));
-        hestonMaximumInitialValues_ =
-	  parseListOfValues<Real>(engineParameter("Heston.MaximumInitialValues", getModelEngineQualifiers(), false, "0.1,20,3,0.9,0.1"), &parseReal);
-        hestonCalibrationMethod_ = engineParameter("Heston.CalibrationMethod", getModelEngineQualifiers(), false, "ConstantBestFit");
-        hestonEarlyExitThreshold_ = parseReal(engineParameter("Heston.EarlyExitThreshold", getModelEngineQualifiers(), false, "0.005"));
-        hestonMaxAcceptableError_ = parseReal(engineParameter("Heston.MaxAcceptableError", getModelEngineQualifiers(), false, "0.05"));
-        hestonProcessDiscretization_ =
-	  parseHestonProcessDiscretization(engineParameter("Heston.ProcessDiscretization", getModelEngineQualifiers(), false, "QuadraticExponential"));
+            parseListOfValues<Real>(engineParameter("CalibrationMoneyness", getModelEngineQualifiers(), false,
+                                                    "-2.0,-1.5,-1.0,-0.5,0.0,0.5,1.0,1.5,2.0"),
+                                    &parseReal);
+        hestonCalibrationExpiries_ = parseListOfValues<Period>(
+            engineParameter("Heston.CalibrationExpiries", getModelEngineQualifiers(), false, ""), &parsePeriod);
+        hestonCalibrationVarianceTerms_ = parseListOfValues<Period>(
+            engineParameter("Heston.CalibrationVarianceTerms", getModelEngineQualifiers(), false, ""), &parsePeriod);
+        hestonInitialValues_ = parseListOfValues<Real>(
+            engineParameter("Heston.InitialValues", getModelEngineQualifiers(), false, "0.04,1.0,0.5,-0.5,0.04"),
+            &parseReal);
+        hestonFixedValues_ = parseListOfValues<bool>(
+            engineParameter("Heston.FixedValues", getModelEngineQualifiers(), false, "N,N,N,N,N"), &parseBool);
+        hestonRelaxedFellerConstraint_ =
+            parseReal(engineParameter("Heston.RelaxedFellerConstraint", getModelEngineQualifiers(), false, "0.25"));
+        hestonMaxCalibrationAttempts_ =
+            parseInteger(engineParameter("Heston.MaxCalibrationAttempts", getModelEngineQualifiers(), false, "0"));
+        hestonMaximumInitialValues_ = parseListOfValues<Real>(
+            engineParameter("Heston.MaximumInitialValues", getModelEngineQualifiers(), false, "0.1,20,3,0.9,0.1"),
+            &parseReal);
+        hestonCalibrationMethod_ =
+            engineParameter("Heston.CalibrationMethod", getModelEngineQualifiers(), false, "ConstantBestFit");
+        hestonEarlyExitThreshold_ =
+            parseReal(engineParameter("Heston.EarlyExitThreshold", getModelEngineQualifiers(), false, "0.005"));
+        hestonMaxAcceptableError_ =
+            parseReal(engineParameter("Heston.MaxAcceptableError", getModelEngineQualifiers(), false, "0.05"));
+        auto tmp =
+            engineParameter("Heston.ProcessDiscretization", getModelEngineQualifiers(), false, "QuadraticExponential");
+        hestonProcessDiscretization_ = parseHestonProcessDiscretization(tmp);
         hestonQuantoTimeStepsPerYear_ = parseInteger(engineParameter(
             "HestonQuantoTimeStepsPerYear", getModelEngineQualifiers(), false, to_string(timeStepsPerYear_)));
-        try {
-            // We cannot use the above with to_string(hestonProcessDiscretization_), because discretization is an enum
-            // rather than an enum class
-            hestonQuantoProcessDiscretization_ = parseHestonProcessDiscretization(
-                engineParameter("Heston.QuantoProcessDiscretization", getModelEngineQualifiers()));
-        } catch (std::exception& e) {
-            hestonQuantoProcessDiscretization_ = hestonProcessDiscretization_;
-        }
-        debug_ = parseBool(engineParameter("Heston.Debug", getModelEngineQualifiers(), false, "false"));
+        hestonQuantoProcessDiscretization_ = parseHestonProcessDiscretization(
+            engineParameter("Heston.QuantoProcessDiscretization", getModelEngineQualifiers(), "false", tmp));
     }
 
     if (engineParam_ == "MC") {
@@ -645,13 +643,14 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
         params_.externalDeviceCompatibilityMode = externalDeviceCompatibilityMode_;
     } else if (engineParam_ == "FD") {
         params_.stateGridPoints = parseInteger(engineParameter("StateGridPoints", getModelEngineQualifiers()));
-	if (modelParam_ == "Heston") 
-	    params_.varianceStateGridPoints = parseInteger(engineParameter("VarianceStateGridPoints", getModelEngineQualifiers()));
-	else
-	    params_.varianceStateGridPoints = 1;
+        if (modelParam_ == "Heston")
+            params_.varianceStateGridPoints =
+                parseInteger(engineParameter("VarianceStateGridPoints", getModelEngineQualifiers()));
+        else
+            params_.varianceStateGridPoints = 1;
         modelSize_ = params_.stateGridPoints * params_.varianceStateGridPoints;
-	params_.mesherEpsilon =
-	    parseReal(engineParameter("MesherEpsilon", getModelEngineQualifiers(), false, "1.0E-4"));
+        params_.mesherEpsilon =
+            parseReal(engineParameter("MesherEpsilon", getModelEngineQualifiers(), false, "1.0E-4"));
         params_.mesherScaling = parseReal(engineParameter("MesherScaling", getModelEngineQualifiers(), false, "1.5"));
         params_.mesherConcentration =
             parseReal(engineParameter("MesherConcentration", getModelEngineQualifiers(), false, "0.1"));
@@ -673,6 +672,30 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
 
     allowModelFallbacks_ =
         globalParameters_.count("AllowModelFallbacks") > 0 && parseBool(globalParameters_.at("AllowModelFallbacks"));
+
+    // run-type dependent parameters / parameter overwrites
+
+    auto rt = globalParameters_.find("RunType");
+    runType_ = rt != globalParameters_.end() ? rt->second : "<<no run type set>>";
+
+    if (useAd_ && runType_ != "SensitivityDelta") {
+        useAd_ = false;
+        LOG("overwrite useAd with false, because run type is not SensitivityDelta");
+    }
+
+    if (useExternalComputeDevice_ && (useAd_ || generateAdditionalResults())) {
+        useExternalComputeDevice_ = false;
+        LOG("overwrite useExternalComputeDevice with false, because we use ad ("
+            << std::boolalpha << useAd_ << ") or generate additional results (" << generateAdditionalResults()
+            << "), both of which is not supported at the moment on external devices.");
+    }
+
+    allowChangingFallbacks_ = runType_ != "SensitivityDelta" && runType_ != "SensitivityDeltaGamma";
+
+    if (params_.staticMesher && (runType_ != "SensitivityDelta" && runType_ != "SensitivityDeltaGamma")) {
+        params_.staticMesher = false;
+        LOG("overwrite staticMesher with false, because run type is not Sensitivity*");
+    }
 
     // sensitivity template
 
@@ -873,6 +896,7 @@ void ScriptedTradeEngineBuilder::compileModelCcyList() {
     // required FX spot processes in the projected model we use for the scripted trade; the only exception is
     // if we have only one ccy in the final scripted trade model anyway (i.e. only one IR process), in which
     // case we can go with that one currency and don't need a more complicated model
+    bool addBaseCcyToModelCcys = true;
     if (amcCam_ != nullptr) {
         std::string newBaseCcy_ = amcCam_->ir(0)->currency().code();
         if (newBaseCcy_ == baseCcy_) {
@@ -887,10 +911,17 @@ void ScriptedTradeEngineBuilder::compileModelCcyList() {
                                  << "), because it is a single currency model");
             }
         }
+    } else if (amcCgModel_ != nullptr) {
+        // for now, we don't support a base ccy different from the global model base ccy, this requires more work in
+        // the computation graph builder, also, how do we make sure that the base ccy we pick here is available
+        // in the model
+        baseCcy_ = amcCgModel_->baseCurrency();
     }
 
     // build currency vector with the base ccy at the front
-    modelCcys_ = std::vector<std::string>(1, baseCcy_);
+    modelCcys_.clear();
+    if (addBaseCcyToModelCcys)
+        modelCcys_.push_back(baseCcy_);
     for (auto const& c : tmpCcys)
         if (c != baseCcy_)
             modelCcys_.push_back(c);
@@ -1179,7 +1210,7 @@ void ScriptedTradeEngineBuilder::compileSimulationAndAddDates() {
                                        << io::iso_date(lim.second + 1 + lag) << "' (from index eval date ["
                                        << io::iso_date(d) << "], start next inf period ["
                                        << io::iso_date(lim.second + 1) << "] + lag[" << lag << "])");
-                        simulationDates_.insert(lim.second + 1 + lag);
+                    simulationDates_.insert(lim.second + 1 + lag);
                 }
             } else {
                 // for all other indices we just take the original dates
@@ -1322,89 +1353,6 @@ std::vector<std::vector<Real>> getCalibrationStrikesVector(const std::map<std::s
 
 } // namespace
 
-void ScriptedTradeEngineBuilder::buildBlackScholes(
-    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
-    Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
-    auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
-    // ignore timeStepsPerYear if we have no correlations, i.e. we can take large timesteps without changing anything
-    auto builder = QuantLib::ext::make_shared<BlackScholesModelBuilder>(
-        modelCurves_, processes_, simulationDates_, addDates_, correlations_.empty() ? 0 : timeStepsPerYear_,
-        calibration_, getCalibrationStrikesVector(filteredStrikes, modelIndices_), baseCcyModelCurve_);
-    if (useCg_) {
-        modelCG_ = QuantLib::ext::make_shared<BlackScholesCG>(
-            ModelCG::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-            modelIndices_, modelIndicesCurrencies_, builder->model(), correlations_, simulationDates_,
-            iborFallbackConfig, calibration_, filteredStrikes);
-    } else {
-        model_ = QuantLib::ext::make_shared<BlackScholes>(
-            Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-            modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
-            iborFallbackConfig, calibration_, filteredStrikes, params_);
-    }
-    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
-}
-
-void ScriptedTradeEngineBuilder::buildFdBlackScholes(
-    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
-    Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
-    auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
-    auto builder = QuantLib::ext::make_shared<BlackScholesModelBuilder>(
-        modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, calibration_,
-        getCalibrationStrikesVector(filteredStrikes, modelIndices_), baseCcyModelCurve_);
-    model_ = QuantLib::ext::make_shared<BlackScholes>(
-        Model::Type::FD, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
-        iborFallbackConfig, calibration_, filteredStrikes, params_);
-    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
-}
-
-void ScriptedTradeEngineBuilder::buildLocalVol(
-    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
-    LocalVolModelBuilder::Type lvType;
-    if (modelParam_ == "LocalVolDupire")
-        lvType = LocalVolModelBuilder::Type::Dupire;
-    else if (modelParam_ == "LocalVolAndreasenHuge")
-        lvType = LocalVolModelBuilder::Type::AndreasenHuge;
-    else {
-        QL_FAIL("local vol model type " << modelParam_ << " not recognised.");
-    }
-
-    Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
-    auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
-    auto builder = QuantLib::ext::make_shared<LocalVolModelBuilder>(
-        modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, lvType, calibrationMoneyness_,
-        referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
-    model_ = QuantLib::ext::make_shared<LocalVol>(
-        Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
-        iborFallbackConfig, "Smile", filteredStrikes, params_);
-    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
-}
-
-void ScriptedTradeEngineBuilder::buildFdLocalVol(
-    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
-    LocalVolModelBuilder::Type lvType;
-    if (modelParam_ == "LocalVolDupire")
-        lvType = LocalVolModelBuilder::Type::Dupire;
-    else if (modelParam_ == "LocalVolAndreasenHuge")
-        lvType = LocalVolModelBuilder::Type::AndreasenHuge;
-    else {
-        QL_FAIL("local vol model type " << modelParam_ << " not recognised.");
-    }
-
-    Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
-    auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
-    auto builder = QuantLib::ext::make_shared<LocalVolModelBuilder>(
-        modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, lvType, calibrationMoneyness_,
-        referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
-    model_ = QuantLib::ext::make_shared<LocalVol>(
-        Model::Type::FD, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
-        iborFallbackConfig, "Smile", filteredStrikes, params_);
-    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
-}
-
-
 bool ScriptedTradeEngineBuilder::containsQuanto() {
     Size n = modelIndices_.size();
     std::vector<IndexInfo> indexInfo;
@@ -1424,9 +1372,109 @@ bool ScriptedTradeEngineBuilder::containsQuanto() {
     return false;
 }
 
+void ScriptedTradeEngineBuilder::buildBlackScholes(
+    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
+    Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
+    auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
+    // ignore timeStepsPerYear if we have no correlations, i.e. we can take large timesteps without changing anything
+    Size effectiveTimeStepsPerYear = correlations_.empty() ? 0 : timeStepsPerYear_;
+    std::function<std::set<Real>(const TimeGrid&)> curveTimes;
+    std::function<std::vector<std::set<std::pair<Real, Real>>>(const TimeGrid&)> volTimesStrikes;
+    if (useCg_) {
+        modelCG_ = QuantLib::ext::make_shared<BlackScholesCG>(
+            ModelCG::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
+            modelIndices_, modelIndicesCurrencies_, correlations_, simulationDates_, effectiveTimeStepsPerYear,
+            addDates_, iborFallbackConfig, calibration_, filteredStrikes, enableCgOptimization_);
+        curveTimes = ext::static_pointer_cast<BlackScholesCG>(modelCG_)->curveTimes();
+        volTimesStrikes = ext::static_pointer_cast<BlackScholesCG>(modelCG_)->volTimesStrikes();
+    } else {
+        model_ = QuantLib::ext::make_shared<BlackScholes>(
+            Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
+            modelIndices_, modelIndicesCurrencies_, payCcys_, correlations_, simulationDates_,
+            effectiveTimeStepsPerYear, addDates_, iborFallbackConfig, calibration_, filteredStrikes, params_);
+        curveTimes = ext::static_pointer_cast<BlackScholes>(model_)->curveTimes();
+        volTimesStrikes = ext::static_pointer_cast<BlackScholes>(model_)->volTimesStrikes();
+    }
+    auto builder = QuantLib::ext::make_shared<BlackScholesModelBuilder>(
+        modelCurves_, processes_, simulationDates_, addDates_, effectiveTimeStepsPerYear, calibration_,
+        getCalibrationStrikesVector(filteredStrikes, modelIndices_), baseCcyModelCurve_, curveTimes, volTimesStrikes);
+    if (useCg_) {
+        ext::static_pointer_cast<BlackScholesCG>(modelCG_)->setModel(builder->model());
+    } else {
+        ext::static_pointer_cast<BlackScholes>(model_)->setModel(builder->model());
+    }
+    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
+}
+
+void ScriptedTradeEngineBuilder::buildFdBlackScholes(
+    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
+    Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
+    auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
+    model_ = QuantLib::ext::make_shared<BlackScholes>(
+        Model::Type::FD, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
+        modelIndices_, modelIndicesCurrencies_, payCcys_, correlations_, simulationDates_, timeStepsPerYear_, addDates_,
+        iborFallbackConfig, calibration_, filteredStrikes, params_);
+    auto builder = QuantLib::ext::make_shared<BlackScholesModelBuilder>(
+        modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, calibration_,
+        getCalibrationStrikesVector(filteredStrikes, modelIndices_), baseCcyModelCurve_,
+        ext::static_pointer_cast<BlackScholes>(model_)->curveTimes(),
+        ext::static_pointer_cast<BlackScholes>(model_)->volTimesStrikes());
+    ext::dynamic_pointer_cast<BlackScholes>(model_)->setModel(builder->model());
+    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
+}
+
+void ScriptedTradeEngineBuilder::buildLocalVol(
+    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
+    LocalVolModelBuilder::Type lvType;
+    if (modelParam_ == "LocalVolDupire")
+        lvType = LocalVolModelBuilder::Type::Dupire;
+    else if (modelParam_ == "LocalVolAndreasenHuge")
+        lvType = LocalVolModelBuilder::Type::AndreasenHuge;
+    else {
+        QL_FAIL("local vol model type " << modelParam_ << " not recognised.");
+    }
+    Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
+    auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
+    model_ = QuantLib::ext::make_shared<LocalVol>(
+        Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
+        modelIndices_, modelIndicesCurrencies_, payCcys_, correlations_, simulationDates_, timeStepsPerYear_, addDates_,
+        iborFallbackConfig, "Smile", filteredStrikes, params_);
+    auto builder = QuantLib::ext::make_shared<LocalVolModelBuilder>(
+        modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, lvType, calibrationMoneyness_,
+        referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_, false,
+        ext::static_pointer_cast<LocalVol>(model_)->curveTimes(),
+        ext::static_pointer_cast<LocalVol>(model_)->volTimesStrikes());
+    ext::dynamic_pointer_cast<LocalVol>(model_)->setModel(builder->model());
+    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
+}
+
+void ScriptedTradeEngineBuilder::buildFdLocalVol(
+    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
+    LocalVolModelBuilder::Type lvType;
+    if (modelParam_ == "LocalVolDupire")
+        lvType = LocalVolModelBuilder::Type::Dupire;
+    else if (modelParam_ == "LocalVolAndreasenHuge")
+        lvType = LocalVolModelBuilder::Type::AndreasenHuge;
+    else {
+        QL_FAIL("local vol model type " << modelParam_ << " not recognised.");
+    }
+    Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
+    auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
+    model_ = QuantLib::ext::make_shared<LocalVol>(
+        Model::Type::FD, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
+        modelIndices_, modelIndicesCurrencies_, payCcys_, correlations_, simulationDates_, timeStepsPerYear_, addDates_,
+        iborFallbackConfig, "Smile", filteredStrikes, params_);
+    auto builder = QuantLib::ext::make_shared<LocalVolModelBuilder>(
+        modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, lvType, calibrationMoneyness_,
+        referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_, false,
+        ext::static_pointer_cast<LocalVol>(model_)->curveTimes(),
+        ext::static_pointer_cast<LocalVol>(model_)->volTimesStrikes());
+    ext::dynamic_pointer_cast<LocalVol>(model_)->setModel(builder->model());
+    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
+}
+
 void ScriptedTradeEngineBuilder::buildHeston(const std::string& id,
                                              const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
-    LOG("ScriptedTradeEngineBuilder::buildHeston() called");
     Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
     auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
     Size steps = timeStepsPerYear_;
@@ -1434,22 +1482,23 @@ void ScriptedTradeEngineBuilder::buildHeston(const std::string& id,
     if (containsQuanto()) {
         steps = hestonQuantoTimeStepsPerYear_;
         discretization = hestonQuantoProcessDiscretization_;
-	ALOG("Overriding time steps and Heston process discretization with Heston Quanto values: "
-	     << steps << " and " << discretization);
+        ALOG("Overriding time steps and Heston process discretization with Heston Quanto values: " << steps << " and "
+                                                                                                   << discretization);
     }
-    auto builder = QuantLib::ext::make_shared<HestonModelBuilder>(
-        modelIndices_, modelCurves_, processes_, simulationDates_, addDates_, steps,
-        hestonCalibrationExpiries_, calibrationMoneyness_, hestonCalibrationVarianceTerms_, hestonInitialValues_,
-        hestonFixedValues_, hestonCalibrationMethod_, hestonMaximumInitialValues_, hestonRelaxedFellerConstraint_,
-        hestonMaxCalibrationAttempts_, hestonEarlyExitThreshold_, hestonMaxAcceptableError_,
-        discretization, referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
     model_ = QuantLib::ext::make_shared<Heston>(
         Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
-        iborFallbackConfig, "Smile", filteredStrikes, params_, debug_);
+        modelIndices_, modelIndicesCurrencies_, payCcys_, correlations_, simulationDates_, steps, addDates_,
+        iborFallbackConfig, "Smile", filteredStrikes, params_);
+    auto builder = QuantLib::ext::make_shared<HestonModelBuilder>(
+        modelIndices_, modelCurves_, processes_, simulationDates_, addDates_, steps, hestonCalibrationExpiries_,
+        calibrationMoneyness_, hestonCalibrationVarianceTerms_, hestonInitialValues_, hestonFixedValues_,
+        hestonCalibrationMethod_, hestonMaximumInitialValues_, hestonRelaxedFellerConstraint_,
+        hestonMaxCalibrationAttempts_, hestonEarlyExitThreshold_, hestonMaxAcceptableError_, discretization,
+        referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_,
+        ext::static_pointer_cast<Heston>(model_)->curveTimes(),
+        ext::static_pointer_cast<Heston>(model_)->volTimesStrikes());
+    ext::dynamic_pointer_cast<Heston>(model_)->setModel(builder->model());
     engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
-    engineFactory()->scriptingModels().insert(std::make_pair(id, model_));
-    LOG("ScriptedTradeEngineBuilder::buildHeston() done");
 }
 
 void ScriptedTradeEngineBuilder::buildFdHeston(
@@ -1463,15 +1512,16 @@ void ScriptedTradeEngineBuilder::buildFdHeston(
         discretization = hestonQuantoProcessDiscretization_;
     }
     auto builder = QuantLib::ext::make_shared<HestonModelBuilder>(
-        modelIndices_, modelCurves_, processes_, simulationDates_, addDates_, steps,
-        hestonCalibrationExpiries_, calibrationMoneyness_, hestonCalibrationVarianceTerms_, hestonInitialValues_,
-        hestonFixedValues_, hestonCalibrationMethod_, hestonMaximumInitialValues_, hestonRelaxedFellerConstraint_,
-        hestonMaxCalibrationAttempts_, hestonEarlyExitThreshold_, hestonMaxAcceptableError_,
-        discretization, referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
+        modelIndices_, modelCurves_, processes_, simulationDates_, addDates_, steps, hestonCalibrationExpiries_,
+        calibrationMoneyness_, hestonCalibrationVarianceTerms_, hestonInitialValues_, hestonFixedValues_,
+        hestonCalibrationMethod_, hestonMaximumInitialValues_, hestonRelaxedFellerConstraint_,
+        hestonMaxCalibrationAttempts_, hestonEarlyExitThreshold_, hestonMaxAcceptableError_, discretization,
+        referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
     model_ = QuantLib::ext::make_shared<Heston>(
         Model::Type::FD, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
+        modelIndices_, modelIndicesCurrencies_, payCcys_, correlations_, simulationDates_, steps, addDates_,
         iborFallbackConfig, "Smile", filteredStrikes, params_);
+    ext::dynamic_pointer_cast<Heston>(model_)->setModel(builder->model());
     engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
 }
 
@@ -1650,25 +1700,29 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(
             }
             std::vector<QuantLib::ext::shared_ptr<CalibrationInstrument>> calInstr;
             DLOG("building calibration basket for inflation index '" << modelInfIndices_[i].first);
-            for (auto const& d : calibrationDates){
-                auto simLag =  simulationLag(modelInfIndices_[i].second->zeroInflationTermStructure());
+            for (auto const& d : calibrationDates) {
+                auto simLag = simulationLag(modelInfIndices_[i].second->zeroInflationTermStructure());
                 Date effectiveFixingDate = d - simLag;
                 auto cpiVolatility = market_->cpiInflationCapFloorVolatilitySurface(modelInfIndices_[i].first);
                 Date maturity = effectiveFixingDate + cpiVolatility->observationLag();
                 DLOG("processing calibration date " << d << " for inflation index '" << modelInfIndices_[i].first << "'"
-                     << " with simulationLag (days) " << simLag << ", effective fixing date " << effectiveFixingDate << " and maturity " << maturity);
+                                                    << " with simulationLag (days) " << simLag
+                                                    << ", effective fixing date " << effectiveFixingDate
+                                                    << " and maturity " << maturity);
                 if (maturity < referenceDate) {
-                    DLOG("skipping calibration instrument for inflation index '" << modelInfIndices_[i].first
-                         << "' with expiry " << d << " and effective fixing date " << effectiveFixingDate
-                         << " (maturity " << maturity << ") since maturity is before reference date");
+                    DLOG("skipping calibration instrument for inflation index '"
+                         << modelInfIndices_[i].first << "' with expiry " << d << " and effective fixing date "
+                         << effectiveFixingDate << " (maturity " << maturity
+                         << ") since maturity is before reference date");
                     continue;
                 }
-                DLOG("adding calibration instrument for inflation index '" << modelInfIndices_[i].first
-                     << "' with expiry " << d << " and effective fixing date " << effectiveFixingDate << " (maturity " << maturity
-                     << ") and strike " << calibrationStrike->toString());
-                
-                calInstr.push_back(
-                    QuantLib::ext::make_shared<CpiCapFloor>(QuantLib::CapFloor::Type::Floor, maturity, calibrationStrike));
+                DLOG("adding calibration instrument for inflation index '"
+                     << modelInfIndices_[i].first << "' with expiry " << d << " and effective fixing date "
+                     << effectiveFixingDate << " (maturity " << maturity << ") and strike "
+                     << calibrationStrike->toString());
+
+                calInstr.push_back(QuantLib::ext::make_shared<CpiCapFloor>(QuantLib::CapFloor::Type::Floor, maturity,
+                                                                           calibrationStrike));
             }
             std::vector<CalibrationBasket> calBaskets(1, CalibrationBasket(calInstr));
             if (infModelType_ == "DK") {
@@ -1837,10 +1891,6 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(
         comConfigs.push_back(config);
     }
 
-    auto rt = globalParameters_.find("RunType");
-    bool allowChangingFallbacks =
-        rt != globalParameters_.end() && rt->second != "SensitivityDelta" && rt->second != "SensitivityDeltaGamma";
-
     std::string configurationInCcy = configuration(MarketContext::irCalibration);
     std::string configurationXois = configuration(MarketContext::pricing);
     auto discretization = useCg_ ? CrossAssetModel::Discretization::Euler : CrossAssetModel::Discretization::Exact;
@@ -1851,7 +1901,7 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(
             bootstrapTolerance_, "LGM", discretization, params_.salvagingAlgorithm),
         configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
         configurationXois, !calibrate_ || zeroVolatility_, continueOnCalibrationError_, referenceCalibrationGrid_, id,
-        allowChangingFallbacks, allowModelFallbacks_);
+        allowChangingFallbacks_, allowModelFallbacks_);
 
     // effective time steps per year: 1 for exact evolution, otherwise the pricing engine parameter
     if (useCg_) {
@@ -1859,7 +1909,8 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(
             camBuilder->model(), modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
             modelIndices_, modelIndicesCurrencies_, simulationDates_, iborFallbackConfig,
             conditionalExpectationModelStates, std::vector<Date>{},
-            camBuilder->model()->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_);
+            camBuilder->model()->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_,
+            enableCgOptimization_);
     } else {
         model_ = QuantLib::ext::make_shared<GaussianCam>(
             camBuilder->model(), modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
@@ -2026,7 +2077,8 @@ void ScriptedTradeEngineBuilder::buildGaussianCamAMC(
             projectedModel, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
             modelIndices_, modelIndicesCurrencies_, simulationDates_, iborFallbackConfig,
             conditionalExpectationModelStates, std::vector<Date>{},
-            projectedModel->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_);
+            projectedModel->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_,
+            enableCgOptimization_);
     } else {
         model_ = QuantLib::ext::make_shared<GaussianCam>(
             projectedModel, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,

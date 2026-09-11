@@ -214,8 +214,9 @@ QuantLib::ext::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tr
     QL_REQUIRE(engineData_->hasProduct(tradeType),
                "No Pricing Engine configuration was provided for trade type " << tradeType);
 
-    const string& model = engineData_->model(tradeType);
-    const string& engine = engineData_->engine(tradeType);
+    const EngineData& ed = *engineData_; // force calls to the const version of the engineData_ methods
+    const string& model = ed.model(tradeType);
+    const string& engine = ed.engine(tradeType);
     typedef pair<tuple<string, string, set<string>>, QuantLib::ext::shared_ptr<EngineBuilder>> map_type;
     auto pred = [&model, &engine, &tradeType](const map_type& v) -> bool {
         const set<string>& types = std::get<2>(v.first);
@@ -232,8 +233,17 @@ QuantLib::ext::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tr
     if (auto db = QuantLib::ext::dynamic_pointer_cast<DelegatingEngineBuilder>(builder))
         effectiveTradeType = db->effectiveTradeType();
 
-    auto modelParams = engineData_->modelParameters(effectiveTradeType);
-    auto engineParams = engineData_->engineParameters(effectiveTradeType);
+    std::map<std::string, std::string> modelParams;
+    std::map<std::string, std::string> engineParams;
+    if (ed.hasModelParams(effectiveTradeType))
+        modelParams = ed.modelParameters(effectiveTradeType);
+    else
+        modelParams = engineData_->modelParameters(effectiveTradeType);
+
+    if (ed.hasEngineParams(effectiveTradeType))
+        engineParams = ed.engineParameters(effectiveTradeType);
+    else
+        engineParams = engineData_->engineParameters(effectiveTradeType);
 
     for (auto const& p : modelParameterOverrides_) {
         if (p.applies(effectiveTradeType)) {
@@ -274,10 +284,6 @@ QuantLib::ext::shared_ptr<LegBuilder> EngineFactory::legBuilder(const LegType& l
 
 set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>>& EngineFactory::modelBuilders() {
     return modelBuilders_;
-}
-
-  set<std::pair<string, QuantLib::ext::shared_ptr<ore::data::Model>>>& EngineFactory::scriptingModels() {
-    return scriptingModels_;
 }
 
 void EngineFactory::setEngineParameterOverrides(const std::vector<ParameterOverride>& overrides) {

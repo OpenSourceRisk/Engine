@@ -107,6 +107,8 @@ public:
     SubPeriodsLeg1& withPaymentCalendar(const Calendar& calendar);
     SubPeriodsLeg1& withType(SubPeriodsCoupon1::Type type);
     SubPeriodsLeg1& includeSpread(bool includeSpread);
+    SubPeriodsLeg1& withPaymentLag(QuantLib::Integer lag);
+    SubPeriodsLeg1& withPaymentDates(const std::vector<Date>& paymentDates);
     operator Leg() const;
 
 private:
@@ -120,6 +122,8 @@ private:
     Calendar paymentCalendar_;
     SubPeriodsCoupon1::Type type_;
     bool includeSpread_;
+    QuantLib::Integer paymentLag_;
+    std::vector<QuantLib::Date> paymentDates_;
 };
 } // namespace QuantExt
 

@@ -45,7 +45,7 @@ using namespace QuantLib;
 
 class LgmImpliedYieldTermStructure : public YieldTermStructure {
 public:
-    LgmImpliedYieldTermStructure(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
+    LgmImpliedYieldTermStructure(const QuantLib::Handle<LinearGaussMarkovModel>& model,
                                  const DayCounter& dc = DayCounter(), const bool purelyTimeBased = false,
                                  const bool cacheValues = false);
 
@@ -69,7 +69,7 @@ protected:
     mutable Real Ht_;
     bool cacheValues_;
 
-    const QuantLib::ext::shared_ptr<LinearGaussMarkovModel> model_;
+    const QuantLib::Handle<LinearGaussMarkovModel> model_;
     const bool purelyTimeBased_;
     Date referenceDate_;
     Real relativeTime_, state_;
@@ -83,7 +83,7 @@ protected:
 */
 class LgmImpliedYtsFwdFwdCorrected : public LgmImpliedYieldTermStructure {
 public:
-    LgmImpliedYtsFwdFwdCorrected(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
+    LgmImpliedYtsFwdFwdCorrected(const QuantLib::Handle<LinearGaussMarkovModel>& model,
                                  const Handle<YieldTermStructure> targetCurve, const DayCounter& dc = DayCounter(),
                                  const bool purelyTimeBased = false, const bool cacheValues = false);
 
@@ -105,7 +105,7 @@ private:
 */
 class LgmImpliedYtsSpotCorrected : public LgmImpliedYieldTermStructure {
 public:
-    LgmImpliedYtsSpotCorrected(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
+    LgmImpliedYtsSpotCorrected(const QuantLib::Handle<LinearGaussMarkovModel>& model,
                                const Handle<YieldTermStructure> targetCurve, const DayCounter& dc,
                                const bool purelyTimeBased, const bool cacheValues = false);
 
@@ -171,7 +171,6 @@ inline void LgmImpliedYtsFwdFwdCorrected::referenceTime(const Time t) {
         Ht_ = model_->parametrization()->H(t);
     }
     relativeTime_ = t;
-
     notifyObservers();
 }
 
@@ -181,7 +180,6 @@ inline void LgmImpliedYieldTermStructure::state(const Real s) {
 }
 
 inline void LgmImpliedYieldTermStructure::move(const Date& d, const Real s) {
-
     state_ = s;
     referenceDate(d);
 }
@@ -189,17 +187,15 @@ inline void LgmImpliedYieldTermStructure::move(const Date& d, const Real s) {
 inline void LgmImpliedYieldTermStructure::move(const Time t, const Real s) {
     state_ = s;
     referenceTime(t);
-
     notifyObservers();
 }
 
 inline void LgmImpliedYieldTermStructure::update() {
+    YieldTermStructure::update();
     if (!purelyTimeBased_) {
         relativeTime_ =
             dayCounter().yearFraction(model_->parametrization()->termStructure()->referenceDate(), referenceDate_);
     }
-
-    notifyObservers();
 }
 
 inline Real LgmImpliedYieldTermStructure::discountImpl(Time t) const {

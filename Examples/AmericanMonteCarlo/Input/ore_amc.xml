@@ -13,7 +13,7 @@
     <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
     <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
     <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
-    <Parameter name="portfolioFile">portfolio.xml</Parameter>
+    <Parameter name="portfolioFile">portfolio_amc.xml</Parameter>
     <Parameter name="observationModel">Disable</Parameter>
     <Parameter name="nThreads">2</Parameter>
   </Setup>
@@ -43,7 +43,7 @@
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>
       <Parameter name="amc">Y</Parameter>
-      <Parameter name="amcTradeTypes">Swap,Swaption,FxOption,CompositeTrade</Parameter>
+      <Parameter name="amcTradeTypes">Swap,Swaption,FxOption,CompositeTrade,RiskParticipationAgreement</Parameter>
       <Parameter name="simulationConfigFile">simulation.xml</Parameter>
       <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
       <Parameter name="amcPricingEnginesFile">pricingengine_amc.xml</Parameter>
@@ -69,8 +69,9 @@
       <Parameter name="dva">Y</Parameter>
       <Parameter name="dvaName">BANK</Parameter>
       <Parameter name="fva">Y</Parameter>
-      <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
-      <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
+      <Parameter name="borrowingCurve">BANK_EUR_BORROW</Parameter>
+      <Parameter name="lendingCurve">BANK_EUR_LEND</Parameter>
+      <Parameter name="mva">Y</Parameter>
       <Parameter name="colva">N</Parameter>
       <Parameter name="collateralSpread">0.0000</Parameter>
       <Parameter name="collateralFloor">N</Parameter>

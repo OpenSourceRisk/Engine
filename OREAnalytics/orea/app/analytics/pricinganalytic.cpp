@@ -18,10 +18,11 @@
 
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/inputparameters.hpp>
-#include <orea/app/reportwriter.hpp>
+#include <orea/app/reportwriters/pricingreportwriter.hpp>
 #include <orea/engine/decomposedsensitivitystream.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/parsensitivitycubestream.hpp>
+#include <orea/engine/sensitivitycubestream.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/report/inmemoryreport.hpp>
 
@@ -31,13 +32,11 @@ using namespace std::filesystem;
 namespace ore {
 namespace analytics {
 
-/*******************************************************************
- * PRICING Analytic: NPV, CASHFLOW, CASHFLOWNPV, SENSITIVITY, STRESS
- *******************************************************************/
+/****************************************************************************
+ * PRICING Analytic: NPV, CURVES, CASHFLOW, CASHFLOWNPV, SENSITIVITY, STRESS
+ ***************************************************************************/
 
  void PricingVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs){
-    inputs->loadParameter<bool>(computeTheta_, "sensitivity", "computeTheta", false, parseBool);
-    inputs->loadParameter<Period>(thetaPeriod_, "sensitivity", "thetaPeriod", false, parsePeriod);
     inputs->loadParameter<bool>(outputCurves_, "curves", "active", false,
                                 std::function<bool(const string&)>(parseBool));
     if (!outputCurves_)
@@ -46,7 +45,9 @@ namespace analytics {
     inputs->loadParameter<string>(curvesGrid_, "curves", "grid", false);
     inputs->loadParameter<string>(curvesMarketConfig_, "curves", "configuration", false);
     inputs->loadParameter<string>(curvesCalendar_, "curves", "calendar", false);
- }
+    inputs->loadParameter<bool>(computeTheta_, "sensitivity", "computeTheta", false, parseBool);
+    inputs->loadParameter<Period>(thetaPeriod_, "sensitivity", "thetaPeriod", false, parsePeriod);
+}
 
 void PricingAnalyticImpl::overwriteResultCurrency(const std::string& ccy) { overwriteResultCurrency_ = ccy; }
 
@@ -60,7 +61,7 @@ void PricingAnalyticImpl::setUpConfigurations() {
         end(analytic()->analyticTypes())) {
         analytic()->configurations().simulationConfigRequired = true;
         analytic()->configurations().sensitivityConfigRequired = true;
-    } 
+    }
 
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     analytic()->configurations().simMarketParams = inputs_->sensiSimMarketParams();
@@ -69,21 +70,32 @@ void PricingAnalyticImpl::setUpConfigurations() {
     setGenerateAdditionalResults(true);
 }
 
-void PricingAnalyticImpl::runAnalytic( 
-    const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, 
+void PricingAnalyticImpl::runAnalytic(
+    const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
     const std::set<std::string>& runTypes) {
 
     Settings::instance().evaluationDate() = inputs_->asof();
     ObservationMode::instance().setMode(inputs_->observationModel());
 
-    QL_REQUIRE(inputs_->portfolio(), "PricingAnalytic::run: No portfolio loaded.");
+    // CURVES only needs the market (see writeCurves below); the other pricing sub-analytics
+    // Only enforce the portfolio requirement if a portfolio-dependent sub-analytic is requested.
+    static const std::set<std::string> portfolioIndependentTypes{"CURVES"};
+    bool requiresPortfolio = false;
+    for (const auto& rt : runTypes) {
+        if (analytic()->analyticTypes().count(rt) > 0 && portfolioIndependentTypes.count(rt) == 0) {
+            requiresPortfolio = true;
+            break;
+        }
+    }
+    QL_REQUIRE(!requiresPortfolio || inputs_->portfolio(), "PricingAnalytic::run: No portfolio loaded.");
 
     CONSOLEW("Pricing: Build Market");
     analytic()->buildMarket(loader);
     CONSOLE("OK");
 
     CONSOLEW("Pricing: Build Portfolio");
-    analytic()->buildPortfolio();
+    if(requiresPortfolio)
+        analytic()->buildPortfolio();
     CONSOLE("OK");
 
     // Check coverage
@@ -114,7 +126,7 @@ void PricingAnalyticImpl::runAnalytic(
         auto marketConfig = inputs_->marketConfig("pricing");
         if (type == "NPV") {
             CONSOLEW("Pricing: NPV Report");
-            ReportWriter(inputs_->reportNaString())
+            PricingReportWriter(inputs_->reportNaString())
                 .writeNpv(*report, effectiveResultCurrency, analytic()->market(), marketConfig,
                           analytic()->portfolio());
             analytic()->addReport(type, "npv", report);
@@ -128,7 +140,16 @@ void PricingAnalyticImpl::runAnalytic(
                 analytic()->addReport(type, "additional_results", addReport);
                 CONSOLE("OK");
 
-		CONSOLEW("Pricing: Model Calibration Reports");
+                CONSOLEW("Pricing: Additional Results Report Path Level");
+                QuantLib::ext::shared_ptr<InMemoryReport> addReportPaths =
+                    QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                ReportWriter(inputs_->reportNaString())
+                    .writeAdditionalResultsPathLevelReport(*addReportPaths, analytic()->portfolio(),
+                                                           inputs_->additionalResultsReportPrecision());
+                analytic()->addReport(type, "additional_results_path_level", addReportPaths);
+                CONSOLE("OK");
+
+                CONSOLEW("Pricing: Model Calibration Reports");
                 auto calReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 ReportWriter(inputs_->reportNaString())
                     .writeModelCalibrationReport(*calReport, analytic()->portfolio());
@@ -139,13 +160,25 @@ void PricingAnalyticImpl::runAnalytic(
                     .writeModelCalibrationDetailReport(*calDetailReport, analytic()->portfolio());
                 analytic()->addReport(type, "assetmodel_calibration_detail", calDetailReport);
                 CONSOLE("OK");
-
-		CONSOLEW("Pricing: Model Path Report");
-                auto pathReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-                ReportWriter(inputs_->reportNaString()).writeModelPathReport(*pathReport, analytic()->portfolio());
-                analytic()->addReport(type, "assetmodel_paths", pathReport);
+            }
+            auto pVars = QuantLib::ext::dynamic_pointer_cast<PricingVariables>(inputVariables_);
+            // If the standalone CURVES analytic is also requested, let it emit the (single) curves
+            // report to avoid a duplicate "curves" report and the resulting disambiguated file names.
+            bool curvesHandledSeparately =
+                analytic()->analyticTypes().count("CURVES") > 0 && runTypes.count("CURVES") > 0;
+            if (pVars && pVars->outputCurves_ && !curvesHandledSeparately) {
+                CONSOLEW("Pricing: Curves Report");
+                LOG("Write curves report");
+                QuantLib::ext::shared_ptr<InMemoryReport> curvesReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                DateGrid grid(pVars->curvesGrid_, parseCalendar(pVars->curvesCalendar_));
+                std::string config = pVars->curvesMarketConfig_;
+                PricingReportWriter(inputs_->reportNaString())
+                    .writeCurves(*curvesReport, config, grid, *analytic()->configurations().todaysMarketParams,
+                                 analytic()->market(), inputs_->continueOnError());
+                analytic()->addReport(type, "curves", curvesReport);
                 CONSOLE("OK");
             }
+        } else if (type == "CURVES") {
             auto pVars = QuantLib::ext::dynamic_pointer_cast<PricingVariables>(inputVariables_);
             if (pVars && pVars->outputCurves_) {
                 CONSOLEW("Pricing: Curves Report");
@@ -153,27 +186,26 @@ void PricingAnalyticImpl::runAnalytic(
                 QuantLib::ext::shared_ptr<InMemoryReport> curvesReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 DateGrid grid(pVars->curvesGrid_, parseCalendar(pVars->curvesCalendar_));
                 std::string config = pVars->curvesMarketConfig_;
-                ReportWriter(inputs_->reportNaString())
+                PricingReportWriter(inputs_->reportNaString())
                     .writeCurves(*curvesReport, config, grid, *analytic()->configurations().todaysMarketParams,
                                  analytic()->market(), inputs_->continueOnError());
                 analytic()->addReport(type, "curves", curvesReport);
                 CONSOLE("OK");
             }
-
         } else if (type == "CASHFLOW") {
             CONSOLEW("Pricing: Cashflow Report");
-            ReportWriter(inputs_->reportNaString())
+            PricingReportWriter(inputs_->reportNaString())
                 .writeCashflow(*report, effectiveResultCurrency, analytic()->portfolio(), analytic()->market(),
                                marketConfig, inputs_->includePastCashflows());
             analytic()->addReport(type, "cashflow", report);
             CONSOLE("OK");
         } else if (type == "CASHFLOWNPV") {
             CONSOLEW("Pricing: Cashflow NPV report");
-            ReportWriter(inputs_->reportNaString())
+            PricingReportWriter(inputs_->reportNaString())
                 .writeCashflow(tmpReport, effectiveResultCurrency, analytic()->portfolio(),
                                analytic()->market(),
                                marketConfig, inputs_->includePastCashflows());
-            ReportWriter(inputs_->reportNaString())
+            PricingReportWriter(inputs_->reportNaString())
                 .writeCashflowNpv(*report, tmpReport, analytic()->market(), marketConfig,
                                   effectiveResultCurrency, inputs_->cashflowHorizon());
             analytic()->addReport(type, "cashflownpv", report);
@@ -184,8 +216,6 @@ void PricingAnalyticImpl::runAnalytic(
             bool ccyConv = false;
             std::string configuration = inputs_->marketConfig("pricing");
             auto pVars = QuantLib::ext::dynamic_pointer_cast<PricingVariables>(inputVariables_);
-            bool computeTheta = pVars ? pVars->computeTheta_ : inputs_->computeTheta();
-            Period thetaPeriod = pVars ? pVars->thetaPeriod_ : inputs_->thetaPeriod();
             if (inputs_->nThreads() == 1) {
                 LOG("Single-threaded sensi analysis");
                 sensiAnalysis_ = QuantLib::ext::make_shared<SensitivityAnalysis>(
@@ -194,7 +224,7 @@ void PricingAnalyticImpl::runAnalytic(
                     inputs_->sensiRecalibrateModels(), inputs_->sensiLaxFxConversion(),
                     analytic()->configurations().curveConfig, analytic()->configurations().todaysMarketParams, ccyConv,
                     inputs_->refDataManager(), inputs_->iborFallbackConfig(), true, inputs_->dryRun(),
-                    inputs_->useAtParCouponsTrades(), computeTheta, thetaPeriod);
+                    inputs_->useAtParCouponsTrades());
                 LOG("Single-threaded sensi analysis created");
             }
             else {
@@ -206,13 +236,13 @@ void PricingAnalyticImpl::runAnalytic(
                     inputs_->sensiLaxFxConversion(), analytic()->configurations().curveConfig,
                     analytic()->configurations().todaysMarketParams, ccyConv, inputs_->refDataManager(),
                     inputs_->iborFallbackConfig(), true, inputs_->dryRun(), "sensi analysis",
-                    inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades(), computeTheta, thetaPeriod);
+                    inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades());
                 LOG("Multi-threaded sensi analysis created");
             }
 
-            if (offsetScenario_ != nullptr) {
-                sensiAnalysis_->setOffsetScenario(offsetScenario_);
-                sensiAnalysis_->setOffsetSimMarketParams(offsetSimMarketParams_);
+            if (analytic()->offsetScenario() != nullptr) {
+                sensiAnalysis_->setOffsetScenario(analytic()->offsetScenario());
+                sensiAnalysis_->setOffsetSimMarketParams(analytic()->offsetSimMarketParams());
             }
 
             const set<RiskFactorKey::KeyType>& typesDisabled = analytic()->configurations().sensiScenarioData->parConversionExcludes();
@@ -248,7 +278,7 @@ void PricingAnalyticImpl::runAnalytic(
                     analytic()->market());
             }
 
-            ReportWriter(inputs_->reportNaString())
+            PricingReportWriter(inputs_->reportNaString())
                 .writeSensitivityReport(*report, ss, inputs_->sensiThreshold(), analytic()->market(), marketConfig,
                                         inputs_->sensiOutputPrecision());
 
@@ -257,12 +287,12 @@ void PricingAnalyticImpl::runAnalytic(
             LOG("Sensi analysis - write sensitivity scenario report in memory");
             QuantLib::ext::shared_ptr<InMemoryReport> scenarioReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
             ReportWriter(inputs_->reportNaString())
-                .writeScenarioReport(*scenarioReport, sensiAnalysis_->sensiCubes(),
+                .writeScenarioReport(*scenarioReport, sensiAnalysis_->sensiCubes(), baseCurrency,
                                      inputs_->sensiThreshold());
             analytic()->addReport(type, "sensitivity_scenario", scenarioReport);
 
             auto simmSensitivityConfigReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-            ReportWriter(inputs_->reportNaString())
+            PricingReportWriter(inputs_->reportNaString())
                 .writeSensitivityConfigReport(*simmSensitivityConfigReport,
                                               sensiAnalysis_->scenarioGenerator()->shiftSizes(),
                                               sensiAnalysis_->scenarioGenerator()->baseValues(),
@@ -306,7 +336,7 @@ void PricingAnalyticImpl::runAnalytic(
                 // If the stream is going to be reused - wrap it into a buffered stream to gain some
                 // performance. The cost for this is the memory footpring of the buffer.
                 QuantLib::ext::shared_ptr<InMemoryReport> parSensiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-                ReportWriter(inputs_->reportNaString())
+                PricingReportWriter(inputs_->reportNaString())
                     .writeSensitivityReport(*parSensiReport, pss, inputs_->sensiThreshold(), analytic()->market(),
                                             marketConfig, inputs_->sensiOutputPrecision());
                 analytic()->addReport(type, "par_sensitivity", parSensiReport);
@@ -315,7 +345,7 @@ void PricingAnalyticImpl::runAnalytic(
                     QuantLib::ext::shared_ptr<InMemoryReport> jacobiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                     writeParConversionMatrix(parAnalysis_->parSensitivities(), *jacobiReport);
                     analytic()->addReport(type, "jacobi", jacobiReport);
-                    
+
                     QuantLib::ext::shared_ptr<InMemoryReport> jacobiInverseReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                     parConverter->writeConversionMatrix(*jacobiInverseReport);
                     analytic()->addReport(type, "jacobi_inverse", jacobiInverseReport);
@@ -324,7 +354,7 @@ void PricingAnalyticImpl::runAnalytic(
             else {
                 LOG("Sensi Analysis - skip par conversion");
             }
-        
+
             LOG("Sensi Analysis - Completed");
             CONSOLE("OK");
         } else {

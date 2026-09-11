@@ -64,6 +64,12 @@ This node holds configuration details for the iterative bootstrap that are descr
   will be allowed during the bootstrap (in a range that is technically defined by the MaxFactor and MaxAttempts
   parameters for the survival probability in the bootstrap config).
 
+\item \lstinline!PriceIsUpfront! [Optional]:
+When the \lstinline!Type! is \lstinline!Price!, this boolean flag allows the price quote to be interpreted as an 
+upfront amount or a price. Some market data providers quote the upfront amount and some quote the price i.e. 1 minus 
+the upfront. In some cases, the quotes are in terms of upfront for single name CDS and in terms of price for index 
+CDS. If omitted, it defaults to \lstinline!true! and the price quote is interpreted as an upfront.
+
 \end{itemize}
 
 \begin{longlisting}
@@ -91,6 +97,7 @@ This node holds configuration details for the iterative bootstrap that are descr
     ...
   </BootstrapConfig>
   <AllowNegativeRates>...</AllowNegativeRates>
+  <PriceIsUpfront>...</PriceIsUpfront>
 </DefaultCurve>
 \end{minted}
 \caption{Default curve configuration based on CDS quotes}

@@ -74,10 +74,10 @@ MarketRiskConfiguration::RiskClass parseVarRiskClass(const string& rc) {
     return riskClassMap.right.at(rc);
 }
 
-MarketRiskConfiguration::RiskType parseVarMarginType(const string& mt) {
-    QL_REQUIRE(riskTypeMap.right.count(mt) > 0,
-               "Risk type string " << mt << " does not correspond to a valid MarketRiskConfiguration::RiskType");
-    return riskTypeMap.right.at(mt);
+MarketRiskConfiguration::RiskType parseVarRiskType(const string& rt) {
+    QL_REQUIRE(riskTypeMap.right.count(rt) > 0,
+               "Risk type string " << rt << " does not correspond to a valid MarketRiskConfiguration::RiskType");
+    return riskTypeMap.right.at(rt);
 }
 
 //! Give back a set containing the RiskClass values optionally excluding 'All'
@@ -117,6 +117,7 @@ RiskFilter::RiskFilter(const MarketRiskConfiguration::RiskClass& riskClass, cons
                                                          RiskFactorKey::KeyType::EquityVolatility,
                                                          RiskFactorKey::KeyType::CommodityCurve,
                                                          RiskFactorKey::KeyType::CommodityVolatility,
+                                                         RiskFactorKey::KeyType::IntradayPowerCurve,
                                                          RiskFactorKey::KeyType::DividendYield,
                                                          RiskFactorKey::KeyType::SurvivalProbability,
                                                          RiskFactorKey::KeyType::RecoveryRate,
@@ -144,6 +145,7 @@ RiskFilter::RiskFilter(const MarketRiskConfiguration::RiskClass& riskClass, cons
                             RiskFactorKey::KeyType::DividendYield,
                             RiskFactorKey::KeyType::SurvivalProbability, 
                             RiskFactorKey::KeyType::CommodityCurve,
+                            RiskFactorKey::KeyType::IntradayPowerCurve,
                             RiskFactorKey::KeyType::RecoveryRate,
                             RiskFactorKey::KeyType::CPIIndex,
                             RiskFactorKey::KeyType::ZeroInflationCurve,
@@ -194,7 +196,8 @@ RiskFilter::RiskFilter(const MarketRiskConfiguration::RiskClass& riskClass, cons
                              RiskFactorKey::KeyType::DividendYield};
             break;
         case MarketRiskConfiguration::RiskClass::Commodity:
-            allowed_class = {RiskFactorKey::KeyType::CommodityCurve, RiskFactorKey::KeyType::CommodityVolatility};
+            allowed_class = {RiskFactorKey::KeyType::CommodityCurve, RiskFactorKey::KeyType::CommodityVolatility,
+                             RiskFactorKey::KeyType::IntradayPowerCurve};
             break;
         case MarketRiskConfiguration::RiskClass::FX:
             allowed_class = {RiskFactorKey::KeyType::FXSpot, RiskFactorKey::KeyType::FXVolatility};

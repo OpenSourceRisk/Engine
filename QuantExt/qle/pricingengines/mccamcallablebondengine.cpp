@@ -159,16 +159,6 @@ RandomVariable McCamCallableBondBaseEngine::cashflowPathValue(
         }
         states[i] = tmp;
     }
-    /*
-    std::cout << "McCamCallableBondBaseEngine::cashflowPathValue(): calculating amount for cf legNo " << cf.legNo
-              << " cfNo " << cf.cfNo << " payTime " << cf.payTime << " payCcyIndex " << cf.payCcyIndex << " payer "
-              << cf.payer << " amount " << cf.amountCalculator(n, states)[0] << " " << cf.amountCalculator(n, states)[1]
-              << "numerarie "
-              << lgmVectorised_[0].numeraire(
-                     cf.payTime, pathValues[simTimesPayIdx][model_->pIdx(CrossAssetModel::AssetType::IR, 0)],
-                     discountCurve)[0]
-              << " df " << discountCurve->discount(cf.payTime) << std::endl;
-    */
     auto numeraire = lgmVectorised_[0].numeraire(
         cf.payTime, pathValues[simTimesPayIdx][model_->pIdx(CrossAssetModel::AssetType::IR, 0)], discountCurve);
     auto amount = cf.amountCalculator(n, states) / numeraire;

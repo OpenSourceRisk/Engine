@@ -58,7 +58,7 @@ add_link_directory_if_exists(${ORE}/build/OREAnalytics/orea)
 set (CMAKE_CXX_STANDARD 11)
 
 # run SWIG
-find_package(SWIG REQUIRED)
+find_package(SWIG MODULE REQUIRED)
 find_package(Java REQUIRED)
 find_package(JNI REQUIRED)
 include(UseJava)

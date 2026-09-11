@@ -147,6 +147,10 @@ inline void EquityMarginCoupon::accept(AcyclicVisitor& v) {
         Coupon::accept(v);
 }
 
+inline QuantLib::ext::shared_ptr<EquityMarginCouponPricer> EquityMarginCoupon::pricer() const {
+    return pricer_;
+}
+
 //! helper class building a sequence of equity margin coupons
 /*! \ingroup cashflows
  */
@@ -172,7 +176,7 @@ public:
     EquityMarginLeg& withNotionals(const std::vector<Real>& notionals);
     EquityMarginLeg& withPaymentDayCounter(const DayCounter& dayCounter);
     EquityMarginLeg& withPaymentAdjustment(BusinessDayConvention convention);
-    EquityMarginLeg& withPaymentLag(Natural paymentLag);
+    EquityMarginLeg& withPaymentLag(QuantLib::Integer paymentLag);
     EquityMarginLeg& withPaymentCalendar(const Calendar& calendar);
     EquityMarginLeg& withTotalReturn(bool);
     EquityMarginLeg& withDividendFactor(Real);
@@ -195,7 +199,7 @@ private:
     QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
     std::vector<Real> notionals_;
     DayCounter paymentDayCounter_;
-    Natural paymentLag_;
+    QuantLib::Integer paymentLag_;
     BusinessDayConvention paymentAdjustment_;
     Calendar paymentCalendar_;
     bool isTotalReturn_;

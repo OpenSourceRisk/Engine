@@ -41,16 +41,13 @@ using namespace ore::data;
 class OREApp {
 public:
     //! Constructor that uses ORE parameters and input data from files
-    OREApp(QuantLib::ext::shared_ptr<Parameters> params, bool console = false, 
-           const std::filesystem::path& logRootPath = std::filesystem::path())
-      : params_(params), inputs_(nullptr), console_(console), logRootPath_(logRootPath) {}
+    OREApp(QuantLib::ext::shared_ptr<Parameters> params, bool console = false,
+           const std::filesystem::path& logRootPath = std::filesystem::path());
 
     //! Constructor that assumes we have already assembled input parameters via API
     OREApp(const QuantLib::ext::shared_ptr<InputParameters>& inputs, const std::string& logFile = "",
            Size logLevel = 31, bool console = false, bool clearLog = true,
-           const std::filesystem::path& logRootPath = std::filesystem::path())
-        : params_(nullptr), inputs_(inputs), logFile_(logFile), logMask_(logLevel), console_(console),
-          clearLog_(clearLog), logRootPath_(logRootPath) {}
+           const std::filesystem::path& logRootPath = std::filesystem::path());
 
     //! Destructor
     virtual ~OREApp();
@@ -110,6 +107,9 @@ protected:
                               const QuantLib::ext::shared_ptr<Parameters>& params);
     QuantLib::ext::shared_ptr<CSVLoader> buildCsvLoader(const QuantLib::ext::shared_ptr<Parameters>& params);
 
+    //! Factory method for creating InputParameters, override in derived classes
+    virtual QuantLib::ext::shared_ptr<InputParameters> createInputParameters(const QuantLib::ext::shared_ptr<Parameters>& params);
+
     void initFromParams();
     void initFromInputs();
       
@@ -151,6 +151,8 @@ public:
           
     std::string loadParameterString(const std::string& analytic, const std::string& param, bool mandatory) override;
     std::vector<std::string> loadParameterXMLString(const std::string& rawString) override;
+    std::vector<std::string> loadParameterCSVString(const std::string& rawString) override;
+    std::vector<std::string> constructFilePaths(const std::string& rawString);
 
 protected:
     QuantLib::ext::shared_ptr<Parameters> params_;

@@ -69,8 +69,8 @@ public:
     virtual ~ReferenceDataManager();
     virtual bool hasData(const std::string& type, const std::string& id,
                          const QuantLib::Date& asof = QuantLib::Null<QuantLib::Date>()) = 0;
-    virtual QuantLib::ext::shared_ptr<ReferenceDatum> getData(const std::string& type, const std::string& id, const QuantLib::Date& asof = QuantLib::Null<QuantLib::Date>()) = 0;
-    virtual void add(const QuantLib::ext::shared_ptr<ReferenceDatum>& referenceDatum) = 0;
+    virtual ext::shared_ptr<ReferenceDatum> getData(const std::string& type, const std::string& id, const QuantLib::Date& asof = QuantLib::Null<QuantLib::Date>()) = 0;
+    virtual void add(const ext::shared_ptr<ReferenceDatum>& referenceDatum) = 0;
 };
 
 class BasicReferenceDataManager : public ReferenceDataManager, public XMLSerializable {
@@ -81,7 +81,7 @@ public:
     // Load extra data and append to this manger
     void appendData(const std::string& filename);
 
-    QuantLib::ext::shared_ptr<ReferenceDatum> buildReferenceDatum(const std::string& refDataType);
+    ext::shared_ptr<ReferenceDatum> buildReferenceDatum(const std::string& refDataType);
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(ore::data::XMLDocument& doc) const override;
@@ -91,11 +91,11 @@ public:
 
     bool hasData(const std::string& type, const std::string& id,
                  const QuantLib::Date& asof = QuantLib::Null<QuantLib::Date>()) override;
-    QuantLib::ext::shared_ptr<ReferenceDatum> getData(const std::string& type, const std::string& id,
+    ext::shared_ptr<ReferenceDatum> getData(const std::string& type, const std::string& id,
                                               const QuantLib::Date& asof = QuantLib::Null<QuantLib::Date>()) override;
-    void add(const QuantLib::ext::shared_ptr<ReferenceDatum>& referenceDatum) override;
+    void add(const ext::shared_ptr<ReferenceDatum>& referenceDatum) override;
     // adds a datum from an xml node and returns it (or nullptr if nothing was added due to an error)
-    QuantLib::ext::shared_ptr<ReferenceDatum> addFromXMLNode(XMLNode* node, const std::string& id = std::string(),
+    ext::shared_ptr<ReferenceDatum> addFromXMLNode(XMLNode* node, const std::string& id = std::string(),
                                                      const QuantLib::Date& validFrom = QuantLib::Null<QuantLib::Date>());
 };
 
@@ -274,7 +274,7 @@ public:
     PortfolioBasketReferenceDatum(const std::string& id, const QuantLib::Date& validFrom);
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
-    std::vector<QuantLib::ext::shared_ptr<Trade>> getTrades() const;
+    std::vector<ext::shared_ptr<Trade>> getTrades() const;
 };
 
 class CreditReferenceDatum : public ReferenceDatum {
@@ -358,12 +358,12 @@ public:
 };
 %extend BondBasketReferenceDatum {
     BondBasketReferenceDatum(const std::string& id,
-                             const std::vector<QuantLib::ext::shared_ptr<BondUnderlying>>& underlyingData) {
+                             const std::vector<ext::shared_ptr<BondUnderlying>>& underlyingData) {
         return new ore::data::BondBasketReferenceDatum(id, VECTOR_SWIG_TO_ORE(underlyingData));
     }
 
     BondBasketReferenceDatum(const std::string& id, const QuantLib::Date& validFrom,
-                             const std::vector<QuantLib::ext::shared_ptr<BondUnderlying>>& underlyingData) {
+                             const std::vector<ext::shared_ptr<BondUnderlying>>& underlyingData) {
         return new ore::data::BondBasketReferenceDatum(id, validFrom, VECTOR_SWIG_TO_ORE(underlyingData));
     }
 }

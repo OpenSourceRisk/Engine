@@ -17,6 +17,8 @@
 */
 
 #include <ored/portfolio/builders/riskparticipationagreement.hpp>
+#include <ored/portfolio/builders/swaption.hpp>
+#include <ored/portfolio/swaption.hpp>
 
 #include <ored/scripting/engines/analyticblackriskparticipationagreementengine.hpp>
 #include <ored/scripting/engines/analyticxccyblackriskparticipationagreementengine.hpp>
@@ -24,16 +26,29 @@
 #include <ored/scripting/engines/numericlgmriskparticipationagreementengine_tlock.hpp>
 
 #include <ored/model/lgmbuilder.hpp>
+#include <ored/scripting/engines/mccamrpaengine.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+
+#include <qle/models/projectedcrossassetmodel.hpp>
+#include <qle/models/representativeswaption.hpp>
 
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
 
 namespace ore {
 namespace data {
+
+namespace detail {
+struct CcyComp {
+    bool operator()(const Currency& c1, const Currency& c2) const { return c1.code() < c2.code(); }
+};
+} // namespace detail
+
+using namespace QuantLib;
+using namespace QuantExt;
 
 std::map<std::string, Handle<YieldTermStructure>>
 RiskParticipationAgreementEngineBuilderBase::getDiscountCurves(RiskParticipationAgreement* rpa) {
@@ -61,7 +76,8 @@ RiskParticipationAgreementBlackEngineBuilder::engineImpl(const std::string& id, 
     string config = configuration(MarketContext::pricing);
     // the first ibor / ois index found
     QuantLib::ext::shared_ptr<IborIndex> index;
-    auto qlInstr = QuantLib::ext::dynamic_pointer_cast<QuantExt::RiskParticipationAgreement>(rpa->instrument()->qlInstrument());
+    auto qlInstr =
+        QuantLib::ext::dynamic_pointer_cast<QuantExt::RiskParticipationAgreement>(rpa->instrument()->qlInstrument());
     QL_REQUIRE(qlInstr != nullptr, "RiskParticipationAgreementBlackEngineBuilder: internal error, could not "
                                    "cast to RiskParticipationAgreement");
     for (auto const& l : qlInstr->underlying()) {
@@ -113,124 +129,6 @@ RiskParticipationAgreementXCcyBlackEngineBuilder::engineImpl(const std::string& 
         parseRpaOptionExpiryPosition(engineParameter("OptionExpiryPosition", {}, false, "Mid")));
 }
 
-QuantLib::ext::shared_ptr<QuantExt::IrModel>
-RiskParticipationAgreementLGMGridEngineBuilder::model(const string& id, const string& key,
-                                                      const std::vector<Date>& expiries, const Date& maturity,
-                                                      const std::vector<Real>& strikes) {
-
-    // TODO this is the same as in LGMBermudanSwaptionEngineBuilder::model(), factor the model building out
-
-    DLOG("Get model data");
-    auto calibration = parseCalibrationType(modelParameter("Calibration"));
-    auto calibrationStrategy = parseCalibrationStrategy(modelParameter("CalibrationStrategy"));
-    std::string referenceCalibrationGrid = modelParameter("ReferenceCalibrationGrid", {}, false, "");
-    Real lambda = parseReal(modelParameter("Reversion"));
-    vector<Real> sigma = parseListOfValues<Real>(modelParameter("Volatility"), &parseReal);
-    vector<Real> sigmaTimes = parseListOfValues<Real>(modelParameter("VolatilityTimes", {}, false), &parseReal);
-    QL_REQUIRE(sigma.size() == sigmaTimes.size() + 1, "there must be n+1 volatilities (" << sigma.size()
-                                                                                         << ") for n volatility times ("
-                                                                                         << sigmaTimes.size() << ")");
-    Real tolerance = parseReal(modelParameter("Tolerance"));
-    auto reversionType = parseReversionType(modelParameter("ReversionType"));
-    auto volatilityType = parseVolatilityType(modelParameter("VolatilityType"));
-    bool continueOnCalibrationError = globalParameters_.count("ContinueOnCalibrationError") > 0 &&
-                                      parseBool(globalParameters_.at("ContinueOnCalibrationError"));
-    bool allowModelFallbacks =
-        globalParameters_.count("AllowModelFallbacks") > 0 && parseBool(globalParameters_.at("AllowModelFallbacks"));
-
-    auto data = QuantLib::ext::make_shared<IrLgmData>();
-
-    // check for allowed calibration / bermudan strategy settings
-    std::vector<std::pair<CalibrationType, CalibrationStrategy>> validCalPairs = {
-        {CalibrationType::None, CalibrationStrategy::None},
-        {CalibrationType::Bootstrap, CalibrationStrategy::CoterminalATM},
-        {CalibrationType::Bootstrap, CalibrationStrategy::CoterminalDealStrike},
-        {CalibrationType::BestFit, CalibrationStrategy::CoterminalATM},
-        {CalibrationType::BestFit, CalibrationStrategy::CoterminalDealStrike}};
-
-    QL_REQUIRE(std::find(validCalPairs.begin(), validCalPairs.end(),
-                         std::make_pair(calibration, calibrationStrategy)) != validCalPairs.end(),
-               "Calibration (" << calibration << ") and CalibrationStrategy (" << calibrationStrategy
-                               << ") are not allowed in this combination");
-
-    // compute horizon shift
-    Real shiftHorizon = parseReal(modelParameter("ShiftHorizon", {}, false, "0.5"));
-    Date today = Settings::instance().evaluationDate();
-    shiftHorizon = ActualActual(ActualActual::ISDA).yearFraction(today, maturity) * shiftHorizon;
-
-    // Default: no calibration, constant lambda and sigma from engine configuration
-    data->reset();
-    data->qualifier() = key;
-    data->calibrateH() = false;
-    data->hParamType() = ParamType::Constant;
-    data->hValues() = {lambda};
-    data->reversionType() = reversionType;
-    data->calibrateA() = false;
-    data->aParamType() = ParamType::Piecewise;
-    data->aValues() = sigma;
-    data->aTimes() = sigmaTimes;
-    data->volatilityType() = volatilityType;
-    data->calibrationType() = calibration;
-    data->shiftHorizon() = shiftHorizon;
-
-    // calibration expiries might be empty, in this case do not calibrate
-    if (!expiries.empty() && (calibrationStrategy == CalibrationStrategy::CoterminalATM ||
-                              calibrationStrategy == CalibrationStrategy::CoterminalDealStrike)) {
-        DLOG("Build LgmData for co-terminal specification");
-        vector<string> expiryDates, termDates;
-        for (Size i = 0; i < expiries.size(); ++i) {
-            expiryDates.push_back(to_string(expiries[i]));
-            termDates.push_back(to_string(maturity));
-        }
-        data->optionExpiries() = expiryDates;
-        data->optionTerms() = termDates;
-        data->optionStrikes().resize(expiryDates.size(), "ATM");
-        if (calibrationStrategy == CalibrationStrategy::CoterminalDealStrike) {
-            for (Size i = 0; i < expiryDates.size(); ++i) {
-                if (strikes[i] != Null<Real>())
-                    data->optionStrikes()[i] = std::to_string(strikes[i]);
-            }
-        }
-        if (calibration == CalibrationType::Bootstrap) {
-            DLOG("Calibrate piecewise alpha");
-            data->calibrationType() = CalibrationType::Bootstrap;
-            data->calibrateH() = false;
-            data->hParamType() = ParamType::Constant;
-            data->hValues() = {lambda};
-            data->calibrateA() = true;
-            data->aParamType() = ParamType::Piecewise;
-            data->aValues() = {sigma};
-        } else if (calibration == CalibrationType::BestFit) {
-            DLOG("Calibrate constant sigma");
-            data->calibrationType() = CalibrationType::BestFit;
-            data->calibrateH() = false;
-            data->hParamType() = ParamType::Constant;
-            data->hValues() = {lambda};
-            data->calibrateA() = true;
-            data->aParamType() = ParamType::Constant;
-            data->aValues() = {sigma};
-        } else
-            QL_FAIL("choice of calibration type invalid");
-    }
-
-    // Build model
-    DLOG("Build LGM model");
-
-    auto rt = globalParameters_.find("RunType");
-    bool allowChangingFallbacks =
-        rt != globalParameters_.end() && rt->second != "SensitivityDelta" && rt->second != "SensitivityDeltaGamma";
-
-    QuantLib::ext::shared_ptr<LgmBuilder> calib = QuantLib::ext::make_shared<LgmBuilder>(
-        market_, data, configuration(MarketContext::irCalibration), tolerance, continueOnCalibrationError,
-        referenceCalibrationGrid, generateAdditionalResults(), id, BlackCalibrationHelper::RelativePriceError,
-        allowChangingFallbacks, allowModelFallbacks,
-        globalParameters_.count("Calibrate") != 0 && !parseBool(globalParameters_.at("Calibrate")));
-
-    engineFactory()->modelBuilders().insert(std::make_pair(id, calib));
-
-    return calib->model();
-}
-
 QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
 RiskParticipationAgreementSwapLGMGridEngineBuilder::engineImpl(const std::string& id, RiskParticipationAgreement* rpa) {
 
@@ -246,25 +144,30 @@ RiskParticipationAgreementSwapLGMGridEngineBuilder::engineImpl(const std::string
 
     // determine expiries and strikes for calibration basket (simple approach, a la summit)
 
-    auto qlInstr = QuantLib::ext::dynamic_pointer_cast<QuantExt::RiskParticipationAgreement>(rpa->instrument()->qlInstrument());
+    auto qlInstr =
+        QuantLib::ext::dynamic_pointer_cast<QuantExt::RiskParticipationAgreement>(rpa->instrument()->qlInstrument());
     QL_REQUIRE(qlInstr != nullptr, "RiskParticipationAgreementSwapLGMGridEngineBuilder: internal error, could not "
                                    "cast to RiskParticipationAgreement");
 
     std::vector<Date> expiries;
     std::vector<Real> strikes;
+    std::vector<Date> maturities;
 
     Date today = Settings::instance().evaluationDate();
     Date calibrationMaturity = std::max(qlInstr->underlyingMaturity(), today);
 
     // the first ibor / ois index found
-    QuantLib::ext::shared_ptr<IborIndex> index;
+    QuantLib::ext::shared_ptr<InterestRateIndex> index;
+    std::string qualifier;
 
-    // if protection end <= today there is no model dependent part to value (just fees, possibly), so
-    // we just pass a dummy calibration instruments
+    // if protection end <= today there is no model dependent part to value (just fees, possibly)
+
     if (rpa->protectionEnd() > today) {
+
         std::vector<Date> gridDates = RiskParticipationAgreementBaseEngine::buildDiscretisationGrid(
             today, rpa->protectionStart(), rpa->protectionEnd(), qlInstr->underlying(), maxGapDays,
             maxDiscretisationPoints);
+
         for (Size i = 0; i < gridDates.size() - 1; ++i) {
             Date mid = gridDates[i] + (gridDates[i + 1] - gridDates[i]) / 2;
             // mid might be = reference date degenerate cases where the first two discretisation points
@@ -273,53 +176,63 @@ RiskParticipationAgreementSwapLGMGridEngineBuilder::engineImpl(const std::string
                 expiries.push_back(mid);
         }
 
-        std::vector<QuantLib::ext::shared_ptr<QuantLib::FixedRateCoupon>> fixedCpns;
-        std::vector<QuantLib::ext::shared_ptr<QuantLib::FloatingRateCoupon>> floatingCpns;
-        for (auto const& l : qlInstr->underlying()) {
-            for (auto const& c : l) {
-                if (auto fixedCpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::FixedRateCoupon>(c))
-                    fixedCpns.push_back(fixedCpn);
-                if (auto floatingCpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(c)) {
-                    floatingCpns.push_back(floatingCpn);
-                    if (index == nullptr)
-                        index = QuantLib::ext::dynamic_pointer_cast<IborIndex>(floatingCpn->index());
-		}
-            }
-        }
-        auto cpnLt = [](const QuantLib::ext::shared_ptr<Coupon>& x, const QuantLib::ext::shared_ptr<Coupon>& y) {
-            return x->accrualStartDate() < y->accrualStartDate();
-        };
-        std::sort(fixedCpns.begin(), fixedCpns.end(), cpnLt);
-        std::sort(floatingCpns.begin(), floatingCpns.end(), cpnLt);
+        index = getInterestRateIndexFromLegs(qlInstr->underlying()).front();
+        strikes = getCalibrationStrikesFromLegs(qlInstr->underlying(), expiries);
+        maturities = std::vector<Date>(expiries.size(), calibrationMaturity);
 
-        auto accLt = [](const QuantLib::ext::shared_ptr<Coupon>& x, const Date& e) { return x->accrualStartDate() < e; };
-        for (auto const& expiry : expiries) {
-            // look for the first fixed and float coupon with accrual start >= expiry
-            auto firstFix = std::lower_bound(fixedCpns.begin(), fixedCpns.end(), expiry, accLt);
-            auto firstFloat = std::lower_bound(floatingCpns.begin(), floatingCpns.end(), expiry, accLt);
-            // if we find both coupons, we take the fixed rate minus the floating spread as the calibration strike
-            // otherwise we set the strike to null meaning we request an ATM strike for the calibration
-            if (firstFix != fixedCpns.end() && firstFloat != floatingCpns.end())
-                strikes.push_back((*firstFix)->rate() - (*firstFloat)->spread());
-            else
-                strikes.push_back(Null<Real>());
+        qualifier = index == nullptr ? rpa->npvCurrency() : IndexNameTranslator::instance().oreName(index->name());
+
+        // overwrite with delta-gamma adjusted basket, if this is configured
+
+        if (parseCalibrationStrategy(modelParameter("CalibrationStrategy", {}, false, "None")) ==
+            CalibrationStrategy::DeltaGammaAdjusted) {
+            auto adjustedSwaptions = buildRepresentativeSwaptions(engineFactory(), qualifier, qlInstr.get(), expiries);
+            expiries.clear();
+            strikes.clear();
+            maturities.clear();
+            for (auto const& swaption : adjustedSwaptions) {
+                expiries.push_back(swaption->exercise()->dates().front());
+                maturities.push_back(swaption->underlying()->maturityDate());
+                strikes.push_back(swaption->underlying()->fixedRate());
+                DLOG("got representative swap: expiry " << QuantLib::io::iso_date(expiries.back()) << ", maturity "
+                                                        << maturities.back() << ", strike " << strikes.back()
+                                                        << ", notional " << swaption->underlying()->nominal());
+            }
         }
     }
 
     // build model + engine
     DLOG("Building LGM Grid RPA engine for trade " << id);
-    QuantLib::ext::shared_ptr<QuantExt::IrModel> lgm =
-        model(id, index == nullptr ? rpa->npvCurrency() : IndexNameTranslator::instance().oreName(index->name()),
-              expiries, calibrationMaturity, strikes);
+    auto lgm = std::get<Handle<LGM>>(ore::data::model(
+        this, id, {qualifier},
+        expiries, maturities, {strikes}, {}, false));
     DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
     Handle<DefaultProbabilityTermStructure> creditCurve =
         market_->defaultCurve(rpa->creditCurveId(), configuration(MarketContext::pricing))->curve();
     Handle<Quote> recoveryRate = market_->recoveryRate(rpa->creditCurveId(), configuration(MarketContext::pricing));
     return QuantLib::ext::make_shared<NumericLgmRiskParticipationAgreementEngine>(
-        rpa->npvCurrency(), getDiscountCurves(rpa), getFxSpots(rpa),
-        QuantLib::ext::dynamic_pointer_cast<QuantExt::LGM>(lgm), sy, ny, sx, nx, creditCurve, recoveryRate, maxGapDays,
-        maxDiscretisationPoints,
+        rpa->npvCurrency(), getDiscountCurves(rpa), getFxSpots(rpa), lgm, sy, ny, sx, nx, creditCurve, recoveryRate,
+        maxGapDays, maxDiscretisationPoints,
         parseRpaOptionExpiryPosition(engineParameter("OptionExpiryPosition", {}, false, "Mid")));
+}
+
+std::vector<QuantLib::ext::shared_ptr<QuantLib::Swaption>>
+RiskParticipationAgreementSwapLGMGridEngineBuilder::buildRepresentativeSwaptions(
+    const EngineFactory* engineFactory, const std::string& qualifier, const QuantExt::RiskParticipationAgreement* rpa,
+    const std::vector<Date>& expiries) const {
+    auto market = QuantLib::ext::dynamic_pointer_cast<Market>(engineFactory->market());
+    auto configuration = engineFactory->configuration(MarketContext::irCalibration);
+    Handle<YieldTermStructure> discountCurve = market->discountCurve(rpa->underlyingCcys().front(), configuration);
+    Handle<SwapIndex> swapIndex = market->swapIndex(market->swapIndexBase(qualifier, configuration), configuration);
+    QuantExt::RepresentativeSwaptionMatcher matcher(rpa->underlying(), rpa->underlyingPayer(), *swapIndex, true,
+                                                    discountCurve, 0.0);
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::Swaption>> swaptions;
+    for (auto const& ed : expiries) {
+        if (auto tmp = matcher.representativeSwaption(
+                ed, QuantExt::RepresentativeSwaptionMatcher::InclusionCriterion::PayDateGtExercise))
+            swaptions.push_back(tmp);
+    }
+    return swaptions;
 }
 
 QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
@@ -342,8 +255,8 @@ RiskParticipationAgreementTLockLGMGridEngineBuilder::engineImpl(const std::strin
     // determine expiries and strikes for calibration basket (coterminal ATM until termination date, spacing as
     // specified in config)
 
-    auto qlInstr =
-        QuantLib::ext::dynamic_pointer_cast<QuantExt::RiskParticipationAgreementTLock>(rpa->instrument()->qlInstrument());
+    auto qlInstr = QuantLib::ext::dynamic_pointer_cast<QuantExt::RiskParticipationAgreementTLock>(
+        rpa->instrument()->qlInstrument());
     QL_REQUIRE(qlInstr != nullptr, "RiskParticipationAgreementTLockLGMGridEngineBuilder: internal error, could not "
                                    "cast to RiskParticipationAgreementTLock");
 
@@ -372,8 +285,9 @@ RiskParticipationAgreementTLockLGMGridEngineBuilder::engineImpl(const std::strin
     // build model + engine
 
     DLOG("Building LGM Grid RPA engine (tlock) for trade " << id);
-    QuantLib::ext::shared_ptr<QuantExt::IrModel> lgm =
-        model(id, rpa->npvCurrency(), expiries, calibrationMaturity, strikes);
+    auto lgm = std::get<Handle<LGM>>(ore::data::model(this, id, {rpa->npvCurrency()}, expiries,
+                                                      std::vector<Date>(expiries.size(), calibrationMaturity),
+                                                      {strikes}, {}, false));
     DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
     Handle<DefaultProbabilityTermStructure> creditCurve =
         market_->defaultCurve(rpa->creditCurveId(), configuration(MarketContext::pricing))->curve();
@@ -390,9 +304,84 @@ RiskParticipationAgreementTLockLGMGridEngineBuilder::engineImpl(const std::strin
     }
 
     return QuantLib::ext::make_shared<NumericLgmRiskParticipationAgreementEngineTLock>(
-        rpa->npvCurrency(), getDiscountCurves(rpa), getFxSpots(rpa),
-        QuantLib::ext::dynamic_pointer_cast<QuantExt::LGM>(lgm), sy, ny, sx, nx, treasuryCurve, creditCurve,
+        rpa->npvCurrency(), getDiscountCurves(rpa), getFxSpots(rpa), lgm, sy, ny, sx, nx, treasuryCurve, creditCurve,
         recoveryRate, timeStepsPerYear);
+}
+
+QuantLib::ext::shared_ptr<PricingEngine> CamAmcRiskParticipationAgreementEngineBuilder::buildMcEngine(
+    const QuantLib::Handle<CrossAssetModel>& model, const std::vector<Currency>& ccys, const Currency& base,
+    const Handle<DefaultProbabilityTermStructure>& creditCurve, const Handle<Quote>& recoveryRate,
+    const std::vector<Size>& externalModelIndices) {
+
+    Size maxDiscretisationPoints = parseInteger(engineParameter("MaxDiscretisationPoints"));
+
+    if (maxDiscretisationPoints == 0)
+        maxDiscretisationPoints = Null<Size>();
+
+    return QuantLib::ext::make_shared<McCamRpaEngine>(
+        model, ccys, base, creditCurve, recoveryRate, parseInteger(engineParameter("MaxGapDays")),
+        maxDiscretisationPoints, parseSequenceType(engineParameter("Training.Sequence")),
+        parseSequenceType(engineParameter("Pricing.Sequence")), parseInteger(engineParameter("Training.Samples")),
+        parseInteger(engineParameter("Pricing.Samples")), parseInteger(engineParameter("Training.Seed")),
+        parseInteger(engineParameter("Pricing.Seed")), parseInteger(engineParameter("Training.BasisFunctionOrder")),
+        parsePolynomType(engineParameter("Training.BasisFunction")),
+        parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering")),
+        parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")),
+        std::vector<Handle<YieldTermStructure>>{}, simulationDates_, stickyCloseOutDates_, externalModelIndices,
+        parseBool(engineParameter("MinObsDate")),
+        parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
+        parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
+        parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
+        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")),
+        parseInteger(engineParameter("CashflowGeneration.OnCpnMaxSimTimes", {}, false, "1")),
+        parsePeriod(engineParameter("CashflowGeneration.OnCpnAddSimTimesCutoff", {}, false, "0D")),
+        parseInteger(engineParameter("Regression.MaxSimTimesIR", {}, false, "0")),
+        parseInteger(engineParameter("Regression.MaxSimTimesFX", {}, false, "0")),
+        parseInteger(engineParameter("Regression.MaxSimTimesEQ", {}, false, "0")),
+        parseVarGroupMode(engineParameter("Regression.VarGroupMode", {}, false, "Global")));
+}
+
+QuantLib::ext::shared_ptr<PricingEngine>
+CamAmcRiskParticipationAgreementEngineBuilder::engineImpl(const std::string& id, RiskParticipationAgreement* rpa) {
+    DLOG("Building AMC engine for rpa " << id << " (from externally given CAM)");
+
+    QL_REQUIRE(cam_ != nullptr, "CamAmcRiskParticipationAgreementEngineBuilder::engineImpl: cam is null");
+
+    // collect currencies
+
+    std::set<Currency, ore::data::detail::CcyComp> allCurrencies;
+    std::for_each(rpa->underlying().begin(), rpa->underlying().end(),
+                  [&allCurrencies](const LegData& c) { allCurrencies.insert(parseCurrency(c.currency())); });
+    std::for_each(rpa->protectionFee().begin(), rpa->protectionFee().end(),
+                  [&allCurrencies](const LegData& c) { allCurrencies.insert(parseCurrency(c.currency())); });
+
+    // get projected model
+
+    bool needBaseCcy = allCurrencies.size() > 1;
+
+    std::set<std::pair<CrossAssetModel::AssetType, Size>> selectedComponents;
+    if (needBaseCcy) {
+        selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, 0));
+    }
+    for (auto const& c : allCurrencies) {
+        Size ccyIdx = cam_->ccyIndex(c);
+        if (ccyIdx != 0 || !needBaseCcy)
+            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, ccyIdx));
+        if (needBaseCcy && ccyIdx > 0)
+            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::FX, ccyIdx - 1));
+    }
+    std::vector<Size> externalModelIndices;
+    Handle<CrossAssetModel> model(getProjectedCrossAssetModel(cam_, selectedComponents, externalModelIndices));
+
+    /* build engine; we pass the credit curve and recovery rate separately, i.e. do not assume they are part
+       of the dynamic model */
+
+    Handle<DefaultProbabilityTermStructure> creditCurve =
+        market_->defaultCurve(rpa->creditCurveId(), configuration(MarketContext::pricing))->curve();
+    Handle<Quote> recoveryRate = market_->recoveryRate(rpa->creditCurveId(), configuration(MarketContext::pricing));
+
+    return buildMcEngine(model, std::vector<Currency>(allCurrencies.begin(), allCurrencies.end()),
+                         parseCurrency(rpa->npvCurrency()), creditCurve, recoveryRate, externalModelIndices);
 }
 
 } // namespace data

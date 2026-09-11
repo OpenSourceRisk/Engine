@@ -51,7 +51,9 @@ static CurveSpec::CurveType parseCurveSpecType(const string& s) {
         {"Commodity", CurveSpec::CurveType::Commodity},
         {"Correlation", CurveSpec::CurveType::Correlation},
         {"CommodityVolatility", CurveSpec::CurveType::CommodityVolatility},
-        {"SwapIndex", CurveSpec::CurveType::SwapIndex}};
+        {"SwapIndex", CurveSpec::CurveType::SwapIndex},
+        {"BondFutureVolatility", CurveSpec::CurveType::BondFutureVolatility},
+        {"IntradayPowerCurve", CurveSpec::CurveType::IntradayPowerCurve}};
 
     auto it = b.find(s);
     if (it != b.end()) {
@@ -242,7 +244,19 @@ QuantLib::ext::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
                                            << s);
         return QuantLib::ext::make_shared<SwapIndexCurveSpec>(tokens[0]);
     }
-        
+
+    case CurveSpec::CurveType::BondFutureVolatility: {
+        // BondFutureVolatility/BondFutureVolatilityConfigId
+        QL_REQUIRE(tokens.size() == 2, "Unexpected number of tokens in bond future volatility spec " << s);
+        return QuantLib::ext::make_shared<BondFutureVolatilityCurveSpec>(tokens[1]);
+    }
+
+    case CurveSpec::CurveType::IntradayPowerCurve: {
+        // IntradayPowerCurve/CCY/IntradayPowerCurveConfigId
+        QL_REQUIRE(tokens.size() == 3, "Unexpected number of tokens in intraday power curve spec " << s);
+        return QuantLib::ext::make_shared<IntradayPowerCurveSpec>(tokens[1], tokens[2]);
+    }
+
     }
 
     QL_FAIL("Unable to convert \"" << s << "\" into CurveSpec");
@@ -267,7 +281,10 @@ CurveSpec::CurveType parseCurveConfigurationType(const std::string& s) {
         {"Securities", CurveSpec::CurveType::Security},
         {"CommodityCurves", CurveSpec::CurveType::Commodity},
         {"Correlations", CurveSpec::CurveType::Correlation},
-        {"CommodityVolatilities", CurveSpec::CurveType::CommodityVolatility}};
+        {"CommodityVolatilities", CurveSpec::CurveType::CommodityVolatility},
+        {"BondFutureVolatilities", CurveSpec::CurveType::BondFutureVolatility},
+        {"IntradayPowerCurves", CurveSpec::CurveType::IntradayPowerCurve}
+    };
 
     auto it = b.find(s);
     if (it != b.end()) {

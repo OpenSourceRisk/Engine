@@ -25,6 +25,7 @@
 #define quantext_interpolated_discount_curve_hpp
 
 #include <boost/make_shared.hpp>
+#include <ql/math/interpolations/cubicinterpolation.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <qle/quotes/logquote.hpp>
 
@@ -40,7 +41,7 @@ using namespace QuantLib;
     */
 class InterpolatedDiscountCurve : public YieldTermStructure {
 public:
-    enum class Interpolation { logLinear, linearZero };
+    enum class Interpolation { logLinear, linearZero, logCubic };
     enum class Extrapolation { flatFwd, flatZero };
     //! \name Constructors
     //@{
@@ -90,6 +91,23 @@ protected:
             Real tMax = this->times_.back();
             Real dMax = std::exp(quotes_.back()->value());
             return std::pow(dMax, t / tMax);
+        }
+        if (interpolation_ == Interpolation::logCubic) {
+            // log-cubic interpolation of discount factors, i.e. a cubic spline in log-discount space
+            std::vector<Real> y(quotes_.size());
+            for (Size j = 0; j < quotes_.size(); ++j)
+                y[j] = quotes_[j]->value(); // log discount factor
+            QuantLib::CubicInterpolation cubic(times_.begin(), times_.end(), y.begin(),
+                                               QuantLib::CubicInterpolation::Spline, true,
+                                               QuantLib::CubicInterpolation::SecondDerivative, 0.0,
+                                               QuantLib::CubicInterpolation::SecondDerivative, 0.0);
+            if (t <= this->times_.back())
+                return ::exp(cubic(t, true));
+            // flat fwd extrapolation beyond the last pillar
+            Real tMax = this->times_.back();
+            Real instFwdMax = -cubic.derivative(tMax);
+            Real dMax = std::exp(y.back());
+            return dMax * ::exp(-instFwdMax * (t - tMax));
         }
         std::vector<Time>::const_iterator it = std::upper_bound(times_.begin(), times_.end(), t);
         Size i = std::min<Size>(it - times_.begin(), times_.size() - 1);

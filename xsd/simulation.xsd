@@ -813,6 +813,7 @@
                   <xs:element type="xs:string" name="Tenors"/>
                   <xs:element type="ycInterpolation" name="Interpolation" minOccurs="0"/>
                   <xs:element type="ycExtrapolation" name="Extrapolation" minOccurs="0"/>
+                  <xs:element type="ycRollDown" name="RollDown" minOccurs="0"/>
                   <xs:element type="dayCounter" name="DayCounter" minOccurs="0"/>
                 </xs:all>
                 <xs:attribute name="curve" type="xs:string" use="optional" />
@@ -901,6 +902,7 @@
               </xs:complexType>
             </xs:element>
 	    <xs:element type="defaultCurveExtrapolation" name="Extrapolation" minOccurs="0"/>
+	    <xs:element type="ycRollDown" name="RollDown" minOccurs="0"/>
           </xs:all>
         </xs:complexType>
       </xs:element>
@@ -1106,6 +1108,15 @@
             <xs:element type="bool" name="AdjustOptionletPillars" maxOccurs="1" minOccurs="0"/>
             <xs:element type="bool" name="UseCapAtm" maxOccurs="1" minOccurs="0"/>
             <xs:element name="SmileDynamics" maxOccurs="unbounded" minOccurs="0">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="key" type="xs:string"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+            <xs:element name="SmileForwardInteraction" maxOccurs="unbounded" minOccurs="0">
               <xs:complexType>
                 <xs:simpleContent>
                   <xs:extension base="xs:string">
@@ -1451,11 +1462,21 @@
         <xs:complexType>
           <xs:sequence>
             <xs:element type="bool" name="Simulate" maxOccurs="1" minOccurs="0"/>
+            <xs:element type="priceRollDown" name="RollDown" minOccurs="0"/>
             <xs:element name="Names" maxOccurs="1" minOccurs="1">
               <xs:complexType>
                 <xs:sequence>
                   <xs:element type="xs:string" name="Name" maxOccurs="unbounded" minOccurs="0"/>
                 </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+            <xs:element name="Interpolation" maxOccurs="unbounded" minOccurs="0">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="name" type="xs:string" use="optional"/>
+                  </xs:extension>
+                </xs:simpleContent>
               </xs:complexType>
             </xs:element>
             <xs:element name="Tenors" maxOccurs="unbounded" minOccurs="1">
@@ -1485,7 +1506,73 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
+      <xs:element name="IntradayPowerCurves" maxOccurs="1" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="bool" name="Simulate" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="Names" maxOccurs="1" minOccurs="1">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element type="xs:string" name="Name" maxOccurs="unbounded" minOccurs="0"/>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+            <xs:element name="Interpolation" maxOccurs="unbounded" minOccurs="0">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="name" type="xs:string" use="optional"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+            <xs:element name="Tenors" maxOccurs="unbounded" minOccurs="1">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="name" type="xs:string" use="optional"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
       <xs:element name="CommodityVolatilities" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="bool" name="Simulate"  maxOccurs="1" minOccurs="0"/>
+            <xs:element type="xs:boolean" name="SimulateATMOnly" maxOccurs="1" minOccurs="0"/>
+            <xs:element type="timeDecayType" name="ReactionToTimeDecay"/>
+            <xs:element name="Names">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="Name" maxOccurs="unbounded">
+                    <xs:complexType>
+                      <xs:all>
+                        <xs:element type="xs:string" name="Expiries"/>
+                        <xs:element type="xs:string" name="Moneyness" maxOccurs="1" minOccurs="0"/>
+                      </xs:all>
+                      <xs:attribute name="id" type="xs:string" />
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+            <xs:element type="xs:string" name="DayCounter" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="SmileDynamics" maxOccurs="unbounded" minOccurs="0">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="key" type="xs:string"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="BondFutureVolatilities" minOccurs="0" maxOccurs="1">
         <xs:complexType>
           <xs:sequence>
             <xs:element type="bool" name="Simulate"  maxOccurs="1" minOccurs="0"/>
@@ -1634,6 +1721,7 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="LogLinear"/>
       <xs:enumeration value="LinearZero"/>
+      <xs:enumeration value="LogCubic"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -1655,6 +1743,20 @@
       <xs:enumeration value="false"/>
       <xs:enumeration value="0"/>
       <xs:enumeration value=""/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ycRollDown">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="ConstantDiscounts"/>
+      <xs:enumeration value="ForwardForward"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="priceRollDown">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Spot"/>
+      <xs:enumeration value="Forward"/>
     </xs:restriction>
   </xs:simpleType>
 

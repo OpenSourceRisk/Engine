@@ -40,7 +40,7 @@ public:
                            const std::string& currency, QuantLib::Real strike, QuantLib::Real payoff,
                            const QuantLib::ext::optional<bool>& isFuturePrice = QuantLib::ext::nullopt,
                            const QuantLib::Date& futureExpiryDate = QuantLib::Date());
-    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>&) override;
+    void build(const ext::shared_ptr<ore::data::EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
@@ -62,7 +62,7 @@ class CommoditySpreadOption : public Trade {
 public:
     CommoditySpreadOption();
     CommoditySpreadOption(const ore::data::CommoditySpreadOptionData& data);
-    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>&) override;
+    void build(const ext::shared_ptr<ore::data::EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
@@ -81,7 +81,7 @@ public:
         CommodityPayRelativeTo commodityPayRelativeTo = CommodityPayRelativeTo::CalculationPeriodEndDate,
         QuantLib::Integer futureMonthOffset = 0, QuantLib::Natural deliveryRollDays = 0, bool includePeriodEnd = true,
         const ore::data::BarrierData& barrierData = {}, const std::string& fxIndex = "");
-    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>&) override;
+    void build(const ext::shared_ptr<ore::data::EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
@@ -105,7 +105,7 @@ public:
         CommodityPayRelativeTo commodityPayRelativeTo = CommodityPayRelativeTo::CalculationPeriodEndDate,
         QuantLib::Integer futureMonthOffset = 0, QuantLib::Natural deliveryRollDays = 0,
         bool includePeriodEnd = true);
-    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>&) override;
+    void build(const ext::shared_ptr<ore::data::EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
@@ -119,10 +119,10 @@ public:
                     const std::string& currency, QuantLib::Real quantity, TradeStrike strike,
                     const QuantLib::ext::optional<bool>& isFuturePrice = QuantLib::ext::nullopt,
                     const QuantLib::Date& futureExpiryDate = QuantLib::Date());
-    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>&) override;
+    void build(const ext::shared_ptr<ore::data::EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
-    QuantLib::Real notional() const override;
+    QuantLib::Real notional(Trade::NotionalType type = Trade::NotionalType::Default) const override;
     std::string notionalCurrency() const override;
 };
 %pythoncode %{ ORECommodityOption = CommodityOption %}
@@ -145,7 +145,7 @@ public:
                          const std::string& fxIndex = "",
                          const bool isDigital = false,
                          QuantLib::Real payoffPerUnit = 0.0);
-    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>&) override;
+    void build(const ext::shared_ptr<ore::data::EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
@@ -156,7 +156,7 @@ class CommodityPosition : public Trade {
 public:
     CommodityPosition();
     CommodityPosition(const ore::data::Envelope& env, const ore::data::CommodityPositionData& data);
-    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>&) override;
+    void build(const ext::shared_ptr<ore::data::EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
@@ -166,7 +166,7 @@ public:
 class CommoditySwaption : public Trade {
 public:
     CommoditySwaption();
-    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>&) override;
+    void build(const ext::shared_ptr<ore::data::EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };

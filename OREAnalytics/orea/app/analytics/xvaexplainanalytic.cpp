@@ -22,7 +22,7 @@
 #include <orea/app/analytics/xvaexplainanalytic.hpp>
 #include <orea/app/analytics/xvastressanalytic.hpp>
 #include <orea/app/inputparameters.hpp>
-#include <orea/app/reportwriter.hpp>
+#include <orea/app/reportwriters/xvareportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/cube/cube_io.hpp>
@@ -38,8 +38,11 @@
 namespace ore {
 namespace analytics {
 
+void XvaExplainVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) { }
+
 void curveShiftData(const QuantLib::Date& asof, std::map<std::string, ext::shared_ptr<StressTestScenarioData::CurveShiftData>>& data, const RiskFactorKey& key,
                     double shift, const ext::shared_ptr<SensitivityScenarioData::CurveShiftData>& sensiData) {
+
     if (data.count(key.name) == 0) {
         StressTestScenarioData::CurveShiftData shiftData;
         shiftData.shiftType = ShiftType::Absolute;
@@ -173,7 +176,7 @@ bool operator<(const XvaExplainResults::XvaReportKey& a, const XvaExplainResults
 }
 
 XvaExplainAnalyticImpl::XvaExplainAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-    : Analytic::Impl(inputs) {
+    : Analytic::Impl(inputs, QuantLib::ext::make_shared<XvaExplainVariables>()) {
     setLabel(LABEL);
     mporDate_ = inputs_->mporDate() != Date()
                     ? inputs_->mporDate()
@@ -232,11 +235,11 @@ void XvaExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     XvaExplainResults xvaData(xvaReport);
 
     auto xvaExplainReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-    ReportWriter(inputs_->reportNaString()).writeXvaExplainReport(*xvaExplainReport, xvaData);
+    XvaReportWriter(inputs_->reportNaString()).writeXvaExplainReport(*xvaExplainReport, xvaData);
     analytic()->addReport(label(), "xvaExplain", xvaExplainReport);
 
     auto xvaExplainSummaryReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-    ReportWriter(inputs_->reportNaString()).writeXvaExplainSummary(*xvaExplainSummaryReport, xvaData);
+    XvaReportWriter(inputs_->reportNaString()).writeXvaExplainSummary(*xvaExplainSummaryReport, xvaData);
 
     analytic()->addReport(label(), "xvaExplain_summary", xvaExplainSummaryReport);
     CONSOLE("OK");

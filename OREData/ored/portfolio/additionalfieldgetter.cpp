@@ -86,5 +86,25 @@ std::string PortfolioFieldGetter::npvCurrency(const std::string& tradeId) const 
     QL_REQUIRE(trade, "Could no get trade with trade ID '" << tradeId << "' in the portfolio");
     return trade->npvCurrency();
 }
+
+QuantLib::ext::optional<string> PortfolioFieldGetter::tryGetField(const string& tradeId, const string& fieldName,
+    bool checkAdditionalData) const {
+
+    auto trade = portfolio_->get(tradeId);
+    if (!trade)
+        return QuantLib::ext::nullopt;
+
+    const map<string, string>& additionalFields = trade->envelope().additionalFields();
+    auto it = additionalFields.find(fieldName);
+    if (it != additionalFields.end())
+        return it->second;
+
+    if (checkAdditionalData) {
+        return trade->tryGetAdditionalDatum<string>(fieldName);
+    }
+
+    return QuantLib::ext::nullopt;
+}
+
 } // namespace data
 } // namespace ore

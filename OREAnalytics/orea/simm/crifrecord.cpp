@@ -132,7 +132,7 @@ const bm<Regulation> regulationsMap = boost::assign::list_of<bm<Regulation>::val
     Regulation::JFSA, "JFSA")(Regulation::MAS, "MAS")(
     Regulation::OSFI, "OSFI")(Regulation::RBI, "RBI")(
     Regulation::SEC, "SEC")(Regulation::SEC_unseg, "SEC-unseg")(
-    Regulation::USPR, "USPR")(Regulation::NONREG, "NONREG")(
+    Regulation::USPR, "USPR")(Regulation::NFRA, "NFRA")(Regulation::NONREG, "NONREG")(
     Regulation::BACEN, "BACEN")(Regulation::SANT, "SANT")(
     Regulation::SFC, "SFC")(Regulation::UK, "UK")(
     Regulation::AMFQ, "AMFQ")(Regulation::BANX, "BANX")(

@@ -81,6 +81,9 @@ CommodityIndexedCashFlow::CommodityIndexedCashFlow(
 }
 
 void CommodityIndexedCashFlow::performCalculations() const {
+
+    CashFlow::performCalculations();
+
     Date today = Settings::instance().evaluationDate();
     price_ = 0.0;
     if (isAveragingFrontMonthCashflow(today)) {

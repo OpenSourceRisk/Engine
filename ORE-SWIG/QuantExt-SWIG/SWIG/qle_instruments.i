@@ -259,7 +259,7 @@ class MultiLegOption : public Instrument {
     MultiLegOption(const std::vector<Leg>& legs,
                    const std::vector<bool>& payer,
                    const std::vector<Currency>& currency,
-                   const QuantLib::ext::shared_ptr<Exercise>& exercise = QuantLib::ext::shared_ptr<Exercise>(),
+                   const ext::shared_ptr<Exercise>& exercise = ext::shared_ptr<Exercise>(),
                    const Settlement::Type settlementType = Settlement::Physical,
                    Settlement::Method settlementMethod = Settlement::PhysicalOTC,
                    const std::vector<Date>& settlementDates = std::vector<Date>(),
@@ -270,7 +270,7 @@ class MultiLegOption : public Instrument {
     const std::vector<Leg>& legs() const;
     const std::vector<bool>& payer() const;
     const std::vector<Currency>& currency() const;
-    const QuantLib::ext::shared_ptr<Exercise> exercise() const;
+    const ext::shared_ptr<Exercise> exercise() const;
     Real underlyingNpv() const;
 };
 }
@@ -279,14 +279,14 @@ class MultiLegOption : public Instrument {
 namespace QuantExt {
 class BondTRS : public Instrument {
   public:
-    BondTRS(const QuantLib::ext::shared_ptr<QuantExt::BondIndex>& bondIndex,
+    BondTRS(const ext::shared_ptr<QuantExt::BondIndex>& bondIndex,
             const Real bondNotional,
             const Real initialPrice,
             const std::vector<Leg>& fundingLeg,
             const bool payTotalReturnLeg,
             const std::vector<Date>& valuationDates,
             const std::vector<Date>& paymentDates,
-            const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
+            const ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
             bool payBondCashFlowsImmediately = false,
             const Currency& fundingCurrency = Currency(),
             const Currency& bondCurrency = Currency(),
@@ -333,9 +333,9 @@ class RiskParticipationAgreement : public Instrument {
                                const Date& protectionEnd,
                                const bool settlesAccrual,
                                const Real fixedRecoveryRate = Null<Real>(),
-                               const QuantLib::ext::shared_ptr<QuantLib::Exercise>& exercise = nullptr,
+                               const ext::shared_ptr<QuantLib::Exercise>& exercise = nullptr,
                                const bool exerciseIsLong = false,
-                               const std::vector<QuantLib::ext::shared_ptr<CashFlow>>& premium = std::vector<QuantLib::ext::shared_ptr<CashFlow>>(),
+                               const std::vector<ext::shared_ptr<CashFlow>>& premium = std::vector<ext::shared_ptr<CashFlow>>(),
                                const bool nakedOption = false);
 };
 }

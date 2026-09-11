@@ -47,6 +47,7 @@
 #include <orea/app/analytics/sensitivitystressanalytic.hpp>
 #include <orea/app/analytics/simmanalytic.hpp>
 #include <orea/app/analytics/smrcanalytic.hpp>
+#include <orea/app/analytics/stressedsimmanalytic.hpp>
 #include <orea/app/analytics/stresstestanalytic.hpp>
 #include <orea/app/analytics/utilities.hpp>
 #include <orea/app/analytics/varanalytic.hpp>
@@ -71,6 +72,11 @@
 #include <orea/app/parameters.hpp>
 #include <orea/app/portfolioanalyser.hpp>
 #include <orea/app/reportwriter.hpp>
+#include <orea/app/reportwriters/capitalreportwriter.hpp>
+#include <orea/app/reportwriters/pricingreportwriter.hpp>
+#include <orea/app/reportwriters/scenarioreportwriter.hpp>
+#include <orea/app/reportwriters/simmreportwriter.hpp>
+#include <orea/app/reportwriters/xvareportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/app/zerosensitivityloader.hpp>
@@ -95,6 +101,7 @@
 #include <orea/engine/bufferedsensitivitystream.hpp>
 #include <orea/engine/correlationreport.hpp>
 #include <orea/engine/cptycalculator.hpp>
+#include <orea/engine/cpuaffinity.hpp>
 #include <orea/engine/creditindexdecomposition.hpp>
 #include <orea/engine/cvasensitivitycubestream.hpp>
 #include <orea/engine/cvasensitivityrecord.hpp>
@@ -157,6 +164,7 @@
 #include <orea/scenario/cvascenarioloader.hpp>
 #include <orea/scenario/deltascenario.hpp>
 #include <orea/scenario/deltascenariofactory.hpp>
+#include <orea/scenario/filteredscenarioreader.hpp>
 #include <orea/scenario/historicalscenariogenerator.hpp>
 #include <orea/scenario/historicalscenarioreturn.hpp>
 #include <orea/scenario/lgmscenariogenerator.hpp>
@@ -187,7 +195,6 @@
 #include <orea/simm/crif.hpp>
 #include <orea/simm/crifconfiguration.hpp>
 #include <orea/simm/crifgenerator.hpp>
-#include <orea/simm/crifloader.hpp>
 #include <orea/simm/crifmarket.hpp>
 #include <orea/simm/crifrecord.hpp>
 #include <orea/simm/crifrecordgenerator.hpp>
@@ -214,6 +221,7 @@
 #include <orea/simm/simmconcentrationisdav2_6_5.hpp>
 #include <orea/simm/simmconcentrationisdav2_7_2412.hpp>
 #include <orea/simm/simmconcentrationisdav2_8_2506.hpp>
+#include <orea/simm/simmconcentrationisdav2_8_2512.hpp>
 #include <orea/simm/simmconfiguration.hpp>
 #include <orea/simm/simmconfigurationbase.hpp>
 #include <orea/simm/simmconfigurationcalibration.hpp>
@@ -231,6 +239,7 @@
 #include <orea/simm/simmconfigurationisdav2_6_5.hpp>
 #include <orea/simm/simmconfigurationisdav2_7_2412.hpp>
 #include <orea/simm/simmconfigurationisdav2_8_2506.hpp>
+#include <orea/simm/simmconfigurationisdav2_8_2512.hpp>
 #include <orea/simm/simmnamemapper.hpp>
 #include <orea/simm/simmresults.hpp>
 #include <orea/simm/simmtradedata.hpp>

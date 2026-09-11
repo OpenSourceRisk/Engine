@@ -27,8 +27,6 @@
 #include <ored/marketdata/market.hpp>
 #include <ored/portfolio/enginedata.hpp>
 #include <ored/portfolio/legdata.hpp>
-#include <ored/scripting/models/modelcg.hpp>
-#include <ored/scripting/models/model.hpp>
 
 #include <qle/models/modelbuilder.hpp>
 
@@ -54,6 +52,7 @@ class Trade;
 class LegBuilder;
 class ReferenceDataManager;
 class EngineFactory;
+class ModelCG;
 
 /*! Market configuration contexts. Note that there is only one pricing context.
   If several are needed (for different trade types, different collateral
@@ -155,6 +154,9 @@ public:
     /*! return global parameters */
     const std::map<std::string, std::string>& globalParameters() const { return globalParameters_; }
 
+    //! convenience function to evaluate global parameters w.r.t. generation of add results
+    bool generateAdditionalResults() const;
+
     //! return model builders
     EngineFactory* engineFactory() const;
 
@@ -162,7 +164,6 @@ protected:
     std::string getParameter(const std::map<std::string, std::string>& m, const std::string& p,
                              const std::vector<std::string>& qs, const bool mandatory,
                              const std::string& defaultValue) const;
-    bool generateAdditionalResults() const;
     string model_;
     string engine_;
     set<string> tradeTypes_;
@@ -287,9 +288,6 @@ public:
     //! return model builders
     set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>>& modelBuilders();
 
-    //! return scripting models
-    set<std::pair<string, QuantLib::ext::shared_ptr<ore::data::Model>>>& scriptingModels();
-
     struct ParameterOverride {
         std::string source;
         std::function<bool(string)> applies;
@@ -315,7 +313,6 @@ private:
     std::vector<ParameterOverride> modelParameterOverrides_;
     std::vector<ParameterOverride> engineParameterOverrides_;
     set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>> modelBuilders_;
-    set<std::pair<string, QuantLib::ext::shared_ptr<ore::data::Model>>> scriptingModels_;
 };
 
 //! Leg builder

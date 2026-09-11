@@ -33,6 +33,8 @@
 namespace ore {
 namespace data {
 
+class DelegatingEngineBuilder;
+
 //! Serializable FX Barrier Option
 /*!
   \ingroup tradedata
@@ -51,7 +53,7 @@ public:
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>&) override;
     
-    QuantLib::Real notional() const override;
+    QuantLib::Real notional(NotionalType type = NotionalType::Default) const override;
     string notionalCurrency() const override;
     
     //! check validity of barriers
@@ -205,6 +207,8 @@ public:
     QuantLib::Real tradeMultiplier() override { return quantity_; }
     Currency tradeCurrency() override { return currency_; }
     const QuantLib::Handle<QuantLib::Quote>& spotQuote() override { return eqIndex_->equitySpot(); }
+    QuantLib::ext::shared_ptr<DelegatingEngineBuilder>
+    getDelegatingBuilder(const QuantLib::ext::shared_ptr<EngineFactory>& ef) override;
     std::string indexFixingName() override { return "EQ-" + eqIndex_->name(); };
 
     void fromXML(ore::data::XMLNode* node) override { BarrierOption::fromXML(node); }

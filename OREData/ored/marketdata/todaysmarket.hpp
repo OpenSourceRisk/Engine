@@ -23,13 +23,7 @@
 
 #pragma once
 
-#include <ored/configuration/conventions.hpp>
-#include <ored/configuration/curveconfigurations.hpp>
-#include <ored/marketdata/curvespec.hpp>
-#include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/marketimpl.hpp>
-#include <ored/marketdata/todaysmarketcalibrationinfo.hpp>
-#include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/marketdata/dependencygraph.hpp>
 
 #include <boost/graph/adjacency_list.hpp>
@@ -42,6 +36,11 @@
 
 namespace ore {
 namespace data {
+
+class CurveConfigurations;
+class Loader;
+struct TodaysMarketCalibrationInfo;
+class TodaysMarketParameters;
 
 class ReferenceDataManager;
 class YieldCurve;
@@ -61,6 +60,8 @@ class Security;
 class CommodityCurve;
 class CommodityVolCurve;
 class CorrelationCurve;
+class IntradayPowerCurve;
+class BondFutureVolCurve;
 
 // TODO: rename class
 //! Today's Market
@@ -167,7 +168,9 @@ private:
     mutable map<string, QuantLib::ext::shared_ptr<EquityCurve>> requiredEquityCurves_;
     mutable map<string, QuantLib::ext::shared_ptr<Security>> requiredSecurities_;
     mutable map<string, QuantLib::ext::shared_ptr<CommodityCurve>> requiredCommodityCurves_;
+    mutable map<string, QuantLib::ext::shared_ptr<IntradayPowerCurve>> requiredIntradayPowerCurves_;
     mutable map<string, QuantLib::ext::shared_ptr<CorrelationCurve>> requiredCorrelationCurves_;
+    mutable map<string, QuantLib::ext::shared_ptr<BondFutureVolCurve>> requiredBondFutureVolCurves_;
     // cached market objects, with configuration added to the key (outer map)
     mutable map<string, map<string, QuantLib::ext::shared_ptr<CommodityVolCurve>>> requiredCommodityVolCurves_;
     mutable map<string, map<string, QuantLib::ext::shared_ptr<EquityVolCurve>>> requiredEquityVolCurves_;

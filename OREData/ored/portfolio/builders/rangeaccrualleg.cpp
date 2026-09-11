@@ -90,7 +90,7 @@ private:
 }
 
 QuantLib::ext::shared_ptr<FloatingRateCouponPricer> RangeAccrualLegEngineBuilder::engineImpl(
-    const std::string& index, const Date& accrualStartDate, const Date& accrualEndDate) {
+    const std::string& index, const Date& accrualStartDate, const Date& accrualEndDate, Real fixedRate) {
     auto config = configuration(MarketContext::pricing);
     Real corr = parseReal(engineParameter("Correlation", {}, false, "1.0"));
     bool isFlatVol = parseBool(engineParameter("withFlatVol", {}, false, "false"));
@@ -129,8 +129,14 @@ QuantLib::ext::shared_ptr<FloatingRateCouponPricer> RangeAccrualLegEngineBuilder
         smileOnPayment = QuantLib::ext::make_shared<NormalToLognormalSmileSection>(smileOnPayment, forwardPayment);
     }
 
-    return QuantLib::ext::make_shared<RangeAccrualPricerByBgm>(
+    auto pricer = QuantLib::ext::make_shared<RangeAccrualPricerByBgm>(
         corr, smileOnExpiry, smileOnPayment, !isFlatVol, callSpread);
+
+    // Set the fixed rate (Null<Real>() in floating mode). This is part of the cache key
+    // so each (index, accrual period, fixed rate) combination gets its own pricer instance.
+    pricer->setFixedRate(fixedRate);
+
+    return pricer;
 }
 
 QuantLib::ext::shared_ptr<FloatingRateCouponPricer> RangeAccrualLegCallSpreadEngineBuilder::engineImpl(

@@ -72,8 +72,8 @@ namespace data {
 Convention::Convention(const string& id, Type type) : type_(type), id_(id) {}
 
 const QuantLib::ext::shared_ptr<ore::data::Conventions>& InstrumentConventions::conventions(QuantLib::Date d) const {
-    QL_REQUIRE(!conventions_.empty(), "InstrumentConventions: No conventions provided.");
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    QL_REQUIRE(!conventions_.empty(), "InstrumentConventions: No conventions provided.");
     Date dt = d == Date() ? Settings::instance().evaluationDate() : d;
     auto it = conventions_.lower_bound(dt);
     if(it != conventions_.end() && it->first == dt)
@@ -95,9 +95,14 @@ const QuantLib::ext::shared_ptr<ore::data::Conventions>& InstrumentConventions::
 }
 
 void InstrumentConventions::setConventions(
-    const QuantLib::ext::shared_ptr<ore::data::Conventions>& conventions, QuantLib::Date d) {
+    const QuantLib::ext::shared_ptr<ore::data::Conventions>& conventions, QuantLib::Date d) const {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
     conventions_[d] = conventions;
+}
+
+void InstrumentConventions::clear() const {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    conventions_[Date()] = QuantLib::ext::make_shared<ore::data::Conventions>();
 }
 
 ZeroRateConvention::ZeroRateConvention(const string& id, const string& dayCounter, const string& compounding,
@@ -244,7 +249,9 @@ void FutureConvention::build() {
     auto tmpIndex = parseIborIndex(strIndex_);
     auto oisIndex = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndex>(tmpIndex);
     isOisIndex_ = oisIndex != nullptr;
-    tenor_ = isOisIndex_ && !strOvernightIndexTenor_.empty() ? parsePeriod(strOvernightIndexTenor_) : tmpIndex->tenor();
+    if (isOisIndex_ && !strOvernightIndexTenor_.empty()) {
+        overnightIndexTenor_ = parsePeriod(strOvernightIndexTenor_);
+    }
     calendar_ = strCalendar_.empty() ? tmpIndex->fixingCalendar() : parseCalendar(strCalendar_);
 }
 
@@ -280,7 +287,8 @@ XMLNode* FutureConvention::toXML(XMLDocument& doc) const {
 
 QuantLib::ext::shared_ptr<IborIndex> FutureConvention::index() const { return parseIborIndex(strIndex_); }
 
-FraConvention::FraConvention(const string& id, const string& index) : Convention(id, Type::FRA), strIndex_(index) {
+FraConvention::FraConvention(const string& id, const string& index, bool endDateFromStart)
+    : Convention(id, Type::FRA), strIndex_(index), endDateFromStart_(endDateFromStart) {
     parseIborIndex(strIndex_);
 }
 
@@ -291,6 +299,16 @@ void FraConvention::fromXML(XMLNode* node) {
     id_ = XMLUtils::getChildValue(node, "Id", true);
     strIndex_ = XMLUtils::getChildValue(node, "Index", true);
     parseIborIndex(strIndex_);
+
+    string endDateConvStr = XMLUtils::getChildValue(node, "EndDateConvention", false);
+    if (endDateConvStr == "FromStart") {
+        endDateFromStart_ = true;
+    } else {
+        QL_REQUIRE(endDateConvStr.empty() || endDateConvStr == "FromSpot",
+                   "FraConvention: unknown EndDateConvention '" << endDateConvStr
+                   << "', expected 'FromSpot' or 'FromStart'");
+        endDateFromStart_ = false;
+    }
 }
 
 XMLNode* FraConvention::toXML(XMLDocument& doc) const {
@@ -298,6 +316,8 @@ XMLNode* FraConvention::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("FRA");
     XMLUtils::addChild(doc, node, "Id", id_);
     XMLUtils::addChild(doc, node, "Index", strIndex_);
+    if (endDateFromStart_)
+        XMLUtils::addChild(doc, node, "EndDateConvention", string("FromStart"));
 
     return node;
 }
@@ -639,10 +659,12 @@ QuantLib::ext::shared_ptr<OvernightIndex> AverageOisConvention::index() const {
 TenorBasisSwapConvention::TenorBasisSwapConvention(const string& id, const string& payIndex, const string& receiveIndex,
                                                    const string& receiveFrequency, const string& payFrequency,
                                                    const string& spreadOnRec, const string& includeSpread, 
-                                                   const string& subPeriodsCouponType)
+                                                   const string& subPeriodsCouponType, const string& strPayIsAveraged,
+                                                   const string& strRecIsAveraged)
     : Convention(id, Type::TenorBasisSwap), strPayIndex_(payIndex), strReceiveIndex_(receiveIndex),
       strReceiveFrequency_(receiveFrequency), strPayFrequency_(payFrequency), strSpreadOnRec_(spreadOnRec),
-      strIncludeSpread_(includeSpread), strSubPeriodsCouponType_(subPeriodsCouponType) {
+      strIncludeSpread_(includeSpread), strSubPeriodsCouponType_(subPeriodsCouponType),
+      strPayIsAveraged_(strPayIsAveraged), strRecIsAveraged_(strRecIsAveraged) {
     build();
 }
 
@@ -682,6 +704,10 @@ void TenorBasisSwapConvention::build() {
 
     subPeriodsCouponType_ = strSubPeriodsCouponType_.empty() ? SubPeriodsCoupon1::Compounding
                                                              : parseSubPeriodsCouponType(strSubPeriodsCouponType_);
+    if (!strPayIsAveraged_.empty())
+        isPayAveraged_ = parseBool(strPayIsAveraged_);
+    if (!strRecIsAveraged_.empty())
+        isRecAveraged_ = parseBool(strRecIsAveraged_);
 }
 
 void TenorBasisSwapConvention::fromXML(XMLNode* node) {
@@ -698,6 +724,8 @@ void TenorBasisSwapConvention::fromXML(XMLNode* node) {
     strSpreadOnRec_ = XMLUtils::getChildValue(node, "SpreadOnRec", false);
     strIncludeSpread_ = XMLUtils::getChildValue(node, "IncludeSpread", false);
     strSubPeriodsCouponType_ = XMLUtils::getChildValue(node, "SubPeriodsCouponType", false);
+    strPayIsAveraged_ = XMLUtils::getChildValue(node, "PayIsAveraged", false);
+    strRecIsAveraged_ = XMLUtils::getChildValue(node, "RecIsAveraged", false);
 
     // handle deprecated fields...
     if (strPayIndex_.empty()) {
@@ -758,6 +786,10 @@ XMLNode* TenorBasisSwapConvention::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "IncludeSpread", strIncludeSpread_);
     if (!strSubPeriodsCouponType_.empty())
         XMLUtils::addChild(doc, node, "SubPeriodsCouponType", strSubPeriodsCouponType_);
+    if (!strPayIsAveraged_.empty())
+        XMLUtils::addChild(doc, node, "SpreadIsAveraged", strPayIsAveraged_);
+    if (!strRecIsAveraged_.empty())
+        XMLUtils::addChild(doc, node, "FlatIsAveraged", strRecIsAveraged_);
     return node;
 }
 
@@ -1617,9 +1649,10 @@ XMLNode* CmsSpreadOptionConvention::toXML(XMLDocument& doc) const {
 CommodityForwardConvention::CommodityForwardConvention(const string& id, const string& spotDays,
                                                        const string& pointsFactor, const string& advanceCalendar,
                                                        const string& spotRelative, BusinessDayConvention bdc,
-                                                       bool outright)
+                                                       bool outright, const string& deliveryLocation)
     : Convention(id, Type::CommodityForward), bdc_(bdc), outright_(outright), strSpotDays_(spotDays),
-      strPointsFactor_(pointsFactor), strAdvanceCalendar_(advanceCalendar), strSpotRelative_(spotRelative) {
+      strPointsFactor_(pointsFactor), strAdvanceCalendar_(advanceCalendar), strSpotRelative_(spotRelative),
+      deliveryLocation_(deliveryLocation) {
     build();
 }
 
@@ -1640,6 +1673,7 @@ void CommodityForwardConvention::fromXML(XMLNode* node) {
     strPointsFactor_ = XMLUtils::getChildValue(node, "PointsFactor", false);
     strAdvanceCalendar_ = XMLUtils::getChildValue(node, "AdvanceCalendar", false);
     strSpotRelative_ = XMLUtils::getChildValue(node, "SpotRelative", false);
+    deliveryLocation_ = XMLUtils::getChildValue(node, "DeliveryLocation", false);
 
     bdc_ = Following;
     if (XMLNode* n = XMLUtils::getChildNode(node, "BusinessDayConvention")) {
@@ -1667,6 +1701,8 @@ XMLNode* CommodityForwardConvention::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "AdvanceCalendar", strAdvanceCalendar_);
     if (!strSpotRelative_.empty())
         XMLUtils::addChild(doc, node, "SpotRelative", strSpotRelative_);
+    if (!deliveryLocation_.empty())
+        XMLUtils::addChild(doc, node, "DeliveryLocation", deliveryLocation_);
 
 
     XMLUtils::addChild(doc, node, "BusinessDayConvention", ore::data::to_string(bdc_));
@@ -1901,7 +1937,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Day
                                                      Natural hoursPerDay,
                                                      const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData, 
                                                      const string& indexName,
-                                                     const std::string& optionFrequency)
+                                                     const std::string& optionFrequency,
+                                                     const string& deliveryLocation)
     : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::DayOfMonth),
       strDayOfMonth_(dayOfMonth.dayOfMonth_), strContractFrequency_(contractFrequency), strCalendar_(calendar),
       strExpiryCalendar_(expiryCalendar), expiryMonthLag_(expiryMonthLag), strOneContractMonth_(oneContractMonth),
@@ -1912,7 +1949,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Day
       indexName_(indexName), strOptionContractFrequency_(optionFrequency), optionAnchorType_(optionExpiryDateRule.type_), strOptionExpiryOffset_(optionExpiryDateRule.daysBefore_),
       strOptionExpiryDay_(optionExpiryDateRule.expiryDay_), strOptionNth_(optionExpiryDateRule.nth_),
       strOptionWeekday_(optionExpiryDateRule.weekday_), strOptionCalendarDaysBefore_(optionExpiryDateRule.calendarDaysBefore_),
-      strOptionMinBusinessDaysBefore_(optionExpiryDateRule.minBusinessDaysBefore_), balanceOfTheMonth_(false) {
+      strOptionMinBusinessDaysBefore_(optionExpiryDateRule.minBusinessDaysBefore_),
+      deliveryLocation_(deliveryLocation), balanceOfTheMonth_(false) {
     build();
 }
 
@@ -1931,7 +1969,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const str
                                                      Natural hoursPerDay,
                                                      const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData,
                                                      const string& indexName,
-                                                     const std::string& optionFrequency)
+                                                     const std::string& optionFrequency,
+                                                     const string& deliveryLocation)
     : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::NthWeekday), strNth_(nth), strWeekday_(weekday),
       strContractFrequency_(contractFrequency), strCalendar_(calendar), strExpiryCalendar_(expiryCalendar),
       expiryMonthLag_(expiryMonthLag), strOneContractMonth_(oneContractMonth), strOffsetDays_(offsetDays), strBdc_(bdc),
@@ -1943,7 +1982,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const str
       optionAnchorType_(optionExpiryDateRule.type_), strOptionExpiryOffset_(optionExpiryDateRule.daysBefore_),
       strOptionExpiryDay_(optionExpiryDateRule.expiryDay_), strOptionNth_(optionExpiryDateRule.nth_),
       strOptionWeekday_(optionExpiryDateRule.weekday_), strOptionCalendarDaysBefore_(optionExpiryDateRule.calendarDaysBefore_),
-      strOptionMinBusinessDaysBefore_(optionExpiryDateRule.minBusinessDaysBefore_), balanceOfTheMonth_(false) {
+      strOptionMinBusinessDaysBefore_(optionExpiryDateRule.minBusinessDaysBefore_),
+      deliveryLocation_(deliveryLocation), balanceOfTheMonth_(false) {
     build();
 }
 
@@ -1962,7 +2002,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Cal
                                                      Natural hoursPerDay,
                                                      const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData,
                                                      const string& indexName,
-                                                     const std::string& optionFrequency)
+                                                     const std::string& optionFrequency,
+                                                     const string& deliveryLocation)
     : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::CalendarDaysBefore),
       strCalendarDaysBefore_(calendarDaysBefore.calendarDaysBefore_), strContractFrequency_(contractFrequency),
       strCalendar_(calendar), strExpiryCalendar_(expiryCalendar), expiryMonthLag_(expiryMonthLag),
@@ -1975,7 +2016,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Cal
       optionAnchorType_(optionExpiryDateRule.type_), strOptionExpiryOffset_(optionExpiryDateRule.daysBefore_), 
       strOptionExpiryDay_(optionExpiryDateRule.expiryDay_), strOptionNth_(optionExpiryDateRule.nth_), 
       strOptionWeekday_(optionExpiryDateRule.weekday_), strOptionCalendarDaysBefore_(optionExpiryDateRule.calendarDaysBefore_),
-      strOptionMinBusinessDaysBefore_(optionExpiryDateRule.minBusinessDaysBefore_), balanceOfTheMonth_(false) {
+      strOptionMinBusinessDaysBefore_(optionExpiryDateRule.minBusinessDaysBefore_),
+      deliveryLocation_(deliveryLocation), balanceOfTheMonth_(false) {
     build();
 }
 
@@ -1994,7 +2036,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Bus
                                                      Natural hoursPerDay,
                                                      const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData,
                                                      const string& indexName,
-                                                     const std::string& optionFrequency)
+                                                     const std::string& optionFrequency,
+                                                     const string& deliveryLocation)
     : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::BusinessDaysAfter),
       strBusinessDaysAfter_(businessDaysAfter.businessDaysAfter_), strContractFrequency_(contractFrequency),
       strCalendar_(calendar), strExpiryCalendar_(expiryCalendar), expiryMonthLag_(expiryMonthLag),
@@ -2007,7 +2050,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Bus
       optionAnchorType_(optionExpiryDateRule.type_), strOptionExpiryOffset_(optionExpiryDateRule.daysBefore_), 
       strOptionExpiryDay_(optionExpiryDateRule.expiryDay_), strOptionNth_(optionExpiryDateRule.nth_), 
       strOptionWeekday_(optionExpiryDateRule.weekday_), strOptionCalendarDaysBefore_(optionExpiryDateRule.calendarDaysBefore_),
-      strOptionMinBusinessDaysBefore_(optionExpiryDateRule.minBusinessDaysBefore_), balanceOfTheMonth_(false) {
+      strOptionMinBusinessDaysBefore_(optionExpiryDateRule.minBusinessDaysBefore_), deliveryLocation_(deliveryLocation),
+      balanceOfTheMonth_(false) {
     build();
 }
 
@@ -2227,6 +2271,7 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
     indexName_ = XMLUtils::getChildValue(node, "IndexName", false);
 
     savingsTime_ = XMLUtils::getChildValue(node, "SavingsTime", false, "US");
+    deliveryLocation_ = XMLUtils::getChildValue(node, "DeliveryLocation", false);
 
     balanceOfTheMonth_ = XMLUtils::getChildValueAsBool(node, "BalanceOfTheMonth", false, false);
 
@@ -2352,6 +2397,9 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) const {
 
     if (!savingsTime_.empty())
         XMLUtils::addChild(doc, node, "SavingsTime", savingsTime_);
+
+    if (!deliveryLocation_.empty())
+        XMLUtils::addChild(doc, node, "DeliveryLocation", deliveryLocation_);
 
     if (contractFrequency_ == Monthly && !validContractMonths_.empty() && validContractMonths_.size() < 12) {
         XMLNode* validContractMonthNode = doc.allocNode("ValidContractMonths");
@@ -2953,6 +3001,8 @@ QuantLib::ext::shared_ptr<Convention> Conventions::get(const string& id) const {
         convention = QuantLib::ext::make_shared<ZeroInflationIndexConvention>();
     } else if (type == "BondYield") {
         convention = QuantLib::ext::make_shared<BondYieldConvention>();
+    } else if (type == "IntradayPowerLoad") {
+        convention = QuantLib::ext::make_shared<IntradayPowerLoadConvention>();
     } else {
         QL_FAIL("Convention '" << id << "' has unknown type '" + type + "' not recognized.");
     }
@@ -3045,6 +3095,33 @@ void Conventions::add(const QuantLib::ext::shared_ptr<Convention>& convention) c
     data_[id] = convention;
 }
 
+void IntradayPowerLoadConvention::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "IntradayPowerLoad");
+    type_ = Type::IntradayPowerLoad;
+    id_ = XMLUtils::getChildValue(node, "Id", true);
+
+    // Parse the PowerLoadProfileData from the XML node
+    XMLNode* dataNode = XMLUtils::getChildNode(node, "PowerLoadProfileData");
+    if (dataNode) {
+        data_.fromXML(dataNode);
+    }
+    build();
+}
+
+XMLNode* IntradayPowerLoadConvention::toXML(XMLDocument& doc) const {
+    XMLNode* node = doc.allocNode("IntradayPowerLoad");
+    XMLUtils::addChild(doc, node, "Id", id_);
+
+    XMLNode* dataNode = data_.toXML(doc);
+    XMLUtils::appendNode(node, dataNode);
+
+    return node;
+}
+
+void IntradayPowerLoadConvention::build() {
+    // No additional building needed, PowerLoadProfileData is already built
+}
+
 std::ostream& operator<<(std::ostream& out, Convention::Type type) {
     switch (type) {
     case Convention::Type::Zero:
@@ -3099,6 +3176,8 @@ std::ostream& operator<<(std::ostream& out, Convention::Type type) {
         return out << "FxOptionTimeWeighting";        
     case Convention::Type::BondYield:
         return out << "BondYield";
+    case Convention::Type::IntradayPowerLoad:
+        return out << "IntradayPowerLoad";
     default:
         return out << "unknown convention type (" << static_cast<int>(type) << ")";
     }

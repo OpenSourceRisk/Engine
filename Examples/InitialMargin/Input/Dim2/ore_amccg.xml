@@ -64,8 +64,10 @@
       <!-- whether to use python integration (conditional expectation calculation) -->
       <Parameter name="xvaCgUsePythonIntegration">false</Parameter>
       <Parameter name="xvaCgUsePythonIntegrationDynamicIm">false</Parameter>
+      <Parameter name="xvaCgRegressionCacheSize">512</Parameter>
+      <Parameter name="xvaCgEnableCgOptimization">true</Parameter>
       <!-- enable trade level breakdown in xva cg engine -->
-      <Parameter name="xvaCgTradeLevelBreakdown">false</Parameter>
+      <Parameter name="xvaCgTradeLevelBreakDown">true</Parameter>
       <!-- enable memory management using red nodes in xva cg engine -->
       <Parameter name="xvaCgUseRedBlocks">true</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>

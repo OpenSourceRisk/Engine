@@ -26,6 +26,7 @@
 #include <orea/app/structuredanalyticswarning.hpp>
 
 #include <ored/portfolio/referencedata.hpp>
+#include <ored/portfolio/bondutils.hpp>
 #include <ored/report/report.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
@@ -46,6 +47,7 @@
 using namespace ore::analytics;
 
 using ore::data::checkCurrency;
+using ore::data::futureContractName;
 using ore::data::parseIborIndex;
 using ore::data::parseZeroInflationIndex;
 using ore::data::Report;
@@ -86,13 +88,14 @@ Volatility VolatilityDataCrif::getVolatility(RiskFactorKey::KeyType rfType, cons
                                              const string& expiryTenor, const string& underlyingTerm) {
 
     // Have we cached the volatility from a previous call.
-    Key key{rfType, rfName, expiryTenor, underlyingTerm};
+    Key key{ rfType, rfName, expiryTenor, underlyingTerm };
     auto it = volatilities_.find(key);
     if (it != volatilities_.end())
         return it->second;
 
     // If not cached, get the volatility from CrifMarket.
     TLOG("VolatilityDataCrif: volatility not cached for key: " << key << ".");
+
 
     Volatility vol;
     switch (rfType) {
@@ -198,6 +201,19 @@ Volatility VolatilityDataCrif::getVolatility(RiskFactorKey::KeyType rfType, cons
             vol = yieldVolSurface->volatility(parsePeriod(expiryTenor), parsePeriod(underlyingTerm), Null<Real>());
             break;
     }
+
+    case RiskFactorKey::KeyType::BondFutureVolatility: {
+        QL_REQUIRE(crifMarket_, "VolatilityDataCrif: need non-empty crifMarket for bond future volatility");
+        const auto& simMarket = crifMarket_->simMarket();
+        QL_REQUIRE(simMarket, "VolatilityDataCrif: crifMarket need non-empty simMarket for bond future volatility");
+        auto bondFutureVolSurface = simMarket->bondFutureVol(rfName);
+        Date optionExpiryDate = bondFutureVolSurface->optionDateFromTenor(parsePeriod(expiryTenor));
+        string futureName{ futureContractName(rfName) };
+        Real atmStrike = simMarket->securityPrice(futureName)->value();
+        vol = bondFutureVolSurface->blackVol(optionExpiryDate, atmStrike);
+        break;
+    }
+
     default:
         QL_FAIL("VolatilityDataCrif: risk factor key type " << rfType << " not supported.");
     }
@@ -336,6 +352,7 @@ QuantLib::ext::optional<ore::analytics::CrifRecord> CrifRecordGenerator::operato
             data = baseCorrelationImpl(sr, rfTokens);
             break;
         case RiskFactorKey::KeyType::CommodityCurve:
+        case RiskFactorKey::KeyType::IntradayPowerCurve:
             data = commodityCurveImpl(sr, rfTokens);
             break;
         case RiskFactorKey::KeyType::CommodityVolatility:
@@ -365,6 +382,9 @@ QuantLib::ext::optional<ore::analytics::CrifRecord> CrifRecordGenerator::operato
         case RiskFactorKey::KeyType::Correlation:
             LOG("CRIF: Skip Correlation factor " << sr.key_1.name << " for trade " << sr.tradeId
                                                  << " as it is not needed.");
+            break;
+        case RiskFactorKey::KeyType::BondFutureVolatility:
+            data = bondFutureVolatilityImpl(sr, rfTokens);
             break;
         default:
             QL_FAIL("CRIF: unexpected risk factor key " << sr.key_1.keytype);
@@ -473,7 +493,7 @@ CrifRecordData CrifRecordGenerator::yieldCurveImpl(const ore::analytics::Sensiti
     } else {
         data.riskType = ore::analytics::CrifRecord::RiskType::IRCurve;
         Period p;
-        if (period != "MUN") {
+        if (period != "MUN" && period != "TIPS") {
             try {
                 p = parsePeriod(period);
                 data.label2 = label2(p);
@@ -483,8 +503,18 @@ CrifRecordData CrifRecordGenerator::yieldCurveImpl(const ore::analytics::Sensiti
                         << "'. Expected CCY1-IN-CCY2, CURVENAME-CCY, CURVENAME-CCY-TENOR, "
                            "CMB-A-B-...-TENOR, CMB-A-B-...-MUN.");
             }
-        } else
-            data.label2 = "Municipal";
+        } else{
+            if(period == "MUN")
+                data.label2 = "Municipal";
+            else if(period == "TIPS")
+                data.label2 = "OIS";
+            else{
+                QL_FAIL("CRIF: YieldCurve risk factor '"
+                        << originalQualifier << "' contains illegal tenor '" << period
+                        << "'. Expected CCY1-IN-CCY2, CURVENAME-CCY, CURVENAME-CCY-TENOR, "
+                           "CMB-A-B-...-TENOR, CMB-A-B-...-MUN.");
+            }  
+        }
 
         data.bucket = bucket(data.riskType, data.qualifier);
         data.label1 = tenorLabel(rfTokens.front());
@@ -670,6 +700,14 @@ std::optional<double> CrifRecordGenerator::CdsAtmVol(const std::string& tradeId,
     return atmVol;
 }
 
+CrifRecordData CrifRecordGenerator::bondFutureVolatilityImpl(const ore::analytics::SensitivityRecord& sr,
+    const std::vector<std::string>& rfTokens) {
+
+    CrifRecordData data;
+    ALOG("CrifRecordGenerator: Bond future volatility sensitivity not covered, returning empty CRIF record data");
+    return data;
+}
+
 SimmRecordGenerator::SimmRecordGenerator(const QuantLib::ext::shared_ptr<SimmConfiguration>& simmConfiguration,
                                          const QuantLib::ext::shared_ptr<SimmNameMapper>& nameMapper,
                                          const QuantLib::ext::shared_ptr<SimmTradeData>& tradeData,
@@ -738,34 +776,37 @@ ore::analytics::CrifRecord SimmRecordGenerator::record(const SensitivityRecord& 
 
 ore::analytics::CrifRecord::RiskType
 SimmRecordGenerator::riskTypeImpl(const ore::analytics::RiskFactorKey::KeyType& rfKeyType) {
-    static std::map<ore::analytics::RiskFactorKey::KeyType, ore::analytics::CrifRecord::RiskType> mapping = {
-        {ore::analytics::RiskFactorKey::KeyType::DiscountCurve, ore::analytics::CrifRecord::RiskType::IRCurve},
-        {ore::analytics::RiskFactorKey::KeyType::IndexCurve, ore::analytics::CrifRecord::RiskType::IRCurve},
-        {ore::analytics::RiskFactorKey::KeyType::YieldCurve, ore::analytics::CrifRecord::RiskType::IRCurve},
-        {ore::analytics::RiskFactorKey::KeyType::BaseCorrelation, ore::analytics::CrifRecord::RiskType::BaseCorr},
-        {ore::analytics::RiskFactorKey::KeyType::CommodityCurve, ore::analytics::CrifRecord::RiskType::Commodity},
-        {ore::analytics::RiskFactorKey::KeyType::CommodityVolatility,
-         ore::analytics::CrifRecord::RiskType::CommodityVol},
-        {ore::analytics::RiskFactorKey::KeyType::EquitySpot, ore::analytics::CrifRecord::RiskType::Equity},
-        {ore::analytics::RiskFactorKey::KeyType::EquityVolatility, ore::analytics::CrifRecord::RiskType::EquityVol},
-        {ore::analytics::RiskFactorKey::KeyType::FXSpot, ore::analytics::CrifRecord::RiskType::FX},
-        {ore::analytics::RiskFactorKey::KeyType::FXVolatility, ore::analytics::CrifRecord::RiskType::FXVol},
-        {ore::analytics::RiskFactorKey::KeyType::OptionletVolatility, ore::analytics::CrifRecord::RiskType::IRVol},
-        {ore::analytics::RiskFactorKey::KeyType::SwaptionVolatility, ore::analytics::CrifRecord::RiskType::IRVol},
-        {ore::analytics::RiskFactorKey::KeyType::YieldVolatility, ore::analytics::CrifRecord::RiskType::IRVol},
-        {ore::analytics::RiskFactorKey::KeyType::YoYInflationCapFloorVolatility,
-         ore::analytics::CrifRecord::RiskType::InflationVol},
-        {ore::analytics::RiskFactorKey::KeyType::YoYInflationCurve, ore::analytics::CrifRecord::RiskType::Inflation},
-        {ore::analytics::RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility,
-         ore::analytics::CrifRecord::RiskType::InflationVol},
-        {ore::analytics::RiskFactorKey::KeyType::ZeroInflationCurve, ore::analytics::CrifRecord::RiskType::Inflation}};
+
+    using RFKT = ore::analytics::RiskFactorKey::KeyType;
+    using CRRT = ore::analytics::CrifRecord::RiskType;
+    static std::map<RFKT, CRRT> mapping = {
+        {RFKT::DiscountCurve, CRRT::IRCurve},
+        {RFKT::IndexCurve, CRRT::IRCurve},
+        {RFKT::YieldCurve, CRRT::IRCurve},
+        {RFKT::BaseCorrelation, CRRT::BaseCorr},
+        {RFKT::CommodityCurve, CRRT::Commodity},
+        {RFKT::CommodityVolatility, CRRT::CommodityVol},
+        {RFKT::EquitySpot, CRRT::Equity},
+        {RFKT::EquityVolatility, CRRT::EquityVol},
+        {RFKT::FXSpot, CRRT::FX},
+        {RFKT::FXVolatility, CRRT::FXVol},
+        {RFKT::OptionletVolatility, CRRT::IRVol},
+        {RFKT::SwaptionVolatility, CRRT::IRVol},
+        {RFKT::YieldVolatility, CRRT::IRVol},
+        {RFKT::YoYInflationCapFloorVolatility, CRRT::InflationVol},
+        {RFKT::YoYInflationCurve, CRRT::Inflation},
+        {RFKT::ZeroInflationCapFloorVolatility, CRRT::InflationVol},
+        {RFKT::ZeroInflationCurve, CRRT::Inflation},
+        {RFKT::BondFutureVolatility, CRRT::IRVol}
+    };
+
     auto it = mapping.find(rfKeyType);
     if (it != mapping.end()) {
         return it->second;
     } else {
         StructuredAnalyticsWarningMessage("SIMM Record Generation", "Internal error",
-                                          "Couldnt not find a riskType for riskFactorKey " + to_string(rfKeyType));
-        return CrifRecord::RiskType::Empty;
+            "Couldnt not find a riskType for riskFactorKey " + to_string(rfKeyType));
+        return CRRT::Empty;
     }
 }
   

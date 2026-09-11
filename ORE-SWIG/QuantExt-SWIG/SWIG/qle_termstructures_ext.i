@@ -34,10 +34,10 @@ public:
                                const std::vector<Period>& swapTenors,
                                const std::vector<Real>& strikeSpreads,
                                const std::vector<std::vector<Handle<Quote>>>& volSpreads,
-                               const QuantLib::ext::shared_ptr<SwapIndex>& baseSwapIndexBase = nullptr,
-                               const QuantLib::ext::shared_ptr<SwapIndex>& baseShortSwapIndexBase = nullptr,
-                               const QuantLib::ext::shared_ptr<SwapIndex>& simulatedSwapIndexBase = nullptr,
-                               const QuantLib::ext::shared_ptr<SwapIndex>& simulatedShortSwapIndexBase = nullptr,
+                               const ext::shared_ptr<SwapIndex>& baseSwapIndexBase = nullptr,
+                               const ext::shared_ptr<SwapIndex>& baseShortSwapIndexBase = nullptr,
+                               const ext::shared_ptr<SwapIndex>& simulatedSwapIndexBase = nullptr,
+                               const ext::shared_ptr<SwapIndex>& simulatedShortSwapIndexBase = nullptr,
                                const bool stickyAbsMoney = false);
     const Handle<SwaptionVolatilityStructure>& baseVol();
 };
@@ -86,6 +86,19 @@ namespace QuantExt {
 class NegativeCorrelationTermStructure : public QuantExt::CorrelationTermStructure {
 public:
     NegativeCorrelationTermStructure(const Handle<QuantExt::CorrelationTermStructure>& c);
+};
+}
+
+%shared_ptr(QuantExt::FlatCorrelation)
+namespace QuantExt {
+class FlatCorrelation : public QuantExt::CorrelationTermStructure {
+public:
+    FlatCorrelation(const Date& referenceDate, const Handle<Quote>& correlation, const DayCounter&);
+    FlatCorrelation(const Date& referenceDate, Real correlation, const DayCounter&);
+    FlatCorrelation(Natural settlementDays, const Calendar& calendar, const Handle<Quote>& correlation,
+                    const DayCounter&);
+    FlatCorrelation(Natural settlementDays, const Calendar& calendar, Real correlation, const DayCounter&);
+    const Handle<Quote>& quote() const;
 };
 }
 

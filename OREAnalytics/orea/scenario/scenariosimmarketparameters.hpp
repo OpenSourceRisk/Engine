@@ -29,6 +29,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
+#include <ql/types.hpp>
 
 namespace ore {
 namespace analytics {
@@ -98,6 +99,7 @@ public:
     const map<string, string>& swapIndices() const { return swapIndices_; }
     const string& interpolation() const { return interpolation_; }
     const string& extrapolation() const { return extrapolation_; }
+    const string& yieldCurveRollDown() const { return yieldCurveRollDown_; }
     const map<string, vector<Period>>& yieldCurveTenors() const { return yieldCurveTenors_; }
 
     bool simulateFxSpots() const { return paramsSimulate(RiskFactorKey::KeyType::FXSpot); }
@@ -137,6 +139,7 @@ public:
     */
     bool capFloorVolUseCapAtm() const { return capFloorVolUseCapAtm_; }
     const string& capFloorVolSmileDynamics(const string& key) const;
+    string capFloorVolSmileForwardInteraction(const string& key) const;
 
     bool simulateYoYInflationCapFloorVols() const {
         return paramsSimulate(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility);
@@ -173,6 +176,7 @@ public:
     const vector<Period>& defaultTenors(const string& key) const;
     bool hasDefaultTenors(const string& key) const { return defaultTenors_.count(key) > 0; }
     const string& defaultCurveExtrapolation() const { return defaultCurveExtrapolation_; }
+    const string& defaultCurveRollDown() const { return defaultCurveRollDown_; }
 
     bool simulateCdsVols() const { return paramsSimulate(RiskFactorKey::KeyType::CDSVolatility); }
     bool simulateCdsVolATMOnly() const { return cdsVolSimulateATMOnly_; }    
@@ -233,6 +237,8 @@ public:
 
     // Commodity price curve data getters
     bool commodityCurveSimulate() const { return paramsSimulate(RiskFactorKey::KeyType::CommodityCurve); }
+    const std::string& commodityCurveRollDown() const { return commodityCurveRollDown_; }
+    const std::string& commodityCurveInterpolation(const std::string& commodityName) const;
     std::vector<std::string> commodityNames() const;
     const std::vector<QuantLib::Period>& commodityCurveTenors(const std::string& commodityName) const;
     bool hasCommodityCurveTenors(const std::string& commodityName) const;
@@ -253,6 +259,25 @@ public:
     const vector<Period>& correlationExpiries() const { return correlationExpiries_; }
     vector<std::string> correlationPairs() const { return paramsLookup(RiskFactorKey::KeyType::Correlation); }
     const vector<Real>& correlationStrikes() const { return correlationStrikes_; }
+
+    // Bond future volatility data getters
+    bool bondFutureVolSimulate() const { return paramsSimulate(RiskFactorKey::KeyType::BondFutureVolatility); }
+    bool simulateBondFutureVolATMOnly() const { return bondFutureVolSimulateATMOnly_; }
+    const std::string& bondFutureVolDecayMode() const { return bondFutureVolDecayMode_; }
+    std::vector<std::string> bondFutureVolNames() const {
+        return paramsLookup(RiskFactorKey::KeyType::BondFutureVolatility);
+    }
+    const std::vector<QuantLib::Period>& bondFutureVolExpiries(const std::string& contractName) const;
+    const std::vector<QuantLib::Real>& bondFutureVolMoneyness(const std::string& contractName) const;
+    const string& bondFutureVolSmileDynamics(const string& contractName) const;
+
+
+    // Intraday power curve data getters
+    bool intradayPowerCurveSimulate() const { return paramsSimulate(RiskFactorKey::KeyType::IntradayPowerCurve); }
+    const std::string& intradayPowerCurveInterpolation(const std::string& intradayPowerName) const;
+    std::vector<std::string> intradayPowerCurveNames() const;
+    const std::vector<QuantLib::Period>& intradayPowerCurveTenors(const std::string& intradayPowerName) const;
+    bool hasIntradayPowerCurveTenors(const std::string& intradayPowerName) const;
 
     Size numberOfCreditStates() const { return numberOfCreditStates_; }
 
@@ -278,6 +303,7 @@ public:
     void setSwapIndex(const std::string& key, const std::string& ind) { swapIndices_[key] = ind; }
     string& interpolation() { return interpolation_; }
     string& extrapolation() { return extrapolation_; }
+    string& yieldCurveRollDown() { return yieldCurveRollDown_; }
 
     void setSimulateFxSpots(bool simulate);
     void setFxCcyPairs(vector<string> names);
@@ -312,6 +338,7 @@ public:
         capFloorVolUseCapAtm_ = capFloorVolUseCapAtm;
     }
     void setCapFloorVolSmileDynamics(const string& key, const string& smileDynamics);
+    void setCapFloorVolSmileForwardInteraction(const string& key, const string& smileForwardInteraction);
 
     void setSimulateYoYInflationCapFloorVols(bool simulate);
     void setYoYInflationCapFloorVolNames(vector<string> names);
@@ -333,6 +360,7 @@ public:
     void setDefaultTenors(const string& key, const vector<Period>& p);
     void setDefaultCurveCalendars(const string& key, const string& p);
     void setDefaultCurveExtrapolation(const std::string& e) { defaultCurveExtrapolation_ = e; }
+    void setDefaultCurveRollDown(const std::string& e) { defaultCurveRollDown_ = e; }
 
     void setSimulateCdsVols(bool simulate);
     void setSimulateCdsVolsATMOnly(bool simulateATMOnly) { cdsVolSimulateATMOnly_ = simulateATMOnly; }
@@ -397,6 +425,8 @@ public:
 
     // Commodity price curve data setters
     void setCommodityCurveSimulate(bool simulate);
+    void setCommodityCurveRollDown(const string& r);
+    void setCommodityCurveInterpolation(const string& commodityName, const string& interpolation);
     void setCommodityNames(vector<string> names);
     void setCommodityCurves(vector<string> names);
     void setCommodityCurveTenors(const std::string& commodityName, const std::vector<QuantLib::Period>& p);
@@ -420,6 +450,27 @@ public:
     void setCorrelationPairs(vector<string> names);
     vector<Real>& correlationStrikes() { return correlationStrikes_; }
     void setNumberOfCreditStates(Size numberOfCreditStates) { numberOfCreditStates_ = numberOfCreditStates; }
+
+    // Bond future volatility data setters
+    void setBondFutureVolSimulate(bool simulate);
+    void setSimulateBondFutureVolATMOnly(bool simulateATMOnly) { bondFutureVolSimulateATMOnly_ = simulateATMOnly; }
+    std::string& bondFutureVolDecayMode() { return bondFutureVolDecayMode_; }
+    void setBondFutureVolNames(vector<string> names);
+    std::vector<QuantLib::Period>& bondFutureVolExpiries(const std::string& contractName) {
+        return bondFutureVolExpiries_[contractName];
+    }
+    std::vector<QuantLib::Real>& bondFutureVolMoneyness(const std::string& contractName) {
+        return bondFutureVolMoneyness_[contractName];
+    }
+    void setBondFutureVolSmileDynamics(const string& key, const string& smileDynamics);
+    
+    // Intraday power curve data setters
+    void setIntradayPowerCurveSimulate(bool simulate);
+    void setIntradayPowerCurveInterpolation(const string& intradayPowerName, const string& interpolation);
+    void setIntradayPowerCurveNames(vector<string> names);
+    void setIntradayPowerCurves(vector<string> names);
+    void setIntradayPowerCurveTenors(const std::string& intradayPowerName, const std::vector<QuantLib::Period>& p);
+    
     //@}
 
     //! \name Serialisation
@@ -447,6 +498,7 @@ private:
     map<string, string> swapIndices_;
     string interpolation_;
     string extrapolation_;
+    string yieldCurveRollDown_;
 
     map<string, bool> swapVolIsCube_;
     bool swapVolSimulateATMOnly_ = false;
@@ -468,6 +520,7 @@ private:
     bool capFloorVolAdjustOptionletPillars_;
     bool capFloorVolUseCapAtm_;
     map<string, string> capFloorVolSmileDynamics_;
+    map<string, string> capFloorVolSmileForwardInteraction_;
 
     map<string, vector<Period>> yoyInflationCapFloorVolExpiries_;
     map<std::string, std::vector<QuantLib::Rate>> yoyInflationCapFloorVolStrikes_;
@@ -482,6 +535,7 @@ private:
     map<string, string> defaultCurveCalendars_;
     map<string, vector<Period>> defaultTenors_;
     string defaultCurveExtrapolation_;
+    string defaultCurveRollDown_;
 
     bool cdsVolSimulateATMOnly_ = false;
     vector<Period> cdsVolExpiries_;
@@ -525,6 +579,8 @@ private:
 
     // Commodity price curve data
     std::map<std::string, std::vector<QuantLib::Period>> commodityCurveTenors_;
+    std::string commodityCurveRollDown_;
+    std::map<std::string, std::string> commodityCurveInterpolation_;
 
     // Commodity volatility data
     bool commodityVolSimulateATMOnly_ = false;
@@ -537,6 +593,17 @@ private:
     vector<Period> correlationExpiries_;
     vector<Real> correlationStrikes_;
     Size numberOfCreditStates_ = 0;
+
+    // Bond future volatility data
+    bool bondFutureVolSimulateATMOnly_ = false;
+    std::string bondFutureVolDecayMode_;
+    std::map<std::string, std::vector<QuantLib::Period>> bondFutureVolExpiries_;
+    std::map<std::string, std::vector<QuantLib::Real>> bondFutureVolMoneyness_;
+    map<string, string> bondFutureVolSmileDynamics_;
+
+    // Intraday power curve data
+    std::map<std::string, std::vector<QuantLib::Period>> intradayPowerCurveTenors_;
+    std::map<std::string, std::string> intradayPowerCurveInterpolation_;
 
     CurveAlgebraData curveAlgebraData_;
 

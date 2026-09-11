@@ -16,37 +16,28 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <iomanip>
 #include <orea/app/analytic.hpp>
 #include <orea/app/analyticsmanager.hpp>
 #include <orea/app/inputparameters.hpp>
 #include <orea/app/inputvariables.hpp>
-#include <orea/app/reportwriter.hpp>
-#include <orea/app/marketdataloader.hpp>
 #include <orea/app/portfolioanalyser.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
-#include <orea/engine/bufferedsensitivitystream.hpp>
-#include <orea/engine/filteredsensitivitystream.hpp>
 #include <orea/engine/observationmode.hpp>
-#include <orea/engine/zerotoparcube.hpp>
-#include <orea/cube/cubewriter.hpp>
-#include <orea/scenario/simplescenariofactory.hpp>
-#include <orea/scenario/scenariowriter.hpp>
-#include <orea/engine/valuationengine.hpp>
-#include <orea/aggregation/dimregressioncalculator.hpp>
+#include <orea/scenario/scenario.hpp>
 
 #include <ored/marketdata/compositeloader.hpp>
+#include <ored/marketdata/marketimpl.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/marketdata/bondspreadimply.hpp>
-#include <ored/portfolio/builders/currencyswap.hpp>
-#include <ored/portfolio/builders/fxoption.hpp>
-#include <ored/portfolio/builders/swaption.hpp>
-#include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/utilities/indexparser.hpp>
 
 #include <iostream>
 
 using namespace ore::data;
 using namespace std::filesystem;
+
+using std::setprecision;
 using boost::timer::cpu_timer;
 using boost::timer::default_places;
 
@@ -81,6 +72,9 @@ Analytic::Analytic(std::unique_ptr<Impl> impl,
     }
 }
 
+QuantLib::ext::shared_ptr<ore::data::MarketImpl> Analytic::getMarket() const {
+    return QuantLib::ext::dynamic_pointer_cast<ore::data::MarketImpl>(market_);
+}
 
 Analytic::analytic_reports Analytic::reports() { 
     auto rpts = reports_;
@@ -110,6 +104,8 @@ const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& Analytic::getReport(
 
 void Analytic::reset() {
     analyticComplete_ = false;
+    offsetScenario_ = nullptr;
+    offsetSimMarketParams_ = nullptr;
     reports_.clear();
     impl_->reset();
 }
@@ -141,6 +137,15 @@ void Analytic::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLo
 void Analytic::initialise() {
     if (impl() && !impl()->initialised()) {
         impl()->initialise();
+    }
+}
+
+void Analytic::setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario,
+                                 const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketParams) {
+    offsetScenario_ = offsetScenario;
+    offsetSimMarketParams_ = simMarketParams;
+    for (auto& a : impl_->dependentAnalytics()) {
+        a.second.first->setOffsetScenario(offsetScenario, simMarketParams);
     }
 }
 
@@ -315,6 +320,20 @@ void Analytic::buildMarket(const QuantLib::ext::shared_ptr<ore::data::InMemoryLo
         LOG("Market Build time " << setprecision(2) << mTimer->format(default_places, "%w") << " sec");
 }
 
+void Analytic::applyOffsetScenario(bool continueOnError, bool useSpreadedTermStructures, bool overrideTenors) {
+    if (offsetScenario() == nullptr)
+        return;
+    DLOG("apply offset scenario " << offsetScenario()->label() << " to analytic " << label());
+    auto curveConfigs = configurations_.curveConfig;
+    std::string marketConfiguration = inputs_->marketConfig("pricing");
+    auto offsetMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
+        market_, offsetSimMarketParams(), marketConfiguration,
+        curveConfigs ? *curveConfigs : ore::data::CurveConfigurations(), *configurations_.todaysMarketParams,
+        continueOnError, useSpreadedTermStructures, continueOnError, overrideTenors, inputs_->iborFallbackConfig(),
+        true, offsetScenario());
+    setMarket(offsetMarket);
+}
+
 void Analytic::marketCalibration(const std::vector<QuantLib::ext::shared_ptr<MarketCalibrationReportBase>>& mcr) {
     for (auto r : mcr)
         r->populateReport(market_, configurations().todaysMarketParams);
@@ -349,6 +368,8 @@ void Analytic::buildPortfolio(const bool emitStructuredError) {
 /*******************************************************************
  * MARKET Analytic
  *******************************************************************/
+
+void MarketDataVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) { }
 
 void MarketDataAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();

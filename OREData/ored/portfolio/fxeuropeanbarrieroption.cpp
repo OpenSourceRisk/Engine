@@ -303,15 +303,28 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
 
         vanillaK = QuantLib::ext::make_shared<VanillaOption>(payoffVanillaK, exercise);
         vanillaB = QuantLib::ext::make_shared<VanillaOption>(payoffVanillaB, exercise);
-        digital = QuantLib::ext::make_shared<VanillaOption>(payoffDigital, exercise);
-        rebateInstrument = QuantLib::ext::make_shared<VanillaOption>(rebatePayoff, exercise);
+        // Use CashSettledEuropeanOption for digital legs so that engines requiring a payment date
+        // (e.g. FxDigitalCallSpreadEngine) have a valid paymentDate in their arguments.
+        digital = QuantLib::ext::make_shared<CashSettledEuropeanOption>(
+            QuantLib::ext::dynamic_pointer_cast<CashOrNothingPayoff>(payoffDigital)->optionType(),
+            QuantLib::ext::dynamic_pointer_cast<CashOrNothingPayoff>(payoffDigital)->strike(),
+            QuantLib::ext::dynamic_pointer_cast<CashOrNothingPayoff>(payoffDigital)->cashPayoff(),
+            expiryDate, paymentDate, false, nullptr, false, Null<Real>());
+        rebateInstrument = QuantLib::ext::make_shared<CashSettledEuropeanOption>(
+            QuantLib::ext::dynamic_pointer_cast<CashOrNothingPayoff>(rebatePayoff)->optionType(),
+            QuantLib::ext::dynamic_pointer_cast<CashOrNothingPayoff>(rebatePayoff)->strike(),
+            QuantLib::ext::dynamic_pointer_cast<CashOrNothingPayoff>(rebatePayoff)->cashPayoff(),
+            expiryDate, paymentDate, false, nullptr, false, Null<Real>());
 
         builder = engineFactory->builder("FxOption");
         QL_REQUIRE(builder, "No builder found for FxOption");
-        fxOptBuilder = QuantLib::ext::dynamic_pointer_cast<FxEuropeanOptionEngineBuilder>(builder);
+        fxOptBuilder = QuantLib::ext::dynamic_pointer_cast<VanillaOptionEngineBuilder>(builder);
+        QL_REQUIRE(fxOptBuilder, "Builder for FxOption is not a VanillaOptionEngineBuilder");
         digitalBuilder = engineFactory->builder("FxDigitalOption");
         QL_REQUIRE(digitalBuilder, "No builder found for FxDigitalOption");
-        auto fxDigitalOptBuilder = QuantLib::ext::dynamic_pointer_cast<FxDigitalOptionEngineBuilder>(digitalBuilder);
+        QuantLib::ext::shared_ptr<FxDigitalOptionEngineBuilderBase> fxDigitalOptBuilder = 
+            QuantLib::ext::dynamic_pointer_cast<FxDigitalOptionEngineBuilderBase>(digitalBuilder);
+        QL_REQUIRE(fxDigitalOptBuilder, "Builder for FxDigitalOption is not an FxDigitalOptionEngineBuilderBase");
         vanillaK->setPricingEngine(fxOptBuilder->engine(
             boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
         vanillaB->setPricingEngine(fxOptBuilder->engine(
@@ -440,7 +453,7 @@ Real FxEuropeanBarrierOption::strike() const {
     return soldAmount_ / boughtAmount_;
 }
 
-QuantLib::Real FxEuropeanBarrierOption::notional() const {
+QuantLib::Real FxEuropeanBarrierOption::notional(NotionalType type) const {
     return delegatingBuilderTrade_ != nullptr ? delegatingBuilderTrade_->notional() : Trade::notional();
 }
 

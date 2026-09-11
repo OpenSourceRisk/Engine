@@ -54,6 +54,8 @@ using namespace data;
 
   Both UP and DOWN shifts are generated in order to facilitate delta and gamma calculation.
 
+  If theta is enabled, a corresponding date shift scenario is generated.
+
   The generator currently covers the IR/FX asset class, with shifts for the following term
   structure types:
   - FX spot rates
@@ -134,10 +136,10 @@ public:
     QuantLib::ext::shared_ptr<Scenario> baseScenarioAbsolute() const { return baseScenarioAbsolute_; }
 
 private:
-    ShiftType getShiftType(SensitivityScenarioData::ShiftData& data) const;
-    Real getShiftSize(SensitivityScenarioData::ShiftData& data) const;
-    ShiftScheme getShiftScheme(SensitivityScenarioData::ShiftData& data) const;
-    bool isScenarioRelevant(bool up, SensitivityScenarioData::ShiftData& data) const;
+    ShiftType getShiftType(const SensitivityScenarioData::ShiftData& data) const;
+    Real getShiftSize(const SensitivityScenarioData::ShiftData& data) const;
+    ShiftScheme getShiftScheme(const SensitivityScenarioData::ShiftData& data) const;
+    bool isScenarioRelevant(bool up, const SensitivityScenarioData::ShiftData& data) const;
     void storeShiftData(const RiskFactorKey& key, const Real rate, const Real newRate);
 
     void generateScenarios();
@@ -160,9 +162,11 @@ private:
     void generateYoYInflationCapFloorVolScenarios(bool up);
     void generateBaseCorrelationScenarios(bool up);
     void generateCommodityCurveScenarios(bool up);
+    void generateIntradayPowerCurveScenarios(bool up);
     void generateCommodityVolScenarios(bool up);
     void generateSecuritySpreadScenarios(bool up);
     void generateCorrelationScenarios(bool up);
+    void generateBondFutureVolScenarios(bool up);
 
     // common helper for generateSwaptionVolScenarios(), generateYieldVolScenarios()
     void generateGenericYieldVolScenarios(bool up, RiskFactorKey::KeyType rfType);
@@ -197,11 +201,15 @@ private:
                                                            bool up, ShiftScheme shiftScheme);
     ScenarioDescription commodityCurveScenarioDescription(const std::string& commodityName, QuantLib::Size bucket,
                                                           bool up, ShiftScheme shiftScheme);
+    ScenarioDescription intradayPowerCurveScenarioDescription(const std::string& curveName, QuantLib::Size bucket,
+                                  bool up, ShiftScheme shiftScheme);
     ScenarioDescription commodityVolScenarioDescription(const std::string& commodityName, QuantLib::Size expiryBucket,
                                                         QuantLib::Size strikeBucket, bool up, ShiftScheme shiftScheme);
     ScenarioDescription securitySpreadScenarioDescription(string bond, bool up, ShiftScheme shiftScheme);
     ScenarioDescription correlationScenarioDescription(string pair, Size expiryBucket, Size strikeBucket, bool up,
                                                        ShiftScheme shiftScheme);
+    ScenarioDescription bondFutureVolScenarioDescription(const std::string& contractName, QuantLib::Size expiryBucket,
+        QuantLib::Size strikeBucket, bool up, ShiftScheme shiftScheme);
 
     QuantLib::ext::shared_ptr<SensitivityScenarioData> sensitivityData_;
     QuantLib::ext::shared_ptr<ScenarioFactory> sensiScenarioFactory_;

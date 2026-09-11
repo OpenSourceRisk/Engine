@@ -59,8 +59,7 @@ DecomposedSensitivityStream::DecomposedSensitivityStream(
                 eqComDecompositionTradeIds_.insert(tradeId);
             }
         }
-        if (decomposeEquityCommodities &&
-            (trade->tradeType() == "TotalReturnSwap" || trade->tradeType() == "ContractForDifference")) {
+        if (decomposeEquityCommodities) {
             std::map<std::string, double> decompositionIndexQuanities;
             for (const auto& [datum, value] : trade->additionalData()) {
                 if (value.has_value() && boost::starts_with(datum, "underlying_quantity_")) {
@@ -346,7 +345,9 @@ DecomposedSensitivityStream::decomposeCurrencyHedgedIndexRisk(const SensitivityR
         // Correct FX Delta from FxForwards
         for (const auto& [ccy, fxRisk] :
              decomposeCurrencyHedgedIndexHelper->fxSpotRiskFromForwards(quantity, today, todaysMarket_, 1.0)) {
-            decompResults.fxRisk[ccy] = decompResults.fxRisk[ccy] - fxRisk * fxRiskShiftSize(ccy);
+            if (ccy != baseCurrency_) {
+                decompResults.fxRisk[ccy] = decompResults.fxRisk[ccy] - fxRisk * fxRiskShiftSize(ccy);
+            }
         }
         
         return sensitivityRecords(decompResults.spotRisk, decompResults.fxRisk, indexCurrency, sr);

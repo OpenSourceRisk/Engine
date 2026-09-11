@@ -63,56 +63,79 @@ public:
         const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
         const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
         const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-        const Handle<AssetModelWrapper>& model,
         const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-        const std::set<Date>& simulationDates,
+        const std::set<Date>& simulationDates, const Size timeStepsPerYear, const std::set<Date>& addDaes,
         const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
             QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
-        const std::string& calibration = "ATM",
-        const std::map<std::string, std::vector<Real>>& calibrationStrikes = {});
+        const std::string& calibration = "ATM", const std::map<std::string, std::vector<Real>>& calibrationStrikes = {},
+        const bool enableCgOptimization = false);
 
     // ctor for single underlying
     BlackScholesCG(const ModelCG::Type type, const Size paths, const std::string& currency,
                    const Handle<YieldTermStructure>& curve, const std::string& index, const std::string& indexCurrency,
-                   const Handle<AssetModelWrapper>& model, const std::set<Date>& simulationDates,
+                   const std::set<Date>& simulationDates, const Size timeStepsPerYear, const std::set<Date>& addDates,
                    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
                        QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
-                   const std::string& calibration = "ATM", const std::vector<Real>& calibrationStrikes = {});
+                   const std::string& calibration = "ATM", const std::vector<Real>& calibrationStrikes = {},
+                   const bool enableCgOptimization = false);
 
     // Model interface implementation
-    const Date& referenceDate() const override;
     std::size_t npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
                     const std::optional<long>& memSlot, const std::set<std::size_t> addRegressors,
-                    const std::optional<std::set<std::size_t>>& overwriteRegressors) const override;
+                    const std::optional<std::set<std::size_t>>& overwriteRegressors,
+                    const std::optional<std::set<std::size_t>>& evaluationRegressors = {}) const override;
+
     std::set<std::size_t> npvRegressors(const Date& obsdate,
-                                        const std::optional<std::set<std::string>>& relevantCurrencies) const override;
-    std::size_t numeraire(const Date& s) const override;
+                                        const std::optional<std::set<std::string>>& relevantCurrencies,
+                                        const std::string& localBaseCurrency = {},
+                                        const std::string& localBaseCurrencyPaths = {}) const override;
+    std::size_t numeraire(const Date& s, const std::string& currency = {},
+                          const std::string& localBaseCurrency = {}) const override;
     std::size_t fwdCompAvg(const bool isAvg, const std::string& indexInput, const Date& obsdate, const Date& start,
                            const Date& end, const Real spread, const Real gearing, const Integer lookback,
                            const Natural rateCutoff, const Natural fixingDays, const bool includeSpread, const Real cap,
-                           const Real floor, const bool nakedOption, const bool localCapFloor) const override;
+                           const Real floor, const bool nakedOption, const bool localCapFloor,
+                           const std::string& localBaseCurrency = {}) const override;
 
     // t0 market data functions from the ModelCG interface
     Real getDirectFxSpotT0(const std::string& forCcy, const std::string& domCcy) const override;
     Real getDirectDiscountT0(const Date& paydate, const std::string& currency) const override;
 
+    void setModel(const Handle<AssetModelWrapper>& model);
+
+    const std::function<std::set<Real>(const TimeGrid&)> curveTimes() const;
+    const std::function<std::vector<std::set<std::pair<Real, Real>>>(const TimeGrid&)> volTimesStrikes() const;
+
 protected:
     // ModelImpl interface implementation
     void performCalculations() const override;
-    std::size_t getIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>()) const override;
-    std::size_t getIrIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>()) const override;
-    std::size_t getInfIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>()) const override;
-    std::size_t getDiscount(const Size idx, const Date& s, const Date& t) const override;
+    std::size_t getIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>(),
+                              const std::string& localBaseCurrency = {}) const override;
+    std::size_t getIrIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>(),
+                                const std::string& localBaseCurrency = {}) const override;
+    std::size_t getInfIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>(),
+                                 const std::string& localBaseCurrency = {}) const override;
+    std::size_t getDiscount(const Size idx, const Date& s, const Date& t,
+                            const std::string& localBaseCurrency = {}) const override;
     std::size_t getFxSpot(const Size idx) const override;
     std::size_t getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
-                                     const std::size_t barrier, const bool above) const override;
+                                     const std::size_t barrier, const bool above,
+                                     const std::string& localBaseCurrency = {}) const override;
+
+    // helper functions
+    void setupDatesAndTimes() const;
 
     // input parameters
     std::vector<Handle<YieldTermStructure>> curves_;
     std::vector<Handle<Quote>> fxSpots_;
-    Handle<AssetModelWrapper> model_;
     std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>> correlations_;
-    std::vector<Date> simulationDates_;
+    Size timeStepsPerYear_;
+    std::set<Date> addDates_;
+    Handle<AssetModelWrapper> model_; // via setter
+
+    // model provided curve times and volTimesStrikes for notification filtering
+    std::function<std::set<Real>(const TimeGrid&)> curveTimes_;
+    std::function<std::vector<std::set<std::pair<Real, Real>>>(const TimeGrid&)> volTimesStrikes_;
 
     // The calibration to use, ATM or Deal
     std::string calibration_;
@@ -121,10 +144,10 @@ protected:
     std::map<std::string, std::vector<Real>> calibrationStrikes_;
 
     // updated in performCalculations()
-    mutable Date referenceDate_;                      // the model reference date
     mutable std::set<Date> effectiveSimulationDates_; // the dates effectively simulated (including today)
     mutable TimeGrid timeGrid_;                       // the (possibly refined) time grid for the simulation
     mutable std::vector<Size> positionInTimeGrid_;    // for each effective simulation date the index in the time grid
+    mutable std::vector<double> effectiveCalibrationStrikes_;              // final eff cal strike for each index
 
     // updated in derived classes' performCalculations() whenever cg version changes
     mutable std::map<Date, std::vector<std::size_t>> underlyingPaths_; // per simulation date index states

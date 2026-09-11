@@ -1,4 +1,4 @@
-/*
+﻿/*
  Copyright (C) 2018 Quaternion Risk Management Ltd
  All rights reserved.
 
@@ -17,7 +17,6 @@
 */
 
 #include <orea/app/structuredanalyticswarning.hpp>
-#include <orea/simm/crifloader.hpp>
 #include <orea/simm/crifrecord.hpp>
 #include <orea/simm/simmcalculator.hpp>
 #include <orea/simm/simmconfigurationbase.hpp>

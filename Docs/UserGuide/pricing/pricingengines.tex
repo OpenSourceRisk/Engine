@@ -489,7 +489,8 @@ The parameters have the following meaning:
   pread of both the equity and the bond component. Since the security spread is understood as an effective discounting
   spread, it is scaled by $s \rightarrow s / (1-\rho)$ before it is added to $h$, where $\rho$ is the recovery rate of
   the bond.
-\item MesherIsStatic: whether to use the same finite-difference mesher under scenario / sensi calculations
+\item MesherIsStatic: whether to use the same finite-difference mesher under scenario calculations, this is restricted
+  to sensitivity runs
 \item Bootstrp.CalibrationGrid: The model is calibrated on a configurable set of times . All tenors from the specified
   grid before the maturity date of the convertible bond are kept and the maturity date itself is added to the resulting
   grid to avoid calibration for times beyond the bond maturity and at the same time ensuring that we do not need to
@@ -4233,6 +4234,10 @@ The parameters have the following meaning:
 \subsection{Product Type: FxEuropeanBarrierOption}
 %--------------------------------------------------------
 
+Its possible to price this product by replication. For the replication approach no dedicated pricing engine configuration for the product is needed.
+
+There is alternative method to price it as a scripted trade.
+
 Available Model/Engine pairs: 
 \begin{itemize}
     \item ScriptedTrade / ScriptedTrade
@@ -4242,7 +4247,7 @@ Engine description:
 
 ScriptedTrade/ScriptedTrade delegates to the scripted trade engine and the associated pricing engine configuration for
 Product Type ScriptedTrade, see there for details. A sample configuration is given in listing
-\ref{lst:peconfig_FxDoubleBarrierOption_ScriptedTrade_ScriptedTrade2}. Only FxBarrierOptions are supported at the moment.
+\ref{lst:peconfig_FxEuropeanBarrierOption_ScriptedTrade_ScriptedTrade}. Only FxBarrierOptions are supported at the moment.
 Typical use case for this pricing engine config would XVA calculation within the AMC framework.
 
 The parameters have the following meaning:
@@ -4253,7 +4258,7 @@ The parameters have the following meaning:
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
-<Product type="FxDoubleBarrierOption">
+<Product type="FxEuropeanBarrierOption">
     <Model>ScriptedTrade</Model>
     <ModelParameters/>
     <Engine>ScriptedTrade</Engine>
@@ -4262,8 +4267,8 @@ The parameters have the following meaning:
     </EngineParameters>
 </Product>
 \end{minted}
-\caption{Configuration for Product FxDoubleBarrierOption, Model ScriptedTrade, Engine ScriptedTrade}
-\label{lst:peconfig_FxDoubleBarrierOption_ScriptedTrade_ScriptedTrade2}
+\caption{Configuration for Product FxEuropeanBarrierOption, Model ScriptedTrade, Engine ScriptedTrade}
+\label{lst:peconfig_FxEuropeanBarrierOption_ScriptedTrade_ScriptedTrade}
 \end{longlisting}
 
 %--------------------------------------------------------
@@ -4272,19 +4277,32 @@ The parameters have the following meaning:
 
 Used by trade type: EquityDigitalOption, FxDigitalOption
 
-Available Model/Engine pairs: BlackScholesMerton/AnalyticEuropeanEngine (equity)
-resp. GarmanKohlhagen/AnalyticEuropeanEngine (fx)
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item BlackScholesMerton/AnalyticEuropeanEngine (equity)
+\item GarmanKohlhagen/AnalyticEuropeanEngine (fx)
+\item GarmanKohlhagen/CallSpreadEngine (fx)
+\end{itemize}
 
 Engine description:
 
-BlackScholesMerton/AnalyticEuropeanEngine (equity) resp. GarmanKohlhagen/AnalyticEuropeanEngine (fx) builds a
-AnalyticEuropeanEngine. A sample configuration is shown in listing
-\ref{lst:peconfig_FxDigitalOption_GarmanKohlhagen_AnalyticEuropeanEngine} for fx. The configuration for equity is
-identical except the Model is set to BlackScholesMerton.
+For equity, BlackScholesMerton/AnalyticEuropeanEngine builds an AnalyticEuropeanEngine.
+
+For fx, GarmanKohlhagen/AnalyticEuropeanEngine builds a cash-settled European engine (AnalyticCashSettledEuropeanEngine),
+which correctly handles both a payment date equal to and a payment date after the option expiry date. The engine name
+AnalyticEuropeanEngine is retained for backward compatibility with existing pricing engine configurations. Alternatively,
+GarmanKohlhagen/CallSpreadEngine builds an FxDigitalCallSpreadEngine which prices the digital by call/put spread
+replication, thereby naturally incorporating the volatility smile. A sample configuration is shown in listing
+\ref{lst:peconfig_FxDigitalOption_GarmanKohlhagen_AnalyticEuropeanEngine} for fx (analytic engine) and in listing
+\ref{lst:peconfig_FxDigitalOption_GarmanKohlhagen_CallSpreadEngine} for fx (call spread engine). The configuration for
+equity is identical to the analytic fx configuration except the Model is set to BlackScholesMerton.
 
 The parameters have the following meaning:
 
 \begin{itemize}
+\item CallSpreadEps [optional, CallSpreadEngine only]: the width of the call/put spread used for the replication,
+  defaults to $10^{-4}$
 \item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
@@ -4301,6 +4319,22 @@ The parameters have the following meaning:
 \end{minted}
 \caption{Configuration for Product FxDigitalOption, Model GarmanKohlhagen, Engine AnalyticEuropeanEngine}
 \label{lst:peconfig_FxDigitalOption_GarmanKohlhagen_AnalyticEuropeanEngine}
+\end{longlisting}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+ <Product type="FxDigitalOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>CallSpreadEngine</Engine>
+    <EngineParameters>
+        <Parameter name="CallSpreadEps">1E-4</Parameter>
+        <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product FxDigitalOption, Model GarmanKohlhagen, Engine CallSpreadEngine}
+\label{lst:peconfig_FxDigitalOption_GarmanKohlhagen_CallSpreadEngine}
 \end{longlisting}
 
 %--------------------------------------------------------
@@ -4835,6 +4869,137 @@ The parameters have the following meaning:
 \end{longlisting}
 
 %--------------------------------------------------------
+\subsection{Product Type: BondFutureOption}
+%--------------------------------------------------------
+
+Used by trade type: BondFutureOption
+
+Available Model/Engine pairs: BlackScholes/AnalyticEuropeanEngine
+
+Engine description:
+
+BlackScholes/AnalyticEuropeanEngine builds an AnalyticEuropeanEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_BondFutureOption_BlackScholes_AnalyticEuropeanEngine}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\item SeparateCallPutVols [optional]: This parameter can be set to true or false or to a regex inclusion pattern.
+  If set to false, the default, the same volatility surface is used for puts and calls.
+  If set to true, there will be a separate volatility surface used to price puts and calls on the same underlying 
+  bond future contract. Which surface is picked depends on the option type of the trade.
+  If set to a regex pattern, all bond future option trades where the underlying contract name matches the regex 
+  will use a volatility surface for puts if the option type is a put and a volatility surface for calls if the 
+  option type is a call.
+  Obviously, the bond future volatility structures need to be configured in a way that matches the setting here.
+  See the bond future volatility curve configuration for details on how to set these up. The convention is 
+  generally to use the underlying bond future contract name as the curve ID of the bond future volatility 
+  curve where only one surface is needed for that contract.
+  Where a separate call and put surface is needed for the contract, the bond future contract name should be 
+  suffixed with \lstinline!_CALL! and \lstinline!_PUT! respectively.
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="BondFutureOption">
+    <Model>BlackScholes</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SeparateCallPutVols">True</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product BondFutureOption, Model BlackScholes, Engine AnalyticEuropeanEngine}
+\label{lst:peconfig_BondFutureOption_BlackScholes_AnalyticEuropeanEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsection{Product Type: BondFutureOptionAmerican}
+%--------------------------------------------------------
+
+Used by trade type BondFutureOption if exercise style is American
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item BlackScholes/FdBlackScholesVanillaEngine
+\item BlackScholes/BaroneAdesiWhaleyApproximationEngine
+\end{itemize}
+
+Engine description:
+
+BlackScholes/FdBlackScholesVanillaEngine builds a FdBlackScholesVanillaEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_BondFutureOptionAmerican_BlackScholes_FdBlackScholesVanillaEngine}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Scheme: The finite difference scheme to use
+\item TimeStepsPerYear: Time grid specification
+\item XGrid: State grid specification
+\item DampingSteps: Number of damping steps taken by FD solver
+\item EnforceMonotoneVariance [optional]: If true variance is modified to be monotone if needed, defaults to true
+\item TimeGridMinimumSize [optional]: Minimum number in resulting time grid, defaults to $1$ if not given
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\item SeparateCallPutVols [optional]: if set to true, there will be a separate volatility surface 
+    used to price puts and calls on the same underlying bond future contract. The default is false 
+    where the same volatility surface is used for puts and calls.
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="BondFutureOptionAmerican">
+  <Model>BlackScholes</Model>
+  <ModelParameters/>
+  <Engine>FdBlackScholesVanillaEngine</Engine>
+  <EngineParameters>
+    <Parameter name="Scheme">Douglas</Parameter>
+    <Parameter name="TimeGridPerYear">365</Parameter>
+    <Parameter name="XGrid">100</Parameter>
+    <Parameter name="DampingSteps">0</Parameter>
+    <Parameter name="EnforceMonotoneVariance">true</Parameter>
+    <Parameter name="SeparateCallPutVols">True</Parameter>
+  </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product BondFutureOptionAmerican, Model BlackScholes, Engine FdBlackScholesVanillaEngine}
+\label{lst:peconfig_BondFutureOptionAmerican_BlackScholes_FdBlackScholesVanillaEngine}
+\end{longlisting}
+
+BlackScholes/BaroneAdesiWhaleyApproximationEngine builds a BaroneAdesiWhaleyApproximationEngine. A sample configuration is 
+shown in listing \ref{lst:peconfig_BondFutureOptionAmerican_BlackScholes_BaroneAdesiWhaleyApproximationEngine}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\item SeparateCallPutVols [optional]: if set to true, there will be a separate volatility surface 
+    used to price puts and calls on the same underlying bond future contract. The default is false 
+    where the same volatility surface is used for puts and calls.
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="BondFutureOptionAmerican">
+  <Model>BlackScholes</Model>
+  <ModelParameters/>
+  <Engine>BaroneAdesiWhaleyApproximationEngine</Engine>
+  <EngineParameters>
+    <Parameter name="SeparateCallPutVols">True</Parameter>
+  </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product BondFutureOptionAmerican, Model BlackScholes, Engine BaroneAdesiWhaleyApproximationEngine}
+\label{lst:peconfig_BondFutureOptionAmerican_BlackScholes_BaroneAdesiWhaleyApproximationEngine}
+\end{longlisting}
+
+As outlined in Section~\ref{sec:pe-global-parameters}, there is a global parameter \lstinline!BondFutureAmericanAsEuropean! 
+that can be used to price all bond future option trades, or bond future option trades on certain underlying bond future 
+contracts, with American exercise as if they have European exercise i.e. with a European bond future option engine.
+
+%--------------------------------------------------------
 \subsection{Product Type: EquityVarianceSwap, CommodityVarianceSwap, FxVarianceSwap}
 %--------------------------------------------------------
 
@@ -5348,40 +5513,6 @@ The parameters have the following meaning:
 \end{minted}
 \caption{Configuration for Product FxAsianOptionGeometricStrike, Model ScriptedTrade, Engine ScriptedTrade}
 \label{lst:peconfig_FxAsianOptionGeometricStrike_ScriptedTrade_ScriptedTrade}
-\end{longlisting}
-
-%--------------------------------------------------------
-\subsection{Product Type: FxDigitalOptionEuropeanCS}
-%--------------------------------------------------------
-
-Used by trade type: FxDigitalOption if cash settled, FxEuropeanBarrierOption
-
-Available Model/Engine pairs: GarmanKohlhagen/AnalyticCashSettledEuropeanEngine
-
-Engine description:
-
-GarmanKohlhagen/AnalyticCashSettledEuropeanEngine builds a AnalyticCashSettledEuropeanEngine. A sample configuration is
-shown in listing \ref{lst:peconfig_FxDigitalOptionEuropeanCS_GarmanKohlhagen_AnalyticCashSettledEuropeanEngine}
-
-The parameters have the following meaning:
-
-\begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use
-\end{itemize}
-
-\begin{longlisting}
-\begin{minted}[fontsize=\footnotesize]{xml}
-<Product type="FxDigitalOptionEuropeanCS">
-    <Model>GarmanKohlhagen</Model>
-    <ModelParameters/>
-    <Engine>AnalyticCashSettledEuropeanEngine</Engine>
-    <EngineParameters>
-        <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
-    </EngineParameters>
-</Product>
-\end{minted}
-\caption{Configuration for Product FxDigitalOptionEuropeanCS, Model GarmanKohlhagen, Engine AnalyticCashSettledEuropeanEngine}
-\label{lst:peconfig_FxDigitalOptionEuropeanCS_GarmanKohlhagen_AnalyticCashSettledEuropeanEngine}
 \end{longlisting}
 
 %--------------------------------------------------------
@@ -6132,6 +6263,7 @@ module documentation for a sample configuration and more details.
 
 %--------------------------------------------------------
 \subsection{Global Parameters}
+\label{sec:pe-global-parameters}
 %--------------------------------------------------------
 
 In addition to product specific settings there is also a block with global parameters with the following meaning:
@@ -6159,5 +6291,13 @@ In addition to product specific settings there is also a block with global param
 \item McType: Set automatically. One of Classic and American depending on the context for which the pricinge engines
   file is referenced. Might also be left empty. This is used by some trade constructions to adapt to certain monte carlo
   types. E.g. Pricer would not be attached to coupons which can be computed in AMC without a leg / coupon pricer
-\item StrikeSpread: Defaults to 0.1. If set, overrides the default value used to calculate the strike spread for replication engines.
+\item StrikeSpread: Defaults to 0.1. If set, overrides the default value used to calculate the strike spread for replication 
+  engines.
+\item BondFutureAmericanAsEuropean: This parameter can be set to true or false or to a regex inclusion pattern.
+  If set to false, the default, there is no effect.
+  If set to true, all bond future option trades with American exercise are priced as if they had European exercise 
+  i.e.\ with a European bond future option engine.
+  If set to a regex pattern, all bond future option trades where the underlying contract name matches the regex 
+  will be priced as if they had European exercise. Bond future option trades where the underlying contract name 
+  does not match the regex will not be impacted i.e. if they have American exercise, they will be priced as such.
 \end{itemize}

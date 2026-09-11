@@ -83,8 +83,10 @@ MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"CORRELATION", MarketDatum::InstrumentType::CORRELATION},
         {"COMMODITY_OPTION", MarketDatum::InstrumentType::COMMODITY_OPTION},
         {"COMMODITY_CALENDAR_SPREAD_OPTION", MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION},
+        {"SHAPE_PROFILE", MarketDatum::InstrumentType::SHAPE_PROFILE},
         {"CPR", MarketDatum::InstrumentType::CPR},
-        {"RATING", MarketDatum::InstrumentType::RATING}};
+        {"RATING", MarketDatum::InstrumentType::RATING},
+        {"BOND_FUTURE_OPTION", MarketDatum::InstrumentType::BOND_FUTURE_OPTION}};
 
     auto it = b.find(s);
     if (it != b.end()) {
@@ -111,6 +113,7 @@ MarketDatum::QuoteType parseQuoteType(const string& s) {
         {"SHIFT", MarketDatum::QuoteType::SHIFT},
         {"TRANSITION_PROBABILITY", MarketDatum::QuoteType::TRANSITION_PROBABILITY},
         {"CONVERSION_FACTOR", MarketDatum::QuoteType::CONVERSION_FACTOR},
+        {"SHAPE_FACTOR", MarketDatum::QuoteType::SHAPE_FACTOR},
         {"NULL", MarketDatum::QuoteType::NONE}};
 
     if (s == "RATE_GVOL")
@@ -322,10 +325,10 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
     case MarketDatum::InstrumentType::OI_FUTURE: {
         QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName);
         const string& ccy = tokens[2];
-        const string& expiry = tokens[3];
+        const string& contractMonth = tokens[3];
         const string& contract = tokens[4];
         Period term = parsePeriod(tokens[5]);
-        return QuantLib::ext::make_shared<OIFutureQuote>(value, asof, datumName, quoteType, ccy, expiry, contract, term);
+        return QuantLib::ext::make_shared<OIFutureQuote>(value, asof, datumName, quoteType, ccy, contractMonth, contract, term);
     }
 
     case MarketDatum::InstrumentType::FRA: {
@@ -956,6 +959,60 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
         const string& toRating = tokens[4];
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::TRANSITION_PROBABILITY, "Invalid quote type for " << datumName);
         return QuantLib::ext::make_shared<TransitionProbabilityQuote>(value, asof, datumName, name, fromRating, toRating);
+    }
+
+    case MarketDatum::InstrumentType::SHAPE_PROFILE: {
+        // Expects the following form:
+        // SHAPE_PROFILE/SHAPE_FACTOR/QuoteName/DeliveryDate/StartTimeInSec/UNIT/<Optional Flag to mark DST factors>
+        // Example: SHAPE_PROFILE/SHAPE_FACTOR/PJM_WH_RT/2027-02-02/0/UNIT/<DST>
+        QL_REQUIRE(tokens.size() >= 6, "5 tokens expected in " << datumName);
+        QL_REQUIRE(quoteType == MarketDatum::QuoteType::SHAPE_FACTOR, "Invalid quote type for " << datumName);
+        
+        const string& quoteName = tokens[2];
+        Date deliveryDate = parseDate(tokens[3]);
+        Size startTimeInSec = parseInteger(tokens[4]);
+        QuantExt::IntradayPowerTimeUnit timeUnit = QuantExt::parseIntradayPowerTimeUnit(tokens[5]);
+        bool isDST = tokens.size() > 6 ? tokens[6] == "DST" : false;
+        return QuantLib::ext::make_shared<IntradayPowerCurveQuote>(value, asof, datumName, quoteType, quoteName, 
+                                                                    deliveryDate, startTimeInSec, timeUnit, isDST);
+    }
+
+    case MarketDatum::InstrumentType::BOND_FUTURE_OPTION: {
+        // Quote of the form:
+        // BOND_FUTURE_OPTION/<QUOTE_TYPE>/<UNDERLYING_CONTRACT_NAME>/<EXPIRY>/<STRIKE>[/<PUT_CALL>]
+        // where:
+        // - QUOTE_TYPE is either RATE_LNVOL or PRICE
+        // - UNDERLYING_CONTRACT_NAME is the name of the underlying bond future contract, e.g. "TYM26"
+        // - EXPIRY is the option expiry date, format YYYY-MM-DD
+        // - STRIKE is the absolute strike price of the bond future option. A strike factor may be given at the curve 
+        //   configuration level so the strike here can be given as a multiple e.g. 97.5 for 0.975 with strike factor 
+        //   in the configuration of 100.
+        // - PUT_CALL is either C for Call or P for Put. This is optional for RATE_LNVOL and defaults to `C` but is
+        //   mandatory for PRICE quotes.
+
+        // Checks.
+        using MDQT = MarketDatum::QuoteType;
+        QL_REQUIRE(quoteType == MDQT::RATE_LNVOL || quoteType == MDQT::PRICE,
+            "invalid quote type for " << datumName << ". Expected RATE_LNVOL or PRICE.");
+
+        if (quoteType == MDQT::PRICE) {
+            QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName << " because quote type is PRICE");
+        } else {
+            QL_REQUIRE(tokens.size() == 5 || tokens.size() == 6, "5 or 6 tokens expected in " << datumName);
+        }
+
+        if (tokens.size() == 6) {
+            QL_REQUIRE(tokens[5] == "C" || tokens[5] == "P", "expected C for call or P for put as the last "
+                "element in " << datumName);
+        }
+
+        const string& contractName = tokens[2];
+        const string& expiry = tokens[3];
+        auto strike = parseBaseStrike(tokens[4]);
+        bool isCall = tokens.size() == 6 ? tokens[5] == "C" : true;
+
+        return QuantLib::ext::make_shared<BondFutureOptionQuote>(value, asof, datumName, quoteType,
+            contractName, expiry, strike, isCall);
     }
 
     default:

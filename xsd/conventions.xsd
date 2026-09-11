@@ -1,5 +1,7 @@
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
+  <xs:include schemaLocation="intradaypowerloaddata.xsd"/>
+
   <xs:element type="conventions" name="Conventions"/>
 
   <xs:complexType name="conventions">
@@ -29,6 +31,7 @@
       <xs:element type="fxOptionTimeWeighting" name="FxOptionTimeWeighting"/>
       <xs:element type="zeroInflationIndexType" name="ZeroInflationIndex"/>
       <xs:element type="bondYield" name="BondYield"/>
+      <xs:element type="intradayPowerLoad" name="IntradayPowerLoad"/>
     </xs:choice>
   </xs:complexType>
 
@@ -60,6 +63,7 @@
       <xs:element type="bool" name="SettlesAccrual" minOccurs="1" maxOccurs="1"/>
       <xs:element type="bool" name="PaysAtDefaultTime" minOccurs="1" maxOccurs="1"/>
       <xs:element type="dayCounter" name="LastPeriodDayCounter" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="UsesReferenceData" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
@@ -151,6 +155,8 @@
       <xs:element type="bool" name="SpreadOnRec" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="IncludeSpread" minOccurs="0" maxOccurs="1"/>
       <xs:element type="subPeriodsCouponType" name="SubPeriodsCouponType" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="PayIsAveraged" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="RecIsAveraged" minOccurs="0" maxOccurs="1"/>
       <!-- deprecated fields -->
       <xs:element type="xs:string" name="LongIndex" minOccurs="0" maxOccurs="1"/>
       <xs:element type="period" name="LongPayTenor" minOccurs="0" maxOccurs="1"/>
@@ -327,6 +333,7 @@
       <xs:element type="xs:decimal" name="PointsFactor" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="AdvanceCalendar" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="SpotRelative" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="DeliveryLocation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="businessDayConvention" name="BusinessDayConvention" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="Outright" minOccurs="0" maxOccurs="1"/>
     </xs:all>
@@ -480,6 +487,7 @@
       <xs:element type="offPeakPowerIndexDataType" name="OffPeakPowerIndexData" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="IndexName" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="SavingsTime" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="DeliveryLocation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="BalanceOfTheMonth" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="BalanceOfTheMonthPricingCalendar" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="OptionUnderlyingFutureConvention" minOccurs="0" maxOccurs="1"/>
@@ -558,6 +566,21 @@
       <xs:element type="frequencyType" name="Frequency" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="AvailabilityLag" minOccurs="1" maxOccurs="1"/>
       <xs:element type="currencyCode" name="Currency" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="RebasingEvents" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Event" minOccurs="1" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:double">
+                    <xs:attribute name="date" type="date" use="required"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
     </xs:all>
   </xs:complexType>
 

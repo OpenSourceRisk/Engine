@@ -164,7 +164,7 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
                                                  std::next(legCurrencies_.begin(), underlyingData_.size()));
     std::vector<bool> couponLegPayers(legPayers_.begin(), std::next(legPayers_.begin(), underlyingData_.size()));
 
-    auto basket = generateFlexiSwapReplication(
+    auto basket = QuantExt::generateFlexiSwapReplication(
         today, couponLegCopies, couponLegPayers,
         parseVectorOfValues(couponLegCurrencies, std::function<Currency(string)>(parseCurrency)), lowerNotionalBounds,
         positionType == Position::Type::Long, generateNotionalExchanges, generateNotionalExchanges);
@@ -178,7 +178,7 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
     for (auto const& b : basket) {
         if (auto ex = ext::dynamic_pointer_cast<BermudanExercise>(b->exercise())) {
             differentDates.insert(ex->dates().begin(), ex->dates().end());
-        } else if (auto ex = ext::dynamic_pointer_cast<RebatedExercise>(b->exercise())) {
+        } else if (auto ex = ext::dynamic_pointer_cast<QuantExt::RebatedExercise>(b->exercise())) {
             differentDates.insert(ex->dates().begin(), ex->dates().end());
         } else {
             QL_FAIL(
@@ -203,13 +203,13 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
     // build global model if required
 
     bool useGlobalModel = parseBool(flexiSwapBuilder->modelParameter("GlobalModel", {}, true));
-    SwaptionModel globalModel;
+    CamOrLgmModel globalModel;
 
     if (useGlobalModel) {
-        globalModel = builder->model(
-            id() + "_0", qualifiers, dates, maturities, strikes,
+        globalModel = model(
+            builder.get(), id() + "_0", qualifiers, dates, maturities, strikes,
             std::vector<std::vector<Real>>(differentCcys.size() - 1, std::vector<Real>(dates.size(), Null<Real>())),
-            false);
+            false, builder->discretization());
     }
 
     // set pricing engine on basket constituents
@@ -222,7 +222,7 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
 
             if (auto ex = ext::dynamic_pointer_cast<BermudanExercise>(basket[i]->exercise())) {
                 dates = ex->dates();
-            } else if (auto ex = ext::dynamic_pointer_cast<RebatedExercise>(basket[i]->exercise())) {
+            } else if (auto ex = ext::dynamic_pointer_cast<QuantExt::RebatedExercise>(basket[i]->exercise())) {
                 dates = ex->dates();
             } else {
                 QL_FAIL("FlexiSwap::build(): could not cast exercise to BermudanExercise or RebatedExercise. Internal "
@@ -268,7 +268,7 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
     addProductModelEngine(*builder);
 }
 
-QuantLib::Real FlexiSwap::notional() const {
+QuantLib::Real FlexiSwap::notional(NotionalType type) const {
     if (notionalTakenFromLeg_ < legs_.size()) {
         Real n = currentNotional(legs_[notionalTakenFromLeg_]);
         if (fabs(n) > QL_EPSILON) {

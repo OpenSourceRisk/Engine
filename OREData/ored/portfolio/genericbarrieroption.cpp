@@ -20,6 +20,7 @@
 #include <ored/scripting/utilities.hpp>
 
 #include <ored/utilities/to_string.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 
 #include <boost/lexical_cast.hpp>
 

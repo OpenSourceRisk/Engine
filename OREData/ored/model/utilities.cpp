@@ -360,14 +360,14 @@ std::string getCalibrationDetails(const std::vector<QuantLib::ext::shared_ptr<Bl
         Real valueDiff = (modelValue - marketValue);
         QuantLib::ext::shared_ptr<CpiCapFloorHelper> instr =
             QuantLib::ext::dynamic_pointer_cast<CpiCapFloorHelper>(basket[j]);
-        if (instr != nullptr && parametrization != nullptr) {
+        if (instr != nullptr && parametrization != nullptr && instr->instrument() != nullptr) {
             // report alpha, H at t_expiry^-
             t = inflationYearFraction(
-                parametrization->termStructure()->frequency(), indexIsInterpolated,
-                parametrization->termStructure()->dayCounter(), parametrization->termStructure()->baseDate(),
-                instr->instrument()->payDate() - parametrization->termStructure()->observationLag());
-            modelAlpha = parametrization->alpha(t - 1.0 / 250.0);
-            modelH = parametrization->H(t - 1.0 / 250.0);
+                parametrization->dkLgmParam()->termStructure()->frequency(), indexIsInterpolated,
+                parametrization->dkLgmParam()->termStructure()->dayCounter(), parametrization->dkLgmParam()->termStructure()->baseDate(),
+                instr->instrument()->payDate() - instr->instrument()->observationLag());
+            modelAlpha = parametrization->dkLgmParam()->alpha(t - 1.0 / 250.0);
+            modelH = parametrization->dkLgmParam()->H(t - 1.0 / 250.0);
         }
         // TODO handle other calibration helpers, too (capfloor)
         log << std::setw(3) << j << std::setprecision(6) << std::setw(14) << t << std::setw(14) << modelValue
@@ -376,8 +376,8 @@ std::string getCalibrationDetails(const std::vector<QuantLib::ext::shared_ptr<Bl
     }
     if (parametrization != nullptr) {
         // report alpha, kappa at t_expiry^+ for last expiry
-        modelAlpha = parametrization->alpha(t + 1.0 / 250.0);
-        modelH = parametrization->H(t + 1.0 / 2500.0);
+        modelAlpha = parametrization->dkLgmParam()->alpha(t + 1.0 / 250.0);
+        modelH = parametrization->dkLgmParam()->H(t + 1.0 / 2500.0);
     }
     log << "t >= " << t << ": infDkAlpha = " << modelAlpha << " infDkH = " << modelH << "\n";
     return log.str();
@@ -556,7 +556,7 @@ Real yoyCapFloorStrikeValue(const QuantLib::ext::shared_ptr<BaseStrike>& strike,
     } else if (auto atm = QuantLib::ext::dynamic_pointer_cast<AtmStrike>(strike)) {
         QL_REQUIRE(atm->atmType() == DeltaVolQuote::AtmFwd,
                    "only atm forward allowed as atm strike for cpi cap floors");
-        return curve->yoyRate(optionMaturityDate - curve->observationLag());
+        return curve->yoyRate(optionMaturityDate);
     } else {
         QL_FAIL("yoy cap floor strike type not supported, expected absolute strike or atm fwd strike, got '"
                 << strike->toString());
@@ -809,6 +809,15 @@ parseScriptedInflationIndex(const std::string& indexName) {
     }
     return std::make_tuple(parseZeroInflationIndex(plainIndexName, Handle<ZeroInflationTermStructure>()),
                            plainIndexName, interpolated);
+}
+
+TimeGrid buildTimeGrid(const Date& referenceDate, const DayCounter& dayCounter, const std::set<Date>& dates,
+                       const Size timeStepsPerYear) {
+    std::vector<Real> times(1, 0.0);
+    for (auto f = dates.lower_bound(referenceDate); f != dates.end(); ++f)
+        times.push_back(dayCounter.yearFraction(referenceDate, *f));
+    Size steps = std::max(std::lround(timeStepsPerYear * times.back() + 0.5), 1l);
+    return TimeGrid(times.begin(), times.end(), steps);
 }
 
 } // namespace data

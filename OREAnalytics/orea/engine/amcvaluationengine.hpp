@@ -34,6 +34,9 @@
 #include <qle/models/crossassetmodel.hpp>
 
 namespace ore {
+namespace data {
+class EngineData;
+}
 namespace analytics {
 
 using std::string;

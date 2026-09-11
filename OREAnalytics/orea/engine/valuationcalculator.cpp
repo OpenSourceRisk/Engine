@@ -25,7 +25,9 @@
 
 #include <ored/marketdata/market.hpp>
 #include <ored/portfolio/optionwrapper.hpp>
+#include <ored/portfolio/trade.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/portfolio/cashflowutils.hpp>
 
 namespace ore {
 namespace analytics {
@@ -59,8 +61,19 @@ void NPVCalculator::calculate(const QuantLib::ext::shared_ptr<Trade>& trade, Siz
                               const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
                               QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
                               Size sample, bool isCloseOut) {
-    if (!isCloseOut)
-        outputCube->set(npv(tradeIndex, trade, simMarket), tradeIndex, dateIndex, sample, index_);
+    if (!isCloseOut) {
+        Real flows = 0.0;
+        if (includeAggregateFlows_) {
+            Date d0 = dateIndex == 0 ? simMarket->asofDate() : outputCube->dates()[dateIndex - 1];
+            if (date > d0) {
+                flows = getAggregateTradeFlows(
+                            d0, date, trade->cashflows(baseCcyCode_, simMarket, Market::defaultConfiguration, false),
+                            simMarket, Market::defaultConfiguration, baseCcyCode_) /
+                        simMarket->numeraire();
+            }
+        }
+        outputCube->set(npv(tradeIndex, trade, simMarket) + flows, tradeIndex, dateIndex, sample, index_);
+    }
 }
 
 void NPVCalculator::calculateT0(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
@@ -88,40 +101,7 @@ Real ExerciseCalculator::npv(Size tradeIndex, const QuantLib::ext::shared_ptr<Tr
     Real fx = fxRates_[tradeCcyIndex_[tradeIndex]];
     Real numeraire = simMarket->numeraire();
 
-    // DLOG("trade " << trade->id() << " " << io::iso_date(today) << " exercised " << exerciseValue << " index "
-    //               << index_);
-
     return exerciseValue * fx / numeraire;
-}
-
-void CashflowCalculator::init(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
-                              const QuantLib::ext::shared_ptr<SimMarket>& simMarket) {
-    DLOG("init CashflowCalculator");
-    tradeAndLegCcyIndex_.clear();
-    std::set<std::string> ccys;
-    for (auto const& [tradeId,trade] : portfolio->trades()) {
-        tradeAndLegCcyIndex_.push_back(std::vector<Size>(trade->legs().size()));
-        for (auto const& l : trade->legCurrencies()) {
-            ccys.insert(l);
-        }
-    }
-    size_t i = 0;
-    for (const auto& [tradeId, trade] : portfolio->trades()) {
-        for (Size j = 0; j < trade->legs().size(); ++j) {
-            tradeAndLegCcyIndex_[i][j] =
-                std::distance(ccys.begin(), ccys.find(trade->legCurrencies()[j]));
-        }
-        i++;
-    }
-    ccyQuotes_.resize(ccys.size());
-    for (Size i = 0; i < ccys.size(); ++i)
-        ccyQuotes_[i] = (simMarket->fxRate(*std::next(ccys.begin(), i) + baseCcyCode_));
-    fxRates_.resize(ccys.size());
-}
-
-void CashflowCalculator::initScenario() {
-    for (Size i = 0; i < ccyQuotes_.size(); ++i)
-        fxRates_[i] = ccyQuotes_[i]->value();
 }
 
 void CashflowCalculator::calculate(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
@@ -156,23 +136,17 @@ void CashflowCalculator::calculate(const QuantLib::ext::shared_ptr<Trade>& trade
 
     try {
         if (!isOption || (isExercised && isPhysical)) {
-            for (Size i = 0; i < trade->legs().size(); i++) {
-                const Leg& leg = trade->legs()[i];
-                Real legFlow = 0;
-                for (auto flow : leg) {
-                    // Take flows in (t, t+1]
-                    if (startDate < flow->date() && flow->date() <= endDate)
-                        legFlow += flow->amount();
-                }
-                if (legFlow != 0) {
-                    // Do FX conversion and add to netFlow
-                    Real fx = fxRates_[tradeAndLegCcyIndex_[tradeIndex][i]];
-                    Real direction = trade->legPayers()[i] ? -1.0 : 1.0;
-                    legFlow *= direction * longShort * fx;
-                    if (legFlow > 0)
-                        netPositiveFlow += legFlow;
+            auto cashflows = trade->cashflows(baseCcyCode_, simMarket, Market::defaultConfiguration, false);
+            for (const auto& cf : cashflows) {
+                // Take flows in (t, t+1]
+                if (startDate < cf.payDate && cf.payDate <= endDate) {
+                    if (cf.baseAmount == Null<Real>())
+                        continue;
+                    Real flow = cf.baseAmount * longShort;
+                    if (flow > 0)
+                        netPositiveFlow += flow;
                     else
-                        netNegativeFlow += legFlow;
+                        netNegativeFlow += flow;
                 }
             }
         }
@@ -214,8 +188,18 @@ void NPVCalculatorFXT0::calculate(const QuantLib::ext::shared_ptr<Trade>& trade,
                                   const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
                                   QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
                                   Size sample, bool isCloseOut) {
-    if (!isCloseOut)
-        outputCube->set(npv(tradeIndex, trade, simMarket), tradeIndex, dateIndex, sample, index_);
+    if (!isCloseOut) {
+        Real flows = 0.0;
+        if (includeAggregateFlows_) {
+            Date d0 = dateIndex == 0 ? simMarket->asofDate() : outputCube->dates()[dateIndex - 1];
+            flows = getAggregateTradeFlows(
+                        d0, date, trade->cashflows(baseCcyCode_, simMarket, Market::defaultConfiguration, false),
+                        t0Market_, Market::defaultConfiguration, baseCcyCode_) /
+                    simMarket->numeraire();
+        }
+        outputCube->set(npv(tradeIndex, trade, simMarket) + flows / simMarket->numeraire(), tradeIndex, dateIndex,
+                        sample, index_);
+    }
 }
 
 void NPVCalculatorFXT0::calculateT0(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,

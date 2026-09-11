@@ -41,16 +41,19 @@ using namespace QuantLib;
 
 class AssetModelBuilderBase : public ModelBuilder {
 public:
-    AssetModelBuilderBase(const std::vector<Handle<YieldTermStructure>>& curves,
-                          const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
-                          const std::set<Date>& simulationDates, const std::set<Date>& addDates,
-                          const Size timeStepsPerYear, const Handle<YieldTermStructure>& baseCurve = {},
-                          const bool observeContinuum = false);
-    AssetModelBuilderBase(const Handle<YieldTermStructure>& curve,
-                          const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
-                          const std::set<Date>& simulationDates, const std::set<Date>& addDates,
-                          const Size timeStepsPerYear, const Handle<YieldTermStructure>& baseCurve = {},
-                          const bool observeContinuum = false);
+    AssetModelBuilderBase(
+        const std::vector<Handle<YieldTermStructure>>& curves,
+        const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
+        const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
+        const Handle<YieldTermStructure>& baseCurve = {}, const bool observeContinuum = false,
+        const std::function<std::set<Real>(const TimeGrid&)>& curveTimes = {},
+        const std::function<std::vector<std::set<std::pair<Real, Real>>>(const TimeGrid&)>& volTimesStrikes = {});
+    AssetModelBuilderBase(
+        const Handle<YieldTermStructure>& curve,
+        const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process, const std::set<Date>& simulationDates,
+        const std::set<Date>& addDates, const Size timeStepsPerYear, const Handle<YieldTermStructure>& baseCurve = {},
+        const bool observeContinuum = false, const std::function<std::set<Real>(const TimeGrid&)>& curveTimes = {},
+        const std::function<std::vector<std::set<std::pair<Real, Real>>>(const TimeGrid&)>& volTimesStrikes = {});
 
     Handle<AssetModelWrapper> model() const;
     const std::set<Date>& simulationDates() const { return simulationDates_; }
@@ -67,15 +70,16 @@ protected:
     AssetModelBuilderBase(const Handle<YieldTermStructure>& curve,
                           const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process);
 
-    virtual void setupDatesAndTimes() const;
-
     virtual AssetModelWrapper::ProcessType processType() const = 0;
     virtual std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> getCalibratedProcesses() const = 0;
-    virtual std::vector<std::vector<Real>> getCurveTimes() const = 0;
-    virtual std::vector<std::vector<std::pair<Real, Real>>> getVolTimesStrikes() const = 0;
+
+    virtual void setupDatesAndTimes() const;
 
     void performCalculations() const override;
     bool calibrationPointsChanged(const bool updateCache) const;
+    void buildCacheData(const std::set<Real>& curveTimes,
+                        const std::vector<std::set<std::pair<Real, Real>>>& volTimesStrikes,
+                        std::vector<std::vector<Real>>& curveData, std::vector<std::vector<Real>>& volData) const;
 
     std::vector<Handle<YieldTermStructure>> curves_;
     Handle<YieldTermStructure> baseCurve_;
@@ -94,10 +98,14 @@ protected:
 
     std::vector<Handle<BlackVolTermStructure>> vols_;
     std::vector<Handle<YieldTermStructure>> allCurves_;
-    mutable CalibrationPointCache cache_;
-    //mutable std::map<std::string, CalibrationResults> calibrationResults_;
-    mutable std::vector<AssetModelCalibrationResults> calibrationResults_;
+    mutable CalibrationPointCache cache_, cacheModel_;
+    mutable std::function<std::set<Real>(const TimeGrid&)> curveTimesBase_;
+    mutable std::set<Real> curveTimes_;
+    mutable std::function<std::vector<std::set<std::pair<Real, Real>>>(const TimeGrid&)> volTimesStrikesBase_;
+    mutable std::vector<std::set<std::pair<Real, Real>>> volTimesStrikes_;
+    mutable Date referenceDate_;
 
+    mutable std::vector<AssetModelCalibrationResults> calibrationResults_;
 };
 
 } // namespace data

@@ -49,9 +49,10 @@ DynamicDeltaVaRCalculator::DynamicDeltaVaRCalculator(
     const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData,
     Real quantile, Size horizonCalendarDays,
     const QuantLib::ext::shared_ptr<DimHelper>& dimHelper, const Size ddvOrder,
-    const std::map<std::string, Real>& currentIM)
+    const std::map<std::string, Real>& currentIM,
+    Real explicitDimScaling)
   : DynamicInitialMarginCalculator(portfolio, cube, cubeInterpretation, scenarioData, quantile, horizonCalendarDays, currentIM),
-    dimHelper_(dimHelper), ddvOrder_(ddvOrder) {}
+    dimHelper_(dimHelper), ddvOrder_(ddvOrder), explicitDimScaling_(explicitDimScaling) {}
 
 const map<string, Real>& DynamicDeltaVaRCalculator::unscaledCurrentDIM() const { return currentDIM_; }
 
@@ -73,18 +74,18 @@ void DynamicDeltaVaRCalculator::build() {
     for (const auto& nid : nettingSetIds_) {
         LOG("Process netting set " << nid);
 
-        if (currentIM_.find(nid) != currentIM_.end()) {
+        Real nettingSetDimScaling = 1.0;
+        if (explicitDimScaling_ != QuantLib::Null<Real>()) {
+            nettingSetDimScaling = explicitDimScaling_;
+        } else if (currentIM_.find(nid) != currentIM_.end()) {
             Real t0im = currentIM_[nid];
             QL_REQUIRE(currentDim.find(nid) != currentDim.end(), "current DIM not found for netting set " << nid);
             Real t0dim = currentDim[nid];
-            Real t0scaling = t0im / t0dim;
-            LOG("t0 scaling for netting set " << nid << ": t0im" << t0im << " t0dim=" << t0dim
-                << " t0scaling=" << t0scaling);
-            nettingSetScaling_[nid] = t0scaling;
+            nettingSetDimScaling = t0im / t0dim;
+            LOG("t0 scaling for netting set " << nid << ": t0im=" << t0im << " t0dim=" << t0dim
+                << " t0scaling=" << nettingSetDimScaling);
+            nettingSetScaling_[nid] = nettingSetDimScaling;
         }
-
-        Real nettingSetDimScaling =
-            nettingSetScaling_.find(nid) == nettingSetScaling_.end() ? 1.0 : nettingSetScaling_[nid];
         LOG("Netting set DIM scaling factor: " << nettingSetDimScaling);
 
         for (Size j = 0; j < stopDatesLoop; ++j)

@@ -22,6 +22,7 @@
 */
 
 #include <ored/marketdata/basecorrelationcurve.hpp>
+#include <ored/marketdata/bondfuturevolcurve.hpp>
 #include <ored/marketdata/capfloorvolcurve.hpp>
 #include <ored/marketdata/cdsvolcurve.hpp>
 #include <ored/marketdata/commoditycurve.hpp>
@@ -34,12 +35,14 @@
 #include <ored/marketdata/fxvolcurve.hpp>
 #include <ored/marketdata/inflationcapfloorvolcurve.hpp>
 #include <ored/marketdata/inflationcurve.hpp>
+#include <ored/marketdata/intradaypowercurve.hpp>
 #include <ored/marketdata/security.hpp>
 #include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/marketdata/swaptionvolcurve.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/marketdata/yieldvolcurve.hpp>
+#include <ored/portfolio/bondutils.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/log.hpp>
@@ -299,9 +302,9 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
             })) {
             DLOG("Building YieldCurve " << reducedNode << " for asof " << asof_);
             yieldCurve = QuantLib::ext::make_shared<YieldCurve>(
-                asof_, ycspecs, *curveConfigs_, *loader_, requiredYieldCurves_, requiredDefaultCurves_, *fx_,
-                referenceData_, iborFallbackConfig_, preserveQuoteLinkage_, buildCalibrationInfo_, this,
-                useAtParCoupons_);
+                asof_, ycspecs, *curveConfigs_, *loader_, requiredYieldCurves_, requiredDefaultCurves_,
+                requiredInflationCurves_, *fx_, referenceData_, iborFallbackConfig_, preserveQuoteLinkage_,
+                buildCalibrationInfo_, this, useAtParCoupons_);
         }
 
         for (auto const& node: reducedNode.nodes) {
@@ -533,8 +536,10 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
                 // build the curve
                 DLOG("Building DefaultCurve for asof " << asof_);
                 QuantLib::ext::shared_ptr<DefaultCurve> defaultCurve = QuantLib::ext::make_shared<DefaultCurve>(
-                    asof_, *defaultspec, *loader_, *curveConfigs_, requiredYieldCurves_, requiredDefaultCurves_, referenceData_);
+                    asof_, *defaultspec, *loader_, *curveConfigs_, requiredYieldCurves_, requiredDefaultCurves_, referenceData_,
+                    buildCalibrationInfo_);
                 itr = requiredDefaultCurves_.insert(make_pair(defaultspec->name(), defaultCurve)).first;
+                calibrationInfo_->defaultCurveCalibrationInfo[defaultspec->name()] = defaultCurve->calibrationInfo();
             }
             DLOG("Adding DefaultCurve (" << node.name << ") with spec " << *defaultspec << " to configuration "
                                          << configuration);
@@ -615,6 +620,7 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
                 // index is not interpolated
                 auto tmp = parseZeroInflationIndex(node.name, Handle<ZeroInflationTermStructure>(ts));
                 zeroInflationIndices_[make_pair(configuration, node.name)] = Handle<ZeroInflationIndex>(tmp);
+                zeroInflationObservationLags_[make_pair(configuration, node.name)] = itr->second->observationLags(); 
             }
 
             if (node.obj == MarketObject::YoYInflationCurve) {
@@ -625,12 +631,11 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
                         itr->second->inflationTermStructure());
                 QL_REQUIRE(ts,
                            "expected yoy inflation term structure for index " << node.name << ", but could not cast");
-            QL_DEPRECATED_DISABLE_WARNING
-                           yoyInflationIndices_[make_pair(configuration, node.name)] =
+                yoyInflationIndices_[make_pair(configuration, node.name)] =
                     Handle<YoYInflationIndex>(QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(
-                        parseZeroInflationIndex(node.name, Handle<ZeroInflationTermStructure>()), false,
+                        parseZeroInflationIndex(node.name, Handle<ZeroInflationTermStructure>()),
                         Handle<YoYInflationTermStructure>(ts)));
-            QL_DEPRECATED_ENABLE_WARNING
+                yoyInflationObservationLags_[make_pair(configuration, node.name)] = itr->second->observationLags();
             }
             break;
         }
@@ -758,8 +763,15 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
                 recoveryRates_[make_pair(configuration, node.name)] = itr->second->recoveryRate();
             if (!itr->second->cpr().empty())
                 cprs_[make_pair(configuration, node.name)] = itr->second->cpr();
-            if (!itr->second->conversionFactor().empty())
+            if (!itr->second->conversionFactor().empty()) {
                 conversionFactors_[make_pair(configuration, node.name)] = itr->second->conversionFactor();
+                // We know that we have a future contract. Store the future contract price so that we can query it 
+                // from the market later also.
+                StructuredSecurityId ssid{node.name};
+                string futureContract = ssid.futureContract();
+                if (!futureContract.empty())
+                    securityPrices_.try_emplace(std::pair{ configuration, futureContract }, itr->second->price());
+            }
             if (!itr->second->price().empty())
                 securityPrices_[make_pair(configuration, node.name)] = itr->second->price();
             break;
@@ -785,6 +797,30 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
             commodityIndices_[make_pair(configuration, node.name)] = commIdx;
             calibrationInfo_->commodityCurveCalibrationInfo[commodityCurveSpec->name()] =
                 itr->second->calibrationInfo();
+            break;
+        }
+
+        // Intraday power curve
+        case CurveSpec::CurveType::IntradayPowerCurve: {
+            QuantLib::ext::shared_ptr<IntradayPowerCurveSpec> intradayPowerCurveSpec =
+                QuantLib::ext::dynamic_pointer_cast<IntradayPowerCurveSpec>(spec);
+            QL_REQUIRE(intradayPowerCurveSpec,
+                       "Failed to convert spec, " << *spec << ", to IntradayPowerCurveSpec");
+            auto itr = requiredIntradayPowerCurves_.find(intradayPowerCurveSpec->name());
+            if (itr == requiredIntradayPowerCurves_.end()) {
+                DLOG("Building IntradayPowerCurve " << intradayPowerCurveSpec->name() << " for asof " << asof_);
+                QuantLib::ext::shared_ptr<IntradayPowerCurve> intradayPowerCurve =
+                    QuantLib::ext::make_shared<IntradayPowerCurve>(asof_, *intradayPowerCurveSpec, *loader_,
+                                                                   *curveConfigs_, requiredCommodityCurves_);
+                itr = requiredIntradayPowerCurves_
+                          .insert(make_pair(intradayPowerCurveSpec->name(), intradayPowerCurve))
+                          .first;
+            }
+
+            DLOG("Adding IntradayPowerIndex, " << node.name << ", with spec " << *intradayPowerCurveSpec
+                                               << " to configuration " << configuration);
+            Handle<QuantExt::IntradayPowerIndex> intradayPowerIdx(itr->second->intradayPowerIndex());
+            intradayPowerIndices_[make_pair(configuration, node.name)] = intradayPowerIdx;
             break;
         }
 
@@ -867,6 +903,25 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
             DLOG("Added SwapIndex " << swapIndexName << " with DiscountingIndex " << discountIndex);
             requiredSwapIndices_[configuration][swapIndexName] =
                 swapIndices_.at(std::make_pair(configuration, swapIndexName)).currentLink();
+            break;
+        }
+
+        // Bond Future Vol
+        case CurveSpec::CurveType::BondFutureVolatility: {
+            using BFVCS = BondFutureVolatilityCurveSpec;
+            ext::shared_ptr<BFVCS> bfvcs = ext::dynamic_pointer_cast<BFVCS>(spec);
+            QL_REQUIRE(bfvcs, "Failed to convert curve spec " << *spec << " to BondFutureVolatilityCurveSpec.");
+            auto it = requiredBondFutureVolCurves_.find(bfvcs->name());
+            if (it == requiredBondFutureVolCurves_.end()) {
+                DLOG("Building bond future volatility for date " << asof_ << ".");
+                ext::shared_ptr<BondFutureVolCurve> bfVolCurve = ext::make_shared<BondFutureVolCurve>(
+                    asof_, *bfvcs, *loader_, *curveConfigs_, requiredYieldCurves_);
+                it = requiredBondFutureVolCurves_.insert(make_pair(bfvcs->name(), bfVolCurve)).first;
+            }
+            DLOG("Adding bond future volatility (" << node.name << ") with spec " << *bfvcs <<
+                " to configuration " << configuration);
+            bondFutureVols_[make_pair(configuration, node.name)] =
+                Handle<BlackVolTermStructure>(it->second->volTermStructure());
             break;
         }
 

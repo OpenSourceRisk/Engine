@@ -40,8 +40,11 @@ protected:
     Real atmForward(const Size indexNo, const Real t) const override;
     Real compoundingFactor(const Size indexNo, const Date& d1, const Date& d2) const override;
 
-    void performCalculationsFd(const bool localVol) const;
-    void setAdditionalResults(const bool localVol) const;
+    void performCalculationsFd() const;
+    
+    void populateAdditionalResults() const override;
+
+    mutable bool localVol_ = false;
 };
 
 } // namespace data

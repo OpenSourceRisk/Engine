@@ -19,10 +19,11 @@
 #include <orea/app/analytics/varanalytic.hpp>
 #include <orea/app/analytics/utilities.hpp>
 #include <orea/app/inputparameters.hpp>
-#include <orea/app/reportwriter.hpp>
+#include <orea/app/reportwriters/scenarioreportwriter.hpp>
 #include <orea/engine/historicalsimulationvar.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/parametricvar.hpp>
+#include <orea/simulation/fixingmanager.hpp>
 #include <ored/portfolio/trade.hpp>
 #include <ored/marketdata/adjustmentfactors.hpp>
 #include <ored/marketdata/adjustedinmemoryloader.hpp>
@@ -87,6 +88,15 @@ void HistoricalSimulationVarVariables::loadVariablesImpl(const QuantLib::ext::sh
     inputs->loadParameter<bool>(tradePnL_, "historicalSimulationVar", "tradePnl", false, parseBool);
     inputs->loadParameter<bool>(riskFactorBreakdown_, "historicalSimulationVar", "riskFactorBreakdown", false, parseBool);
     inputs->loadParameter<bool>(riskClassBreakdown_, "historicalSimulationVar", "riskClassBreakdown", false, parseBool);
+    inputs->loadParameter<bool>(includeTheta_, "historicalSimulationVar", "includeTheta", false, parseBool);
+    inputs->loadParameter<bool>(includePeriodCashflow_, "historicalSimulationVar", "includePeriodCashflow", false, parseBool);
+    sensitivityStream_ = inputs->loadSensitivityStream("historicalSimulationVar", "sensitivityInputFile");
+
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiScenarioData;
+    if (inputs->loadParameterXML<SensitivityScenarioData>(
+            sensiScenarioData, "historicalSimulationVar", "sensitivityConfigFile")) {
+        sensiScenarioData_ = sensiScenarioData;
+    }
 }
 
 /***********************************************************************************
@@ -188,7 +198,7 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
             returnConfig, varVars->horizonOverlappingPeriods_);
 
         if (varVars->outputHistoricalScenarios_)
-            ReportWriter().writeHistoricalScenarios(
+            ScenarioReportWriter().writeHistoricalScenarios(
                 scenarios->scenarioLoader(),
                 QuantLib::ext::make_shared<CSVFileReport>(path(inputs_->resultsPath() / "backtest_histscenarios.csv").string(),
                                                   ',', false, inputs_->csvQuoteChar(), inputs_->reportNaString()));
@@ -225,6 +235,14 @@ void HistoricalSimulationVarAnalyticImpl::setUpConfigurations() {
     if(riskFactorBreakdown_){
         allowPartialScenarios_ = true;
     }
+    sensiBased_ = varVars->sensitivityStream_ && varVars->sensiScenarioData_;
+    if (varVars->sensitivityStream_ && !varVars->sensiScenarioData_)
+        WLOG("HISTSIM_VAR: sensitivityInputFile provided without sensitivityConfigFile; falling back to full revaluation");
+    if (!varVars->sensitivityStream_ && varVars->sensiScenarioData_)
+        WLOG("HISTSIM_VAR: sensitivityConfigFile provided without sensitivityInputFile; falling back to full revaluation");
+    if (sensiBased_) {
+        analytic()->configurations().sensiScenarioData = varVars->sensiScenarioData_;
+    }
 }
 
 void HistoricalSimulationVarAnalyticImpl::setVarReport(
@@ -249,34 +267,51 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
     auto scenarios = buildHistoricalScenarioGenerator(
         varVars->scenarioReader_, adjFactors, benchmarkVarPeriod, varVars->horizonCalendar_, varVars->horizonDays_,
         analytic()->configurations().simMarketParams, analytic()->configurations().todaysMarketParams,
-        returnConfig, varVars->horizonOverlappingPeriods_, riskFactorBreakdown_);
+        returnConfig, varVars->horizonOverlappingPeriods_, riskFactorBreakdown_, varVars->includeTheta_);
 
     if (varVars->outputHistoricalScenarios_)
-        ore::analytics::ReportWriter().writeHistoricalScenarios(
+        ScenarioReportWriter().writeHistoricalScenarios(
             scenarios->scenarioLoader(),
             QuantLib::ext::make_shared<CSVFileReport>(path(inputs_->resultsPath() / "var_histscenarios.csv").string(), ',',
                                               false, inputs_->csvQuoteChar(), inputs_->reportNaString()));
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), analytic()->configurations().simMarketParams, Market::defaultConfiguration,
-        *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, true, false, false,
-        allowPartialScenarios_, inputs_->iborFallbackConfig());
+        *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, true, false,
+        allowPartialScenarios_, true, inputs_->iborFallbackConfig());
     simMarket->scenarioGenerator() = scenarios;
     scenarios->baseScenario() = simMarket->baseScenario();
 
-    std::unique_ptr<MarketRiskReport::FullRevalArgs> fullRevalArgs = std::make_unique<MarketRiskReport::FullRevalArgs>(
-        simMarket, inputs_->pricingEngine(), inputs_->refDataManager(), inputs_->iborFallbackConfig());
+    if (sensiBased_) {
+        LOG("HISTSIM_VAR: sensi-based historical simulation VaR");
+        QuantLib::ext::shared_ptr<ScenarioShiftCalculator> shiftCalculator =
+            QuantLib::ext::make_shared<ScenarioShiftCalculator>(varVars->sensiScenarioData_,
+                                                                analytic()->configurations().simMarketParams);
 
-    std::unique_ptr<MarketRiskReport::MultiThreadArgs> multiThreadsArgs;
-    if(inputs_->nThreads()>1)
-        multiThreadsArgs = std::make_unique<MarketRiskReport::MultiThreadArgs>(inputs_->nThreads(), inputs_->asof(), analytic()->loader(), 
-                                                                                analytic()->configurations().curveConfig, analytic()->configurations().todaysMarketParams,
-                                                                                inputs_->marketConfig("simulation"), analytic()->configurations().simMarketParams, "histstimvar-simulation");
+        std::unique_ptr<MarketRiskReport::SensiRunArgs> sensiArgs =
+            std::make_unique<MarketRiskReport::SensiRunArgs>(varVars->sensitivityStream_, shiftCalculator, 0.01);
 
-    varReport_ = ext::make_shared<HistoricalSimulationVarReport>(
-        inputs_->baseCurrency(), analytic()->portfolio(), varVars->portfolioFilter_, varVars->varQuantiles_,
-        benchmarkVarPeriod, scenarios, std::move(fullRevalArgs), std::move(multiThreadsArgs), varVars->varBreakDown_,
-        varVars->includeExpectedShortfall_, varVars->tradePnL_, riskFactorBreakdown_,
-        inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades(), riskClassBreakdown_);
+        varReport_ = ext::make_shared<HistoricalSimulationVarReport>(
+            inputs_->baseCurrency(), analytic()->portfolio(), varVars->portfolioFilter_, varVars->varQuantiles_,
+            benchmarkVarPeriod, scenarios, std::move(sensiArgs), varVars->varBreakDown_,
+            varVars->includeExpectedShortfall_, varVars->tradePnL_, riskFactorBreakdown_,
+            inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades(), riskClassBreakdown_);
+    } else {
+        std::unique_ptr<MarketRiskReport::FullRevalArgs> fullRevalArgs =
+            std::make_unique<MarketRiskReport::FullRevalArgs>(
+                simMarket, inputs_->pricingEngine(), inputs_->refDataManager(), inputs_->iborFallbackConfig());
+
+        std::unique_ptr<MarketRiskReport::MultiThreadArgs> multiThreadsArgs;
+        if(inputs_->nThreads()>1)
+            multiThreadsArgs = std::make_unique<MarketRiskReport::MultiThreadArgs>(inputs_->nThreads(), inputs_->asof(), analytic()->loader(),
+                                                                                    analytic()->configurations().curveConfig, analytic()->configurations().todaysMarketParams,
+                                                                                    inputs_->marketConfig("simulation"), analytic()->configurations().simMarketParams, "histstimvar-simulation");
+
+        varReport_ = ext::make_shared<HistoricalSimulationVarReport>(
+            inputs_->baseCurrency(), analytic()->portfolio(), varVars->portfolioFilter_, varVars->varQuantiles_,
+            benchmarkVarPeriod, scenarios, std::move(fullRevalArgs), std::move(multiThreadsArgs),
+            varVars->varBreakDown_, varVars->includeExpectedShortfall_, varVars->tradePnL_, riskFactorBreakdown_,
+            inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades(), riskClassBreakdown_);
+    }
 }
 
 void HistoricalSimulationVarAnalyticImpl::addAdditionalReports(

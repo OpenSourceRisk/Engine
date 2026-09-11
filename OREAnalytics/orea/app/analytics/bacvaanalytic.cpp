@@ -18,7 +18,8 @@
 
 #include <orea/app/analytics/bacvaanalytic.hpp>
 #include <orea/app/inputparameters.hpp>
-#include <orea/app/reportwriter.hpp>
+#include <orea/app/reportwriters/capitalreportwriter.hpp>
+#include <orea/engine/bacvacalculator.hpp>
 #include <ored/report/inmemoryreport.hpp>
 
 using namespace ore::data;
@@ -29,6 +30,29 @@ namespace analytics {
 
 void BaCvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
     inputs->loadParameterXML<NettingSetManager>(nettingSetManager_, "bacva", "csaFile");
+
+    // Set simmVersion if not already set — required before setSimmBucketMapperFromFile
+    std::string tmp;
+    inputs->loadParameter<std::string>(tmp, "bacva", "simmVersion");
+    if (!tmp.empty())
+        inputs->setSimmVersion(tmp);
+    QL_REQUIRE(!inputs->simmVersion().empty(), "SIMM version must not be empty for BA-CVA");
+
+    tmp = {};
+    inputs->loadParameter<std::string>(tmp, "bacva", "nameMappingInputFile");
+    if (!tmp.empty()) {
+        std::string nameMappingFile = (inputs->setupVariables().inputPath_ / tmp).generic_string();
+        inputs->setSimmNameMapperFromFile(nameMappingFile);
+        LOG("Loading SIMM name mapping from file " << nameMappingFile);
+    }
+
+    tmp = {};
+    inputs->loadParameter<std::string>(tmp, "bacva", "bucketMappingInputFile");
+    if (!tmp.empty()) {
+        std::string bucketMappingFile = (inputs->setupVariables().inputPath_ / tmp).generic_string();
+        inputs->setSimmBucketMapperFromFile(bucketMappingFile);
+        LOG("Loading SIMM bucket mapping from file " << bucketMappingFile);
+    }
 }
 
 void BaCvaAnalyticImpl::setUpConfigurations() {
@@ -65,7 +89,7 @@ void BaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoad
 
     // generate report
     QuantLib::ext::shared_ptr<InMemoryReport> baCvaReport = QuantLib::ext::make_shared<InMemoryReport>();
-    ReportWriter(inputs_->reportNaString()).writeBaCvaReport(baCvaCalculator, *baCvaReport);
+    CapitalReportWriter(inputs_->reportNaString()).writeBaCvaReport(baCvaCalculator, *baCvaReport);
     LOG("BA-CVA Calculation - Completed");
 
     analytic()->addReport(label(), "bacva", baCvaReport);

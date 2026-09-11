@@ -103,10 +103,10 @@ public:
     const ext::shared_ptr<ore::data::CurveConfigurations>& curveConfig(const std::string& s = std::string()) const;
     QuantLib::Date mporDate();
 
-    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& stressSimMarketParams() const;
-    const QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData>& stressScenarioData() const;
-    const QuantLib::ext::shared_ptr<ore::data::EngineData>& stressPricingEngine() const;
-    const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& stressSensitivityScenarioData() const;
+    const ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& stressSimMarketParams() const;
+    const ext::shared_ptr<ore::analytics::StressTestScenarioData>& stressScenarioData() const;
+    const ext::shared_ptr<ore::data::EngineData>& stressPricingEngine() const;
+    const ext::shared_ptr<ore::analytics::SensitivityScenarioData>& stressSensitivityScenarioData() const;
 
     // and Setters
     void setAsOfDate(const std::string& s);
@@ -257,7 +257,7 @@ public:
     void setTradePnl(bool b);
     void setRiskFactorBreakdown(bool b);
     void setIncludeExpectedShortfall(bool b);
-    void setHistVarReturnConfiguration(const QuantLib::ext::shared_ptr<ore::analytics::ReturnConfiguration>& rc);
+    void setHistVarReturnConfiguration(const ext::shared_ptr<ore::analytics::ReturnConfiguration>& rc);
     // Setters for Correlation
     void setCorrelationMethod(const std::string& s);
 
@@ -323,8 +323,8 @@ public:
     void setWriteCubeFile(bool b);
     void setWriteRawCubeFile(bool b);
     void setWriteNetCubeFile(bool b);
-    // TODO: load from XML
-    // void setCounterpartyManager(const std::string& xml);
+    void setCounterpartyManager(const std::string& xml);
+    void setCounterpartyManager(const ext::shared_ptr<ore::data::CounterpartyManager>& cm);
     void setCollateralBalances(const std::string& xml);
     void setCollateralBalances(const ext::shared_ptr<ore::data::CollateralBalances>& xml);
     void setReportBufferSize(Size s);
@@ -352,8 +352,8 @@ public:
     // Setters for xva
     void setXvaUseDoublePrecisionCubes(const bool b);
     void setXvaBaseCurrency(const std::string& s);
-    void setCube(const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& file);
-    void setMarketCube(const QuantLib::ext::shared_ptr<ore::analytics::AggregationScenarioData>& file);
+    void setCube(const ext::shared_ptr<ore::analytics::NPVCube>& file);
+    void setMarketCube(const ext::shared_ptr<ore::analytics::AggregationScenarioData>& file);
     void setFlipViewXVA(bool b);
     void setMporCashFlowMode(const MporCashFlowMode m);
     void setFullInitialCollateralisation(bool b);
@@ -435,7 +435,6 @@ public:
     void setSensitivityStressScenarioDataFromFile(const std::string& s);
     void setSensitivityStressSensitivityScenarioData(const std::string& xml);
     void setSensitivityStressSensitivityScenarioDataFromFile(const std::string& fileName);
-    void setSensitivityStressCalculateBaseScenario(const bool calcBaseScenario);
 
     // Setters for xvaSensi
     void setXvaSensiSimMarketParams(const std::string& xml);
@@ -444,7 +443,7 @@ public:
     void setXvaSensiScenarioDataFromFile(const std::string& fileName);
     void setXvaSensiPricingEngine(const std::string& xml);
     void setXvaSensiPricingEngineFromFile(const std::string& fileName);
-    void setXvaSensiPricingEngine(const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData);
+    void setXvaSensiPricingEngine(const ext::shared_ptr<ore::data::EngineData>& engineData);
     void setXvaSensiParSensi(const bool parSensi);
     void setXvaSensiOutputJacobi(const bool outputJacobi);
     void setXvaSensiThreshold(const Real threshold);
@@ -472,7 +471,7 @@ public:
     void setParConversionScenarioDataFromFile(const std::string& fileName);
     void setParConversionPricingEngine(const std::string& xml);
     void setParConversionPricingEngineFromFile(const std::string& fileName);
-    void setParConversionPricingEngine(const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData);
+    void setParConversionPricingEngine(const ext::shared_ptr<ore::data::EngineData>& engineData);
     void setParConversionInputFile(const std::string& s);
     void setParConversionInputIdColumn(const std::string& s);
     void setParConversionInputRiskFactorColumn(const std::string& s);
@@ -488,7 +487,7 @@ public:
     void setParStressScenarioDataFromFile(const std::string& fileName);
     void setParStressPricingEngine(const std::string& xml);
     void setParStressPricingEngineFromFile(const std::string& fileName);
-    void setParStressPricingEngine(const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData);
+    void setParStressPricingEngine(const ext::shared_ptr<ore::data::EngineData>& engineData);
     void setParStressSensitivityScenarioData(const std::string& xml);
     void setParStressSensitivityScenarioDataFromFile(const std::string& fileName);
     void setParStressLowerBoundCapFloorVolatility(const double value);
@@ -506,7 +505,7 @@ public:
     void setZeroToParShiftScenarioDataFromFile(const std::string& fileName);
     void setZeroToParShiftPricingEngine(const std::string& xml);
     void setZeroToParShiftPricingEngineFromFile(const std::string& fileName);
-    void setZeroToParShiftPricingEngine(const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData);
+    void setZeroToParShiftPricingEngine(const ext::shared_ptr<ore::data::EngineData>& engineData);
     void setZeroToParShiftSensitivityScenarioData(const std::string& xml);
     void setZeroToParShiftSensitivityScenarioDataFromFile(const std::string& fileName);
 
@@ -573,6 +572,10 @@ class Analytic {
  public:
     ext::shared_ptr<ore::data::MarketImpl> getMarket() const;
     const ext::shared_ptr<ore::data::Portfolio>& portfolio() const;
+    void addReport(const std::string& key, const std::string& subKey,
+                   const ext::shared_ptr<ore::data::InMemoryReport>& report);
+    ext::shared_ptr<ore::data::InMemoryReport> getReport(
+        const std::string& key, const std::string& subKey);
 };
 
 class MarketDataLoader {

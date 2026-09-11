@@ -20,6 +20,8 @@ ORE currently supports sensitivity analysis with respect to
 \item Bond credit spreads
 \item Base correlation curves
 \item Correlation termstructures
+\item Commodity curves
+\item Intraday power curves
 \end{itemize}
 
 The {\tt sensitivity.xml} file specifies how sensitivities are computed for each market component.
@@ -102,6 +104,8 @@ giving an example in each category:
   zero (i.e. it is the first pillar)
 \item {\tt IndexCurve/EUR-EURIBOR-6M/2/2Y}: 2Y pillar of index forwarding curve for the Ibor index ``EUR-EURIBOR-6M'',
   the pillar index is 2 in this case
+\item {\tt IntradayPowerCurve/PJM\_WH\_RT/3/1M}: 1M pillar of intraday power curve ``PJM\_WH\_RT'',
+  the pillar index is 3 in this case
 \item {\tt OptionletVolatility/EUR/18/5Y/0.04}: EUR caplet volatility surface, at 5Y option expiry and $4\%$ strike, the
   running index for this expiry - strike pair is 18; the index counts the points in the surface in lexical order
   w.r.t. the dimensions option expiry, strike
@@ -116,6 +120,7 @@ Additional flags:
 
 \begin{itemize}
 \item ComputeGamma: If set to false, second order sensitivity computation is suppressed
+\item ThetaPeriod: If given and not 0D, the period for theta calculation
 \item UseSpreadedTermStructures: If set to true, spreaded termstructures over t0 will be used for sensitivity
   calculation (where supported), to improve the alignment of the scenario sim market and t0 curves
 \end{itemize}
@@ -215,6 +220,10 @@ Additional flags:
 \label{lst:sensitivity_config}
 \end{longlisting}
 
+\input{parameterisation/sensitivity_commoditycurves}
+
+\input{parameterisation/sensitivity_intradaypowercurves}
+
 \subsubsection*{Par Sensitivity Analysis}
 
 To perform a par sensitivity analysis, additional sensitivity configuration is required that describes the assumed par instruments and related conventions.
@@ -299,7 +308,7 @@ Using DiscountCurves as an example, the full sensitivity specification including
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>2W,1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</ShiftTenors>
       <ParConversion>
-        <!--DEP, FRA, IRS, OIS, FXF, XBS -->
+        <!--DEP, FRA, FUT, IRS, OIS, FXF, XBS -->
 	<Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
 	<SingleCurve>true</SingleCurve>
   <Conventions>
@@ -355,9 +364,9 @@ Note
 \item The length of list of (par) instruments needs to match the length of the list of shift tenors
 \item Permissible codes for the assumed par instruments:
 	\begin{itemize}
-	\item DEP, FRA, IRS, OIS, TBS, FXF, XBS in the case of DiscountCurves
-	\item DEP, FRA, IRS, OIS, TBS in the case of IndexCurves
-	\item DEP, FRA, IRS, OIS, TBS, XBS in the case of YieldCurves
+	\item DEP, FRA, FUT, IRS, OIS, TBS, FXF, XBS in the case of DiscountCurves
+	\item DEP, FRA, FUT, IRS, OIS, TBS in the case of IndexCurves
+	\item DEP, FRA, FUT, IRS, OIS, TBS, XBS in the case of YieldCurves
 	\item ZIS, YYS for YYInflationIndexCurves, interpreted as Year-on-Year Inflation Swaps linked to Zero Inflation resp. YoY Inflation curves
 	\item ZIS, YYS for YYCapFloorVolatilities, interpreted as Year-on-Year Inflation Cap Floor linked to Zero Inflation resp. YoY Inflation curves
 	\item Any code for CreditCurves, interpreted as CDS

@@ -33,6 +33,7 @@
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/cashflows/overnightindexedcoupon.hpp>
+#include <ql/cashflows/rangeaccrual.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/payoff.hpp>
 
@@ -291,6 +292,30 @@ NumericLgmMultiLegOptionEngineBase::CashflowInfo NumericLgmMultiLegOptionEngineB
                        lgm.reducedDiscountBond(t, T, x, discountCurve);
             };
             done = true;
+        } else if (auto ra = QuantLib::ext::dynamic_pointer_cast<QuantLib::RangeAccrualFloatersCoupon>(cpn)) {
+            // Range accrual coupon: use the analytical digital caplet/floorlet formula in the
+            // LGM1F model (see ORE documentation 5.1.25) to compute the probability of each
+            // observation being in the range, conditional on the LGM state.
+            info.maxEstimationTime_ = timeFromReference(ra->fixingDate());
+            auto iborIndex = QuantLib::ext::dynamic_pointer_cast<IborIndex>(ra->index());
+            QL_REQUIRE(iborIndex != nullptr,
+                       "NumericLgmMultiLegOptionEngineBase::buildCashflowInfo(): range accrual coupon requires an "
+                       "IborIndex. " + cashflowDescription);
+            // If the coupon's pricer carries a fixed rate, the coupon pays
+            // fixedRate * (n/N) instead of the floating formula gearing * Libor * (n/N) + spread.
+            Real raFixedRate = Null<Real>();
+            if (auto raPricer = QuantLib::ext::dynamic_pointer_cast<QuantLib::RangeAccrualPricer>(ra->pricer()))
+                raFixedRate = raPricer->fixedRate();
+            info.calculator_ = [ra, iborIndex, raFixedRate, T, payrec,
+                                multiplier](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
+                                            const Handle<YieldTermStructure>& discountCurve) {
+                return multiplier *
+                       lgm.rangeAccrualRate(iborIndex, ra->fixingDate(), ra->observationDates(), ra->lowerTrigger(),
+                                            ra->upperTrigger(), ra->gearing(), ra->spread(), T, t, x, raFixedRate) *
+                       RandomVariable(x.size(), ra->accrualPeriod() * ra->nominal() * payrec) *
+                       lgm.reducedDiscountBond(t, T, x, discountCurve);
+            };
+            done = true;
         }
     } else {
         // can not cast to coupon
@@ -310,7 +335,8 @@ NumericLgmMultiLegOptionEngineBase::CashflowInfo NumericLgmMultiLegOptionEngineB
     QL_REQUIRE(
         done,
         "NumericLgmMultiLegOptionEngineBase::buildCashflowInfo(): coupon type not handled, supported coupon types: "
-        "SimpleCashFlow, Fix, (capfloored) Ibor, (capfloored) ON comp, (capfloored) ON avg, BMA/SIFMA, subperiod. " +
+        "SimpleCashFlow, Fix, (capfloored) Ibor, (capfloored) ON comp, (capfloored) ON avg, BMA/SIFMA, subperiod, "
+        "RangeAccrual. " +
             cashflowDescription);
 
     // some postprocessing and checks
@@ -416,13 +442,14 @@ bool NumericLgmMultiLegOptionEngineBase::instrumentIsHandled(
                       QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredAverageONIndexedCoupon>(c) ||
                       QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredAverageBMACoupon>(c) ||
                       QuantLib::ext::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(c) ||
+                      QuantLib::ext::dynamic_pointer_cast<QuantLib::RangeAccrualFloatersCoupon>(c) ||
                       (QuantLib::ext::dynamic_pointer_cast<QuantLib::CappedFlooredCoupon>(c) &&
                        QuantLib::ext::dynamic_pointer_cast<QuantLib::IborCoupon>(
                            QuantLib::ext::dynamic_pointer_cast<QuantLib::CappedFlooredCoupon>(c)->underlying())))) {
                     messages.push_back(
                         "NumericLgmMultilegOptionEngine: coupon type not handled, supported coupon types: Fix, "
                         "(capfloored) (interpolated) Ibor, (capfloored) ON comp, (capfloored) ON avg, BMA/SIFMA, "
-                        "Subperiod, Scaled. leg = " +
+                        "Subperiod, Scaled, RangeAccrual. leg = " +
                         std::to_string(i) + " cf = " + std::to_string(j));
                     isHandled = false;
                 }
@@ -442,10 +469,15 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
 
     // handle empty exercise
 
+    auto const& ts = solver_->model()->parametrization()->termStructure();
+    Date refDate = ts->referenceDate();
+
     if (exercise_ == nullptr) {
         npv_ = 0.0;
         for (Size i = 0; i < legs_.size(); ++i) {
             for (Size j = 0; j < legs_[i].size(); ++j) {
+                if (legs_[i][j]->date() <= refDate)
+                    continue;
                 npv_ += legs_[i][j]->amount() * discountCurve_->discount(legs_[i][j]->date());
             }
         }
@@ -456,8 +488,6 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
     // we have a non-empty exercise
 
     auto rebatedExercise = QuantLib::ext::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_);
-    auto const& ts = solver_->model()->parametrization()->termStructure();
-    Date refDate = ts->referenceDate();
 
     /* Build the cashflow info */
 
@@ -468,6 +498,8 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
 
     for (Size i = 0; i < legs_.size(); ++i) {
         for (Size j = 0; j < legs_[i].size(); ++j) {
+            if (legs_[i][j]->date() <= refDate)
+                continue;
             cashflows.push_back(buildCashflowInfo(
                 legs_[i][j], payer_[i] ? -1.0 : 1.0,
                 [this](const Date& d) {
@@ -660,7 +692,7 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
 } // NumericLgmMultiLegOptionEngineBase::calculate()
 
 NumericLgmMultiLegOptionEngine::NumericLgmMultiLegOptionEngine(
-    const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny, const Real sx,
+    const QuantLib::Handle<LinearGaussMarkovModel>& model, const Real sy, const Size ny, const Real sx,
     const Size nx, const Handle<YieldTermStructure>& discountCurve, const Size americanExerciseTimeStepsPerYear,
     const bool generateAdditionalResults)
     : NumericLgmMultiLegOptionEngineBase(QuantLib::ext::make_shared<LgmConvolutionSolver2>(model, sy, ny, sx, nx),
@@ -670,7 +702,7 @@ NumericLgmMultiLegOptionEngine::NumericLgmMultiLegOptionEngine(
 }
 
 NumericLgmMultiLegOptionEngine::NumericLgmMultiLegOptionEngine(
-    const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime,
+    const QuantLib::Handle<LinearGaussMarkovModel>& model, const Real maxTime,
     const QuantLib::FdmSchemeDesc scheme, const Size stateGridPoints, const Size timeStepsPerYear,
     const Real mesherEpsilon, const Handle<YieldTermStructure>& discountCurve,
     const Size americanExerciseTimeStepsPerYear, const bool generateAdditionalResults)
@@ -703,7 +735,7 @@ void NumericLgmMultiLegOptionEngine::calculate() const {
     }
 } // NumericLgmSwaptionEngine::calculate
 
-NumericLgmSwaptionEngine::NumericLgmSwaptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
+NumericLgmSwaptionEngine::NumericLgmSwaptionEngine(const QuantLib::Handle<LinearGaussMarkovModel>& model,
                                                    const Real sy, const Size ny, const Real sx, const Size nx,
                                                    const Handle<YieldTermStructure>& discountCurve,
                                                    const Size americanExerciseTimeStepsPerYear,
@@ -714,7 +746,7 @@ NumericLgmSwaptionEngine::NumericLgmSwaptionEngine(const QuantLib::ext::shared_p
     registerWith(discountCurve_);
 }
 
-NumericLgmSwaptionEngine::NumericLgmSwaptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
+NumericLgmSwaptionEngine::NumericLgmSwaptionEngine(const QuantLib::Handle<LinearGaussMarkovModel>& model,
                                                    const Real maxTime, const QuantLib::FdmSchemeDesc scheme,
                                                    const Size stateGridPoints, const Size timeStepsPerYear,
                                                    const Real mesherEpsilon,
@@ -753,7 +785,7 @@ void NumericLgmSwaptionEngine::calculate() const {
 } // NumericLgmSwaptionEngine::calculate
 
 NumericLgmNonstandardSwaptionEngine::NumericLgmNonstandardSwaptionEngine(
-    const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny, const Real sx,
+    const QuantLib::Handle<LinearGaussMarkovModel>& model, const Real sy, const Size ny, const Real sx,
     const Size nx, const Handle<YieldTermStructure>& discountCurve, const Size americanExerciseTimeStepsPerYear,
     const bool generateAdditionalResults)
     : NumericLgmMultiLegOptionEngineBase(QuantLib::ext::make_shared<LgmConvolutionSolver2>(model, sy, ny, sx, nx),
@@ -763,7 +795,7 @@ NumericLgmNonstandardSwaptionEngine::NumericLgmNonstandardSwaptionEngine(
 }
 
 NumericLgmNonstandardSwaptionEngine::NumericLgmNonstandardSwaptionEngine(
-    const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime,
+    const QuantLib::Handle<LinearGaussMarkovModel>& model, const Real maxTime,
     const QuantLib::FdmSchemeDesc scheme, const Size stateGridPoints, const Size timeStepsPerYear,
     const Real mesherEpsilon, const Handle<YieldTermStructure>& discountCurve,
     const Size americanExerciseTimeStepsPerYear, const bool generateAdditionalResults)

@@ -91,6 +91,10 @@ std::ostream& operator<<(std::ostream& os, const CurveSpec::CurveType& t) {
         return os << "Correlation";
     case CurveSpec::CurveType::SwapIndex:
         return os << "SwapIndex";
+    case CurveSpec::CurveType::BondFutureVolatility:
+        return os << "BondFutureVolatility";
+    case CurveSpec::CurveType::IntradayPowerCurve:
+        return os << "IntradayPowerCurve";
     default:
         return os << "N/A";
     }

@@ -23,7 +23,6 @@
 
 #pragma once
 
-#include <orea/simm/crifloader.hpp>
 #include <orea/simm/simmconfiguration.hpp>
 #include <orea/simm/simmnamemapper.hpp>
 #include <orea/simm/crifrecord.hpp>

@@ -289,19 +289,19 @@ Matrix rebucketGammas(const std::vector<Time>& gammaTimes, const std::map<Date, 
             if (i1 >= 0) {
                 if (i2 < n - 1)
                     gammadf[i1][i2 + 1] += w1 * (1.0 - w2) * i->second *
-                                           (linearInZero ? 1.0 : gammaTimes[b1 - 1] * gammaTimes[b2] / (t1 * t2));
+                                           (linearInZero ? 1.0 : gammaTimes[i1] * gammaTimes[i2+1] / (t1 * t2));
                 if (i2 >= 0) {
                     gammadf[i1][i2] += w1 * w2 * i->second *
-                                       (linearInZero ? 1.0 : gammaTimes[b1 - 1] * gammaTimes[b2 - 1] / (t1 * t2));
+                                       (linearInZero ? 1.0 : gammaTimes[i1] * gammaTimes[i2] / (t1 * t2));
                 }
             }
             if (i2 >= 0 && i1 < n - 1) {
                 gammadf[i1 + 1][i2] += (1.0 - w1) * w2 * i->second *
-                                       (linearInZero ? 1.0 : gammaTimes[b1] * gammaTimes[b2 - 1] / (t1 * t2));
+                                       (linearInZero ? 1.0 : gammaTimes[i1+1] * gammaTimes[i2] / (t1 * t2));
             }
             if (i1 < n - 1 && i2 < n - 1) {
                 gammadf[i1 + 1][i2 + 1] += (1.0 - w1) * (1.0 - w2) * i->second *
-                                           (linearInZero ? 1.0 : gammaTimes[b1] * gammaTimes[b2] / (t1 * t2));
+                                           (linearInZero ? 1.0 : gammaTimes[i1+1] * gammaTimes[i2+1] / (t1 * t2));
             }
         }
         for (int i = 0; i < n; ++i) {
@@ -342,28 +342,28 @@ Matrix rebucketGammas(const std::vector<Time>& gammaTimes, const std::map<Date, 
         if (i1 >= 0) {
             if (i2 < n - 1) {
                 gamma[n + i1][n + i2 + 1] +=
-                    w1 * (1.0 - w2) * tmp * (linearInZero ? 1.0 : gammaTimes[b1 - 1] * gammaTimes[b2] / (t1 * t2));
+                    w1 * (1.0 - w2) * tmp * (linearInZero ? 1.0 : gammaTimes[i1] * gammaTimes[i2+1] / (t1 * t2));
                 gamma[n + i2 + 1][n + i1] +=
-                    w1 * (1.0 - w2) * tmp * (linearInZero ? 1.0 : gammaTimes[b1 - 1] * gammaTimes[b2] / (t1 * t2));
+                    w1 * (1.0 - w2) * tmp * (linearInZero ? 1.0 : gammaTimes[i1] * gammaTimes[i2+1] / (t1 * t2));
             }
             if (i2 >= 0) {
                 gamma[n + i1][n + i2] +=
-                    w1 * w2 * tmp * (linearInZero ? 1.0 : gammaTimes[b1 - 1] * gammaTimes[b2 - 1] / (t1 * t2));
+                    w1 * w2 * tmp * (linearInZero ? 1.0 : gammaTimes[i1] * gammaTimes[i2] / (t1 * t2));
                 gamma[n + i2][n + i1] +=
-                    w1 * w2 * tmp * (linearInZero ? 1.0 : gammaTimes[b1 - 1] * gammaTimes[b2 - 1] / (t1 * t2));
+                    w1 * w2 * tmp * (linearInZero ? 1.0 : gammaTimes[i1] * gammaTimes[i2] / (t1 * t2));
             }
         }
         if (i2 >= 0 && i1 < n - 1) {
             gamma[n + i1 + 1][n + i2] +=
-                (1.0 - w1) * w2 * tmp * (linearInZero ? 1.0 : gammaTimes[b1] * gammaTimes[b2 - 1] / (t1 * t2));
+                (1.0 - w1) * w2 * tmp * (linearInZero ? 1.0 : gammaTimes[i1+1] * gammaTimes[i2] / (t1 * t2));
             gamma[n + i2][n + i1 + 1] +=
-                (1.0 - w1) * w2 * tmp * (linearInZero ? 1.0 : gammaTimes[b1] * gammaTimes[b2 - 1] / (t1 * t2));
+                (1.0 - w1) * w2 * tmp * (linearInZero ? 1.0 : gammaTimes[i1+1] * gammaTimes[i2] / (t1 * t2));
         }
         if (i1 < n - 1 && i2 < n - 1) {
             gamma[n + i1 + 1][n + i2 + 1] +=
-                (1.0 - w1) * (1.0 - w2) * tmp * (linearInZero ? 1.0 : gammaTimes[b1] * gammaTimes[b2] / (t1 * t2));
+                (1.0 - w1) * (1.0 - w2) * tmp * (linearInZero ? 1.0 : gammaTimes[i1+1] * gammaTimes[i2+1] / (t1 * t2));
             gamma[n + i2 + 1][n + i1 + 1] +=
-                (1.0 - w1) * (1.0 - w2) * tmp * (linearInZero ? 1.0 : gammaTimes[b1] * gammaTimes[b2] / (t1 * t2));
+                (1.0 - w1) * (1.0 - w2) * tmp * (linearInZero ? 1.0 : gammaTimes[i1+1] * gammaTimes[i2+1] / (t1 * t2));
         }
     }
 

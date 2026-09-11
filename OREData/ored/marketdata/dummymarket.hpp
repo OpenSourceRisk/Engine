@@ -157,6 +157,35 @@ public:
                                                                           const std::string&) const override {
         return QuantLib::Handle<QuantExt::CorrelationTermStructure>();
     }
+
+    QuantLib::Handle<QuantLib::BlackVolTermStructure> bondFutureVol(const std::string& contractName,
+        const std::string& configuration) const override {
+        return QuantLib::Handle<QuantLib::BlackVolTermStructure>();
+    }
+
+    QuantLib::Handle<QuantExt::IntradayPowerPriceTermStructure>
+    intradayPowerPriceCurve(const std::string& indexName,
+                            const std::string& configuration = Market::defaultConfiguration) const override {
+        return QuantLib::Handle<QuantExt::IntradayPowerPriceTermStructure>();
+    }
+
+    QuantLib::Handle<QuantExt::IntradayPowerIndex>
+    intradayPowerIndex(const std::string& indexName,
+                       const std::string& configuration = Market::defaultConfiguration) const override {
+        return QuantLib::Handle<QuantExt::IntradayPowerIndex>();
+    }
+
+    std::map<QuantLib::Period, QuantLib::Period>
+    zeroInflationObservationLags(const string& indexName,
+                                 const string& configuration = Market::defaultConfiguration) const override {
+        return std::map<QuantLib::Period, QuantLib::Period>();
+    }
+
+    std::map<QuantLib::Period, QuantLib::Period>
+    yoyInflationObservationLags(const string& indexName,
+                                const string& configuration = Market::defaultConfiguration) const override {
+        return std::map<QuantLib::Period, QuantLib::Period>();
+    }
 };
 
 } // namespace data

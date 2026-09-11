@@ -27,7 +27,7 @@
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/trade.hpp>
 
-#include <ql/instruments/nonstandardswap.hpp>
+#include <ql/instruments/swaption.hpp>
 
 namespace ore {
 namespace data {
@@ -56,7 +56,7 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
-    QuantLib::Real notional() const override;
+    QuantLib::Real notional(NotionalType type = NotionalType::Default) const override;
     const std::map<std::string, QuantLib::ext::any>& additionalData() const override;
 
     bool isExercised() const;
@@ -73,9 +73,9 @@ private:
     buildUnderlyingSwaps(const QuantLib::ext::shared_ptr<PricingEngine>&, const std::vector<Date>&, const bool isXccy);
 
     //! build underlying swaps for calibation under delta-gamma-adjusted method
-    std::vector<QuantLib::ext::shared_ptr<FixedVsFloatingSwap>>
-    buildRepresentativeSwaps(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                             const std::string& qualifier);
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::Swaption>>
+    buildRepresentativeSwaptions(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                                 const std::string& qualifier);
 
     QuantLib::ext::shared_ptr<ore::data::Swap> underlying_;
     QuantLib::ext::shared_ptr<ExerciseBuilder> exerciseBuilder_;

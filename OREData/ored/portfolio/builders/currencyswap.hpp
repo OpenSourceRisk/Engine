@@ -54,7 +54,9 @@ public:
     AmcCgCurrencySwapEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& modelCg,
                                    const std::vector<Date>& simulationDates)
         : CrossCurrencySwapEngineBuilderBase("CrossAssetModel", "AMCCG"), modelCg_(modelCg),
-          simulationDates_(simulationDates) {}
+          simulationDates_(simulationDates) {
+        cachingEnabled_ = false;
+}
 
 protected:
     QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const std::vector<Currency>& ccys, const Currency& base,

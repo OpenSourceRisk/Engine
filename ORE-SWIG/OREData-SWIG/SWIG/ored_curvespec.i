@@ -23,9 +23,9 @@
 namespace ore {
 namespace data {
 class CurveSpec {
-	public:
-		enum class CurveType {
-		    FX,
+    public:
+        enum class CurveType {
+            FX,
             Yield,
             CapFloorVolatility,
             SwaptionVolatility,
@@ -41,7 +41,9 @@ class CurveSpec {
             BaseCorrelation,
             Commodity,
             CommodityVolatility,
-            Correlation
+            Correlation,
+            SwapIndex,
+            BondFutureVolatility
        };
        CurveSpec();
        CurveSpec(const std::string& curveConfigID);
@@ -336,10 +338,30 @@ class CorrelationCurveSpec  : public CurveSpec {
 
 };
 
-    ext::shared_ptr<CurveSpec> parseCurveSpec(const std::string& s);
-    CurveSpec::CurveType parseCurveConfigurationType(const std::string&);
+ext::shared_ptr<CurveSpec> parseCurveSpec(const std::string& s);
+CurveSpec::CurveType parseCurveConfigurationType(const std::string&);
 
-    } // namespace data
-    } // namespace ore
+} // namespace data
+} // namespace ore
+
+%shared_ptr(ore::data::SwapIndexCurveSpec)
+namespace ore {
+namespace data {
+class SwapIndexCurveSpec : public CurveSpec {
+    public:
+        SwapIndexCurveSpec(const std::string& curveConfigID);
+};
+} // namespace data
+} // namespace ore
+
+%shared_ptr(ore::data::BondFutureVolatilityCurveSpec)
+namespace ore {
+namespace data {
+class BondFutureVolatilityCurveSpec : public CurveSpec {
+    public:
+        BondFutureVolatilityCurveSpec(const std::string& contractName);
+};
+} // namespace data
+} // namespace ore
 
 #endif

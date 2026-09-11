@@ -120,8 +120,7 @@ public:
     const QuantLib::Period& proxySourceRateComputationPeriod() const { return proxySourceRateComputationPeriod_; }
     const QuantLib::Period& proxyTargetRateComputationPeriod() const { return proxyTargetRateComputationPeriod_; }
     double proxyScalingFactor() const { return proxyScalingFactor_; }
-    //
-    const QuantLib::ext::optional<ParametricSmileConfiguration> parametricSmileConfiguration() const {
+    const QuantLib::ext::optional<ParametricSmileConfiguration>& parametricSmileConfiguration() const {
         return parametricSmileConfiguration_;
     }
     //

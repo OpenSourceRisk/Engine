@@ -58,7 +58,9 @@ public:
         CommodityVolatility,
         SecuritySpread,
         Correlation,
-        CPR
+        CPR,
+        Theta,
+        BondFutureVolatility
     };
 
     RiskFactorKey();
@@ -92,7 +94,7 @@ public:
     virtual void setPar(const bool b) = 0;
     virtual const std::map<std::pair<QuantExt::RiskFactorKey::KeyType, std::string>, std::vector<std::vector<Real>>>&
     coordinates() const = 0;
-    virtual QuantLib::ext::shared_ptr<QuantExt::Scenario> clone() const = 0;
+    virtual ext::shared_ptr<QuantExt::Scenario> clone() const = 0;
 };
 }
 
@@ -119,7 +121,7 @@ public:
 
     SimpleScenario();
     SimpleScenario(QuantLib::Date asof, const std::string& label = std::string(), QuantLib::Real numeraire = 0,
-                   const QuantLib::ext::shared_ptr<SharedData>& sharedData = nullptr);
+                   const ext::shared_ptr<SharedData>& sharedData = nullptr);
 
     const QuantLib::Date& asof() const override;
     void setAsof(const QuantLib::Date& d) override;
@@ -132,16 +134,18 @@ public:
     void add(const QuantExt::RiskFactorKey& key, QuantLib::Real value) override;
     QuantLib::Real get(const QuantExt::RiskFactorKey& key) const override;
     const bool isAbsolute() const override;
+    void setAbsolute(const bool b) override;
     const bool isPar() const override;
+    void setPar(const bool b) override;
     const std::map<std::pair<QuantExt::RiskFactorKey::KeyType, std::string>, std::vector<std::vector<QuantLib::Real>>>&
     coordinates() const override;
-    QuantLib::ext::shared_ptr<QuantExt::Scenario> clone() const override;
+    ext::shared_ptr<QuantExt::Scenario> clone() const override;
 };
 
 class ScenarioFactory {
 public:
     virtual ~ScenarioFactory() {}
-    virtual const QuantLib::ext::shared_ptr<QuantExt::Scenario> buildScenario(QuantLib::Date asof, bool isAbsolute,
+    virtual const ext::shared_ptr<QuantExt::Scenario> buildScenario(QuantLib::Date asof, bool isAbsolute,
                                                                      bool isPar = false,
                                                                      const std::string& label = "",
                                                                      QuantLib::Real numeraire = 0.0) const = 0;
@@ -149,8 +153,8 @@ public:
 
 class CloneScenarioFactory : public ScenarioFactory {
 public:
-    CloneScenarioFactory(const QuantLib::ext::shared_ptr<QuantExt::Scenario>& baseScenario);
-    const QuantLib::ext::shared_ptr<QuantExt::Scenario> buildScenario(QuantLib::Date asof, bool isAbsolute,
+    CloneScenarioFactory(const ext::shared_ptr<QuantExt::Scenario>& baseScenario);
+    const ext::shared_ptr<QuantExt::Scenario> buildScenario(QuantLib::Date asof, bool isAbsolute,
                                                             bool isPar = false, const std::string& label = "",
                                                             QuantLib::Real numeraire = 0.0) const override;
 };
@@ -158,7 +162,7 @@ public:
 class ScenarioGenerator {
 public:
     virtual ~ScenarioGenerator() {}
-    virtual QuantLib::ext::shared_ptr<QuantExt::Scenario> next(const Date& d) = 0;
+    virtual ext::shared_ptr<QuantExt::Scenario> next(const Date& d) = 0;
     virtual void reset() = 0;
 };
 
@@ -166,8 +170,8 @@ class StaticScenarioGenerator : public ScenarioGenerator {
 public:
     StaticScenarioGenerator();
     void reset() override;
-    QuantLib::ext::shared_ptr<QuantExt::Scenario> next(const Date&) override;
-    void setScenario(const QuantLib::ext::shared_ptr<QuantExt::Scenario>& s);
+    ext::shared_ptr<QuantExt::Scenario> next(const Date&) override;
+    void setScenario(const ext::shared_ptr<QuantExt::Scenario>& s);
 };
 
 class ScenarioGeneratorData : public ore::data::XMLSerializable {
@@ -188,39 +192,43 @@ public:
 class SimMarket : public ore::data::MarketImpl {
 public:
     explicit SimMarket(const bool handlePseudoCurrencies);
+    void update(const Date& d = Date());
     virtual void preUpdate() = 0;
     virtual void updateDate(const Date&) = 0;
-    virtual void updateScenario(const Date&) = 0;
-    virtual void postUpdate(const Date& d) = 0;
-    virtual void updateAsd(const Date&) = 0;
+    virtual Date loadNextScenario(const Date& d) = 0;
+    virtual void applyLoadedScenario() = 0;
+    void updateScenario(const Date& d = Date());
+    virtual void postUpdate() = 0;
+    virtual void updateAsd() = 0;
+    Real numeraire() { return numeraire_; }
+    const std::string& label() { return label_; }
     virtual void reset() = 0;
-    virtual const QuantLib::ext::shared_ptr<ore::analytics::FixingManager>& fixingManager() const = 0;
 };
 
 class ScenarioSimMarket : public SimMarket {
 public:
     explicit ScenarioSimMarket(const bool handlePseudoCurrencies);
 
-    virtual QuantLib::ext::shared_ptr<ore::analytics::ScenarioGenerator>& scenarioGenerator();
-    virtual const QuantLib::ext::shared_ptr<ore::analytics::ScenarioGenerator>& scenarioGenerator() const;
-    virtual QuantLib::ext::shared_ptr<ore::analytics::AggregationScenarioData>& aggregationScenarioData();
-    virtual const QuantLib::ext::shared_ptr<ore::analytics::AggregationScenarioData>& aggregationScenarioData() const;
-    virtual QuantLib::ext::shared_ptr<ore::analytics::ScenarioFilter>& filter();
-    virtual const QuantLib::ext::shared_ptr<ore::analytics::ScenarioFilter>& filter() const;
+    virtual ext::shared_ptr<ore::analytics::ScenarioGenerator>& scenarioGenerator();
+    virtual const ext::shared_ptr<ore::analytics::ScenarioGenerator>& scenarioGenerator() const;
+    virtual ext::shared_ptr<ore::analytics::AggregationScenarioData>& aggregationScenarioData();
+    virtual const ext::shared_ptr<ore::analytics::AggregationScenarioData>& aggregationScenarioData() const;
+    virtual ext::shared_ptr<ore::analytics::ScenarioFilter>& filter();
+    virtual const ext::shared_ptr<ore::analytics::ScenarioFilter>& filter() const;
 
     virtual void preUpdate() override;
-    virtual void updateScenario(const Date&) override;
     virtual void updateDate(const Date&) override;
-    virtual void postUpdate(const Date& d) override;
-    virtual void updateAsd(const Date&) override;
+    virtual Date loadNextScenario(const Date& d) override;
+    virtual void applyLoadedScenario() override;
+    virtual void postUpdate() override;
+    virtual void updateAsd() override;
     virtual void reset() override;
 
-    virtual QuantLib::ext::shared_ptr<QuantExt::Scenario> baseScenario() const;
-    virtual QuantLib::ext::shared_ptr<QuantExt::Scenario> baseScenarioAbsolute() const;
+    virtual ext::shared_ptr<QuantExt::Scenario> baseScenario() const;
+    virtual ext::shared_ptr<QuantExt::Scenario> baseScenarioAbsolute() const;
     bool useSpreadedTermStructures() const;
-    const QuantLib::ext::shared_ptr<ore::analytics::FixingManager>& fixingManager() const override;
     virtual bool isSimulated(const QuantExt::RiskFactorKey::KeyType& factor) const;
-    void applyScenario(const QuantLib::ext::shared_ptr<QuantExt::Scenario>& scenario);
+    void applyScenario(const ext::shared_ptr<QuantExt::Scenario>& scenario);
 };
 
 } // namespace analytics

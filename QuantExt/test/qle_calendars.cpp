@@ -20,6 +20,7 @@
 #include <boost/test/unit_test.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/calendars/austria.hpp>
+#include <ql/time/calendars/israel.hpp>
 #include <ql/time/calendars/thailand.hpp>
 #include <ql/time/calendars/chile.hpp>
 #include <qle/calendars/belgium.hpp>
@@ -28,7 +29,6 @@
 #include <qle/calendars/france.hpp>
 #include <qle/calendars/greece.hpp>
 #include <qle/calendars/ireland.hpp>
-#include <qle/calendars/israel.hpp>
 #include <qle/calendars/luxembourg.hpp>
 #include <qle/calendars/malaysia.hpp>
 #include <qle/calendars/netherlands.hpp>
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(testIsraelTelbor) {
 
     BOOST_TEST_MESSAGE("Testing Israel Telbor standard weekends");
 
-    Calendar c = QuantExt::Israel(QuantExt::Israel::Telbor);
+    Calendar c = QuantLib::Israel(QuantLib::Israel::Telbor);
 
     BOOST_CHECK(!c.isWeekend(Friday));
     BOOST_CHECK(c.isWeekend(Saturday));
@@ -297,11 +297,11 @@ BOOST_AUTO_TEST_CASE(testIsraelTelAviv) {
 
     BOOST_TEST_MESSAGE("Testing Israel TelAviv weekends");
 
-    Calendar c = QuantExt::Israel(QuantExt::Israel::Settlement);
+    Calendar c = QuantLib::Israel(QuantLib::Israel::TASE);
 
-    BOOST_CHECK(c.isWeekend(Friday));
+    BOOST_CHECK(!c.isWeekend(Friday));
     BOOST_CHECK(c.isWeekend(Saturday));
-    BOOST_CHECK(!c.isWeekend(Sunday));
+    BOOST_CHECK(c.isWeekend(Sunday));
 }
 
 BOOST_AUTO_TEST_CASE(testAustrianCalendar) {

@@ -27,6 +27,9 @@
 %shared_ptr(ore::analytics::XvaAnalytic)
 %shared_ptr(ore::analytics::SimmAnalytic)
 %shared_ptr(ore::analytics::SaCcrAnalytic)
+%shared_ptr(ore::analytics::PnlAnalytic)
+%shared_ptr(ore::analytics::PnlExplainAnalytic)
+%shared_ptr(ore::analytics::HistoricalSimulationVarAnalytic)
 
 %rename(SaccrAnalytic) ore::analytics::SaCcrAnalytic;
 
@@ -40,7 +43,7 @@ class PricingAnalytic : public ore::analytics::Analytic {
             return new ore::analytics::PricingAnalytic(
                 inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
         }
-        PricingAnalytic(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs) {
+        PricingAnalytic(const ext::shared_ptr<ore::analytics::InputParameters>& inputs) {
             return new ore::analytics::PricingAnalytic(
                 inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
         }
@@ -59,9 +62,14 @@ class XvaAnalytic : public ore::analytics::Analytic {
             return new ore::analytics::XvaAnalytic(
                 inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
         }
-        XvaAnalytic(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs) {
+        XvaAnalytic(const ext::shared_ptr<ore::analytics::InputParameters>& inputs) {
             return new ore::analytics::XvaAnalytic(
                 inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
+        }
+        ext::shared_ptr<ore::analytics::PostProcess> postProcess() {
+            auto* impl = dynamic_cast<ore::analytics::XvaAnalyticImpl*>($self->impl().get());
+            if (!impl) return nullptr;
+            return impl->postProcess();
         }
     }
 };
@@ -78,7 +86,7 @@ class SimmAnalytic : public ore::analytics::Analytic {
             return new ore::analytics::SimmAnalytic(
                 inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
         }
-        SimmAnalytic(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs) {
+        SimmAnalytic(const ext::shared_ptr<ore::analytics::InputParameters>& inputs) {
             return new ore::analytics::SimmAnalytic(
                 inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
         }
@@ -100,11 +108,14 @@ class SaCcrAnalytic : public ore::analytics::Analytic {
             return new ore::analytics::SaCcrAnalytic(
                 inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
         }
-        SaCcrAnalytic(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs) {
+        SaCcrAnalytic(const ext::shared_ptr<ore::analytics::InputParameters>& inputs) {
             return new ore::analytics::SaCcrAnalytic(
                 inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
         }
     }
+
+    const ext::shared_ptr<ore::analytics::SaccrCalculator> saccrCalculator() const;
+    const ext::shared_ptr<ore::analytics::SaccrTradeData> saccrTradeData() const;
 };
 }
 }
@@ -122,5 +133,134 @@ class AnalyticFactory {
 };
 }
 }
+
+// Helper to downcast Analytic to XvaAnalytic
+%inline %{
+ext::shared_ptr<ore::analytics::XvaAnalytic> asXvaAnalytic(
+    ext::shared_ptr<ore::analytics::Analytic> analytic) {
+    return QuantLib::ext::dynamic_pointer_cast<ore::analytics::XvaAnalytic>(analytic);
+}
+%}
+
+namespace ore {
+namespace analytics {
+class PnlAnalytic : public ore::analytics::Analytic {
+  public:
+    %extend {
+        PnlAnalytic() {
+            auto inputs = QuantLib::ext::make_shared<ore::analytics::InputParameters>();
+            return new ore::analytics::PnlAnalytic(
+                inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
+        }
+        PnlAnalytic(const ext::shared_ptr<ore::analytics::InputParameters>& inputs) {
+            return new ore::analytics::PnlAnalytic(
+                inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
+        }
+    }
+};
+}
+}
+
+namespace ore {
+namespace analytics {
+class PnlExplainAnalytic : public ore::analytics::Analytic {
+  public:
+    %extend {
+        PnlExplainAnalytic() {
+            auto inputs = QuantLib::ext::make_shared<ore::analytics::InputParameters>();
+            return new ore::analytics::PnlExplainAnalytic(
+                inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
+        }
+        PnlExplainAnalytic(const ext::shared_ptr<ore::analytics::InputParameters>& inputs) {
+            return new ore::analytics::PnlExplainAnalytic(
+                inputs, QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>());
+        }
+    }
+};
+}
+}
+
+namespace ore {
+namespace analytics {
+class HistoricalSimulationVarAnalytic : public ore::analytics::Analytic {
+  public:
+    %extend {
+        HistoricalSimulationVarAnalytic() {
+            auto inputs = ext::make_shared<ore::analytics::InputParameters>();
+            return new ore::analytics::HistoricalSimulationVarAnalytic(
+                inputs, ext::weak_ptr<ore::analytics::AnalyticsManager>());
+        }
+        HistoricalSimulationVarAnalytic(
+            const ext::shared_ptr<ore::analytics::InputParameters>& inputs) {
+            return new ore::analytics::HistoricalSimulationVarAnalytic(
+                inputs, ext::weak_ptr<ore::analytics::AnalyticsManager>());
+        }
+    }
+};
+
+class HistoricalSimulationVarCalculator {
+  public:
+    HistoricalSimulationVarCalculator(const std::vector<QuantLib::Real>& pnls);
+    QuantLib::Real var(QuantLib::Real confidence, bool isCall = true) const;
+    QuantLib::Real expectedShortfall(QuantLib::Real confidence, bool isCall = true) const;
+};
+}
+}
+
+// Helper to downcast Analytic to PnlAnalytic
+%inline %{
+ext::shared_ptr<ore::analytics::PnlAnalytic> asPnlAnalytic(
+    ext::shared_ptr<ore::analytics::Analytic> analytic) {
+    return QuantLib::ext::dynamic_pointer_cast<ore::analytics::PnlAnalytic>(analytic);
+}
+%}
+
+// Helper to downcast Analytic to PnlExplainAnalytic
+%inline %{
+ext::shared_ptr<ore::analytics::PnlExplainAnalytic> asPnlExplainAnalytic(
+    ext::shared_ptr<ore::analytics::Analytic> analytic) {
+    return QuantLib::ext::dynamic_pointer_cast<ore::analytics::PnlExplainAnalytic>(analytic);
+}
+%}
+
+// Helper to downcast Analytic to HistoricalSimulationVarAnalytic
+%inline %{
+ext::shared_ptr<ore::analytics::HistoricalSimulationVarAnalytic>
+asHistoricalSimulationVarAnalytic(
+    ext::shared_ptr<ore::analytics::Analytic> analytic) {
+    return ext::dynamic_pointer_cast<ore::analytics::HistoricalSimulationVarAnalytic>(analytic);
+}
+%}
+
+#if defined(SWIGPYTHON)
+%pythoncode %{
+_HistoricalSimulationVarCalculator_init = HistoricalSimulationVarCalculator.__init__
+_HistoricalSimulationVarCalculator_var = HistoricalSimulationVarCalculator.var
+_HistoricalSimulationVarCalculator_expectedShortfall = (
+    HistoricalSimulationVarCalculator.expectedShortfall
+)
+
+def _historicalSimulationVarCalculatorInit(self, pnls):
+    copied_pnls = DoubleVector()
+    for pnl in pnls:
+        copied_pnls.append(pnl)
+    self._pnls = copied_pnls
+    _HistoricalSimulationVarCalculator_init(self, copied_pnls)
+
+def _historicalSimulationVarCalculatorVar(self, confidence, isCall=True, tradeIds=None):
+    return _HistoricalSimulationVarCalculator_var(self, confidence, isCall)
+
+def _historicalSimulationVarCalculatorExpectedShortfall(
+    self, confidence, isCall=True, tradeIds=None
+):
+    return _HistoricalSimulationVarCalculator_expectedShortfall(self, confidence, isCall)
+
+HistoricalSimulationVarCalculator.__init__ = _historicalSimulationVarCalculatorInit
+HistoricalSimulationVarCalculator.var = _historicalSimulationVarCalculatorVar
+HistoricalSimulationVarCalculator.expectedShortfall = (
+    _historicalSimulationVarCalculatorExpectedShortfall
+)
+%}
+#endif
 
 #endif

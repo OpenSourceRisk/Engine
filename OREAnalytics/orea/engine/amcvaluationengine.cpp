@@ -20,29 +20,25 @@
 
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/cube/inmemorycube.hpp>
+#include <orea/engine/cpuaffinity.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/pathdata.hpp>
 
 #include <ored/marketdata/clonedloader.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/model/crossassetmodelbuilder.hpp>
-#include <ored/portfolio/compositeinstrumentwrapper.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/optionwrapper.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
-#include <ored/portfolio/compositetrade.hpp>
+#include <ored/portfolio/tradeutils.hpp>
 #include <ored/utilities/to_string.hpp>
 
 #include <qle/indexes/fallbackiborindex.hpp>
-#include <qle/instruments/multiccycompositeinstrument.hpp>
 #include <qle/instruments/payment.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/methods/multipathvariategenerator.hpp>
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
-
-#include <ql/instruments/compositeinstrument.hpp>
-
-#include <ored/portfolio/optionwrapper.hpp>
 
 #include <boost/timer/timer.hpp>
 
@@ -292,7 +288,7 @@ void populateAsd(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& mod
         }
         Size ccyIndex = model->ccyIndex(tmp->currency());
         asdIndexCurve.push_back(QuantLib::ext::make_shared<LgmImpliedYtsFwdFwdCorrected>(
-            model->lgm(ccyIndex), tmp->forwardingTermStructure()));
+            Handle<LGM>(model->lgm(ccyIndex)), tmp->forwardingTermStructure()));
         asdIndex.push_back(tmp->clone(Handle<YieldTermStructure>(asdIndexCurve.back())));
         asdIndexIndex.push_back(ccyIndex);
         asdIndexName.push_back(i);
@@ -422,22 +418,7 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
 
             // 3 unpack CompositeInstrumentWrapper
 
-            std::set<QuantLib::ext::shared_ptr<InstrumentWrapper>> wrappers{trade->instrument()};
-            std::set<QuantLib::ext::shared_ptr<InstrumentWrapper>> wrappersTmp;
-            bool compositeFound;
-            do {
-                compositeFound = false;
-                for (auto const& w : wrappers) {
-                    if (auto comp = QuantLib::ext::dynamic_pointer_cast<CompositeInstrumentWrapper>(w)) {
-                        wrappersTmp.insert(comp->wrappers().begin(), comp->wrappers().end());
-                        compositeFound = true;
-                    } else {
-                        wrappersTmp.insert(w);
-                    }
-                }
-                wrappers.swap(wrappersTmp);
-                wrappersTmp.clear();
-            } while (compositeFound);
+            auto wrappers = unpackCompositeInstrumentWrappers({trade->instrument()});
 
             // 4 process the wrappers
 
@@ -465,29 +446,7 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
 
                 // 4.3 unpack composite ql / qle instruments
 
-                std::set<std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Real>> qlInstrumentsTmp;
-                bool compositeFound;
-                do {
-                    compositeFound = false;
-                    for (auto const& [qlInstrument, outerMult] : qlInstruments) {
-
-                        if (auto c = QuantLib::ext::dynamic_pointer_cast<MultiCcyCompositeInstrument>(qlInstrument)) {
-                            for (auto const& [instr, innerMult, _] : c->components()) {
-                                qlInstrumentsTmp.insert(std::make_pair(instr, outerMult * innerMult));
-                            }
-                            compositeFound = true;
-                        } else if (auto c = QuantLib::ext::dynamic_pointer_cast<CompositeInstrument>(qlInstrument)) {
-                            for (auto const& [instr, innerMult] : c->components()) {
-                                qlInstrumentsTmp.insert(std::make_pair(instr, outerMult * innerMult));
-                            }
-                            compositeFound = true;
-                        } else {
-                            qlInstrumentsTmp.insert(std::make_pair(qlInstrument, outerMult));
-                        }
-                    }
-                    qlInstruments.swap(qlInstrumentsTmp);
-                    qlInstrumentsTmp.clear();
-                } while (compositeFound);
+                qlInstruments = unpackCompositeInstruments(qlInstruments);
 
                 // 4.4 process qlInstruments
 
@@ -882,6 +841,9 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<Portfolio>& p
 }
 
 void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio) {
+
+    boost::timer::cpu_timer timer;
+
     LOG("Starting multi-threaded AMCValuationEngine for "
         << portfolio->size() << " trades, " << nSamples_ << " samples and " << scenarioGeneratorData_->getGrid()->size()
         << " dates.");
@@ -890,6 +852,10 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
                                    "multi-threaded run, but engine was constructed for single-threaded runs");
 
     QL_REQUIRE(portfolio->size() > 0, "AMCValuationEngine::buildCube: empty portfolio");
+
+    // make sure curve configs are read-only to avoid data races
+
+    curveConfigs_->parseAll();
 
     // split portfolio into nThreads parts (just distribute the trades assuming all are approximately expensive)
 
@@ -993,12 +959,29 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
             bool continueOnError = true;
             std::string configuration = configurationFinalModel_;
             market = QuantLib::ext::make_shared<ScenarioSimMarket>(
-                initMarket, simMarketParams_, QuantLib::ext::make_shared<FixingManager>(today_), configuration,
-                *curveConfigs_, *todaysMarketParams_, continueOnError, true, true, false, iborFallbackConfig_, false,
-                offsetScenario_);
+                initMarket, simMarketParams_, configuration, *curveConfigs_, *todaysMarketParams_, continueOnError,
+                true, true, false, iborFallbackConfig_, false, offsetScenario_);
         }
+
+        // Need to copy crossAssetModelData_ and use a copy of the correlation quotes. If we don't do this, in 
+        // CrossAssetModelBuilder, for each correlation quote handle `cqh` we have marketObserver_->addObservable(cqh). 
+        // There is a separate marketObserver_ per thread but the `cqh` is the same quote handle in each of the 
+        // different threads. Problems can arise for example when the `cqh` attempts to unregisterObserver.
+        // In particular, we can have unregisterObserver called on the same `cqh` from different threads simultaneously
+        // and consequently an attempt is made to edit the `observers_` set from multiple threads which is undefined
+        // behaviour and can lead to a crash.
+        auto camdCopy = ext::make_shared<CrossAssetModelData>(*crossAssetModelData_);
+        map<CorrelationKey, Handle<Quote>> corrCopy;
+        for (const auto& [key, quoteHandle] : crossAssetModelData_->correlations()) {
+            QL_REQUIRE(!quoteHandle.empty(), "AMCValuationEngine::buildCube: empty correlation quote handle "
+                "for key (" << key.first << ", " << key.second << ")");
+            auto quoteCopy = ext::make_shared<SimpleQuote>(quoteHandle->value());
+            corrCopy.emplace(key, Handle<Quote>(quoteCopy));
+        }
+        camdCopy->setCorrelations(corrCopy);
+
         ore::data::CrossAssetModelBuilder modelBuilder(
-            market, crossAssetModelData_, configurationLgmCalibration_, configurationFxCalibration_,
+            market, camdCopy, configurationLgmCalibration_, configurationFxCalibration_,
             configurationEqCalibration_, configurationInfCalibration_, configurationCrCalibration_,
             configurationFinalModel_, false, continueOnCalibrationError_, std::string(), "xva/amc cam building", false,
             allowModelFallbacks_);
@@ -1017,12 +1000,15 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
     }
 
     // run amc simulation on multiple threads
-
+    std::vector<std::size_t> cpuIds = getCpuIds(eff_nThreads, "[AMC_MULTITHREADING]");
     for (Size i = 0; i < eff_nThreads; ++i) {
 
-        auto job = [this, obsMode, includeTodaysCashFlows, localIncRefDateEvents, &portfoliosAsString, &loaders,
-                    &simDates, &stickyCloseOutDates, &progressIndicator, &pathData,
+        auto job = [this, &cpuIds, obsMode, includeTodaysCashFlows, localIncRefDateEvents, &portfoliosAsString,
+                    &loaders, &simDates, &stickyCloseOutDates, &progressIndicator, &pathData,
                     &marketModelBuilder](int id) -> resultType {
+
+            setThreadCpuAffinity(id, cpuIds, "[AMC_MULTITHREADING]");
+
             // set thread local singletons
 
             QuantLib::Settings::instance().evaluationDate() = today_;
@@ -1056,7 +1042,7 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
 
                 portfolio->build(engineFactory, "amc-val-engine", true, useAtParCouponsTrades_);
 
-                // run core engine code (asd is written for thread id 0 only)
+                // run core engine code
 
                 runCoreEngine(portfolio, model, market, scenarioGeneratorData_, miniCubes_[id], progressIndicator,
                               pathData, amcIndividualTrainingInput_, amcIndividualTrainingOutput_);
@@ -1111,7 +1097,10 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
     // LOG("Stop thread pool");
     // threadPool.stop(true);
 
-    LOG("Finished multi-threaded AMCValuationEngine run.");
+    LOG("Finished multi-threaded AMCValuationEngine run, timings: "
+        << static_cast<double>(timer.elapsed().wall) / 1.0E9 << "s Wall, "
+        << static_cast<double>(timer.elapsed().user) / 1.0E9 << "s User, "
+        << static_cast<double>(timer.elapsed().system) / 1.0E9 << "s System.");
 }
 
 } // namespace analytics

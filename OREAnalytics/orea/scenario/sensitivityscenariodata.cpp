@@ -136,6 +136,11 @@ void SensitivityScenarioData::curveShiftDataFromXML(XMLNode* child, CurveShiftDa
         XMLUtils::getChildValue(child, "ShiftTenors", true), &parseScenarioCurvePillar);
 }
 
+void SensitivityScenarioData::intradayPowerShiftDataFromXML(XMLNode* child, IntradayPowerShiftData& data) {
+    shiftDataFromXML(child, data);
+    data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
+}
+
 void SensitivityScenarioData::volShiftDataFromXML(XMLNode* child, VolShiftData& data, const bool requireShiftStrikes) {
     shiftDataFromXML(child, data);
     data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
@@ -162,6 +167,12 @@ void SensitivityScenarioData::shiftDataToXML(XMLDocument& doc, XMLNode* node, co
 }
 
 void SensitivityScenarioData::curveShiftDataToXML(XMLDocument& doc, XMLNode* node, const CurveShiftData& data) const {
+    shiftDataToXML(doc, node, data);
+    XMLUtils::addGenericChildAsList(doc, node, "ShiftTenors", data.shiftTenors);
+}
+
+void SensitivityScenarioData::intradayPowerShiftDataToXML(XMLDocument& doc, XMLNode* node,
+                                                          const IntradayPowerShiftData& data) const {
     shiftDataToXML(doc, node, data);
     XMLUtils::addGenericChildAsList(doc, node, "ShiftTenors", data.shiftTenors);
 }
@@ -213,12 +224,16 @@ const ShiftData& SensitivityScenarioData::shiftData(const RiskFactorKey::KeyType
         return *dividendYieldShiftData().at(name);
     case RFType::CommodityCurve:
         return *commodityCurveShiftData().at(name);
+    case RFType::IntradayPowerCurve:
+        return *intradayPowerCurveShiftData().at(name);
     case RFType::CommodityVolatility:
         return *commodityVolShiftData().at(name);
     case RFType::SecuritySpread:
         return *securityShiftData().at(name);
     case RFType::Correlation:
         return *correlationShiftData().at(name);
+    case RFType::BondFutureVolatility:
+        return *bondFutureVolShiftData().at(name);
     default:
         QL_FAIL("Cannot return shift data for key type: " << keyType);
     }
@@ -496,9 +511,36 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
              child = XMLUtils::getNextSibling(child)) {
             string name = XMLUtils::getAttribute(child, "name");
             commodityCurrencies_[name] = XMLUtils::getChildValue(child, "Currency", true);
-            CurveShiftData data;
+            CommodityCurveShiftData data;
             curveShiftDataFromXML(child, data);
-            commodityCurveShiftData_[name] = QuantLib::ext::make_shared<CurveShiftData>(data);
+            // Absence of Calendar preserves existing (unbucketed) behaviour and XML round trips.
+            if (XMLNode* calNode = XMLUtils::getChildNode(child, "Calendar")) {
+                data.fixingCalendar = ore::data::parseCalendar(XMLUtils::getNodeValue(calNode));
+                data.fixingConvention =
+                    XMLUtils::getChildNode(child, "BusinessDayConvention")
+                        ? ore::data::parseBusinessDayConvention(
+                              XMLUtils::getChildValue(child, "BusinessDayConvention", true))
+                        : Preceding;
+            } else {
+                // A BusinessDayConvention without a Calendar is ineffective/contradictory configuration
+                // and must fail clearly rather than being silently ignored.
+                QL_REQUIRE(!XMLUtils::getChildNode(child, "BusinessDayConvention"),
+                           "SensitivityScenarioData: commodity curve '"
+                               << name << "' configures BusinessDayConvention without a Calendar");
+            }
+            commodityCurveShiftData_[name] = QuantLib::ext::make_shared<CommodityCurveShiftData>(data);
+        }
+    }
+
+    DLOG("Get intraday power curve sensitivity parameters");
+    XMLNode* ipcNode = XMLUtils::getChildNode(node, "IntradayPowerCurves");
+    if (ipcNode) {
+        for (XMLNode* child = XMLUtils::getChildNode(ipcNode, "IntradayPowerCurve"); child;
+             child = XMLUtils::getNextSibling(child)) {
+            string name = XMLUtils::getAttribute(child, "name");
+            IntradayPowerShiftData data;
+            intradayPowerShiftDataFromXML(child, data);
+            intradayPowerCurveShiftData_[name] = QuantLib::ext::make_shared<IntradayPowerShiftData>(data);
         }
     }
 
@@ -547,6 +589,17 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         }
     }
 
+    DLOG("Get bond future volatility sensitivity parameters.");
+    if (XMLNode* bfvNode = XMLUtils::getChildNode(node, "BondFutureVolatilities")) {
+        for (XMLNode* child = XMLUtils::getChildNode(bfvNode, "BondFutureVolatility"); child;
+            child = XMLUtils::getNextSibling(child)) {
+            string name = XMLUtils::getAttribute(child, "name");
+            auto data = ext::make_shared<VolShiftData>();
+            volShiftDataFromXML(child, *data);
+            bondFutureVolShiftData_[name] = data;
+        }
+    }
+
     XMLNode* CGF = XMLUtils::getChildNode(node, "CrossGammaFilter");
     if (CGF) {
         DLOG("Get cross gamma parameters");
@@ -561,6 +614,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
 
     DLOG("Get compute gamma flag");
     computeGamma_ = XMLUtils::getChildValueAsBool(node, "ComputeGamma", false); // defaults to true
+    thetaPeriod_ = ore::data::parsePeriod(XMLUtils::getChildValue(node, "ThetaPeriod", false, "0D"));
 
     DLOG("Get useSpreadedTermStructures flag");
     if (auto n = XMLUtils::getChildNode(node, "UseSpreadedTermStructures"))
@@ -912,6 +966,22 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) const {
             XMLUtils::addAttribute(doc, node, "name", kv.first);
             XMLUtils::addChild(doc, node, "Currency", commodityCurrencies_.find(kv.first)->second);
             curveShiftDataToXML(doc, node, *kv.second);
+            // Only emit the fixing convention when a calendar was explicitly configured, so that
+            // unchanged sensitivity files round trip without new default elements.
+            if (kv.second->fixingCalendar) {
+                XMLUtils::addChild(doc, node, "Calendar", to_string(*kv.second->fixingCalendar));
+                XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(kv.second->fixingConvention));
+            }
+        }
+    }
+
+    if (!intradayPowerCurveShiftData_.empty()) {
+        DLOG("toXML for IntradayPowerCurves");
+        XMLNode* parent = XMLUtils::addChild(doc, root, "IntradayPowerCurves");
+        for (const auto& kv : intradayPowerCurveShiftData_) {
+            XMLNode* node = XMLUtils::addChild(doc, parent, "IntradayPowerCurve");
+            XMLUtils::addAttribute(doc, node, "name", kv.first);
+            intradayPowerShiftDataToXML(doc, node, *kv.second);
         }
     }
 
@@ -948,6 +1018,16 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) const {
         }
     }
 
+    if (!bondFutureVolShiftData_.empty()) {
+        DLOG("toXML for BondFutureVolatilities");
+        XMLNode* parent = XMLUtils::addChild(doc, root, "BondFutureVolatilities");
+        for (const auto& kv : bondFutureVolShiftData_) {
+            XMLNode* node = XMLUtils::addChild(doc, parent, "BondFutureVolatility");
+            XMLUtils::addAttribute(doc, node, "name", kv.first);
+            volShiftDataToXML(doc, node, *kv.second);
+        }
+    }
+
     if (!crossGammaFilter_.empty()) {
         DLOG("toXML for CrossGammaFilter");
         XMLNode* parent = XMLUtils::addChild(doc, root, "CrossGammaFilter");
@@ -957,6 +1037,8 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) const {
     }
 
     XMLUtils::addChild(doc, root, "ComputeGamma", computeGamma_);
+    if(thetaPeriod_ != Period())
+        XMLUtils::addChild(doc, root, "ThetaPeriod", thetaPeriod_);
 
     XMLUtils::addChild(doc, root, "UseSpreadedTermStructures", useSpreadedTermStructures_);
 
@@ -1179,11 +1261,15 @@ std::set<std::string> getShiftSpecKeys(const SensitivityScenarioData& d) {
         extractKeysFromShiftData(*v, pids);
     for (auto const& [_, v] : d.commodityCurveShiftData())
         extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.intradayPowerCurveShiftData())
+        extractKeysFromShiftData(*v, pids);
     for (auto const& [_, v] : d.commodityVolShiftData())
         extractKeysFromShiftData(*v, pids);
     for (auto const& [_, v] : d.correlationShiftData())
         extractKeysFromShiftData(*v, pids);
     for (auto const& [_, v] : d.securityShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.bondFutureVolShiftData())
         extractKeysFromShiftData(*v, pids);
     return pids;
 }

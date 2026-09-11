@@ -40,13 +40,7 @@ InterpolatedDiscountCurve2::InterpolatedDiscountCurve2(const std::vector<Time>& 
         QL_REQUIRE(!quotes[i].empty(), "quote at index " << i << " is empty");
         registerWith(quotes_[i]);
     }
-    if (interpolation_ == Interpolation::logLinear) {
-        dataInterpolation_ =
-            QuantLib::ext::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
-    } else {
-        dataInterpolation_ =
-            QuantLib::ext::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin());
-    }
+    dataInterpolation_ = makeInterpolation();
     registerWith(Settings::instance().evaluationDate());
 }
 
@@ -65,14 +59,20 @@ InterpolatedDiscountCurve2::InterpolatedDiscountCurve2(const std::vector<Date>& 
         QL_REQUIRE(!quotes[i].empty(), "quote at index " << i << " is empty");
         registerWith(quotes_[i]);
     }
-    if (interpolation_ == Interpolation::logLinear) {
-        dataInterpolation_ =
-            QuantLib::ext::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
-    } else {
-        dataInterpolation_ =
-            QuantLib::ext::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin());
-    }
+    dataInterpolation_ = makeInterpolation();
     registerWith(Settings::instance().evaluationDate());
+}
+
+QuantLib::ext::shared_ptr<QuantLib::Interpolation> InterpolatedDiscountCurve2::makeInterpolation() const {
+    if (interpolation_ == Interpolation::logLinear) {
+        return QuantLib::ext::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
+    } else if (interpolation_ == Interpolation::logCubic) {
+        return QuantLib::ext::make_shared<LogCubicInterpolation>(
+            times_.begin(), times_.end(), data_.begin(), CubicInterpolation::Spline, true,
+            CubicInterpolation::SecondDerivative, 0.0, CubicInterpolation::SecondDerivative, 0.0);
+    } else {
+        return QuantLib::ext::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin());
+    }
 }
 
 void InterpolatedDiscountCurve2::update() {
@@ -86,7 +86,13 @@ const Date& InterpolatedDiscountCurve2::referenceDate() const {
 }
 
 void InterpolatedDiscountCurve2::performCalculations() const {
-    today_ = Settings::instance().evaluationDate();
+    if(today_ != Settings::instance().evaluationDate()) {
+        QL_REQUIRE(bases_.empty(),
+                   "InterpolatedDiscountCurve2: bases are only supported if eval date does not change, but it did ("
+                       << today_ << " -> " << Settings::instance().evaluationDate()
+                       << "). Can SpreadedDiscountCurve be used?");
+        today_ = Settings::instance().evaluationDate();
+    }
     for (Size i = 0; i < times_.size(); ++i) {
         data_[i] = quotes_[i]->value();
         QL_REQUIRE(data_[i] > 0, "InterpolatedDiscountCurve2: invalid value " << data_[i] << " at index " << i);
@@ -106,14 +112,14 @@ DiscountFactor InterpolatedDiscountCurve2::discountImpl(Time t) const {
     calculate();
     if (t <= this->times_.back()) {
         Real tmp = (*dataInterpolation_)(t, true);
-        if (interpolation_ == Interpolation::logLinear)
-            return tmp;
-        else
+        if (interpolation_ == Interpolation::linearZero)
             return std::exp(-tmp * t);
+        else
+            return tmp;
     }
     Time tMax = this->times_.back();
     DiscountFactor dMax =
-        interpolation_ == Interpolation::logLinear ? this->data_.back() : std::exp(-this->data_.back() * tMax);
+        interpolation_ == Interpolation::linearZero ? std::exp(-this->data_.back() * tMax) : this->data_.back();
     if (extrapolation_ == Extrapolation::flatFwd) {
         Rate instFwdMax = -(*dataInterpolation_).derivative(tMax) / dMax;
         return dMax * std::exp(-instFwdMax * (t - tMax));

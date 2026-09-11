@@ -42,6 +42,7 @@
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
+#include <qle/indexes/intradaypowerindex.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
 #include <qle/termstructures/credit/basecorrelationstructure.hpp>
 #include <qle/termstructures/creditcurve.hpp>
@@ -84,7 +85,9 @@ enum class MarketObject {
     CommodityCurve = 18,
     CommodityVolatility = 19,
     Correlation = 20,
-    YieldVol = 21
+    YieldVol = 21,
+    BondFutureVol = 22,
+    IntradayPowerPriceCurve = 23,
 };
 
 //! Struct to store parameters for commodities to be treatred as pseudo currencies
@@ -263,8 +266,17 @@ public:
     //! Inflation Indexes
     virtual Handle<ZeroInflationIndex>
     zeroInflationIndex(const string& indexName, const string& configuration = Market::defaultConfiguration) const = 0;
+
+    virtual std::map<QuantLib::Period, QuantLib::Period>
+    zeroInflationObservationLags(const string& indexName,
+                                 const string& configuration = Market::defaultConfiguration) const = 0;
+
     virtual Handle<YoYInflationIndex>
     yoyInflationIndex(const string& indexName, const string& configuration = Market::defaultConfiguration) const = 0;
+
+    virtual std::map<QuantLib::Period, QuantLib::Period>
+    yoyInflationObservationLags(const string& indexName,
+                                const string& configuration = Market::defaultConfiguration) const = 0;
 
     //! CPI Inflation Cap Floor Volatility Surfaces
     virtual Handle<QuantLib::CPIVolatilitySurface>
@@ -335,6 +347,23 @@ public:
     //@{
     virtual Handle<Quote> cpr(const string& securityID,
                               const string& configuration = Market::defaultConfiguration) const = 0;
+    //@}
+
+    //! \name Bond future volatility
+    //@{
+    virtual QuantLib::Handle<QuantLib::BlackVolTermStructure> bondFutureVol(const std::string& contractName,
+        const std::string& configuration = Market::defaultConfiguration) const = 0;
+    //@}
+
+    //! \name Intraday Power Price Curves
+    //@{
+    virtual QuantLib::Handle<QuantExt::IntradayPowerPriceTermStructure>
+    intradayPowerPriceCurve(const std::string& indexName,
+                            const std::string& configuration = Market::defaultConfiguration) const = 0;
+
+    virtual QuantLib::Handle<QuantExt::IntradayPowerIndex>
+    intradayPowerIndex(const std::string& indexName,
+                       const std::string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     // public utility

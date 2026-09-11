@@ -20,6 +20,7 @@ RUN apt-get update \
     doxygen \
     graphviz \
     libeigen3-dev \
+    llvm \
     clang \
     swig \
     lld \
@@ -27,9 +28,11 @@ RUN apt-get update \
     python3-pip \
     python3-venv \
     curl \
+    libcurl4-openssl-dev \
     libzstd-dev \
     podman \
     libcpprest-dev \
+    git-all \
     -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \

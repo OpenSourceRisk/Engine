@@ -29,6 +29,10 @@
 
 #include <utility>
 
+namespace QuantExt {
+class ModelBuilder;
+}
+
 namespace ore {
 namespace data {
 

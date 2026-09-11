@@ -77,13 +77,13 @@ class IrModel : public QuantExt::LinkableCalibratedModel {
 public:
     enum class Measure { LGM, BA };
     virtual QuantExt::IrModel::Measure measure() const = 0;
-    virtual const QuantLib::ext::shared_ptr<QuantExt::Parametrization> parametrizationBase() const = 0;
+    virtual const ext::shared_ptr<QuantExt::Parametrization> parametrizationBase() const = 0;
     virtual Handle<YieldTermStructure> termStructure() const = 0;
     virtual Size n() const = 0;
     virtual Size m() const = 0;
     virtual Size n_aux() const = 0;
     virtual Size m_aux() const = 0;
-    virtual QuantLib::ext::shared_ptr<StochasticProcess> stateProcess() const = 0;
+    virtual ext::shared_ptr<StochasticProcess> stateProcess() const = 0;
 };
 }
 
@@ -216,14 +216,70 @@ public:
 %nodefaultctor QuantExt::InfDkParametrization;
 namespace QuantExt {
 class InfDkParametrization : public QuantExt::Parametrization {
+};
+}
+
+%feature("notabstract") QuantExt::InfDkConstantParametrization;
+%shared_ptr(QuantExt::InfDkConstantParametrization)
+namespace QuantExt {
+class InfDkConstantParametrization : public QuantExt::InfDkParametrization {
 public:
-    virtual Real zeta(const Time t) const = 0;
-    virtual Real H(const Time t) const = 0;
-    virtual Real alpha(const Time t) const;
-    virtual Real kappa(const Time t) const;
-    virtual Real Hprime(const Time t) const;
-    virtual Real Hprime2(const Time t) const;
-    virtual Real hullWhiteSigma(const Time t) const;
+    InfDkConstantParametrization(const Currency& currency,
+                                 const Handle<ZeroInflationTermStructure>& termStructure,
+                                 const Real alpha, const Real kappa,
+                                 const ext::shared_ptr<ZeroInflationIndex>& index,
+                                 const std::string& name = std::string());
+};
+}
+
+%feature("notabstract") QuantExt::InfDkPiecewiseConstantHullWhiteAdaptor;
+%shared_ptr(QuantExt::InfDkPiecewiseConstantHullWhiteAdaptor)
+namespace QuantExt {
+class InfDkPiecewiseConstantHullWhiteAdaptor : public QuantExt::InfDkParametrization {
+public:
+    InfDkPiecewiseConstantHullWhiteAdaptor(
+        const Currency& currency, const Handle<ZeroInflationTermStructure>& termStructure,
+        const Array& sigmaTimes, const Array& sigma, const Array& kappaTimes, const Array& kappa,
+        const ext::shared_ptr<ZeroInflationIndex>& index,
+        const std::string& name = std::string(),
+        const ext::shared_ptr<QuantLib::Constraint>& sigmaConstraint =
+            QuantLib::ext::make_shared<QuantLib::NoConstraint>(),
+        const ext::shared_ptr<QuantLib::Constraint>& kappaConstraint =
+            QuantLib::ext::make_shared<QuantLib::NoConstraint>());
+};
+}
+
+%feature("notabstract") QuantExt::InfDkPiecewiseConstantParametrization;
+%shared_ptr(QuantExt::InfDkPiecewiseConstantParametrization)
+namespace QuantExt {
+class InfDkPiecewiseConstantParametrization : public QuantExt::InfDkParametrization {
+public:
+    InfDkPiecewiseConstantParametrization(
+        const Currency& currency, const Handle<ZeroInflationTermStructure>& termStructure,
+        const Array& alphaTimes, const Array& alpha, const Array& kappaTimes, const Array& kappa,
+        const ext::shared_ptr<ZeroInflationIndex>& index,
+        const std::string& name = std::string(),
+        const ext::shared_ptr<QuantLib::Constraint>& alphaConstraint =
+            QuantLib::ext::make_shared<QuantLib::NoConstraint>(),
+        const ext::shared_ptr<QuantLib::Constraint>& kappaConstraint =
+            QuantLib::ext::make_shared<QuantLib::NoConstraint>());
+};
+}
+
+%feature("notabstract") QuantExt::InfDkPiecewiseLinearParametrization;
+%shared_ptr(QuantExt::InfDkPiecewiseLinearParametrization)
+namespace QuantExt {
+class InfDkPiecewiseLinearParametrization : public QuantExt::InfDkParametrization {
+public:
+    InfDkPiecewiseLinearParametrization(
+        const Currency& currency, const Handle<ZeroInflationTermStructure>& termStructure,
+        const Array& alphaTimes, const Array& alpha, const Array& hTimes, const Array& h,
+        const ext::shared_ptr<ZeroInflationIndex>& index,
+        const std::string& name = std::string(),
+        const ext::shared_ptr<QuantLib::Constraint>& alphaConstraint =
+            QuantLib::ext::make_shared<QuantLib::NoConstraint>(),
+        const ext::shared_ptr<QuantLib::Constraint>& hConstraint =
+            QuantLib::ext::make_shared<QuantLib::NoConstraint>());
 };
 }
 
@@ -233,13 +289,13 @@ namespace QuantExt {
 class LinearGaussMarkovModel : public QuantExt::IrModel {
 public:
     enum class Discretization { Euler, Exact, ExactGlobal };
-    LinearGaussMarkovModel(const QuantLib::ext::shared_ptr<QuantExt::IrLgm1fParametrization>& parametrization,
+    LinearGaussMarkovModel(const ext::shared_ptr<QuantExt::IrLgm1fParametrization>& parametrization,
                            const QuantExt::IrModel::Measure measure = QuantExt::IrModel::Measure::LGM,
                            const QuantExt::LinearGaussMarkovModel::Discretization discretization =
                                QuantExt::LinearGaussMarkovModel::Discretization::Euler,
                            const bool evaluateBankAccount = true);
-    QuantLib::ext::shared_ptr<StochasticProcess> stateProcess() const override;
-    const QuantLib::ext::shared_ptr<QuantExt::IrLgm1fParametrization> parametrization() const;
+    ext::shared_ptr<StochasticProcess> stateProcess() const override;
+    const ext::shared_ptr<QuantExt::IrLgm1fParametrization> parametrization() const;
     Real numeraire(const Time t, const Real x,
                    const Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
     Real bankAccountNumeraire(const Time t, const Real x, const Real y,
@@ -255,12 +311,12 @@ namespace QuantExt {
 class HwModel : public QuantExt::IrModel {
 public:
     enum class Discretization { Euler, Exact };
-    HwModel(const QuantLib::ext::shared_ptr<QuantExt::IrHwParametrization>& parametrization,
+    HwModel(const ext::shared_ptr<QuantExt::IrHwParametrization>& parametrization,
             const QuantExt::IrModel::Measure measure = QuantExt::IrModel::Measure::BA,
             const QuantExt::HwModel::Discretization discretization = QuantExt::HwModel::Discretization::Euler,
             const bool evaluateBankAccount = true);
-    QuantLib::ext::shared_ptr<StochasticProcess> stateProcess() const override;
-    const QuantLib::ext::shared_ptr<QuantExt::IrHwParametrization> parametrization() const;
+    ext::shared_ptr<StochasticProcess> stateProcess() const override;
+    const ext::shared_ptr<QuantExt::IrHwParametrization> parametrization() const;
 };
 }
 
@@ -321,6 +377,22 @@ ext::shared_ptr<QuantExt::Parametrization>
 toParametrization(const ext::shared_ptr<QuantExt::FxBsPiecewiseConstantParametrization>& p) {
     return ext::static_pointer_cast<QuantExt::Parametrization>(p);
 }
+ext::shared_ptr<QuantExt::Parametrization>
+toParametrization(const ext::shared_ptr<QuantExt::InfDkConstantParametrization>& p) {
+    return ext::static_pointer_cast<QuantExt::Parametrization>(p);
+}
+ext::shared_ptr<QuantExt::Parametrization>
+toParametrization(const ext::shared_ptr<QuantExt::InfDkPiecewiseConstantHullWhiteAdaptor>& p) {
+    return ext::static_pointer_cast<QuantExt::Parametrization>(p);
+}
+ext::shared_ptr<QuantExt::Parametrization>
+toParametrization(const ext::shared_ptr<QuantExt::InfDkPiecewiseConstantParametrization>& p) {
+    return ext::static_pointer_cast<QuantExt::Parametrization>(p);
+}
+ext::shared_ptr<QuantExt::Parametrization>
+toParametrization(const ext::shared_ptr<QuantExt::InfDkPiecewiseLinearParametrization>& p) {
+    return ext::static_pointer_cast<QuantExt::Parametrization>(p);
+}
 ext::shared_ptr<QuantExt::FxBsParametrization>
 toFxBsParametrization(const ext::shared_ptr<QuantExt::FxBsConstantParametrization>& p) {
     return ext::static_pointer_cast<QuantExt::FxBsParametrization>(p);
@@ -363,7 +435,7 @@ public:
                     const QuantExt::CrossAssetModel::Discretization discretization =
                         QuantExt::CrossAssetModel::Discretization::Exact);
 
-    QuantLib::ext::shared_ptr<QuantExt::CrossAssetStateProcess> stateProcess() const;
+    ext::shared_ptr<QuantExt::CrossAssetStateProcess> stateProcess() const;
     Size dimension() const;
     Size brownians() const;
     Size auxBrownians() const;

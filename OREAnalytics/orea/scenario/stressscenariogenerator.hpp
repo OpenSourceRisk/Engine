@@ -85,6 +85,8 @@ private:
     void addFxShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addEquityShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addCommodityCurveShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
+    void addIntradayPowerCurveShifts(StressTestScenarioData::StressTestData& data,
+                                     QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addDiscountCurveShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addIndexCurveShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addYieldCurveShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
@@ -108,6 +110,7 @@ private:
     QuantLib::ext::shared_ptr<ScenarioFactory> stressScenarioFactory_;
     QuantLib::ext::shared_ptr<Scenario> baseScenarioAbsolute_;
     bool useSpreadedTermStructures_ = true;
+    std::set<RiskFactorKey> missingBaseScenarioKeys_;
 };
 } // namespace analytics
 } // namespace ore

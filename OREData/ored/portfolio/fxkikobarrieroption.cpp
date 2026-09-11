@@ -396,7 +396,7 @@ XMLNode* FxKIKOBarrierOption::toXML(XMLDocument& doc) const {
     return node;
 }
 
-QuantLib::Real FxKIKOBarrierOption::notional() const {
+QuantLib::Real FxKIKOBarrierOption::notional(NotionalType type) const {
     return delegatingBuilderTrade_ != nullptr ? delegatingBuilderTrade_->notional() : Trade::notional();
 }
 

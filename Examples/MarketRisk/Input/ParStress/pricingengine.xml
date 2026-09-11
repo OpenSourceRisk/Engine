@@ -553,14 +553,6 @@
       <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
     </EngineParameters>
   </Product>
-  <Product type="FxDigitalOptionEuropeanCS">
-    <Model>GarmanKohlhagen</Model>
-    <ModelParameters/>
-    <Engine>AnalyticCashSettledEuropeanEngine</Engine>
-    <EngineParameters>
-      <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
-    </EngineParameters>
-  </Product>
   <Product type="FxBarrierOption">
     <Model>GarmanKohlhagen</Model>
     <ModelParameters/>

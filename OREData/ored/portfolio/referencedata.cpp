@@ -772,9 +772,11 @@ QuantLib::ext::shared_ptr<ReferenceDatum> BasicReferenceDataManager::buildRefere
 
 XMLNode* BasicReferenceDataManager::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("ReferenceData");
-    for (const auto& kv : data_) {
-        for (const auto& [_, refData] : kv.second) {
-            XMLUtils::appendNode(node, refData->toXML(doc));
+    for (const auto& [typeAndId, datedData] : data_) {
+        for (const auto& [validFrom, refData] : datedData) {
+            if (usedData_.find(std::make_tuple(typeAndId.first, typeAndId.second, validFrom)) != usedData_.end()) {
+                XMLUtils::appendNode(node, refData->toXML(doc));
+            }
         }
     }
     return node;
@@ -827,6 +829,8 @@ pair<bool, ext::shared_ptr<ReferenceDatum>> BasicReferenceDataManager::tryGetDat
 
     Date asofDate = asof == Date() ? Settings::instance().evaluationDate() : asof;
     auto [validFrom, refData] = latestValidFrom(type, id, asofDate);
+    if (refData)
+        usedData_.insert(std::make_tuple(type, id, validFrom));
     check(type, id, validFrom);
     return { refData != nullptr, refData };
 }

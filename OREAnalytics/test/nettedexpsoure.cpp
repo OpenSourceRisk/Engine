@@ -218,7 +218,7 @@ QuantLib::ext::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, QuantLib
     return portfolio;
 }
 
-QuantLib::ext::shared_ptr<CrossAssetModel> buildCrossAssetModel(QuantLib::ext::shared_ptr<Market>& initMarket){
+QuantLib::Handle<CrossAssetModel> buildCrossAssetModel(QuantLib::ext::shared_ptr<Market>& initMarket) {
     // Config
     // Build IR configurations
     CalibrationType calibrationType = CalibrationType::Bootstrap;
@@ -266,16 +266,12 @@ QuantLib::ext::shared_ptr<CrossAssetModel> buildCrossAssetModel(QuantLib::ext::s
     // Model Builder & Model
     // model builder
     QuantLib::ext::shared_ptr<CrossAssetModelBuilder> modelBuilder(new CrossAssetModelBuilder(initMarket, config));
-    return *modelBuilder->model();
-
+    return modelBuilder->model();
 }
 
-QuantLib::ext::shared_ptr<analytics::ScenarioSimMarket> buildScenarioSimMarket(QuantLib::ext::shared_ptr<DateGrid> dateGrid,
-                                                                       QuantLib::ext::shared_ptr<Market>& initMarket, 
-                                                                       QuantLib::ext::shared_ptr<CrossAssetModel>& model,  
-                                                                       Size samples=1,
-                                                                       Size seed=5,
-                                                                       bool antithetic=false){
+QuantLib::ext::shared_ptr<analytics::ScenarioSimMarket> buildScenarioSimMarket(
+    const QuantLib::ext::shared_ptr<DateGrid>& dateGrid, const QuantLib::ext::shared_ptr<Market>& initMarket,
+    const QuantLib::Handle<CrossAssetModel>& model, Size samples = 1, Size seed = 5, bool antithetic = false) {
     // build scenario sim market parameters
     Date today = initMarket->asofDate();
 
@@ -346,7 +342,8 @@ QuantLib::ext::shared_ptr<NPVCube> buildNPVCube(QuantLib::ext::shared_ptr<DateGr
 
     Date today = Settings::instance().evaluationDate();
     // Now calculate exposure
-    ValuationEngine valEngine(today, dateGrid, simMarket);
+    ValuationEngine valEngine(today, dateGrid, simMarket, {}, true,
+                              QuantLib::ext::make_shared<FixingManager>(today, FixingManager::Mode::BackwardFlat));
 
     Size depth = 1;
     if (withCloseOutGrid)
@@ -419,7 +416,7 @@ struct TestData : ore::test::OreaTopLevelFixture {
 
     QuantLib::ext::shared_ptr<Market> initMarket_;
     QuantLib::ext::shared_ptr<analytics::ScenarioSimMarket> simMarket_;
-    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model_;
+    QuantLib::Handle<QuantExt::CrossAssetModel> model_;
     QuantLib::ext::shared_ptr<NPVCube> cube_;
     QuantLib::ext::shared_ptr<Portfolio> portfolio_;
 };

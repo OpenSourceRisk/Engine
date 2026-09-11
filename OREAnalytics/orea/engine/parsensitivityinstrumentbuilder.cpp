@@ -24,6 +24,7 @@
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/parsensitivityinstrumentbuilder.hpp>
 #include <orea/engine/valuationengine.hpp>
+#include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <ored/marketdata/inflationcurve.hpp>
@@ -70,6 +71,7 @@
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 #include <qle/pricingengines/inflationcapfloorengines.hpp>
 #include <qle/cashflows/blackovernightindexedcouponpricer.hpp>
+#include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/termstructures/oiscapfloorhelper.hpp>
 
 using namespace QuantLib;
@@ -1097,6 +1099,7 @@ std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityI
         QuantLib::ext::dynamic_pointer_cast<FutureConvention>(convention);
     Handle<YieldTermStructure> indexTs =
         Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.00, Actual365Fixed()));
+    term.setConvention(futureConvention);
     if (market == nullptr) {
         if (!singleCurve)
             parHelperDependencies.emplace(RiskFactorKey::KeyType::IndexCurve,
@@ -1130,19 +1133,24 @@ std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityI
         QuantLib::ext::shared_ptr<OvernightIndex> overnightIndex =
             QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index->clone(indexTs));
 
+        QL_REQUIRE(futureConvention->overnightIndexTenor().has_value(),
+                   "ParSensitivityInstrumentBuilder::makeIrFuture(): Overnight future convention for index "
+                       << index->name() << " does not have an overnight index tenor");
+
+        auto tenor = futureConvention->overnightIndexTenor().value();
+
         removeTodaysFixingIndices.insert(overnightIndex->name());
-        LOG("Creating OIS future with index " << overnightIndex->name() << " and term " << term << " using tenor "
-                                              << futureConvention->tenor() << " and date generation rule "
-                                              << futureConvention->dateGenerationRule());
-        auto [startDate, endDate] =
-            getOiFutureStartEndDate(term.month(), term.year(), futureConvention->tenor(),
-                                    futureConvention->dateGenerationRule(), futureConvention->calendar());
+        DLOG("Creating OIS future with index " << overnightIndex->name() << " and term " << term << " using tenor "
+                                               << tenor << " and date generation rule "
+                                               << futureConvention->dateGenerationRule());
+        auto [startDate, endDate] = getOiFutureStartEndDate(
+            term.month(), term.year(), tenor, futureConvention->dateGenerationRule(), futureConvention->calendar());
         if (endDate < asof) {
             // TODO :SKIP
             QL_FAIL("ParSensitivityInstrumentBuilder::makeIrFuture(): OIS Future with expiry "
                     << term << " has already expired (expiry date: " << endDate << ", asof: " << asof << ")");
         }
-        LOG("Creating OIS future with start date " << startDate << " and end date " << endDate);
+        DLOG("Creating OIS future with start date " << startDate << " and end date " << endDate);
         auto future = ext::make_shared<OvernightIndexFuture>(overnightIndex, startDate, endDate, Handle<Quote>(),
                                                              futureConvention->overnightIndexFutureNettingType());
         return {future, future->maturityDate()};
@@ -1224,7 +1232,7 @@ std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityI
     auto helper = QuantLib::ext::make_shared<TenorBasisSwap>(
         settlementDate, 1.0, term, payIndex, 0.0, conv->payFrequency(), receiveIndex, 0.0, conv->receiveFrequency(),
         DateGeneration::Backward, conv->includeSpread(), conv->spreadOnRec(), conv->subPeriodsCouponType(),
-        telescopicValueDates);
+        conv->isPayAveraged(), conv->isRecAveraged(), telescopicValueDates);
 
     auto lastPayCoupon = helper->payLeg().back();
     auto lastReceiveCoupon = helper->recLeg().back();
@@ -1831,7 +1839,7 @@ QuantLib::ext::shared_ptr<Instrument> ParSensitivityInstrumentBuilder::makeZeroI
     Date end = start + term;
     QuantLib::ext::shared_ptr<ZeroCouponInflationSwap> helper(new ZeroCouponInflationSwap(
         ZeroCouponInflationSwap::Payer, 1.0, start, end, conv->infCalendar(), conv->infConvention(), conv->dayCounter(),
-        0.0, index, conv->observationLag(), CPI::AsIndex));
+        0.0, index, conv->observationLag(), conv->interpolated() ? CPI::Linear : CPI::Flat));
 
     if (market != nullptr) {
         QuantLib::ext::shared_ptr<PricingEngine> swapEngine =
@@ -1859,7 +1867,7 @@ QuantLib::ext::shared_ptr<Instrument> ParSensitivityInstrumentBuilder::makeYoyIn
 
     QuantLib::ext::shared_ptr<ZeroInflationIndex> zeroIndex = conv->index();
     QuantLib::ext::shared_ptr<YoYInflationIndex> index =
-        QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex, conv->interpolated());
+        QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex);
 
     // Potentially use conventions here to get an updated start date e.g. AU CPI conventions with a publication roll.
     Date start = Settings::instance().evaluationDate();
@@ -1887,7 +1895,7 @@ QuantLib::ext::shared_ptr<Instrument> ParSensitivityInstrumentBuilder::makeYoyIn
         // Get the inflation index
         if (fromZero) {
             zeroIndex = *market->zeroInflationIndex(name, marketConfiguration);
-            index = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex, false);
+            index = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex);
         } else {
             index = *market->yoyInflationIndex(name, marketConfiguration);
         }
@@ -1904,7 +1912,8 @@ QuantLib::ext::shared_ptr<Instrument> ParSensitivityInstrumentBuilder::makeYoyIn
     }
     QuantLib::ext::shared_ptr<YearOnYearInflationSwap> helper(new YearOnYearInflationSwap(
         YearOnYearInflationSwap::Payer, 1.0, fixSchedule, 0.0, conv->dayCounter(), yoySchedule, index,
-        conv->observationLag(), QuantLib::CPI::AsIndex, 0.0, conv->dayCounter(), conv->infCalendar()));
+        conv->observationLag(), conv->interpolated() ? QuantLib::CPI::Linear : QuantLib::CPI::Flat, 0.0,
+        conv->dayCounter(), conv->infCalendar()));
     QuantLib::ext::shared_ptr<InflationCouponPricer> yoyCpnPricer =
         QuantLib::ext::make_shared<YoYInflationCouponPricer>(discountCurve);
     for (auto& c : helper->yoyLeg()) {
@@ -1944,7 +1953,7 @@ void ParSensitivityInstrumentBuilder::makeYoYCapFloor(ParSensitivityInstrumentBu
 
     QuantLib::ext::shared_ptr<ZeroInflationIndex> zeroIndex = conv->index();
     QuantLib::ext::shared_ptr<YoYInflationIndex> index =
-        QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex, conv->interpolated());
+        QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex);
 
     Date start = Settings::instance().evaluationDate();
     Date end = start + term;
@@ -1964,7 +1973,7 @@ void ParSensitivityInstrumentBuilder::makeYoYCapFloor(ParSensitivityInstrumentBu
         // Get the inflation index
         if (fromZero) {
             zeroIndex = *market->zeroInflationIndex(name, marketConfiguration);
-            index = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex, conv->interpolated());
+            index = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex);
         } else {
             index = *market->yoyInflationIndex(name, marketConfiguration);
         }
@@ -1981,11 +1990,11 @@ void ParSensitivityInstrumentBuilder::makeYoYCapFloor(ParSensitivityInstrumentBu
     }
 
     // build the leg data and instrument
-    Leg yoyLeg =
-        yoyInflationLeg(yoySchedule, yoySchedule.calendar(), index, conv->observationLag(), QuantLib::CPI::AsIndex)
-            .withNotionals(1.0)
-            .withPaymentDayCounter(conv->dayCounter())
-            .withRateCurve(discountCurve);
+    Leg yoyLeg = yoyInflationLeg(yoySchedule, yoySchedule.calendar(), index, conv->observationLag(),
+                                 conv->interpolated() ? QuantLib::CPI::Linear : QuantLib::CPI::Flat)
+                     .withNotionals(1.0)
+                     .withPaymentDayCounter(conv->dayCounter())
+                     .withRateCurve(discountCurve);
     if (market == nullptr)
         return;
 
@@ -2014,10 +2023,7 @@ void ParSensitivityInstrumentBuilder::makeYoYCapFloor(ParSensitivityInstrumentBu
         QuantLib::ext::make_shared<YoYInflationCapFloor>(type, yoyLeg, std::vector<Real>(yoyLeg.size(), strike));
     helper->setPricingEngine(engine);
 
-    instruments.parYoYCaps_[key] = helper;
-    instruments.parYoYCapsYts_[key] = discountCurve;
-    instruments.parYoYCapsIndex_[key] = Handle<YoYInflationIndex>(index);
-    instruments.parYoYCapsVts_[key] = ovs;
+    instruments.parYoYCaps_[key] = {helper, discountCurve, ovs, Handle<YoYInflationIndex>(index), conv->observationLag()};
 }
 
 } // namespace analytics

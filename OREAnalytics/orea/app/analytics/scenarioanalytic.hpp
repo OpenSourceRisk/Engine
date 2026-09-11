@@ -22,6 +22,7 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/inputvariables.hpp>
 
 namespace ore {
 namespace analytics {
@@ -29,7 +30,7 @@ namespace analytics {
 class InputParameters;
 
 struct ScenarioVariables : public InputVariables {
-    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override {};
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
 };
 
 class ScenarioAnalyticImpl : public Analytic::Impl {
@@ -37,7 +38,7 @@ public:
     static constexpr const char* LABEL = "SCENARIO";
 
     ScenarioAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : 
-        Analytic::Impl(inputs) {
+        Analytic::Impl(inputs, QuantLib::ext::make_shared<ScenarioVariables>()) {
         setLabel(LABEL);
     }
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,

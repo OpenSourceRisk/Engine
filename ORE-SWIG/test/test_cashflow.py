@@ -93,6 +93,144 @@ class FloatingRateFXLinkedNotionalCouponTest(unittest.TestCase):
         """ Test consistency of FX Linked Cash Flow fair price and NPV() """
 
         
+class CommodityIndexedAverageCashFlowTest(unittest.TestCase):
+    def setUp(self):
+        """Set up a CommodityIndexedAverageCashFlow with a CommoditySpotIndex."""
+        self.todayDate = Date(15, January, 2026)
+        Settings.instance().evaluationDate = self.todayDate
+
+        self.commName = "COMMODITY_WTI"
+        self.commCalendar = UnitedStates(UnitedStates.NYSE)
+
+        # Use two-arg constructor (no price curve); fixings will supply prices
+        self.commodityIndex = CommoditySpotIndex(
+            self.commName, self.commCalendar)
+
+        self.startDate = Date(2, February, 2026)
+        self.endDate = Date(2, March, 2026)
+        self.paymentDate = Date(3, March, 2026)
+        self.quantity = 1000.0
+
+    def testExplicitPaymentDateConstructor(self):
+        """Test CommodityIndexedAverageCashFlow with explicit payment date."""
+        cf = CommodityIndexedAverageCashFlow(
+            self.quantity, self.startDate, self.endDate,
+            self.paymentDate, self.commodityIndex)
+
+        self.assertEqual(cf.date(), self.paymentDate)
+        self.assertEqual(cf.startDate(), self.startDate)
+        self.assertEqual(cf.endDate(), self.endDate)
+        self.assertAlmostEqual(cf.periodQuantity(), self.quantity, delta=1e-10)
+
+    def testDeducedPaymentDateConstructor(self):
+        """Test CommodityIndexedAverageCashFlow with deduced payment date."""
+        cf = CommodityIndexedAverageCashFlow(
+            self.quantity, self.startDate, self.endDate,
+            0, self.commCalendar, Following,
+            self.commodityIndex)
+
+        self.assertEqual(cf.startDate(), self.startDate)
+        self.assertEqual(cf.endDate(), self.endDate)
+        self.assertAlmostEqual(cf.periodQuantity(), self.quantity, delta=1e-10)
+        # Payment date should be on or after end date
+        self.assertGreaterEqual(cf.date(), self.endDate)
+
+    def testAccessors(self):
+        """Test CommodityIndexedAverageCashFlow accessor methods."""
+        cf = CommodityIndexedAverageCashFlow(
+            self.quantity, self.startDate, self.endDate,
+            self.paymentDate, self.commodityIndex,
+            self.commCalendar, 0.5, 1.0, False, 0, 0)
+
+        self.assertEqual(cf.deliveryDateRoll(), 0)
+        self.assertEqual(cf.futureMonthOffset(), 0)
+        self.assertTrue(cf.useBusinessDays())
+        self.assertIsNotNone(cf.index())
+
+    def testCommodityIndexedAverageLeg(self):
+        """Test CommodityIndexedAverageLeg builder produces a non-empty Leg."""
+        schedule = Schedule(
+            self.startDate, Date(2, February, 2027),
+            Period(1, Months), self.commCalendar,
+            ModifiedFollowing, ModifiedFollowing,
+            DateGeneration.Forward, False)
+
+        leg = CommodityIndexedAverageLeg(
+            schedule=schedule,
+            index=self.commodityIndex,
+            quantities=[self.quantity],
+            paymentCalendar=self.commCalendar,
+            pricingCalendar=self.commCalendar)
+
+        self.assertGreater(len(leg), 0)
+
+    def testNettedCommodityCashFlow(self):
+        """Test netting two commodity cashflows with opposite payer flags."""
+        pricing_date = Date(15, January, 2026)
+        payment_date = Date(16, January, 2026)
+        self.commodityIndex.addFixing(pricing_date, 10.0, True)
+        cashflow = CommodityIndexedCashFlow(
+            self.quantity, pricing_date, payment_date, self.commodityIndex)
+        payer_cashflow = CommodityIndexedCashFlow(
+            self.quantity, pricing_date, payment_date, self.commodityIndex,
+            1.0)
+
+        netted = NettedCommodityCashFlow(
+            [cashflow, payer_cashflow], [False, True], 2)
+
+        self.assertAlmostEqual(netted.amount(), self.quantity, delta=1e-10)
+
+    def testCommodityIndexedLeg(self):
+        """Test the plain commodity indexed leg builder and cashflow amount."""
+        pricing_date = Date(15, January, 2026)
+        payment_date = Date(16, January, 2026)
+        self.commodityIndex.addFixing(pricing_date, 10.0, True)
+        schedule = Schedule(
+            [self.startDate, self.endDate], self.commCalendar)
+
+        leg = CommodityIndexedLeg(
+            schedule=schedule,
+            index=self.commodityIndex,
+            quantities=[self.quantity],
+            pricingDates=[pricing_date],
+            paymentDates=[payment_date],
+            paymentCalendar=self.commCalendar,
+            pricingCalendar=self.commCalendar)
+
+        self.assertEqual(len(leg), 1)
+        self.assertAlmostEqual(
+            leg[0].amount(), self.quantity * 10.0, delta=1e-10)
+
+    def testIntradayPowerLeg(self):
+        """Test the intraday power leg builder and cashflow accessors."""
+        delivery_date = Date(15, January, 2026)
+        payment_date = Date(16, January, 2026)
+        power_index = IntradayPowerIndex(
+            "POWER_TEST", delivery_date, self.commCalendar)
+        power_index.addFixing(delivery_date, 50.0, True)
+        schedule = Schedule(
+            [delivery_date, payment_date], self.commCalendar)
+
+        leg = IntradayPowerLeg(
+            schedule=schedule,
+            index=power_index,
+            quantities=[self.quantity],
+            paymentDates=[payment_date],
+            paymentCalendar=self.commCalendar,
+            pricingCalendar=self.commCalendar)
+
+        self.assertEqual(len(leg), 1)
+        cashflow = IntradayPowerCashFlow(
+            self.quantity, delivery_date, delivery_date, payment_date,
+            power_index, None, self.commCalendar, 0.0, 1.0, True)
+        self.assertEqual(cashflow.startDate(), delivery_date)
+        self.assertEqual(cashflow.endDate(), delivery_date)
+        self.assertAlmostEqual(cashflow.spread(), 0.0, delta=1e-10)
+        self.assertAlmostEqual(cashflow.gearing(), 1.0, delta=1e-10)
+        self.assertAlmostEqual(
+            cashflow.amount(), self.quantity * 50.0, delta=1e-10)
+
+
 class EquityCouponTest(unittest.TestCase):
     def setUp(self):
         """Set up an EquityCoupon with a simple EquityIndex2 and flat curve."""
@@ -195,12 +333,223 @@ class EquityCouponTest(unittest.TestCase):
         pricer.setFxVolatility(fxVolHandle)
 
 
+class IndexedCouponTest(unittest.TestCase):
+    def setUp(self):
+        """Set up an IndexedCoupon wrapping a FixedRateCoupon."""
+        self.todayDate = Date(15, January, 2026)
+        Settings.instance().evaluationDate = self.todayDate
+
+        self.dayCounter = Actual365Fixed()
+        self.nominal = 1000000.0
+        self.rate = 0.05
+        self.startDate = Date(15, January, 2026)
+        self.endDate = Date(15, April, 2026)
+        self.paymentDate = Date(17, April, 2026)
+
+        self.underlying = FixedRateCoupon(
+            self.paymentDate, self.nominal,
+            self.rate, self.dayCounter,
+            self.startDate, self.endDate)
+
+    def testIndexedCouponFixedMultiplier(self):
+        """Test IndexedCoupon with a fixed multiplier."""
+        qty = 2.0
+        initialFixing = 1.5
+        coupon = IndexedCoupon(self.underlying, qty, initialFixing)
+
+        self.assertAlmostEqual(coupon.quantity(), qty, delta=1e-10)
+        self.assertAlmostEqual(coupon.initialFixing(), initialFixing, delta=1e-10)
+        expectedMultiplier = qty * initialFixing
+        self.assertAlmostEqual(coupon.multiplier(), expectedMultiplier, delta=1e-10)
+
+        underlyingAmount = self.underlying.amount()
+        self.assertAlmostEqual(coupon.amount(), underlyingAmount * expectedMultiplier, delta=1e-6)
+
+    def testIndexedCouponAccessors(self):
+        """Test IndexedCoupon basic accessors."""
+        qty = 1.0
+        initialFixing = 2.0
+        coupon = IndexedCoupon(self.underlying, qty, initialFixing)
+
+        self.assertIsNotNone(coupon.underlying())
+        self.assertEqual(coupon.dayCounter(), self.dayCounter)
+        self.assertAlmostEqual(coupon.nominal(), self.nominal * qty * initialFixing, delta=1e-6)
+
+    def testIndexWrappedCashFlowFixedMultiplier(self):
+        """Test IndexWrappedCashFlow with a fixed multiplier."""
+        qty = 3.0
+        initialFixing = 1.25
+        wrapped = IndexWrappedCashFlow(self.underlying, qty, initialFixing)
+
+        self.assertEqual(wrapped.date(), self.paymentDate)
+        expectedMultiplier = qty * initialFixing
+        self.assertAlmostEqual(wrapped.multiplier(), expectedMultiplier, delta=1e-10)
+        self.assertAlmostEqual(wrapped.amount(), self.underlying.amount() * expectedMultiplier, delta=1e-6)
+
+    def testIndexedCouponLegBuilder(self):
+        """Test IndexedCouponLeg builder produces a non-empty Leg."""
+        calendar = TARGET()
+        schedule = Schedule(
+            self.startDate, Date(15, January, 2027),
+            Period(3, Months), calendar,
+            ModifiedFollowing, ModifiedFollowing,
+            DateGeneration.Forward, False)
+
+        fixedLeg = FixedRateLeg(schedule, self.dayCounter, [self.nominal], [self.rate])
+
+        flatForward = FlatForward(self.todayDate, 0.03, self.dayCounter)
+        ytsHandle = RelinkableYieldTermStructureHandle(flatForward)
+        eqSpot = QuoteHandle(SimpleQuote(100.0))
+        eqIndex = EquityIndex2("EQ-IDX", calendar, USDCurrency(), eqSpot, ytsHandle, ytsHandle)
+
+        leg = IndexedCouponLeg(
+            underlyingLeg=fixedLeg,
+            qty=1.0,
+            index=eqIndex,
+            initialFixing=100.0,
+            fixingCalendar=calendar)
+
+        self.assertGreater(len(leg), 0)
+
+    def testUnpackIndexedCoupon(self):
+        """Test unpackIndexedCoupon returns the underlying coupon."""
+        qty = 2.0
+        initialFixing = 1.5
+        coupon = IndexedCoupon(self.underlying, qty, initialFixing)
+
+        unpacked = unpackIndexedCoupon(coupon)
+        self.assertIsNotNone(unpacked)
+
+    def testGetMultiplier(self):
+        """Test getIndexedCouponOrCashFlowMultiplier returns correct value."""
+        qty = 2.0
+        initialFixing = 1.5
+        coupon = IndexedCoupon(self.underlying, qty, initialFixing)
+
+        multiplier = getIndexedCouponOrCashFlowMultiplier(coupon)
+        self.assertAlmostEqual(multiplier, qty * initialFixing, delta=1e-10)
+
+
+class BondTRSCashFlowTest(unittest.TestCase):
+    def setUp(self):
+        """Set up a BondTRSCashFlow using a BondIndex.
+
+        evaluationDate is set AFTER both fixing dates so they become historical
+        and index.fixing() uses stored fixings rather than trying to forecast
+        (which would require an actual Bond object attached to the BondIndex).
+        """
+        self.todayDate = Date(1, May, 2026)
+        Settings.instance().evaluationDate = self.todayDate
+
+        self.calendar = UnitedStates(UnitedStates.NYSE)
+        self.dayCounter = Actual365Fixed()
+        self.flatForward = FlatForward(self.todayDate, 0.03, self.dayCounter)
+        self.discountCurve = RelinkableYieldTermStructureHandle(self.flatForward)
+
+        # BondIndex with no bond object; only historical fixings will be used
+        self.bondIndex = BondIndex(
+            "BOND-TEST", False, True,
+            self.calendar, None,
+            self.discountCurve)
+
+        self.fixingStartDate = Date(15, January, 2026)
+        self.fixingEndDate = Date(15, April, 2026)
+        self.paymentDate = Date(17, April, 2026)
+        self.bondNotional = 1000000.0
+
+        # Relative clean prices: par at start, +2% gain at end
+        self.bondIndex.addFixing(self.fixingStartDate, 1.0)
+        self.bondIndex.addFixing(self.fixingEndDate, 1.02)
+
+    def testBondTRSCashFlowConstruction(self):
+        """Test BondTRSCashFlow constructs and basic accessors work."""
+        cf = BondTRSCashFlow(
+            self.paymentDate,
+            self.fixingStartDate,
+            self.fixingEndDate,
+            self.bondNotional,
+            self.bondIndex)
+
+        self.assertEqual(cf.date(), self.paymentDate)
+        self.assertAlmostEqual(cf.notional(), self.bondNotional, delta=1e-10)
+        self.assertEqual(cf.fixingStartDate(), self.fixingStartDate)
+        self.assertEqual(cf.fixingEndDate(), self.fixingEndDate)
+
+    def testBondTRSCashFlowAmount(self):
+        """Test BondTRSCashFlow.amount() computes total return correctly."""
+        cf = BondTRSCashFlow(
+            self.paymentDate,
+            self.fixingStartDate,
+            self.fixingEndDate,
+            self.bondNotional,
+            self.bondIndex)
+
+        # amount = notional * (endPrice - startPrice) = 1e6 * (1.02 - 1.0) = 20000
+        self.assertAlmostEqual(cf.amount(), 20000.0, delta=1e-4)
+
+    def testBondTRSCashFlowWithInitialPrice(self):
+        """Test BondTRSCashFlow construction with explicit initialPrice."""
+        cf = BondTRSCashFlow(
+            self.paymentDate,
+            self.fixingStartDate,
+            self.fixingEndDate,
+            self.bondNotional,
+            self.bondIndex,
+            1.0)  # initialPrice
+
+        # Basic accessors still work; amount() is not tested here because
+        # with initialPrice set, assetStart() calls notional(date) which
+        # requires a real Bond object attached to BondIndex.
+        self.assertEqual(cf.date(), self.paymentDate)
+        self.assertAlmostEqual(cf.notional(), self.bondNotional, delta=1e-10)
+        self.assertAlmostEqual(cf.initialPrice(), 1.0, delta=1e-10)
+
+    def testBondTRSCashFlowSetFixingStartDate(self):
+        """Test setFixingStartDate updates the fixing start date."""
+        cf = BondTRSCashFlow(
+            self.paymentDate,
+            self.fixingStartDate,
+            self.fixingEndDate,
+            self.bondNotional,
+            self.bondIndex)
+
+        # Feb 2, 2026 is a Monday (valid NYSE business day)
+        newStart = Date(2, February, 2026)
+        self.bondIndex.addFixing(newStart, 1.01)
+        cf.setFixingStartDate(newStart)
+        self.assertEqual(cf.fixingStartDate(), newStart)
+
+    def testBondTRSLegBuilder(self):
+        """Test BondTRSLeg builder produces a Leg with correct length."""
+        valuationDates = [
+            Date(15, January, 2026),
+            Date(15, April, 2026),
+            Date(15, July, 2026)]
+        paymentDates = [
+            Date(17, April, 2026),
+            Date(17, July, 2026)]
+
+        self.bondIndex.addFixing(Date(15, July, 2026), 1.03)
+
+        leg = BondTRSLeg(
+            valuationDates=valuationDates,
+            paymentDates=paymentDates,
+            bondNotional=self.bondNotional,
+            index=self.bondIndex,
+            initialPrice=1.0)
+
+        # leg has len(valuationDates) - 1 cashflows
+        self.assertEqual(len(leg), 2)
+
+
 if __name__ == '__main__':
     print('testing ORE ' + ORE.__version__)
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(FXLinkedCashFlowTest,'test'))
     suite.addTest(unittest.makeSuite(FloatingRateFXLinkedNotionalCouponTest,'test'))
+    suite.addTest(unittest.makeSuite(CommodityIndexedAverageCashFlowTest,'test'))
     suite.addTest(unittest.makeSuite(EquityCouponTest,'test'))
+    suite.addTest(unittest.makeSuite(IndexedCouponTest,'test'))
+    suite.addTest(unittest.makeSuite(BondTRSCashFlowTest,'test'))
     unittest.TextTestRunner(verbosity=2).run(suite)
     unittest.main()
-

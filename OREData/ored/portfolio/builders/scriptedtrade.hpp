@@ -61,7 +61,7 @@ public:
                QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()));
 
     // these are guaranteed to be set only after engine() was called
-    const std::string& npvCurrency() const { return model_ ? model_->baseCcy() : modelCG_->baseCcy(); }
+    const std::string& npvCurrency() const { return model_ ? model_->baseCcy() : modelCG_->baseCurrency(); }
     const QuantLib::Date& lastRelevantDate() const { return lastRelevantDate_; }
     const std::string& lastRelevantDateType() const { return lastRelevantDateType_; }
     bool includePastCashflows() const { return includePastCashflows_; }
@@ -174,7 +174,9 @@ protected:
     bool fullDynamicFx_, fullDynamicIr_, enforceBaseCcy_;
     Size modelSize_, timeStepsPerYear_;
     Model::Params params_;
-    bool interactive_, zeroVolatility_, continueOnCalibrationError_, allowModelFallbacks_;
+    bool interactive_, zeroVolatility_, continueOnCalibrationError_;
+    bool allowModelFallbacks_, allowChangingFallbacks_;
+    string runType_;
     std::vector<Real> calibrationMoneyness_;
     std::string referenceCalibrationGrid_;
     Real bootstrapTolerance_;
@@ -189,6 +191,8 @@ protected:
     bool includePastCashflows_;
     bool staticNpvMem_;
     Real indicatorSmoothingForValues_, indicatorSmoothingForDerivatives_, sqrtSmoothingForDerivatives_;
+    bool generateAdditionalResultsPathLevel_;
+    bool enableCgOptimization_;
     // Heston related
     std::vector<Period> hestonCalibrationExpiries_;
     std::vector<Period> hestonCalibrationVarianceTerms_;
@@ -203,7 +207,6 @@ protected:
     HestonProcess::Discretization hestonProcessDiscretization_;
     Size hestonQuantoTimeStepsPerYear_;
     HestonProcess::Discretization hestonQuantoProcessDiscretization_;
-    bool debug_;
 };
 
 } // namespace data

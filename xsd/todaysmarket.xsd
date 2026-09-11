@@ -27,6 +27,8 @@
       <xs:element type="commodityCurvesType" name="CommodityCurves" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="commodityVolatilitiesType" name="CommodityVolatilities" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="correlationsType" name="Correlations" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="bondFutureVolatilitiesType" name="BondFutureVolatilities" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="intradayPowerPriceCurvesType" name="IntradayPowerPriceCurves" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -55,6 +57,8 @@
       <xs:element type="xs:string" name="CommodityCurvesId" minOccurs="0"/>
       <xs:element type="xs:string" name="CommodityVolatilitiesId" minOccurs="0"/>
       <xs:element type="xs:string" name="CorrelationsId" minOccurs="0"/>
+      <xs:element type="xs:string" name="BondFutureVolatilitiesId" minOccurs="0"/>
+      <xs:element type="xs:string" name="IntradayPowerPriceCurvesId" minOccurs="0"/>
     </xs:all>
     <xs:attribute type="xs:string" name="id" use="required"/>
   </xs:complexType>
@@ -380,6 +384,36 @@
   <xs:complexType name="correlationsType">
     <xs:sequence>
       <xs:element name="Correlation" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="xs:string" name="name" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+  <xs:complexType name="bondFutureVolatilitiesType">
+    <xs:sequence>
+      <xs:element name="BondFutureVolatility" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="xs:string" name="name" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+  <xs:complexType name="intradayPowerPriceCurvesType">
+    <xs:sequence>
+      <xs:element name="IntradayPowerPriceCurve" maxOccurs="unbounded" minOccurs="0">
         <xs:complexType>
           <xs:simpleContent>
             <xs:extension base="xs:string">

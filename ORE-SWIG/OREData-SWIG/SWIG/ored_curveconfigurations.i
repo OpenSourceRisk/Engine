@@ -41,6 +41,7 @@ using ore::data::DefaultCurveConfig;
 using ore::data::CDSVolatilityCurveConfig;
 using ore::data::BaseCorrelationCurveConfig;
 using ore::data::InflationCurveConfig;
+using ore::data::InflationCurveSegment;
 using ore::data::InflationCapFloorVolatilityCurveConfig;
 using ore::data::EquityCurveConfig;
 using ore::data::EquityVolatilityCurveConfig;
@@ -57,7 +58,7 @@ using ore::data::BootstrapConfig;
 using ore::data::PriceSegment;
 using ore::data::YieldCurveSegment;
 using ore::data::ParametricSmileConfiguration;
-
+using ore::data::BondFutureVolatilityConfig;
 %}
 
 %shared_ptr(ore::data::ReportConfig)
@@ -277,112 +278,18 @@ public:
 %shared_ptr(ore::data::CommodityCurveConfig)
 %shared_ptr(ore::data::DefaultCurveConfig)
 %shared_ptr(ore::data::DefaultCurveConfig::Config)
+%shared_ptr(ore::data::GenericYieldVolatilityCurveConfig)
+%shared_ptr(ore::data::YieldVolatilityCurveConfig)
+%shared_ptr(ore::data::SwaptionVolatilityCurveConfig)
+%shared_ptr(ore::data::FXVolatilityCurveConfig)
+%shared_ptr(ore::data::CapFloorVolatilityCurveConfig)
+%shared_ptr(ore::data::EquityVolatilityCurveConfig)
+%shared_ptr(ore::data::BondFutureVolatilityConfig)
 %feature("flatnested") DefaultCurveConfig;
 %rename(DefaultCurveConfigConfig) ore::data::DefaultCurveConfig::Config;
 
 namespace ore {
 namespace data {
-
-class CurveConfigurations  : public XMLSerializable  {
-  public:
-    CurveConfigurations();
-
-    const ReportConfig& reportConfigEqVols() const;
-    const ReportConfig& reportConfigFxVols() const;
-    const ReportConfig& reportConfigCommVols() const;
-    const ReportConfig& reportConfigIrCapFloorVols();
-    const ReportConfig& reportConfigIrSwaptionVols();
-
-    bool hasYieldCurveConfig(const std::string& curveID) const;
-    ext::shared_ptr<YieldCurveConfig> yieldCurveConfig(const std::string& curveID) const;
-
-    bool hasFxVolCurveConfig(const std::string& curveID) const;
-    ext::shared_ptr<FXVolatilityCurveConfig> fxVolCurveConfig(const std::string& curveID) const;
-
-    bool hasSwaptionVolCurveConfig(const std::string& curveID) const;
-    ext::shared_ptr<SwaptionVolatilityCurveConfig> swaptionVolCurveConfig(const std::string& curveID) const;
-
-    bool hasYieldVolCurveConfig(const std::string& curveID) const;
-    ext::shared_ptr<YieldVolatilityCurveConfig> yieldVolCurveConfig(const std::string& curveID) const;
-
-    bool hasCapFloorVolCurveConfig(const std::string& curveID) const;
-    ext::shared_ptr<CapFloorVolatilityCurveConfig> capFloorVolCurveConfig(const std::string& curveID) const;
-
-    bool hasDefaultCurveConfig(const std::string& curveID) const;
-    ext::shared_ptr<DefaultCurveConfig> defaultCurveConfig(const std::string& curveID) const;
-
-    bool hasCdsVolCurveConfig(const std::string& curveID) const;
-    ext::shared_ptr<CDSVolatilityCurveConfig> cdsVolCurveConfig(const std::string& curveID) const;
-
-    bool hasBaseCorrelationCurveConfig(const std::string& curveID) const;
-    ext::shared_ptr<BaseCorrelationCurveConfig> baseCorrelationCurveConfig(const std::string& curveID) const;
-
-    bool hasInflationCurveConfig(const std::string& curveID) const;
-    ext::shared_ptr<InflationCurveConfig> inflationCurveConfig(const std::string& curveID) const;
-
-    bool hasInflationCapFloorVolCurveConfig(const std::string& curveID) const;
-    ext::shared_ptr<InflationCapFloorVolatilityCurveConfig> inflationCapFloorVolCurveConfig(const std::string& curveID) const;
-
-    bool hasEquityCurveConfig(const std::string& curveID) const;
-    ext::shared_ptr<EquityCurveConfig> equityCurveConfig(const std::string& curveID) const;
-
-    bool hasEquityVolCurveConfig(const std::string& curveID) const;
-    ext::shared_ptr<EquityVolatilityCurveConfig> equityVolCurveConfig(const std::string& curveID) const;
-
-    bool hasSecurityConfig(const std::string& curveID) const;
-    ext::shared_ptr<SecurityConfig> securityConfig(const std::string& curveID) const;
-
-    bool hasFxSpotConfig(const std::string& curveID) const;
-    ext::shared_ptr<FXSpotConfig> fxSpotConfig(const std::string& curveID) const;
-
-    bool hasCommodityCurveConfig(const std::string& curveID) const;
-    ext::shared_ptr<CommodityCurveConfig> commodityCurveConfig(const std::string& curveID) const;
-
-    bool hasCommodityVolatilityConfig(const std::string& curveID) const;
-    ext::shared_ptr<CommodityVolatilityConfig> commodityVolatilityConfig(const std::string& curveID) const;
-
-    bool hasCorrelationCurveConfig(const std::string& curveID) const;
-    ext::shared_ptr<CorrelationCurveConfig> correlationCurveConfig(const std::string& curveID) const;
-
-    ext::shared_ptr<CurveConfigurations> minimalCurveConfig(const ext::shared_ptr<TodaysMarketParameters> todaysMarketParams,
-                       const std::set<std::string>& configurations = {""}) const;
-
-    std::set<std::string> quotes(const ext::shared_ptr<TodaysMarketParameters> todaysMarketParams,
-                            const std::set<std::string>& configurations = {""}) const;
-    std::set<std::string> quotes() const;
-
-    std::set<std::string> conventions(const ext::shared_ptr<TodaysMarketParameters> todaysMarketParams,
-                                 const std::set<std::string>& configurations = {""}) const;
-    std::set<std::string> conventions() const;
-
-    std::set<std::string> yieldCurveConfigIds();
-
-    std::map<CurveSpec::CurveType, std::set<std::string>> requiredCurveIds(const CurveSpec::CurveType& type,
-                                                                      const std::string& curveId) const;
-
-    void add(const CurveSpec::CurveType& type, const std::string& curveId, const ext::shared_ptr<CurveConfig>& config);
-    bool has(const CurveSpec::CurveType& type, const std::string& curveId) const;
-    const ext::shared_ptr<CurveConfig>& get(const CurveSpec::CurveType& type, const std::string& curveId) const;
-    void parseAll();
-
-    void addAdditionalCurveConfigs(const CurveConfigurations& c);
-
-    void fromXML(ore::data::XMLNode* node) override;
-    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
-
-};
-
-class CurveConfigurationsManager {
-  public:
-    CurveConfigurationsManager();
-
-    void add(const ext::shared_ptr<CurveConfigurations>& config, std::string id = std::string());
-    const ext::shared_ptr<CurveConfigurations>& get(std::string id = std::string()) const;
-    const bool has(std::string id = std::string()) const;
-    const std::map<std::string, ext::shared_ptr<CurveConfigurations>>& curveConfigurations() const;
-    const bool empty() const;
-
-};
 
 class VolatilityConfig : public XMLSerializable {
 public:
@@ -668,12 +575,6 @@ if 'DefaultCurveConfigConfig' in globals():
 %}
 #endif
 
-%shared_ptr(ore::data::GenericYieldVolatilityCurveConfig)
-%shared_ptr(ore::data::SwaptionVolatilityCurveConfig)
-%shared_ptr(ore::data::FXVolatilityCurveConfig)
-%shared_ptr(ore::data::CapFloorVolatilityCurveConfig)
-%shared_ptr(ore::data::EquityVolatilityCurveConfig)
-
 namespace ore {
 namespace data {
 
@@ -753,6 +654,16 @@ public:
     const QuantLib::ext::optional<ParametricSmileConfiguration> parametricSmileConfiguration() const;
     const ReportConfig& reportConfig() const;
 
+};
+
+class YieldVolatilityCurveConfig : public GenericYieldVolatilityCurveConfig {
+    YieldVolatilityCurveConfig();
+    YieldVolatilityCurveConfig(const std::string& curveID, const std::string& curveDescription, const std::string& qualifier,
+                            const Dimension& dimension, const VolatilityType volatilityType,
+                            const VolatilityType outputVolatilityType, const Interpolation interpolation,
+                            const Extrapolation extrapolation, const std::vector<std::string>& optionTenors,
+                            const std::vector<std::string>& bondTenors, const QuantLib::DayCounter& dayCounter, const QuantLib::Calendar& calendar,
+                            const QuantLib::BusinessDayConvention& businessDayConvention);
 };
 
 class SwaptionVolatilityCurveConfig : public GenericYieldVolatilityCurveConfig {
@@ -906,7 +817,7 @@ public:
     const std::string& strikeInterpolation() const;
     bool quoteIncludesIndexName() const;
     const std::vector<std::string>& atmTenors() const;
-    const BootstrapConfig& bootstrapConfig() const;
+    const ore::data::BootstrapConfig& bootstrapConfig() const;
     Type type() const;
     const std::string& currency() const;
     std::string indexTenor() const;
@@ -954,6 +865,367 @@ public:
     const ReportConfig& reportConfig() const;
     string& ccy();
     string& dayCounter();
+};
+
+class BondFutureVolatilityConfig : public CurveConfig {
+public:
+    BondFutureVolatilityConfig();
+    BondFutureVolatilityConfig(
+        const std::string& curveId,
+        const std::string& curveDescription,
+        std::string contractName,
+        std::vector<ext::shared_ptr<VolatilityConfig>> volatilityConfig,
+        std::string dayCounter = "A365",
+        std::string calendar = "NullCalendar",
+        std::string yieldCurveId = "",
+        QuantLib::Real strikeFactor = 1.0,
+        std::string useOnlyPutCall = "",
+        QuantLib::ext::optional<OneDimSolverConfig> solverConfig = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<bool> preferOutOfTheMoney = QuantLib::ext::nullopt,
+        std::string engineOverride = "",
+        QuantLib::ext::optional<bool> treatAsEuropean = QuantLib::ext::nullopt);
+
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+
+    const std::string& contractName() const;
+    const std::vector<ext::shared_ptr<VolatilityConfig>>& volatilityConfig() const;
+    const std::string& dayCounter() const;
+    const std::string& calendar() const;
+    const std::string& yieldCurveId() const;
+    QuantLib::Real strikeFactor() const;
+    const std::string& useOnlyPutCall() const;
+    const QuantLib::ext::optional<OneDimSolverConfig>& solverConfig() const;
+    const QuantLib::ext::optional<bool>& preferOutOfTheMoney() const;
+    const std::string& engineOverride() const;
+    const QuantLib::ext::optional<bool>& treatAsEuropean() const;
+};
+
+} // namespace data
+} // namespace ore
+
+%shared_ptr(ore::data::InflationCurveSegment)
+%shared_ptr(ore::data::InflationCurveConfig)
+%shared_ptr(ore::data::CDSVolatilityCurveConfig)
+%shared_ptr(ore::data::SecurityConfig)
+%shared_ptr(ore::data::CommodityVolatilityConfig)
+%shared_ptr(ore::data::InflationCapFloorVolatilityCurveConfig)
+%shared_ptr(ore::data::CorrelationCurveConfig)
+%shared_ptr(ore::data::FXSpotConfig)
+%shared_ptr(ore::data::BaseCorrelationCurveConfig)
+
+%template(InflationCurveSegmentVector) std::vector<ore::data::InflationCurveSegment>;
+
+namespace ore {
+namespace data {
+
+// ore/OREData/ored/configuration/inflationcurveconfig.hpp
+
+class InflationCurveSegment : public XMLSerializable {
+public:
+    InflationCurveSegment();
+    InflationCurveSegment(const std::string& convention, const std::vector<std::string>& quotes);
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+    const std::string& convention() const;
+    const std::vector<std::string>& quotes() const;
+};
+
+class InflationCurveConfig : public CurveConfig {
+public:
+    enum class Type { ZC, YY };
+    enum class InterpolationVariable { ZeroRate, PriceIndex };
+
+    InflationCurveConfig();
+    InflationCurveConfig(const std::string& curveID, const std::string& curveDescription,
+                         const std::string& nominalTermStructure, const Type type,
+                         const std::vector<std::string>& quotes, const std::string& conventions,
+                         bool extrapolate, const QuantLib::Calendar& calendar,
+                         const QuantLib::DayCounter& dayCounter, const QuantLib::Period& lag,
+                         const QuantLib::Frequency& frequency, QuantLib::Real baseRate,
+                         QuantLib::Real tolerance, bool useLastAvailableFixingAsBaseDate,
+                         const QuantLib::Date& seasonalityBaseDate,
+                         const QuantLib::Frequency& seasonalityFrequency,
+                         const std::vector<std::string>& seasonalityFactors,
+                         const std::vector<double>& overrideSeasonalityFactors = std::vector<double>(),
+                         const InterpolationVariable& interpolationVariable = InterpolationVariable::ZeroRate);
+
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+
+    const std::string& nominalTermStructure() const;
+    const std::vector<InflationCurveSegment>& segments() const;
+    InflationCurveConfig::Type type() const;
+    const bool& extrapolate() const;
+    const QuantLib::Calendar& calendar() const;
+    const QuantLib::DayCounter& dayCounter() const;
+    const QuantLib::Period& lag() const;
+    const QuantLib::Frequency& frequency() const;
+    const QuantLib::Real& baseRate() const;
+    const QuantLib::Real& tolerance() const;
+    const bool& useLastAvailableFixingAsBaseDate() const;
+    const InterpolationVariable& interpolationVariable() const;
+    const QuantLib::Date& seasonalityBaseDate() const;
+    const QuantLib::Frequency& seasonalityFrequency() const;
+    const std::vector<std::string>& seasonalityFactors() const;
+    const std::vector<double>& overrideSeasonalityFactors() const;
+};
+
+// ore/OREData/ored/configuration/cdsvolcurveconfig.hpp
+
+class CDSVolatilityCurveConfig : public CurveConfig {
+public:
+    CDSVolatilityCurveConfig();
+    CDSVolatilityCurveConfig(const std::string& curveId, const std::string& curveDescription,
+                             const ext::shared_ptr<VolatilityConfig>& volatilityConfig,
+                             const std::string& dayCounter = "A365",
+                             const std::string& calendar = "NullCalendar",
+                             const std::string& strikeType = "",
+                             const std::string& quoteName = "",
+                             QuantLib::Real strikeFactor = 1.0,
+                             const std::vector<QuantLib::Period>& terms = {},
+                             const std::vector<std::string>& termCurves = {},
+                             const std::vector<QuantLib::Date>& termMaturities = {});
+
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+
+    const ext::shared_ptr<VolatilityConfig>& volatilityConfig() const;
+    const std::string& dayCounter() const;
+    const std::string& calendar() const;
+    const std::string& strikeType() const;
+    const std::string& quoteName() const;
+    QuantLib::Real strikeFactor() const;
+    const std::vector<QuantLib::Period>& terms() const;
+    const std::vector<std::string>& termCurves() const;
+    const std::vector<QuantLib::Date>& termMaturities() const;
+};
+
+class SecurityConfig : public ore::data::CurveConfig {
+public:
+    SecurityConfig(const std::string& curveID, const std::string& curveDescription, const std::string& spreadQuote = "",
+                   const std::string& recoveryQuote = "", const std::string& cprQuote = "", const std::string& priceQuote = "",
+                   const std::string& conversionFactor = "");
+    SecurityConfig();
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+};
+
+class CommodityVolatilityConfig : public ore::data::CurveConfig {
+public:
+    CommodityVolatilityConfig();
+    CommodityVolatilityConfig(const std::string& curveId, const std::string& curveDescription,
+                              const std::string& currency,
+                              const std::vector<ext::shared_ptr<ore::data::VolatilityConfig>>& volatilityConfig,
+                              const std::string& dayCounter = "A365", const std::string& calendar = "NullCalendar",
+                              const std::string& futureConventionsId = "", QuantLib::Natural optionExpiryRollDays = 0,
+                              const std::string& priceCurveId = "", const std::string& yieldCurveId = "",
+                              const std::string& quoteSuffix = "",
+                              const ore::data::OneDimSolverConfig& solverConfig = ore::data::OneDimSolverConfig(),
+                              const QuantLib::ext::optional<bool>& preferOutOfTheMoney = QuantLib::ext::nullopt);
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+};
+
+class InflationCapFloorVolatilityCurveConfig : public ore::data::CurveConfig {
+public:
+    enum class Type { ZC, YY };
+    enum class VolatilityType { Lognormal, Normal, ShiftedLognormal };
+    enum class QuoteType { Price, Volatility };
+
+    InflationCapFloorVolatilityCurveConfig();
+    InflationCapFloorVolatilityCurveConfig(
+        const std::string& curveID, const std::string& curveDescription, const Type type, const QuoteType& quoteType,
+        const VolatilityType& volatilityType, const bool extrapolate, const std::vector<std::string>& tenors,
+        const std::vector<std::string>& capStrikes, const std::vector<std::string>& floorStrikes, const std::vector<std::string>& strikes,
+        const QuantLib::DayCounter& dayCounter, QuantLib::Natural settleDays, const QuantLib::Calendar& calendar,
+        const QuantLib::BusinessDayConvention& businessDayConvention, const std::string& index, const std::string& indexCurve,
+        const std::string& yieldTermStructure, const QuantLib::Period& observationLag, const std::string& quoteIndex = "",
+        const std::string& conventions = "");
+
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+};
+
+// ore/OREData/ored/configuration/correlationcurveconfig.hpp
+
+class CorrelationCurveConfig : public CurveConfig {
+public:
+    enum class CorrelationType { CMSSpread, Generic };
+    enum class Dimension { ATM, Constant };
+
+    CorrelationCurveConfig();
+    CorrelationCurveConfig(const std::string& curveID, const std::string& curveDescription,
+                           const Dimension& dimension, const CorrelationType& corrType,
+                           const std::string& conventions,
+                           const ore::data::MarketDatum::QuoteType& quoteType,
+                           bool extrapolate, const std::vector<std::string>& optionTenors,
+                           const QuantLib::DayCounter& dayCounter, const QuantLib::Calendar& calendar,
+                           const QuantLib::BusinessDayConvention& businessDayConvention,
+                           const std::string& index1, const std::string& index2,
+                           const std::string& currency, const std::string& swaptionVol = "",
+                           const std::string& discountCurve = "");
+
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+
+    const CorrelationType& correlationType() const;
+    const std::string& conventions() const;
+    const Dimension& dimension() const;
+    const bool& extrapolate() const;
+    const std::vector<std::string>& optionTenors() const;
+    const QuantLib::DayCounter& dayCounter() const;
+    const QuantLib::Calendar& calendar() const;
+    const std::string& index1() const;
+    const std::string& index2() const;
+    const std::string& currency() const;
+    const std::string& swaptionVolatility() const;
+    const std::string& discountCurve() const;
+};
+
+// ore/OREData/ored/configuration/fxspotconfig.hpp
+
+class FXSpotConfig : public CurveConfig {
+public:
+    FXSpotConfig();
+    FXSpotConfig(const std::string& curveID, const std::string& curveDescription);
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+};
+
+// ore/OREData/ored/configuration/basecorrelationcurveconfig.hpp
+
+class BaseCorrelationCurveConfig : public CurveConfig {
+public:
+    BaseCorrelationCurveConfig();
+    BaseCorrelationCurveConfig(const std::string& curveID, const std::string& curveDescription,
+                               const std::vector<std::string>& detachmentPoints,
+                               const std::vector<std::string>& terms,
+                               QuantLib::Size settlementDays,
+                               const QuantLib::Calendar& calendar,
+                               QuantLib::BusinessDayConvention businessDayConvention,
+                               QuantLib::DayCounter dayCounter,
+                               bool extrapolate,
+                               const std::string& quoteName = "",
+                               const QuantLib::Date& startDate = QuantLib::Date(),
+                               const QuantLib::Period& indexTerm = 0 * QuantLib::Days);
+
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+
+    const std::vector<std::string>& terms() const;
+    const std::vector<std::string>& detachmentPoints() const;
+    const QuantLib::Size& settlementDays() const;
+    const QuantLib::Calendar& calendar() const;
+    const QuantLib::DayCounter& dayCounter() const;
+    const bool& extrapolate() const;
+    const std::string& quoteName() const;
+    const QuantLib::Date& startDate() const;
+    const QuantLib::Period& indexTerm() const;
+};
+
+class CurveConfigurations  : public XMLSerializable  {
+  public:
+    CurveConfigurations();
+
+    const ReportConfig& reportConfigEqVols() const;
+    const ReportConfig& reportConfigFxVols() const;
+    const ReportConfig& reportConfigCommVols() const;
+    const ReportConfig& reportConfigIrCapFloorVols();
+    const ReportConfig& reportConfigIrSwaptionVols();
+
+    bool hasYieldCurveConfig(const std::string& curveID) const;
+    ext::shared_ptr<YieldCurveConfig> yieldCurveConfig(const std::string& curveID) const;
+
+    bool hasFxVolCurveConfig(const std::string& curveID) const;
+    ext::shared_ptr<FXVolatilityCurveConfig> fxVolCurveConfig(const std::string& curveID) const;
+
+    bool hasSwaptionVolCurveConfig(const std::string& curveID) const;
+    ext::shared_ptr<SwaptionVolatilityCurveConfig> swaptionVolCurveConfig(const std::string& curveID) const;
+
+    bool hasYieldVolCurveConfig(const std::string& curveID) const;
+    ext::shared_ptr<YieldVolatilityCurveConfig> yieldVolCurveConfig(const std::string& curveID) const;
+
+    bool hasCapFloorVolCurveConfig(const std::string& curveID) const;
+    ext::shared_ptr<CapFloorVolatilityCurveConfig> capFloorVolCurveConfig(const std::string& curveID) const;
+
+    bool hasDefaultCurveConfig(const std::string& curveID) const;
+    ext::shared_ptr<DefaultCurveConfig> defaultCurveConfig(const std::string& curveID) const;
+
+    bool hasCdsVolCurveConfig(const std::string& curveID) const;
+    ext::shared_ptr<CDSVolatilityCurveConfig> cdsVolCurveConfig(const std::string& curveID) const;
+
+    bool hasBaseCorrelationCurveConfig(const std::string& curveID) const;
+    ext::shared_ptr<BaseCorrelationCurveConfig> baseCorrelationCurveConfig(const std::string& curveID) const;
+
+    bool hasInflationCurveConfig(const std::string& curveID) const;
+    ext::shared_ptr<InflationCurveConfig> inflationCurveConfig(const std::string& curveID) const;
+
+    bool hasInflationCapFloorVolCurveConfig(const std::string& curveID) const;
+    ext::shared_ptr<InflationCapFloorVolatilityCurveConfig> inflationCapFloorVolCurveConfig(const std::string& curveID) const;
+
+    bool hasEquityCurveConfig(const std::string& curveID) const;
+    ext::shared_ptr<EquityCurveConfig> equityCurveConfig(const std::string& curveID) const;
+
+    bool hasEquityVolCurveConfig(const std::string& curveID) const;
+    ext::shared_ptr<EquityVolatilityCurveConfig> equityVolCurveConfig(const std::string& curveID) const;
+
+    bool hasSecurityConfig(const std::string& curveID) const;
+    ext::shared_ptr<SecurityConfig> securityConfig(const std::string& curveID) const;
+
+    bool hasFxSpotConfig(const std::string& curveID) const;
+    ext::shared_ptr<FXSpotConfig> fxSpotConfig(const std::string& curveID) const;
+
+    bool hasCommodityCurveConfig(const std::string& curveID) const;
+    ext::shared_ptr<CommodityCurveConfig> commodityCurveConfig(const std::string& curveID) const;
+
+    bool hasCommodityVolatilityConfig(const std::string& curveID) const;
+    ext::shared_ptr<CommodityVolatilityConfig> commodityVolatilityConfig(const std::string& curveID) const;
+
+    bool hasCorrelationCurveConfig(const std::string& curveID) const;
+    ext::shared_ptr<CorrelationCurveConfig> correlationCurveConfig(const std::string& curveID) const;
+
+    bool hasBondFutureVolatilityConfig(const std::string& curveID) const;
+    ext::shared_ptr<BondFutureVolatilityConfig> bondFutureVolatilityConfig(const std::string& curveID) const;
+
+    ext::shared_ptr<CurveConfigurations> minimalCurveConfig(const ext::shared_ptr<TodaysMarketParameters> todaysMarketParams,
+                       const std::set<std::string>& configurations = {""}) const;
+
+    std::set<std::string> quotes(const ext::shared_ptr<TodaysMarketParameters> todaysMarketParams,
+                            const std::set<std::string>& configurations = {""}) const;
+    std::set<std::string> quotes() const;
+
+    std::set<std::string> conventions(const ext::shared_ptr<TodaysMarketParameters> todaysMarketParams,
+                                 const std::set<std::string>& configurations = {""}) const;
+    std::set<std::string> conventions() const;
+
+    std::set<std::string> yieldCurveConfigIds();
+
+    std::map<CurveSpec::CurveType, std::set<std::string>> requiredCurveIds(const CurveSpec::CurveType& type,
+                                                                      const std::string& curveId) const;
+
+    void add(const CurveSpec::CurveType& type, const std::string& curveId, const ext::shared_ptr<CurveConfig>& config);
+    bool has(const CurveSpec::CurveType& type, const std::string& curveId) const;
+    const ext::shared_ptr<CurveConfig>& get(const CurveSpec::CurveType& type, const std::string& curveId) const;
+    void parseAll();
+
+    void addAdditionalCurveConfigs(const CurveConfigurations& c);
+
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+
+};
+
+class CurveConfigurationsManager {
+  public:
+    CurveConfigurationsManager();
+
+    void add(const ext::shared_ptr<CurveConfigurations>& config, std::string id = std::string());
+    const ext::shared_ptr<CurveConfigurations>& get(std::string id = std::string()) const;
+    const bool has(std::string id = std::string()) const;
+    const std::map<std::string, ext::shared_ptr<CurveConfigurations>>& curveConfigurations() const;
+    const bool empty() const;
+
 };
 
 } // namespace data

@@ -117,9 +117,17 @@ public:
 
     //! Inflation Indexes
     virtual Handle<ZeroInflationIndex>
-    zeroInflationIndex(const string& indexName, const string& configuration = Market::defaultConfiguration) const override;
+    zeroInflationIndex(const string& indexName,
+                       const string& configuration = Market::defaultConfiguration) const override;
+    std::map<QuantLib::Period, QuantLib::Period>
+    zeroInflationObservationLags(const string& indexName,
+                                 const string& configuration = Market::defaultConfiguration) const override;
     virtual Handle<YoYInflationIndex>
-    yoyInflationIndex(const string& indexName, const string& configuration = Market::defaultConfiguration) const override;
+    yoyInflationIndex(const string& indexName,
+                      const string& configuration = Market::defaultConfiguration) const override;
+    std::map<QuantLib::Period, QuantLib::Period>
+    yoyInflationObservationLags(const string& indexName,
+                                const string& configuration = Market::defaultConfiguration) const override;
 
     //! Inflation Cap Floor Volatility Surfaces
     virtual Handle<QuantLib::CPIVolatilitySurface>
@@ -175,6 +183,19 @@ public:
                                 const string& configuration = Market::defaultConfiguration) const override;
     //@}
 
+    //! Bond future volatilities
+    QuantLib::Handle<QuantLib::BlackVolTermStructure> bondFutureVol(const std::string& contractName,
+        const std::string& configuration = Market::defaultConfiguration) const override;
+
+    QuantLib::Handle<QuantExt::IntradayPowerPriceTermStructure>
+    intradayPowerPriceCurve(const std::string& commodityName,
+                            const std::string& configuration = Market::defaultConfiguration) const override;
+
+    QuantLib::Handle<QuantExt::IntradayPowerIndex>
+    intradayPowerIndex(const std::string& indexName,
+                       const std::string& configuration = Market::defaultConfiguration) const override;
+
+    
     //! \name Disable copying
     //@{
     MarketImpl(const MarketImpl&) = delete;
@@ -222,7 +243,9 @@ protected:
     mutable map<pair<string, string>, std::pair<string, QuantLib::Period>> capFloorIndexBase_;
     mutable map<pair<string, string>, Handle<YoYOptionletVolatilitySurface>> yoyCapFloorVolSurfaces_;
     mutable map<pair<string, string>, Handle<ZeroInflationIndex>> zeroInflationIndices_;
+    mutable map<pair<string, string>, std::map<QuantLib::Period, QuantLib::Period>> zeroInflationObservationLags_;
     mutable map<pair<string, string>, Handle<YoYInflationIndex>> yoyInflationIndices_;
+    mutable map<pair<string, string>, std::map<QuantLib::Period, QuantLib::Period>> yoyInflationObservationLags_;
     mutable map<pair<string, string>, Handle<QuantLib::CPIVolatilitySurface>> cpiInflationCapFloorVolatilitySurfaces_;
     mutable map<pair<string, string>, Handle<Quote>> equitySpots_;
     mutable map<pair<string, string>, Handle<BlackVolTermStructure>> equityVols_;
@@ -235,7 +258,8 @@ protected:
     mutable map<pair<string, string>, QuantLib::Handle<QuantLib::BlackVolTermStructure>> commodityVols_;
     mutable map<pair<string, string>, QuantLib::Handle<QuantExt::EquityIndex2>> equityCurves_;
     mutable map<pair<string, string>, Handle<Quote>> cprs_;
-
+    mutable map<pair<string, string>, QuantLib::Handle<QuantLib::BlackVolTermStructure>> bondFutureVols_;
+    mutable map<pair<string, string>, QuantLib::Handle<QuantExt::IntradayPowerIndex>> intradayPowerIndices_;
     //! add a swap index to the market
     void addSwapIndex(const string& swapindex, const string& discountIndex,
                       const string& configuration = Market::defaultConfiguration) const;

@@ -41,6 +41,7 @@ using ore::data::DigitalCMSSpreadLegData;
 using ore::data::EquityLegData;
 using ore::data::CMBLegData;
 using ore::data::LegDataFactory;
+using ore::data::LegType;
 using ore::data::CommodityPayRelativeTo;
 using ore::data::CommodityPriceType;
 using ore::data::CommodityPricingDateRule;
@@ -96,6 +97,27 @@ using ore::data::XMLSerializable;
 namespace ore {
 namespace data {
 
+enum class LegType {
+    Fixed,
+    Floating,
+    Cashflow,
+    CMS,
+    CMB,
+    DigitalCMS,
+    DurationAdjustedCMS,
+    CMSSpread,
+    DigitalCMSSpread,
+    Equity,
+    CPI,
+    ZeroCouponFixed,
+    FormulaBased,
+    CommodityFloating,
+    CommodityFixed,
+    EquityMargin,
+    YY,
+    RangeAccrual
+};
+
 class ScheduleRules : public XMLSerializable {
 public:
   ScheduleRules();
@@ -104,6 +126,14 @@ public:
           const std::string& endOfMonth = "N", const std::string& firstDate = "", const std::string& lastDate = "",
                   const bool removeFirstDate = false, const bool removeLastDate = false,
           const std::string& endOfMonthConvention = "");
+    const std::string& startDate() const;
+    const std::string& endDate() const;
+    const std::string& tenor() const;
+    const std::string& calendar() const;
+    const std::string& convention() const;
+    const std::string& termConvention() const;
+    const std::string& rule() const;
+    bool hasData() const;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
@@ -114,6 +144,10 @@ public:
   ScheduleDates(const std::string& calendar, const std::string& convention, const std::string& tenor,
                 const std::vector<std::string>& dates, const std::string& endOfMonth = "",
                 const std::string& endOfMonthConvention = "", bool includeDuplicateDates = false);
+    const std::vector<std::string>& dates() const;
+    const std::string& calendar() const;
+    const std::string& convention() const;
+    const std::string& tenor() const;
   virtual void fromXML(XMLNode* node) override;
   virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
@@ -123,7 +157,9 @@ public:
   ScheduleDerived();
   ScheduleDerived(const std::string& baseSchedule, const std::string& calendar,
                   const std::string& convention, const std::string& shift,
-                  const bool removeFirstDate = false, const bool removeLastDate = false);
+                  const bool removeFirstDate = false, const bool removeLastDate = false,
+                  QuantLib::ext::optional<QuantExt::DateDeltaUnit> shiftUnit = QuantLib::ext::nullopt,
+                  QuantLib::ext::optional<QuantExt::DateDeltaAnchor> shiftAnchor = QuantLib::ext::nullopt);
   virtual void fromXML(XMLNode* node) override;
   virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
@@ -134,11 +170,16 @@ public:
   ScheduleData(const ScheduleDates& dates, const std::string& name = "");
   ScheduleData(const ScheduleRules& rules, const std::string& name = "");
   ScheduleData(const ScheduleDerived& derived, const std::string& name = "");
+    const std::vector<ScheduleRules>& rules() const;
+    const std::vector<ScheduleDates>& dates() const;
+    bool hasData() const;
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 
 class LegAdditionalData : public XMLSerializable {
+public:
+    const LegType& legType() const;
 };
 
 // ore/OREData/ored/portfolio/legdata.hpp - CashflowData
@@ -231,29 +272,53 @@ class LegData : public XMLSerializable {
   public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
+    bool isPayer() const;
+    const std::string& currency() const;
+    const std::vector<double>& notionals() const;
+    const ScheduleData& schedule() const;
+    const std::string& dayCounter() const;
+    const LegType& legType() const;
+    ext::shared_ptr<LegAdditionalData> concreteLegData() const;
 };
+
 %extend LegData {
-  LegData() { return new LegData(); }
-  LegData(const ext::shared_ptr<LegAdditionalData>& innerLegData, bool isPayer, const std::string& currency,
-      const ScheduleData& scheduleData = ScheduleData(), const std::string& dayCounter = "",
-            const std::vector<double>& notionals = std::vector<double>(),
-      const std::vector<std::string>& notionalDates = std::vector<std::string>(), const std::string& paymentConvention = "F",
-            const bool notionalInitialExchange = false, const bool notionalFinalExchange = false,
-            const bool notionalAmortizingExchange = false, const bool isNotResetXCCY = true,
-      const std::string& foreignCurrency = "", const double foreignAmount = 0, const std::string& resetStartDate = "", const std::string& fxIndex = "",
-            const std::vector<ext::shared_ptr<AmortizationData>>& amortizationData = std::vector<ext::shared_ptr<AmortizationData>>(),
-      const std::string& paymentLag = "", const std::string& notionalPaymentLag = "",
-            const std::string& paymentCalendar = "",
-            const std::vector<std::string>& paymentDates = std::vector<std::string>(),
-            const std::vector<Indexing>& indexing = {}, const bool indexingFromAssetLeg = false,
-      const std::string& lastPeriodDayCounter = "") {
-                return new LegData(innerLegData, isPayer, currency, scheduleData,
-                    dayCounter, notionals, notionalDates, paymentConvention,
-                    notionalInitialExchange, notionalFinalExchange,
-                    notionalAmortizingExchange, isNotResetXCCY, foreignCurrency,
-                    foreignAmount, resetStartDate, fxIndex, VECTOR_SWIG_TO_ORE(amortizationData),
-                    paymentLag, notionalPaymentLag, paymentCalendar, paymentDates,
-                    indexing, indexingFromAssetLeg, lastPeriodDayCounter);
+    LegData() { return new LegData(); }
+    LegData(const ext::shared_ptr<LegAdditionalData>& innerLegData,
+        bool isPayer,
+        const std::string& currency,
+        const ScheduleData& scheduleData = ScheduleData(),
+        const std::string& dayCounter = "",
+        const std::vector<double>& notionals = std::vector<double>(),
+        const std::vector<std::string>& notionalDates = std::vector<std::string>(),
+        const std::string& paymentConvention = "F",
+        const bool notionalInitialExchange = false,
+        const bool notionalFinalExchange = false,
+        const bool notionalAmortizingExchange = false,
+        const bool isNotResetXCCY = true,
+        const std::string& foreignCurrency = "",
+        const double foreignAmount = 0,
+        const std::string& resetStartDate = "",
+        const std::string& fxIndex = "",
+        const std::vector<ext::shared_ptr<AmortizationData>>& amortizationData =
+            std::vector<ext::shared_ptr<AmortizationData>>(),
+        const std::string& paymentLag = "",
+        const std::string& notionalPaymentLag = "",
+        const std::string& paymentCalendar = "",
+        const std::vector<std::string>& paymentDates = std::vector<std::string>(),
+        const std::vector<Indexing>& indexing = {},
+        const bool indexingFromAssetLeg = false,
+        const std::string& lastPeriodDayCounter = "",
+        QuantLib::ext::optional<QuantExt::DateDeltaUnit> paymentLagUnit = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<QuantExt::DateDeltaAnchor> paymentLagAnchor = QuantLib::ext::nullopt) {
+
+            return new LegData(innerLegData, isPayer, currency, scheduleData,
+                dayCounter, notionals, notionalDates, paymentConvention,
+                notionalInitialExchange, notionalFinalExchange,
+                notionalAmortizingExchange, isNotResetXCCY, foreignCurrency,
+                foreignAmount, resetStartDate, fxIndex, VECTOR_SWIG_TO_ORE(amortizationData),
+                paymentLag, notionalPaymentLag, paymentCalendar, paymentDates,
+                indexing, indexingFromAssetLeg, lastPeriodDayCounter,
+                paymentLagUnit, paymentLagAnchor);
     }
 }
 
@@ -273,7 +338,7 @@ class DigitalCMSLegData : public LegAdditionalData {
 public:
     DigitalCMSLegData();
     DigitalCMSLegData(
-        const QuantLib::ext::shared_ptr<CMSLegData>& underlying,
+        const ext::shared_ptr<CMSLegData>& underlying,
         Position::Type callPosition = Position::Long,
         bool isCallATMIncluded = false,
         const std::vector<double> callStrikes = std::vector<double>(),
@@ -286,7 +351,7 @@ public:
         const std::vector<std::string> putStrikeDates = std::vector<std::string>(),
         const std::vector<double> putPayoffs = std::vector<double>(),
         const std::vector<std::string> putPayoffDates = std::vector<std::string>());
-    const QuantLib::ext::shared_ptr<CMSLegData>& underlying() const;
+    const ext::shared_ptr<CMSLegData>& underlying() const;
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
@@ -362,7 +427,7 @@ class DigitalCMSSpreadLegData : public LegAdditionalData {
 public:
   DigitalCMSSpreadLegData();
   DigitalCMSSpreadLegData(
-    const QuantLib::ext::shared_ptr<CMSSpreadLegData>& underlying, Position::Type callPosition = Position::Long,
+    const ext::shared_ptr<CMSSpreadLegData>& underlying, Position::Type callPosition = Position::Long,
     bool isCallATMIncluded = false, const std::vector<double> callStrikes = std::vector<double>(),
     const std::vector<std::string> callStrikeDates = std::vector<std::string>(), const std::vector<double> callPayoffs = std::vector<double>(),
     const std::vector<std::string> callPayoffDates = std::vector<std::string>(), Position::Type putPosition = Position::Long,
@@ -452,6 +517,8 @@ class CommodityFloatingLegData : public LegAdditionalData {
 %template(AmortizationDataVector) std::vector<ext::shared_ptr<ore::data::AmortizationData>>;
 %template(IndexingVector) std::vector<ore::data::Indexing>;
 %template(LegDataVector) std::vector<ext::shared_ptr<ore::data::LegData>>;
+%template(ScheduleRulesVector) std::vector<ore::data::ScheduleRules>;
+%template(ScheduleDatesVector) std::vector<ore::data::ScheduleDates>;
 SWIG_SHARED_PTR_VECTOR_TYPEMAP(ore::data::LegData, LegDataVector)
 
 // ore/OREData/ored/portfolio/legbuilders.hpp
@@ -626,7 +693,7 @@ public:
 class EquityMarginLegData : public LegAdditionalData {
 public:
     EquityMarginLegData();
-    EquityMarginLegData(QuantLib::ext::shared_ptr<ore::data::EquityLegData>& equityLegData, const vector<double>& rates,
+    EquityMarginLegData(ext::shared_ptr<ore::data::EquityLegData>& equityLegData, const vector<double>& rates,
         const vector<string>& rateDates = vector<string>(), const double& initialMarginFactor = QuantExt::Null<double>(),
         const double& multiplier = QuantExt::Null<double>());
     virtual void fromXML(XMLNode* node) override;

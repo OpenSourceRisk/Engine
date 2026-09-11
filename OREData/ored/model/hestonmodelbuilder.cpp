@@ -59,9 +59,11 @@ HestonModelBuilder::HestonModelBuilder(
     const ::std::string& calibrationMethod, const std::vector<Real>& maximumInitialValues, Real relaxedFellerConstraint,
     Size maxCalibrationAttempts, Real earlyExitThreshold, Real maxAcceptableError,
     const HestonProcess::Discretization& discretization, const std::string& referenceCalibrationGrid,
-    const bool dontCalibrate, const Handle<YieldTermStructure>& baseCurve, const bool observeContinuum)
-    : AssetModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear, baseCurve,
-                            observeContinuum),
+    const bool dontCalibrate, const Handle<YieldTermStructure>& baseCurve,
+    const std::function<std::set<Real>(const TimeGrid&)>& curveTimes,
+    const std::function<std::vector<std::set<std::pair<Real, Real>>>(const TimeGrid&)>& volTimesStrikes)
+    : AssetModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear, baseCurve, false,
+                            curveTimes, volTimesStrikes),
       indices_(indices), calibrationExpiries_(calibrationExpiries), calibrationMoneyness_(calibrationMoneyness),
       calibrationVarianceTerms_(calibrationVarianceTerms), initialValues_(initialValues), fixedValues_(fixedValues),
       calibrationMethod_(calibrationMethod), maximumInitialValues_(maximumInitialValues),
@@ -99,6 +101,9 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> HestonModelBuilder::ge
                                    maximumInitialValues_, relaxedFellerConstraint_, maxCalibrationAttempts_,
                                    earlyExitThreshold_, maxAcceptableError_, discretization_, dontCalibrate_);
 
+        curveTimes_.insert(hmc.curveTimes().begin(), hmc.curveTimes().end());
+        volTimesStrikes_[i].insert(hmc.volTimesStrikes().begin(), hmc.volTimesStrikes().end());
+
         DLOG("Build a Heston Model with constant parameters");
 	auto model = hmc.model();
 
@@ -109,7 +114,6 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> HestonModelBuilder::ge
 	    DLOG("Build a Heston Model with piecewise constant parameters on top of the constant parameters model");
 	    auto ptdModel = hmc.ptdModel(model);
 	    auto ptdProcess = ext::make_shared<PiecewiseTimeDependentHestonProcess>(ptdModel, discretization_);
-	    // processes.push_back(model->process());
 	    processes.push_back(ptdProcess);
 	    calibrationResults_.push_back(hmc.piecewiseResults());
 	}
@@ -118,41 +122,6 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> HestonModelBuilder::ge
     DLOG("Number of Heston processes built: " << processes_.size());
 
     return processes;
-}
-
-std::vector<std::vector<Real>> HestonModelBuilder::getCurveTimes() const {
-    std::vector<Real> timesExt(discretisationTimeGrid_.begin() + 1, discretisationTimeGrid_.end());
-    for (auto const& d : addDates_) {
-        if (d > curves_.front()->referenceDate()) {
-            timesExt.push_back(curves_.front()->timeFromReference(d));
-        }
-    }
-    std::sort(timesExt.begin(), timesExt.end());
-    auto it = std::unique(timesExt.begin(), timesExt.end(),
-                          [](const Real x, const Real y) { return QuantLib::close_enough(x, y); });
-    timesExt.resize(std::distance(timesExt.begin(), it));
-    return std::vector<std::vector<Real>>(allCurves_.size(), timesExt);
-}
-
-std::vector<std::vector<std::pair<Real, Real>>> HestonModelBuilder::getVolTimesStrikes() const {
-    std::vector<std::vector<std::pair<Real, Real>>> volTimesStrikes;
-    std::vector<Real> times;
-    for (auto const& d : effectiveSimulationDates_) {
-        if (d > curves_.front()->referenceDate())
-            times.push_back(processes_.front()->riskFreeRate()->timeFromReference(d));
-    }
-    for (auto const& p : processes_) {
-        volTimesStrikes.push_back(std::vector<std::pair<Real, Real>>());
-        for (auto const t : times) {
-            Real atmLevel = atmForward(p->x0(), p->riskFreeRate(), p->dividendYield(), t);
-            Real atmMarketVol = std::max(1e-4, p->blackVolatility()->blackVol(t, atmLevel));
-            for (auto const m : calibrationMoneyness_) {
-                Real strike = atmLevel * std::exp(m * atmMarketVol * std::sqrt(t));
-                volTimesStrikes.back().push_back(std::make_pair(t, strike));
-            }
-        }
-    }
-    return volTimesStrikes;
 }
 
 AssetModelWrapper::ProcessType HestonModelBuilder::processType() const {

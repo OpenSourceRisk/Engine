@@ -74,8 +74,14 @@ InfDkBuilder::InfDkBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& m
     registerWith(infVol_);
     // notify observers of all market data changes, not only when not calculated
     alwaysForwardNotifications();
+}
 
-    // build option basket and derive parametrization from it
+void InfDkBuilder::initParametrization() const {
+
+    if (parametrizationInitializedOnAnchorDate_ == referenceDate_)
+        return;
+    parametrizationInitializedOnAnchorDate_ = referenceDate_;
+
     const ReversionParameter& reversion = data_->reversion();
     const VolatilityParameter& volatility = data_->volatility();
     if (volatility.calibrate() || reversion.calibrate())
@@ -130,16 +136,16 @@ InfDkBuilder::InfDkBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& m
         DLOG("INF parametrization: InfDkPiecewiseConstantHullWhiteAdaptor");
         parametrization_ = QuantLib::ext::make_shared<InfDkPiecewiseConstantHullWhiteAdaptor>(
             inflationIndex_->currency(), inflationIndex_->zeroInflationTermStructure(), aTimes, alpha, hTimes, h,
-            data_->index());
+            inflationIndex_, data_->index());
     } else if (reversion.reversionType() == LgmData::ReversionType::HullWhite) {
         DLOG("INF parametrization for " << data_->index() << ": InfDkPiecewiseConstant");
         parametrization_ = QuantLib::ext::make_shared<InfDkPiecewiseConstantParametrization>(
             inflationIndex_->currency(), inflationIndex_->zeroInflationTermStructure(), aTimes, alpha, hTimes, h,
-            data_->index());
+            inflationIndex_, data_->index());
     } else {
         parametrization_ = QuantLib::ext::make_shared<InfDkPiecewiseLinearParametrization>(
             inflationIndex_->currency(), inflationIndex_->zeroInflationTermStructure(), aTimes, alpha, hTimes, h,
-            data_->index());
+            inflationIndex_, data_->index());
         DLOG("INF parametrization for " << data_->index() << ": InfDkPiecewiseLinear");
     }
 
@@ -154,12 +160,12 @@ InfDkBuilder::InfDkBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& m
 
     if (horizon > 0.0) {
         DLOG("Apply shift horizon " << horizon << " to the " << data_->index() << " DK model");
-        parametrization_->shift() = horizon;
+        parametrization_->dkLgmParam()->shift() = horizon;
     }
 
     if (scaling != 1.0) {
         DLOG("Apply scaling " << scaling << " to the " << data_->index() << " DK model");
-        parametrization_->scaling() = scaling;
+        parametrization_->dkLgmParam()->scaling() = scaling;
     }
 }
 
@@ -175,14 +181,16 @@ std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> InfDkBuilder::opt
 
 bool InfDkBuilder::requiresRecalibration() const {
     return (data_->volatility().calibrate() || data_->reversion().calibrate()) &&
-           (volSurfaceChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_);
+           (referenceDate_ != rateCurve_->referenceDate() || volSurfaceChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_);
 }
 
 void InfDkBuilder::performCalculations() const {
     if (requiresRecalibration()) {
-        // build option basket
+        referenceDate_ = rateCurve_->referenceDate();
         buildCapFloorBasket();
     }
+    referenceDate_ = rateCurve_->referenceDate();
+    initParametrization();
 }
 
 void InfDkBuilder::setCalibrationDone() const {

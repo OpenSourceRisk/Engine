@@ -72,6 +72,7 @@ index.cpp
 inflationcurve.cpp
 inflationvol.cpp
 interpolatedyoycapfloortermpricesurface.cpp
+intradaypowercurves.cpp
 lgmbgsflexiswapengine.cpp
 lgmflexiswapengine.cpp
 lgmpricing.cpp
@@ -96,13 +97,12 @@ randomvariable.cpp
 randomvariablelsmbasissystem.cpp
 ratehelpers.cpp
 stabilisedglls.cpp
-staticallycorrectedyieldtermstructure.cpp
 stoplightbounds.cpp
 strippedoptionletadapter.cpp
 strippedoptionletadapter2.cpp
 survivalprobabilitycurve.cpp
-swaptionvolconstantspread.cpp
 sviparametricvolatility.cpp
+swaptionvolconstantspread.cpp
 testsuite.cpp
 transitionmatrix.cpp)
 

@@ -23,6 +23,7 @@
 #pragma once
 
 #include <qle/termstructures/pricetermstructure.hpp>
+#include <qle/termstructures/dynamicstype.hpp>
 
 #include <ql/math/interpolation.hpp>
 #include <ql/patterns/lazyobject.hpp>
@@ -30,41 +31,46 @@
 namespace QuantExt {
 
 //! Spreaded Price term structure
-class SpreadedPriceTermStructure : public PriceTermStructure,
-                                   QuantLib::LazyObject {
+class SpreadedPriceTermStructure final : public PriceTermStructure, QuantLib::LazyObject {
 public:
-    //! times should be consistent with reference curve day counter
+    //! times should be consistent with reference curve day counter∂
     SpreadedPriceTermStructure(const QuantLib::Handle<PriceTermStructure>& referenceCurve,
                                const std::vector<QuantLib::Real>& times,
-                               const std::vector<QuantLib::Handle<QuantLib::Quote>>& priceSpreads);
+                               const std::vector<QuantLib::Handle<QuantLib::Quote>>& priceSpreads,
+                               const PriceCurveRollDown rollDown = PriceCurveRollDown::Forward,
+                               const std::string& interpolation = "Linear");
 
     QuantLib::Date maxDate() const override;
-    void update() override;
-    const QuantLib::Date& referenceDate() const override;
-    QuantLib::Calendar calendar() const override;
-    QuantLib::Natural settlementDays() const override;
-
     QuantLib::Time minTime() const override;
     const QuantLib::Currency& currency() const override;
     std::vector<QuantLib::Date> pillarDates() const override;
+
+    void update() override;
     
     void makeThisCurveSpreaded(const std::vector<QuantLib::Handle<PriceTermStructure>>& bases,
                                const std::vector<double>& multiplier);
 
+    QuantLib::Real priceWithoutSpread(QuantLib::Time t) const;
+
 private:
     void performCalculations() const override;
     QuantLib::Real priceImpl(QuantLib::Time) const override;
+    void updateBasesOffsets() const;
+    QuantLib::Real getPrice(QuantLib::Time t, bool includeSpread) const;
 
     QuantLib::Handle<PriceTermStructure> referenceCurve_;
     mutable std::vector<QuantLib::Real> times_;
     std::vector<QuantLib::Handle<QuantLib::Quote>> priceSpreads_;
+    PriceCurveRollDown priceCurveRollDown_;
+    std::string interpolationType_;
 
     mutable std::vector<QuantLib::Real> data_;
     QuantLib::ext::shared_ptr<QuantLib::Interpolation> interpolation_;
     
     std::vector<QuantLib::Handle<PriceTermStructure>> bases_;
     std::vector<double> multiplier_;
-    std::vector<std::vector<QuantLib::Real>> basesOffset_;
+    mutable QuantLib::Date basesReferenceDate_;
+    mutable std::vector<std::vector<QuantLib::Real>> basesOffset_;
 };
 
 } // namespace QuantExt

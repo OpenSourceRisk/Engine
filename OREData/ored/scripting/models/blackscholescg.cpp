@@ -43,12 +43,14 @@ using namespace QuantExt;
 
 BlackScholesCG::BlackScholesCG(const ModelCG::Type type, const Size paths, const std::string& currency,
                                const Handle<YieldTermStructure>& curve, const std::string& index,
-                               const std::string& indexCurrency, const Handle<AssetModelWrapper>& model,
-                               const std::set<Date>& simulationDates,
+                               const std::string& indexCurrency, const std::set<Date>& simulationDates,
+                               const Size timeStepsPerYear, const std::set<Date>& addDates,
                                const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
-                               const std::string& calibration, const std::vector<Real>& calibrationStrikes)
-    : BlackScholesCG(type, paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, simulationDates,
-                     iborFallbackConfig, calibration, {{index, calibrationStrikes}}) {}
+                               const std::string& calibration, const std::vector<Real>& calibrationStrikes,
+                               const bool enableCgOptimization)
+    : BlackScholesCG(type, paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, {}, simulationDates,
+                     timeStepsPerYear, addDates, iborFallbackConfig, calibration, {{index, calibrationStrikes}},
+                     enableCgOptimization) {}
 
 BlackScholesCG::BlackScholesCG(
     const ModelCG::Type type, const Size paths, const std::vector<std::string>& currencies,
@@ -56,31 +58,26 @@ BlackScholesCG::BlackScholesCG(
     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-    const Handle<AssetModelWrapper>& model,
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-    const std::set<Date>& simulationDates, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
-    const std::string& calibration, const std::map<std::string, std::vector<Real>>& calibrationStrikes)
+    const std::set<Date>& simulationDates, const Size timeStepsPerYear, const std::set<Date>& addDates,
+    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const std::string& calibration,
+    const std::map<std::string, std::vector<Real>>& calibrationStrikes, const bool enableCgOptimization)
     : ModelCGImpl(type, curves.at(0)->dayCounter(), paths, currencies, irIndices, infIndices, indices, indexCurrencies,
-                  simulationDates, iborFallbackConfig),
-      curves_(curves), fxSpots_(fxSpots), model_(model), correlations_(correlations), calibration_(calibration),
-      calibrationStrikes_(calibrationStrikes) {
+                  simulationDates, iborFallbackConfig, enableCgOptimization),
+      curves_(curves), fxSpots_(fxSpots), correlations_(correlations), timeStepsPerYear_(timeStepsPerYear),
+      addDates_(addDates), calibration_(calibration), calibrationStrikes_(calibrationStrikes) {
 
     QL_REQUIRE(type == ModelCG::Type::MC, "BlackScholesCG: FD is not yet supported as a model type");
 
     // check inputs
 
-    QL_REQUIRE(!model_.empty(), "model is empty");
-    QL_REQUIRE(!curves_.empty(), "no curves given");
-    QL_REQUIRE(currencies_.size() == curves_.size(), "number of currencies (" << currencies_.size()
-                                                                              << ") does not match number of curves ("
-                                                                              << curves_.size() << ")");
+    QL_REQUIRE(!curves_.empty(), "BlackScholesCG: no curves given");
+    QL_REQUIRE(currencies_.size() == curves_.size(), "BlackScholesCG: number of currencies ("
+                                                         << currencies_.size() << ") does not match number of curves ("
+                                                         << curves_.size() << ")");
     QL_REQUIRE(currencies_.size() == fxSpots_.size() + 1,
-               "number of currencies (" << currencies_.size() << ") does not match number of fx spots ("
-                                        << fxSpots_.size() << ") + 1");
-
-    QL_REQUIRE(indices_.size() == model_->processes().size(),
-               "mismatch of processes size (" << model_->processes().size() << ") and number of indices ("
-                                              << indices_.size() << ")");
+               "BlackScholesCG: number of currencies (" << currencies_.size() << ") does not match number of fx spots ("
+                                                        << fxSpots_.size() << ") + 1");
 
     // register with observables
 
@@ -89,7 +86,25 @@ BlackScholesCG::BlackScholesCG(
     for (auto const& o : correlations_)
         registerWith(o.second);
 
-    registerWith(model_);
+    // populate eff sim dates and time grid
+
+    setupDatesAndTimes();
+
+    // populate volTimesStrikes, and curve times
+
+    volTimesStrikes_ = [this](const TimeGrid&) {
+        return std::vector<std::set<std::pair<Real, Real>>>(indices_.size());
+    };
+
+    curveTimes_ = [this](const TimeGrid&) {
+        std::set<Real> curveTimes;
+        for (auto const& d : addDates_) {
+            if (d > curves_.front()->referenceDate()) {
+                curveTimes.insert(curves_.front()->timeFromReference(d));
+            }
+        }
+        return curveTimes;
+    };
 
 } // BlackScholesBase ctor
 
@@ -278,16 +293,40 @@ struct SqrtCovCalculator : public QuantLib::LazyObject {
 
 } // namespace
 
-const Date& BlackScholesCG::referenceDate() const {
-    calculate();
-    return referenceDate_;
+const std::function<std::set<Real>(const TimeGrid&)> BlackScholesCG::curveTimes() const { return curveTimes_; }
+
+const std::function<std::vector<std::set<std::pair<Real, Real>>>(const TimeGrid&)>
+BlackScholesCG::volTimesStrikes() const {
+    return volTimesStrikes_;
+};
+
+void BlackScholesCG::setModel(const Handle<AssetModelWrapper>& model) {
+    unregisterWith(model_);
+    model_ = model;
+    registerWith(model_);
+}
+
+void BlackScholesCG::setupDatesAndTimes() const {
+    Date referenceDate = curves_.front()->referenceDate();
+    effectiveSimulationDates_ = std::set<Date>(simulationDates_.lower_bound(referenceDate), simulationDates_.end());
+    effectiveSimulationDates_.insert(referenceDate);
+    timeGrid_ = buildTimeGrid(referenceDate, curves_.front()->dayCounter(), simulationDates_, timeStepsPerYear_);
 }
 
 void BlackScholesCG::performCalculations() const {
 
+    QL_REQUIRE(!model_.empty(), "BlackScholesCG: model is empty");
+    QL_REQUIRE(indices_.size() == model_->processes().size(),
+               "BlackScholesCG: mismatch of processes size (" << model_->processes().size()
+                                                              << ") and number of indices (" << indices_.size() << ")");
+
     // needed for base class performCalculations()
 
     referenceDate_ = curves_.front()->referenceDate();
+
+    // set up time grid
+
+    setupDatesAndTimes();
 
     // update cg version if necessary (eval date changed)
 
@@ -314,16 +353,13 @@ void BlackScholesCG::performCalculations() const {
 
         underlyingPaths_.clear();
         underlyingPathsCgVersion_ = cgVersion();
+
+        effectiveCalibrationStrikes_.clear();
     }
 
     // nothing to do if we do not have any indices or if underlying paths are populated already
 
     if (indices_.empty() || !underlyingPaths_.empty())
-        return;
-
-    // exit if there are no future simulation dates (i.e. only the reference date)
-
-    if (effectiveSimulationDates_.size() == 1)
         return;
 
     // init underlying path where we map a date to a randomvariable representing the path values
@@ -333,19 +369,33 @@ void BlackScholesCG::performCalculations() const {
             std::vector<std::size_t>(model_->generalizedBlackScholesProcesses().size(), ComputationGraph::nan);
     }
 
+    std::vector<std::size_t> logState(indices_.size());
+    for (Size j = 0; j < indices_.size(); ++j) {
+        auto p = model_->generalizedBlackScholesProcesses().at(j);
+        logState[j] =
+            addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::logX0, {}, {}, {}, {}, {}, j),
+                              [p] { return std::log(p->x0()); });
+        underlyingPaths_[*effectiveSimulationDates_.begin()][j] = cg_exp(*g_, logState[j]);
+    }
+
+    // exit if there are no future simulation dates (i.e. only the reference date)
+
+    if (effectiveSimulationDates_.size() == 1) {
+        return;
+    }
+
     // determine calibration strikes
 
-    std::vector<Real> calibrationStrikes;
     if (calibration_ == "ATM") {
-        calibrationStrikes.resize(indices_.size(), Null<Real>());
+        effectiveCalibrationStrikes_.resize(indices_.size(), Null<Real>());
     } else if (calibration_ == "Deal") {
         for (Size i = 0; i < indices_.size(); ++i) {
             auto f = calibrationStrikes_.find(indices_[i].name());
             if (f != calibrationStrikes_.end() && !f->second.empty()) {
-                calibrationStrikes.push_back(f->second[0]);
+                effectiveCalibrationStrikes_.push_back(f->second[0]);
                 TLOG("calibration strike for index '" << indices_[i] << "' is " << f->second[0]);
             } else {
-                calibrationStrikes.push_back(Null<Real>());
+                effectiveCalibrationStrikes_.push_back(Null<Real>());
                 TLOG("calibration strike for index '" << indices_[i] << "' is ATMF");
             }
         }
@@ -356,9 +406,9 @@ void BlackScholesCG::performCalculations() const {
     // generate computation graph of underlying paths dependend on the drift and sqrtCov between simulation
     // dates, which we treat as model parameters
 
-    auto sqrtCovCalc = QuantLib::ext::make_shared<SqrtCovCalculator>(indices_, indexCurrencies_, correlations_,
-                                                                     effectiveSimulationDates_, timeGrid_,
-                                                                     positionInTimeGrid_, model_, calibrationStrikes);
+    auto sqrtCovCalc = QuantLib::ext::make_shared<SqrtCovCalculator>(
+        indices_, indexCurrencies_, correlations_, effectiveSimulationDates_, timeGrid_, positionInTimeGrid_, model_,
+        effectiveCalibrationStrikes_);
 
     std::vector<std::vector<std::size_t>> drift(effectiveSimulationDates_.size() - 1,
                                                 std::vector<std::size_t>(indices_.size(), ComputationGraph::nan));
@@ -432,21 +482,11 @@ void BlackScholesCG::performCalculations() const {
 
     for (Size j = 0; j < indices_.size(); ++j) {
         for (Size i = 0; i < effectiveSimulationDates_.size() - 1; ++i) {
-            randomVariates_[j][i] = cg_var(*g_, "__rv_" + std::to_string(j) + "_" + std::to_string(i),
-                                           ComputationGraph::VarDoesntExist::Create);
+            randomVariates_[j][i] = cg_insert(*g_);
         }
     }
 
     // evolve the process using correlated normal variates and set the underlying path values
-
-    std::vector<std::size_t> logState(indices_.size());
-    for (Size j = 0; j < indices_.size(); ++j) {
-        auto p = model_->generalizedBlackScholesProcesses().at(j);
-        logState[j] =
-            addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::logX0, {}, {}, {}, {}, {}, j),
-                              [p] { return std::log(p->x0()); });
-        underlyingPaths_[*effectiveSimulationDates_.begin()][j] = cg_exp(*g_, logState[j]);
-    }
 
     date = effectiveSimulationDates_.begin();
     for (Size i = 0; i < effectiveSimulationDates_.size() - 1; ++i) {
@@ -467,9 +507,10 @@ void BlackScholesCG::performCalculations() const {
             c.second->correlation(0.0);
     }
 
-    for (Size i = 0; i < calibrationStrikes.size(); ++i) {
+    for (Size i = 0; i < effectiveCalibrationStrikes_.size(); ++i) {
         additionalResults_["BlackScholes.CalibrationStrike_" + indices_[i].name()] =
-            (calibrationStrikes[i] == Null<Real>() ? "ATMF" : std::to_string(calibrationStrikes[i]));
+            (effectiveCalibrationStrikes_[i] == Null<Real>() ? "ATMF"
+                                                             : std::to_string(effectiveCalibrationStrikes_[i]));
     }
 
     for (Size i = 0; i < indices_.size(); ++i) {
@@ -481,7 +522,7 @@ void BlackScholesCG::performCalculations() const {
                                       model_->generalizedBlackScholesProcesses()[i]->dividendYield(), t);
             if (timeStep > 0) {
                 Real volatility = model_->generalizedBlackScholesProcesses()[i]->blackVolatility()->blackVol(
-                    t, calibrationStrikes[i] == Null<Real>() ? forward : calibrationStrikes[i]);
+                    t, effectiveCalibrationStrikes_[i] == Null<Real>() ? forward : effectiveCalibrationStrikes_[i]);
                 additionalResults_["BlackScholes.Volatility_" + indices_[i].name() + "_" + ore::data::to_string(d)] =
                     volatility;
             }
@@ -502,7 +543,13 @@ struct comp {
 } // namespace
 
 std::size_t BlackScholesCG::getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
-                                                 const std::size_t barrier, const bool above) const {
+                                                 const std::size_t barrier, const bool above,
+                                                 const std::string& localBaseCurrency) const {
+
+    QL_REQUIRE(localBaseCurrency.empty() || localBaseCurrency == baseCurrency(),
+               "BlackScholesCG::getFutureBarrierProb(): localBaseCurrency ("
+                   << localBaseCurrency << ") not allowed, must be empty or equal to global base ccy ("
+                   << baseCurrency() << ")");
 
     // get the underlying values at the start and end points of the period
 
@@ -665,7 +712,14 @@ std::size_t BlackScholesCG::getFutureBarrierProb(const std::string& index, const
     return barrierHit;
 } // getFutureBarrierProb()
 
-std::size_t BlackScholesCG::getIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
+std::size_t BlackScholesCG::getIndexValue(const Size indexNo, const Date& d, const Date& fwd,
+                                          const std::string& localBaseCurrency) const {
+
+    QL_REQUIRE(localBaseCurrency.empty() || localBaseCurrency == baseCurrency(),
+               "BlackScholesCG::getIndexValue(): localBaseCurrency ("
+                   << localBaseCurrency << ") not allowed, must be empty or equal to global base ccy ("
+                   << baseCurrency() << ")");
+
     Date effFwd = fwd;
     if (indices_[indexNo].isComm()) {
         Date expiry = indices_[indexNo].comm(d)->expiryDate();
@@ -699,7 +753,14 @@ std::size_t BlackScholesCG::getIndexValue(const Size indexNo, const Date& d, con
     return res;
 }
 
-std::size_t BlackScholesCG::getIrIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
+std::size_t BlackScholesCG::getIrIndexValue(const Size indexNo, const Date& d, const Date& fwd,
+                                            const std::string& localBaseCurrency) const {
+
+    QL_REQUIRE(localBaseCurrency.empty() || localBaseCurrency == baseCurrency(),
+               "BlackScholesCG::getIrIndexValue(): localBaseCurrency ("
+                   << localBaseCurrency << ") not allowed, must be empty or equal to global base ccy ("
+                   << baseCurrency() << ")");
+
     Date effFixingDate = d;
     if (fwd != Null<Date>())
         effFixingDate = fwd;
@@ -711,7 +772,14 @@ std::size_t BlackScholesCG::getIrIndexValue(const Size indexNo, const Date& d, c
         [index, effFixingDate]() { return index->fixing(effFixingDate); });
 }
 
-std::size_t BlackScholesCG::getInfIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
+std::size_t BlackScholesCG::getInfIndexValue(const Size indexNo, const Date& d, const Date& fwd,
+                                             const std::string& localBaseCurrency) const {
+
+    QL_REQUIRE(localBaseCurrency.empty() || localBaseCurrency == baseCurrency(),
+               "BlackScholesCG::getInfIndexValue(): localBaseCurrency ("
+                   << localBaseCurrency << ") not allowed, must be empty or equal to global base ccy ("
+                   << baseCurrency() << ")");
+
     Date effFixingDate = d;
     if (fwd != Null<Date>())
         effFixingDate = fwd;
@@ -725,7 +793,14 @@ std::size_t BlackScholesCG::fwdCompAvg(const bool isAvg, const std::string& inde
                                        const Date& start, const Date& end, const Real spread, const Real gearing,
                                        const Integer lookback, const Natural rateCutoff, const Natural fixingDays,
                                        const bool includeSpread, const Real cap, const Real floor,
-                                       const bool nakedOption, const bool localCapFloor) const {
+                                       const bool nakedOption, const bool localCapFloor,
+                                       const std::string& localBaseCurrency) const {
+
+    QL_REQUIRE(localBaseCurrency.empty() || localBaseCurrency == baseCurrency(),
+               "BlackScholesCG::fwdCompAvg(): localBaseCurrency ("
+                   << localBaseCurrency << ") not allowed, must be empty or equal to global base ccy ("
+                   << baseCurrency() << ")");
+
     calculate();
     auto index = std::find_if(irIndices_.begin(), irIndices_.end(), comp(indexInput));
     QL_REQUIRE(index != irIndices_.end(),
@@ -753,7 +828,14 @@ std::size_t BlackScholesCG::fwdCompAvg(const bool isAvg, const std::string& inde
         [coupon]() { return coupon->rate(); });
 }
 
-std::size_t BlackScholesCG::getDiscount(const Size idx, const Date& s, const Date& t) const {
+std::size_t BlackScholesCG::getDiscount(const Size idx, const Date& s, const Date& t,
+                                        const std::string& localBaseCurrency) const {
+
+    QL_REQUIRE(localBaseCurrency.empty() || localBaseCurrency == baseCurrency(),
+               "BlackScholesCG::getDiscount(): localBaseCurrency ("
+                   << localBaseCurrency << ") not allowed, must be empty or equal to global base ccy ("
+                   << baseCurrency() << ")");
+
     auto c = curves_.at(idx);
     std::size_t ns =
         addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, currencies_[idx], {}, s),
@@ -764,10 +846,22 @@ std::size_t BlackScholesCG::getDiscount(const Size idx, const Date& s, const Dat
     return cg_div(*g_, nt, ns);
 }
 
-std::size_t BlackScholesCG::numeraire(const Date& s) const {
-    auto c = curves_.at(0);
+std::size_t BlackScholesCG::numeraire(const Date& s, const std::string& currency,
+                                      const std::string& localBaseCurrency) const {
+
+    calculate();
+
+    QL_REQUIRE(localBaseCurrency.empty() || localBaseCurrency == baseCurrency(),
+               "BlackScholesCG::numeraire(): localBaseCurrency ("
+                   << localBaseCurrency << ") not allowed, must be empty or equal to global base ccy ("
+                   << baseCurrency() << ")");
+
+    auto ccy = currency.empty() ? currencies_.begin() : std::find(currencies_.begin(), currencies_.end(), currency);
+    QL_REQUIRE(ccy != currencies_.end(), "currency " << currency << " not handled");
+    Size cidx = std::distance(currencies_.begin(), ccy);
+    auto c = curves_.at(cidx);
     std::size_t ds =
-        addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, currencies_[0], {}, s),
+        addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, currencies_[cidx], {}, s),
                           [c, s] { return c->discount(s); });
     return cg_div(*g_, cg_const(*g_, 1.0), ds);
 }
@@ -801,9 +895,21 @@ Real BlackScholesCG::getDirectDiscountT0(const Date& paydate, const std::string&
     return curves_.at(cidx)->discount(paydate);
 }
 
-std::set<std::size_t>
-BlackScholesCG::npvRegressors(const Date& obsdate,
-                              const std::optional<std::set<std::string>>& relevantCurrencies) const {
+std::set<std::size_t> BlackScholesCG::npvRegressors(const Date& obsdate,
+                                                    const std::optional<std::set<std::string>>& relevantCurrencies,
+                                                    const std::string& localBaseCurrency,
+                                                    const std::string& localBaseCurrencyPaths) const {
+
+    calculate();
+
+    QL_REQUIRE(localBaseCurrency.empty() || localBaseCurrency == baseCurrency(),
+               "BlackScholesCG::npvRegressors: localBaseCurrency ("
+                   << localBaseCurrency << ") not allowed, must be empty or equal to global base ccy ("
+                   << baseCurrency() << ")");
+    QL_REQUIRE(localBaseCurrencyPaths.empty() || localBaseCurrencyPaths == baseCurrency(),
+               "BlackScholesCG::npvRegressors: localBaseCurrencyPaths ("
+                   << localBaseCurrency << ") not allowed, must be empty or equal to global base ccy ("
+                   << baseCurrency() << ")");
 
     std::set<std::size_t> state;
 
@@ -811,10 +917,14 @@ BlackScholesCG::npvRegressors(const Date& obsdate,
         return state;
     }
 
+    std::string effBaseCcy = localBaseCurrency.empty() ? baseCurrency() : localBaseCurrency;
+    std::set<std::string> effRelCcys =
+        relevantCurrencies ? *relevantCurrencies : std::set<std::string>(currencies().begin(), currencies().end());
+
     if (!underlyingPaths_.empty()) {
         for (Size i = 0; i < indices_.size(); ++i) {
-            if (relevantCurrencies && indices_[i].isFx()) {
-                if (relevantCurrencies->find(indices_[i].fx()->sourceCurrency().code()) == relevantCurrencies->end())
+            if (indices_[i].isFx()) {
+                if (effRelCcys.find(indices_[i].fx()->sourceCurrency().code()) == effRelCcys.end())
                     continue;
             }
             state.insert(underlyingPaths_.at(obsdate).at(i));
@@ -826,7 +936,8 @@ BlackScholesCG::npvRegressors(const Date& obsdate,
 
 std::size_t BlackScholesCG::npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
                                 const std::optional<long>& memSlot, const std::set<std::size_t> addRegressors,
-                                const std::optional<std::set<std::size_t>>& overwriteRegressors) const {
+                                const std::optional<std::set<std::size_t>>& overwriteRegressors,
+                                const std::optional<std::set<std::size_t>>& evaluationRegressors) const {
 
     calculate();
 
@@ -841,17 +952,37 @@ std::size_t BlackScholesCG::npv(const std::size_t amount, const Date& obsdate, c
     // build the state
 
     std::vector<std::size_t> state;
+    std::vector<std::size_t> evalState;
 
     if (overwriteRegressors) {
         state.insert(state.end(), overwriteRegressors->begin(), overwriteRegressors->end());
-    } else {
-        std::set<std::size_t> r = npvRegressors(obsdate, std::nullopt);
-        state.insert(state.end(), r.begin(), r.end());
     }
 
-    for (auto const& r : addRegressors)
-        if (r != ComputationGraph::nan)
-            state.push_back(r);
+    if (evaluationRegressors) {
+        evalState.insert(evalState.end(), evaluationRegressors->begin(), evaluationRegressors->end());
+    }
+
+    if (state.empty()) {
+        std::set<std::size_t> r = npvRegressors(obsdate, std::nullopt);
+        state.insert(state.end(), r.begin(), r.end());
+        for (auto const& r : addRegressors) {
+            if (r != ComputationGraph::nan) {
+                state.push_back(r);
+            }
+        }
+    }
+
+    if (evalState.empty()) {
+        std::set<std::size_t> r = npvRegressors(obsdate, std::nullopt);
+        evalState.insert(evalState.end(), r.begin(), r.end());
+        for (auto const& r : addRegressors) {
+            if (r != ComputationGraph::nan) {
+                evalState.push_back(r);
+            }
+        }
+    }
+
+    state.insert(state.end(), evalState.begin(), evalState.end());
 
     // if the state is empty, return the plain expectation (no conditioning)
 

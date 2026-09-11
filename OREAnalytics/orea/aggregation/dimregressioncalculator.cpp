@@ -51,12 +51,14 @@ RegressionDynamicInitialMarginCalculator::RegressionDynamicInitialMarginCalculat
     Size regressionOrder, std::vector<std::string> regressors, Size localRegressionEvaluations,
     Real localRegressionBandWidth,
     const std::map<std::string, Real>& currentIM,
-    const std::map<std::string, TimeSeries<Real>>& deterministicInitialMargin)
+    const std::map<std::string, TimeSeries<Real>>& deterministicInitialMargin,
+    Real explicitDimScaling)
     : DynamicInitialMarginCalculator(portfolio, cube, cubeInterpretation, scenarioData, quantile, horizonCalendarDays,
                                      currentIM),
       regressionOrder_(regressionOrder), regressors_(regressors),
       localRegressionEvaluations_(localRegressionEvaluations), localRegressionBandWidth_(localRegressionBandWidth),
-      deterministicInitialMargin_(deterministicInitialMargin) {
+      deterministicInitialMargin_(deterministicInitialMargin),
+      explicitDimScaling_(explicitDimScaling) {
     Size dates = cube_->dates().size();
     Size samples = cube_->samples();
     for (const auto& nettingSetId : nettingSetIds_) {
@@ -228,18 +230,18 @@ void RegressionDynamicInitialMarginCalculator::build() {
             continue;
     }
         
-        if (currentIM_.find(n) != currentIM_.end()) {
+        Real nettingSetDimScaling = 1.0;
+        if (explicitDimScaling_ != QuantLib::Null<Real>()) {
+            nettingSetDimScaling = explicitDimScaling_;
+        } else if (currentIM_.find(n) != currentIM_.end()) {
             Real t0im = currentIM_[n];
             QL_REQUIRE(currentDIM_.find(n) != currentDIM_.end(), "current DIM not found for netting set " << n);
             Real t0dim = currentDIM_[n];
-            Real t0scaling = t0im / t0dim;
-            DLOG("t0 scaling for netting set " << n << ": t0im" << t0im << " t0dim=" << t0dim
-                                              << " t0scaling=" << t0scaling);
-            nettingSetScaling_[n] = t0scaling;
+            nettingSetDimScaling = t0im / t0dim;
+            DLOG("t0 scaling for netting set " << n << ": t0im=" << t0im << " t0dim=" << t0dim
+                                               << " t0scaling=" << nettingSetDimScaling);
+            nettingSetScaling_[n] = nettingSetDimScaling;
         }
-
-        Real nettingSetDimScaling =
-            nettingSetScaling_.find(n) == nettingSetScaling_.end() ? 1.0 : nettingSetScaling_[n];
         DLOG("Netting set DIM scaling factor: " << nettingSetDimScaling);
 
         for (Size j = 0; j < stopDatesLoop; ++j) {

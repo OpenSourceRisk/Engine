@@ -63,7 +63,9 @@
 %include orea_engine.i
 %include orea_aggregation.i
 %include orea_simm.i
+%include orea_saccr.i
 %include orea_analytics.i
+%include orea_pnl.i
 
 #if defined(SWIGPYTHON)
 %pythoncode %{

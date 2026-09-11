@@ -19,6 +19,8 @@ configuration determines the composition of
 \item Security spreads and recovery rates % done
 \item Base correlation curves % done
 \item Correlation termstructures % done
+\item Intraday power curves
+\item Bond future volatility structures % done
 \end{itemize}
 
 This file also contains other market objects such as FXSpots, Security Spreads and Security Rates which are necessary
@@ -927,12 +929,20 @@ The only other allowed value is \lstinline!Premium!.
 If \lstinline!ImpliedVolatility! is specified, the quotes used to build the surface are expected to be 
 implied lognormal volatility quotes starting with \lstinline!INDEX_CDS_OPTION/RATE_LNVOL/!. These quotes are 
 discussed further below.
+
 If \lstinline!Premium! is specified, the quotes used to build the surface are expected to be 
 option premium quotes of the form \lstinline!INDEX_CDS_OPTION/PRICE/[NAME]/[TERM]/[EXPIRY]/[STRIKE]/[TYPE]!,
 where \lstinline![TYPE]! is \lstinline!P! for payer and \lstinline!R! for receiver.
 Implied volatilities are derived from the option premia. The \lstinline!PriceInfo! node defined below must be provided 
 in this case to supply additional information for the stripping process. Also, the \lstinline!Terms! node must contain 
 the \lstinline!Maturity! node giving the maturity date of the underlying index CDS series of the given \lstinline!Term!.
+
+If both payer and receiver premiums are quoted for the same expiry and strike, the smaller premium, i.e.\ the 
+out-of-the-money option premium, is used in the stripping procedure.
+During stripping, ORE calculates the forward price or spread from the market index CDS curve. In general, this forward 
+will not exactly coincide with the forward implied by the quoted payer and receiver premiums through put-call parity.
+Consequently, the volatility stripped to match the out-of-the-money premium will not, in general, exactly recover the 
+premium of the corresponding in-the-money option at the same strike and expiry.
 
 \item
 \lstinline!Strikes!: comma separated list of strikes. The strikes may be in terms of spread or price. However, it is important to ensure that the trade XML for a CDS option or index CDS option provides the strike in the same way. In other words, if the strike is in terms of spread on the trade XML, the strike must be in terms of spread in the CDS volatility configuration here. Similarly for strikes in terms of price. A single wildcard character, \lstinline!*!, can be used here also to indicate that all strikes found in the market data for this CDS volatility configuration should be used when building the CDS volatility surface.
@@ -1103,6 +1113,7 @@ If not provided, the engine used depends on the type of the volatility surface b
 For a surface with strikes in terms of spread, the default engine is \lstinline!NumericalIntegrationEngine!.
 For a surface with strikes in terms of price, the default engine is \lstinline!BlackIndexCdsOptionEngine!.
 Allowable values for this node are \lstinline!NumericalIntegrationEngine! and \lstinline!BlackIndexCdsOptionEngine!.
+The methodology for these pricers is described in the ORE Product Catalogue \cite{products}.
 
 \item
 \lstinline!QuoteDimension! [Optional]: For premium quotes on new versions of a given series the quote may be given in 
@@ -1378,6 +1389,8 @@ Listing \ref{lst:correlation_configuration} shows the configuration of the Corre
 \input{curve_configurations/commodity_curves}
 
 \input{curve_configurations/commodity_volatilities}
+
+\input{curve_configurations/bond_future_volatilities}
 
 \subsubsection{Bootstrap Configuration}
 \label{sec:bootstrap_config}

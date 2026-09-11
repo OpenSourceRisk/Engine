@@ -130,11 +130,15 @@ void AnalyticEuropeanEngineAutoDeltaHedge::calculate() const {
             hedgeOptionNpv = hedgeOption->NPV();
         }
 
-        // --- Discount factor for deterministic cashflows at expiry ---
-        DiscountFactor df = discountCurve_->discount(expiryDate);
+        // --- Discount factor for deterministic cashflows at payment date ---
+        Date payDate = (batch.paymentDate != Date()) ? batch.paymentDate : expiryDate;
+        DiscountFactor df = discountCurve_->discount(payDate);
 
-        // --- Aggregate: N^i * [realizedPnL * DF + C_hedge - C_market + Premium * DF]
-        Real batchNpv = Ni * (realizedHedgePnL * df + hedgeOptionNpv - marketOptionNpv + premium * df);
+        // --- Adjustment for deferred settlement: shift option PVs from expiry to payment date ---
+        DiscountFactor df_te_tp = discountCurve_->discount(payDate) / discountCurve_->discount(expiryDate);
+
+        // --- Aggregate: N^i * [realizedPnL * DF + (C_hedge - C_market) * df_te_tp + Premium * DF]
+        Real batchNpv = Ni * (realizedHedgePnL * df + (hedgeOptionNpv - marketOptionNpv) * df_te_tp + premium * df);
         totalNpv += batchNpv;
 
         // Store per-batch results

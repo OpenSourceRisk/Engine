@@ -28,6 +28,7 @@ using ore::data::ForwardBond;
 using ore::data::BondOption;
 using ore::data::TRS;
 using ore::data::CallableBondData;
+using ore::data::TreasuryLockData;
 using ore::data::ConvertibleBondData;
 using ore::data::parseTrsFundingNotionalType;
 using ore::data::FxDoubleBarrierOption;
@@ -61,6 +62,7 @@ using ore::data::FxTouchOption;
 %shared_ptr(ore::data::Bond)
 %shared_ptr(ore::data::CommodityForward)
 %shared_ptr(ore::data::CommoditySwap)
+%shared_ptr(ore::data::TreasuryLockData)
 
 namespace ore {
 namespace data {
@@ -76,7 +78,7 @@ public:
 
     void build(const ext::shared_ptr<EngineFactory>&) override;
     virtual void setIsdaTaxonomyFields();
-    QuantLib::Real notional() const override;
+    QuantLib::Real notional(Trade::NotionalType type = Trade::NotionalType::Default) const override;
     std::string notionalCurrency() const override;
 
     std::map<AssetClass, std::set<std::string>>
@@ -252,6 +254,50 @@ public:
     }
 }
 
+class TreasuryLockData : public XMLSerializable {
+public:
+    TreasuryLockData();
+    TreasuryLockData(bool payer, const ore::data::BondData& bondData, QuantLib::Real referenceRate,
+                     std::string dayCounter, std::string terminationDate, int paymentGap,
+                     std::string paymentCalendar);
+    bool empty() const;
+    bool payer() const;
+    const ore::data::BondData& bondData() const;
+    const ore::data::BondData& originalBondData() const;
+    QuantLib::Real referenceRate() const;
+    const std::string& dayCounter() const;
+    const std::string& terminationDate() const;
+    int paymentGap() const;
+    const std::string& paymentCalendar() const;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+};
+%extend TreasuryLockData {
+    TreasuryLockData(bool payer, ore::data::BondData bondData, QuantLib::Real referenceRate,
+                     std::string dayCounter, std::string terminationDate, int paymentGap,
+                     std::string paymentCalendar) {
+        return new ore::data::TreasuryLockData(payer, bondData, referenceRate, dayCounter,
+                                               terminationDate, paymentGap, paymentCalendar);
+    }
+}
+
+%pythoncode %{
+_treasury_lock_data_init = TreasuryLockData.__init__
+
+
+def _compat_treasury_lock_data_init(self, *args):
+    bond_data_type = globals().get('BondData')
+    if len(args) == 7 and bond_data_type is not None and isinstance(args[1], bond_data_type):
+        try:
+            return _treasury_lock_data_init(self, *args)
+        except TypeError:
+            return _treasury_lock_data_init(self)
+    return _treasury_lock_data_init(self, *args)
+
+
+TreasuryLockData.__init__ = _compat_treasury_lock_data_init
+%}
+
 } // namespace data
 } // namespace ore
 
@@ -296,17 +342,19 @@ public:
     class ReturnData : public XMLSerializable {
     public:
         ReturnData();
-        ReturnData(const bool payer, const std::string& currency, const ScheduleData& scheduleData,
+        ReturnData(const bool payer, const std::string& currency, const ore::data::ScheduleData& scheduleData,
                    const std::string& observationLag, const std::string& observationConvention,
                    const std::string& observationCalendar, const std::string& paymentLag,
                    const std::string& paymentConvention, const std::string& paymentCalendar,
                    const std::vector<std::string>& paymentDates, const QuantLib::Real initialPrice,
                    const std::string& initialPriceCurrency, const std::vector<std::string>& fxTerms,
                    const QuantLib::ext::optional<bool> payUnderlyingCashFlowsImmediately,
-                   const QuantLib::ext::optional<TRS::FXConversion> fxConversion);
+                   const QuantLib::ext::optional<TRS::FXConversion> fxConversion,
+                   QuantLib::ext::optional<QuantExt::DateDeltaUnit> paymentLagUnit = QuantLib::ext::nullopt,
+                   QuantLib::ext::optional<QuantExt::DateDeltaAnchor> paymentLagAnchor = QuantLib::ext::nullopt);
         bool payer() const;
         const std::string& currency() const;
-        const ScheduleData& scheduleData() const;
+        const ore::data::ScheduleData& scheduleData() const;
         void fromXML(XMLNode* node) override;
         XMLNode* toXML(XMLDocument& doc) const override;
     };
@@ -330,7 +378,7 @@ public:
 
     TRS();
     void build(const ext::shared_ptr<EngineFactory>&) override;
-    QuantLib::Real notional() const override;
+    QuantLib::Real notional(Trade::NotionalType type = Trade::NotionalType::Default) const override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
@@ -399,7 +447,7 @@ public:
     public:
         explicit CallabilityData(const std::string& nodeName);
         bool initialised() const;
-        const ScheduleData& dates() const;
+        const ore::data::ScheduleData& dates() const;
         const std::vector<std::string>& styles() const;
         const std::vector<std::string>& styleDates() const;
         const std::vector<double>& prices() const;
@@ -506,7 +554,6 @@ public:
 
         explicit CallabilityData(const std::string& nodeName);
         bool initialised() const;
-        const ScheduleData& dates() const;
         const std::vector<std::string>& styles() const;
         const std::vector<std::string>& styleDates() const;
         const std::vector<double>& prices() const;
@@ -522,6 +569,7 @@ public:
         const std::vector<std::string>& nOfMTriggers() const;
         const std::vector<std::string>& nOfMTriggerDates() const;
         const MakeWholeData& makeWholeData() const;
+        const ore::data::ScheduleData& dates() const;
         void fromXML(XMLNode* node) override;
         XMLNode* toXML(XMLDocument& doc) const override;
     };
@@ -567,7 +615,7 @@ public:
         public:
             ConversionResetData();
             bool initialised() const;
-            const ScheduleData& dates() const;
+            const ore::data::ScheduleData& dates() const;
             const std::vector<std::string>& references() const;
             const std::vector<std::string>& referenceDates() const;
             const std::vector<double>& thresholds() const;
@@ -606,7 +654,7 @@ public:
 
         ConversionData();
         bool initialised() const;
-        const ScheduleData& dates() const;
+        const ore::data::ScheduleData& dates() const;
         const std::vector<std::string>& styles() const;
         const std::vector<std::string>& styleDates() const;
         const std::vector<double>& conversionRatios() const;
@@ -614,7 +662,7 @@ public:
         const ContingentConversionData& contingentConversionData() const;
         const MandatoryConversionData& mandatoryConversionData() const;
         const ConversionResetData& conversionResetData() const;
-        const EquityUnderlying equityUnderlying() const;
+        const ore::data::EquityUnderlying equityUnderlying() const;
         const std::string fxIndex() const;
         const ExchangeableData& exchangeableData() const;
         const FixedAmountConversionData& fixedAmountConversionData() const;
@@ -626,7 +674,7 @@ public:
     public:
         DividendProtectionData();
         bool initialised() const;
-        const ScheduleData& dates() const;
+        const ore::data::ScheduleData& dates() const;
         const std::vector<std::string>& adjustmentStyles() const;
         const std::vector<std::string>& adjustmentStyleDates() const;
         const std::vector<std::string>& dividendTypes() const;
@@ -713,15 +761,15 @@ public:
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
     virtual void checkBarriers() = 0;
-    virtual QuantLib::ext::shared_ptr<QuantLib::Index> getIndex() const = 0;
+    virtual ext::shared_ptr<QuantLib::Index> getIndex() const = 0;
     virtual const QuantLib::Real strike() const = 0;
     virtual QuantLib::Real tradeMultiplier() = 0;
     virtual Currency tradeCurrency() = 0;
-    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
-    vanillaPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+    virtual ext::shared_ptr<QuantLib::PricingEngine>
+    vanillaPricingEngine(const ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
                            const QuantLib::Date& paymentDate) = 0;
-    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
-    barrierPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+    virtual ext::shared_ptr<QuantLib::PricingEngine>
+    barrierPricingEngine(const ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
                            const QuantLib::Date& paymentDate) = 0;
     virtual const QuantLib::Handle<QuantLib::Quote>& spotQuote() = 0;
     virtual void additionalFromXml(ore::data::XMLNode* node) = 0;
@@ -738,7 +786,7 @@ class FxOptionWithBarrier : public BarrierOption {
 public:
     void additionalFromXml(ore::data::XMLNode* node) override;
     void additionalToXml(ore::data::XMLDocument& doc, ore::data::XMLNode* node) const override;
-    QuantLib::ext::shared_ptr<QuantLib::Index> getIndex() const override;
+    ext::shared_ptr<QuantLib::Index> getIndex() const override;
     const QuantLib::Real strike() const override;
     QuantLib::Real tradeMultiplier() override;
     Currency tradeCurrency() override;
@@ -753,7 +801,7 @@ class EquityOptionWithBarrier : public BarrierOption {
 public:
     void additionalFromXml(ore::data::XMLNode* node) override;
     void additionalToXml(ore::data::XMLDocument& doc, ore::data::XMLNode* node) const override;
-    QuantLib::ext::shared_ptr<QuantLib::Index> getIndex() const override;
+    ext::shared_ptr<QuantLib::Index> getIndex() const override;
     const QuantLib::Real strike() const override;
     QuantLib::Real tradeMultiplier() override;
     Currency tradeCurrency() override;
@@ -775,11 +823,11 @@ public:
         QuantLib::Date startDate, std::string calendar, std::string boughtCurrency, QuantLib::Real boughtAmount,
         std::string soldCurrency, QuantLib::Real soldAmount, std::string fxIndex = "");
     void checkBarriers() override;
-    QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
-    vanillaPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+    ext::shared_ptr<QuantLib::PricingEngine>
+    vanillaPricingEngine(const ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
                            const QuantLib::Date& paymentDate = QuantLib::Date()) override;
-    QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
-    barrierPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+    ext::shared_ptr<QuantLib::PricingEngine>
+    barrierPricingEngine(const ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
                            const QuantLib::Date& paymentDate = QuantLib::Date()) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
@@ -794,11 +842,11 @@ public:
                     std::string calendar, std::string boughtCurrency, double boughtAmount,
                     std::string soldCurrency, double soldAmount, std::string fxIndex = "");
     void checkBarriers() override;
-    QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
-    vanillaPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+    ext::shared_ptr<QuantLib::PricingEngine>
+    vanillaPricingEngine(const ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
                            const QuantLib::Date& paymentDate = QuantLib::Date()) override;
-    QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
-    barrierPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+    ext::shared_ptr<QuantLib::PricingEngine>
+    barrierPricingEngine(const ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
                            const QuantLib::Date& paymentDate = QuantLib::Date()) override;
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
@@ -830,7 +878,7 @@ public:
                             double soldAmount, std::string startDate = "", std::string calendar = "",
                             std::string fxIndex = "");
     void build(const ext::shared_ptr<EngineFactory>&) override;
-    QuantLib::Real notional() const override;
+    QuantLib::Real notional(Trade::NotionalType type = Trade::NotionalType::Default) const override;
     std::string notionalCurrency() const override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
@@ -844,6 +892,7 @@ using ore::data::EquityOptionWithBarrier;
 using ore::data::BGSTrancheData;
 using OREBalanceGuaranteedSwap = ore::data::BalanceGuaranteedSwap;
 using ore::data::BondFuture;
+using ore::data::BondFutureOption;
 using ore::data::BondPosition;
 using ore::data::BondRepo;
 using ore::data::Ascot;
@@ -881,6 +930,9 @@ using ore::data::FxVarSwap;
 using ore::data::ComVarSwap;
 using OREBalanceGuaranteedSwap = ore::data::BalanceGuaranteedSwap;
 using ORERiskParticipationAgreement = ore::data::RiskParticipationAgreement;
+using ore::data::EquityAutoDeltaHedgedOption;
+using ore::data::UnderlyingOptionData;
+using ore::data::RateDigitalOption;
 %}
 
 %rename(OREBondTRS) ore::data::BondTRS;
@@ -957,6 +1009,19 @@ public:
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+// ore/OREData/ored/portfolio/bondfutureoption.hpp
+
+%shared_ptr(BondFutureOption)
+class BondFutureOption : public ore::data::VanillaOptionTrade {
+public:
+    BondFutureOption();
+    BondFutureOption(Envelope& env,
+        OptionData optionData,
+        std::string futureContractName,
+        QuantLib::Real futureContractNotional,
+        QuantLib::Real strikePrice);
 };
 
 // ore/OREData/ored/portfolio/bondposition.hpp
@@ -1149,11 +1214,11 @@ public:
                         std::string calendar, ore::data::EquityUnderlying equityUnderlying, QuantLib::Currency currency,
                         QuantLib::Real quantity, ore::data::TradeStrike strike);
     void checkBarriers() override;
-    QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
-    vanillaPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+    ext::shared_ptr<QuantLib::PricingEngine>
+    vanillaPricingEngine(const ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
                            const QuantLib::Date& paymentDate = QuantLib::Date()) override;
-    QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
-    barrierPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+    ext::shared_ptr<QuantLib::PricingEngine>
+    barrierPricingEngine(const ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
                            const QuantLib::Date& paymentDate = QuantLib::Date()) override;
 };
 
@@ -1182,11 +1247,11 @@ public:
                               std::string calendar, ore::data::EquityUnderlying equityUnderlying, QuantLib::Currency currency,
                               QuantLib::Real quantity, ore::data::TradeStrike strike);
     void checkBarriers() override;
-    QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
-    vanillaPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+    ext::shared_ptr<QuantLib::PricingEngine>
+    vanillaPricingEngine(const ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
                            const QuantLib::Date& paymentDate = QuantLib::Date()) override;
-    QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
-    barrierPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+    ext::shared_ptr<QuantLib::PricingEngine>
+    barrierPricingEngine(const ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
                            const QuantLib::Date& paymentDate = QuantLib::Date()) override;
     void build(const ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
@@ -1565,5 +1630,64 @@ public:
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
+
+// ore/OREData/ored/portfolio/equityautodeltahedgeoption.hpp
+// ore/OREData/ored/portfolio/ratedigitaloption.hpp
+
+%shared_ptr(ore::data::EquityAutoDeltaHedgedOption)
+%shared_ptr(ore::data::RateDigitalOption)
+
+namespace ore {
+namespace data {
+
+struct UnderlyingOptionData {
+    OptionData optionData;
+    EquityUnderlying equityUnderlying;
+    std::string currency;
+    TradeStrike strike;
+    std::string strikeCurrency;
+    double quantity;
+};
+
+class EquityAutoDeltaHedgedOption : public Trade {
+public:
+    EquityAutoDeltaHedgedOption();
+    EquityAutoDeltaHedgedOption(Envelope& env, std::vector<UnderlyingOptionData> underlyings, double hedgingVol, double driftRate,
+                                const QuantLib::Date& observationStartDate,  const QuantLib::Date& paymentDate);
+    void build(const ext::shared_ptr<EngineFactory>&) override;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+
+    const std::vector<UnderlyingOptionData>& underlyings() const;
+    double hedgingVolatility() const;
+    const QuantLib::Date& observationStartDate() const;
+    double driftRate() const;
+};
+
+class RateDigitalOption : public Trade {
+public:
+    RateDigitalOption();
+    RateDigitalOption(const Envelope& env, const OptionData& option, const std::string& index,
+                      QuantLib::Real strike, QuantLib::Real payoffAmount,
+                      const std::string& payoffCurrency, const std::string& fixingDate,
+                      const std::string& paymentDate);
+
+    void build(const ext::shared_ptr<EngineFactory>&) override;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+
+    const OptionData& option() const;
+    const std::string& indexName() const;
+    QuantLib::Real strike() const;
+    QuantLib::Real payoffAmount() const;
+    const std::string& payoffCurrency() const;
+    const std::string& fixingDate() const;
+    const std::string& paymentDate() const;
+};
+
+} // namespace data
+} // namespace ore
+
+%template(UnderlyingOptionDataVector) std::vector<ore::data::UnderlyingOptionData>;
 
 #endif

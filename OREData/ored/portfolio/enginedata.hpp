@@ -41,15 +41,38 @@ using std::vector;
 class EngineData : public XMLSerializable {
 public:
     //! Default constructor
-    EngineData() {}
+    EngineData(const QuantLib::ext::shared_ptr<EngineData>& engineDataOverride = nullptr)
+        : engineDataOverride_(engineDataOverride) {}
+
+    /*! add an override to the engine data; products present in the override take
+        precedence over the corresponding products in this object */
+    void setEngineDataOverride(const QuantLib::ext::shared_ptr<EngineData>& engineDataOverride) {
+        engineDataOverride_ = engineDataOverride;
+    }
 
     //! \name Inspectors
     //@{
-    bool hasProduct(const string& productName);
-    const string& model(const string& productName) const { return model_.at(productName); }
-    const map<string, string>& modelParameters(const string& productName) const { return modelParams_.at(productName); }
-    const string& engine(const string& productName) const { return engine_.at(productName); }
+    bool hasProduct(const string& productName) const;
+    bool hasModelParams(const string& productName) const;
+    bool hasEngineParams(const string& productName) const;
+    const string& model(const string& productName) const {
+        if (engineDataOverride_ && engineDataOverride_->hasProduct(productName))
+            return engineDataOverride_->model(productName);
+        return model_.at(productName);
+    }
+    const map<string, string>& modelParameters(const string& productName) const {
+        if (engineDataOverride_ && engineDataOverride_->hasProduct(productName))        
+            return engineDataOverride_->modelParameters(productName);
+        return modelParams_.at(productName);
+    }
+    const string& engine(const string& productName) const {
+        if (engineDataOverride_ && engineDataOverride_->hasProduct(productName))
+            return engineDataOverride_->engine(productName);
+        return engine_.at(productName);
+    }
     const map<string, string>& engineParameters(const string& productName) const {
+        if (engineDataOverride_ && engineDataOverride_->hasProduct(productName))
+            return engineDataOverride_->engineParameters(productName);
         return engineParams_.at(productName);
     }
     const std::map<std::string, std::string>& globalParameters() const { return globalParams_; }
@@ -63,11 +86,11 @@ public:
     std::string& model(const std::string& productName) { return model_[productName]; }
     void setModel(const std::string& productName, const std::string& model) { model_[productName] = model; }
     std::map<std::string, std::string>& modelParameters(const std::string& productName) { return modelParams_[productName]; }
-    void setModelParameters(const std::string& productName, const std::map<std::string, std::string>& params) { modelParams_[productName] = params; }
+    void setModelParameters(const std::string& productName, const std::map<std::string, std::string>& params);
     std::string& engine(const std::string& productName) { return engine_[productName]; }
     void setEngine(const std::string& productName, const std::string& engine) { engine_[productName] = engine; }
     std::map<std::string, std::string>& engineParameters(const std::string& productName) { return engineParams_[productName]; }
-    void setEngineParameters(const std::string& productName, const std::map<std::string, std::string>& params) { engineParams_[productName] = params; }
+    void setEngineParameters(const std::string& productName, const std::map<std::string, std::string>& params);
     std::map<std::string, std::string>& globalParameters() { return globalParams_; }
     void setGlobalParameter(const std::string& name, const std::string& param) { globalParams_[name] = param; }
     //@}
@@ -87,6 +110,7 @@ private:
     std::map<std::string, std::string> engine_;
     std::map<std::string, std::map<std::string, std::string>> engineParams_;
     std::map<std::string, std::string> globalParams_;
+    QuantLib::ext::shared_ptr<EngineData> engineDataOverride_;
 };
 
 bool operator==(const EngineData& lhs, const EngineData& rhs);

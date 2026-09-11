@@ -31,6 +31,8 @@
 #include <ql/time/period.hpp>
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/models/zeroinflationmodeltermstructure.hpp>
+#include <concepts>
+#include <type_traits>
 
 namespace QuantExt {
 
@@ -49,23 +51,43 @@ QuantLib::Time inflationTime(const QuantLib::Date& date,
     coupon bond price at time zero for maturity \f$ t \f$ and \f$ P_n(0, t) \f$ is the nominal zero coupon bond price.
 */
 QuantLib::Real inflationGrowth(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts, QuantLib::Time t,
-                               const std::optional<QuantLib::DayCounter>& dc, bool indexIsInterpolated);
+                               const std::optional<QuantLib::DayCounter>& dc);
 
 /*! Utility for calculating the ratio \f$ \frac{P_r(0, t)}{P_n(0, t)} \f$ where \f$ P_r(0, t) \f$ is the real zero
     coupon bond price at time zero for maturity \f$ t \f$ and \f$ P_n(0, t) \f$ is the nominal zero coupon bond price.
 */
 QuantLib::Real inflationGrowth(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts,
-    QuantLib::Time t, bool indexIsInterpolated);
+    QuantLib::Time t);
 
-int simulationLag(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts);
+template <class T>
+concept TermstructureWithBaseAndReferenceDate = requires(const T ts) {
+    { ts.baseDate() } -> std::convertible_to<QuantLib::Date>;
+    { ts.referenceDate() } -> std::convertible_to<QuantLib::Date>;
+};
 
-int simulationLag(const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts);
+template <TermstructureWithBaseAndReferenceDate T>
+int simulationLag(const QuantLib::ext::shared_ptr<T>& ts) {
+    QL_REQUIRE(ts != nullptr, "simulationLag can not be computed, no curve given");
+    return ts->referenceDate() - ts->baseDate();
+}
 
-double simulationLagTime(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts,
-                         const std::optional<QuantLib::DayCounter>& dc = std::nullopt);
+template <TermstructureWithBaseAndReferenceDate T>
+int simulationLag(const QuantLib::Handle<T>& ts) {
+    return simulationLag(ts.currentLink());
+}
 
-double simulationLagTime(const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts,
-                         const std::optional<QuantLib::DayCounter>& dc = std::nullopt);
+template <TermstructureWithBaseAndReferenceDate T>
+double simulationLagTime(const QuantLib::ext::shared_ptr<T>& ts,
+                         const std::optional<QuantLib::DayCounter>& dc = std::nullopt) {
+    QL_REQUIRE(ts != nullptr, "simulationLag can not be computed, no curve given");
+    return dc.value_or(ts->dayCounter()).yearFraction(ts->baseDate(), ts->referenceDate());
+}
+
+template <TermstructureWithBaseAndReferenceDate T>
+double simulationLagTime(const QuantLib::Handle<T>& ts,
+                         const std::optional<QuantLib::DayCounter>& dc = std::nullopt) {
+    return simulationLagTime(ts.currentLink(), dc);
+}
 
 /*! Compute a seasonality-adjusted zero rate for a given observation date.
     It takes the time tau between the term structure base date and the observation date as
@@ -159,6 +181,37 @@ bool isCPIVolSurfaceLogNormal(const QuantLib::ext::shared_ptr<QuantLib::CPIVolat
 
 
 }
+
+class InflationObservationLagFinder{
+    public:
+        InflationObservationLagFinder(const std::map<QuantLib::Period, QuantLib::Period>& observationLags, const QuantLib::Date& refDate)
+            : refDate_(refDate) {
+            for (const auto& [tenor, obsLag] : observationLags) {
+                maturityObsLag_[refDate_ + obsLag] = obsLag;
+            }
+        }
+    
+        QuantLib::Period operator()(const QuantLib::Period& p) const {
+            QuantLib::Date maturity = refDate_ + p;
+            return operator()(maturity);
+        }
+
+        QuantLib::Period operator()(const QuantLib::Date& d) const {
+            auto it = maturityObsLag_.upper_bound(d);
+            if (it == maturityObsLag_.begin()) {
+                // all observation lags are for maturities after the given maturity, return the first one
+                return maturityObsLag_.begin()->second;
+            }
+            else {
+                // return the observation lag for the largest maturity smaller than or equal to the given maturity
+                return std::prev(it)->second;
+            }
+        }
+    
+    private:
+        QuantLib::Date refDate_;
+        std::map<QuantLib::Date, QuantLib::Period> maturityObsLag_;
+};
 
 
 } // namespace QuantExt

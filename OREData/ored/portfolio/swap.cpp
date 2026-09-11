@@ -307,7 +307,7 @@ const std::map<std::string,QuantLib::ext::any>& Swap::additionalData() const {
     return additionalData_;
 }
 
-QuantLib::Real Swap::notional() const {
+QuantLib::Real Swap::notional(NotionalType type) const {
     // try to get the notional from the additional results of the instrument
     try {
         return instrument_->qlInstrument(true)->result<Real>("currentNotional");
@@ -477,8 +477,8 @@ getSwapUnderlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& 
     map<AssetClass, set<string>> result;
     for (const auto& ld : legData) {
         for (auto ind : ld.indices()) {
-            // only handle equity and commodity for now
-            if (ind.substr(0, 5) != "COMM-" && ind.substr(0, 3) != "EQ-")
+            // only handle equity, commodity, bond indices for now
+            if (ind.substr(0, 5) != "COMM-" && ind.substr(0, 3) != "EQ-" && ind.substr(0, 5) != "BOND-")
                 continue;
 
             QuantLib::ext::shared_ptr<Index> index = parseIndex(ind);
@@ -487,6 +487,8 @@ getSwapUnderlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& 
                 result[AssetClass::EQ].insert(ei->name());
             } else if (auto ci = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {
                 result[AssetClass::COM].insert(ci->name());
+            } else if (auto bi = QuantLib::ext::dynamic_pointer_cast<QuantExt::BondIndex>(index)) {
+                result[AssetClass::BOND].insert(bi->securityName());
             }
         }
     }

@@ -512,4 +512,6 @@
     <Pair>DiscountCurve/EUR,IndexCurve/EUR</Pair>
   </CrossGammaFilter>
 
+  <ThetaPeriod>1D</ThetaPeriod>
+
 </SensitivityAnalysis>

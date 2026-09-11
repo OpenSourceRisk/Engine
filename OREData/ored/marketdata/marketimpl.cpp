@@ -354,9 +354,23 @@ Handle<ZeroInflationIndex> MarketImpl::zeroInflationIndex(const string& indexNam
     return lookup<Handle<ZeroInflationIndex>>(zeroInflationIndices_, indexName, configuration, "zero inflation index");
 }
 
+std::map<QuantLib::Period, QuantLib::Period>
+MarketImpl::zeroInflationObservationLags(const string& indexName, const string& configuration) const {
+    require(MarketObject::ZeroInflationCurve, indexName, configuration);
+    return lookup<std::map<QuantLib::Period, QuantLib::Period>>(zeroInflationObservationLags_, indexName, configuration,
+                                                              "zero inflation observation lags");
+}
+
 Handle<YoYInflationIndex> MarketImpl::yoyInflationIndex(const string& indexName, const string& configuration) const {
     require(MarketObject::YoYInflationCurve, indexName, configuration);
     return lookup<Handle<YoYInflationIndex>>(yoyInflationIndices_, indexName, configuration, "yoy inflation index");
+}
+
+std::map<QuantLib::Period, QuantLib::Period>
+MarketImpl::yoyInflationObservationLags(const string& indexName, const string& configuration) const {
+    require(MarketObject::YoYInflationCurve, indexName, configuration);
+    return lookup<std::map<QuantLib::Period, QuantLib::Period>>(yoyInflationObservationLags_, indexName, configuration,
+                                                              "yoy inflation observation lags");
 }
 
 Handle<CPIVolatilitySurface> MarketImpl::cpiInflationCapFloorVolatilitySurface(const string& indexName,
@@ -478,6 +492,23 @@ Handle<QuantExt::CorrelationTermStructure> MarketImpl::correlationCurve(const st
 Handle<Quote> MarketImpl::cpr(const string& securityID, const string& configuration) const {
     require(MarketObject::Security, securityID, configuration);
     return lookup<Handle<Quote>>(cprs_, securityID, configuration, "cpr");
+}
+
+Handle<BlackVolTermStructure> MarketImpl::bondFutureVol(const string& contractName, const string& configuration) const {
+    require(MarketObject::BondFutureVol, contractName, configuration);
+    return lookup<Handle<BlackVolTermStructure>>(bondFutureVols_, contractName, configuration, "bond future vol curve");
+}
+
+QuantLib::Handle<QuantExt::IntradayPowerPriceTermStructure>
+MarketImpl::intradayPowerPriceCurve(const std::string& commodityName, const std::string& configuration) const {
+    return intradayPowerIndex(commodityName, configuration)->priceCurve();
+}
+
+QuantLib::Handle<QuantExt::IntradayPowerIndex> MarketImpl::intradayPowerIndex(const std::string& commodityName,
+                                                                              const std::string& configuration) const {
+    require(MarketObject::IntradayPowerPriceCurve, commodityName, configuration);
+    return lookup<Handle<QuantExt::IntradayPowerIndex>>(intradayPowerIndices_, commodityName, configuration,
+                                                        "intraday power indices");
 }
 
 void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountIndex, const string& configuration) const {

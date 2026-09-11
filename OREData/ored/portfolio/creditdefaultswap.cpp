@@ -199,7 +199,7 @@ const std::map<std::string, QuantLib::ext::any>& CreditDefaultSwap::additionalDa
     return additionalData_;
 }
 
-QuantLib::Real CreditDefaultSwap::notional() const {
+QuantLib::Real CreditDefaultSwap::notional(NotionalType type) const {
     Date asof = Settings::instance().evaluationDate();
     // get the current notional from CDS premium leg
     if (!legs_.empty()) {

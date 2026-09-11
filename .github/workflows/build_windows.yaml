@@ -44,6 +44,11 @@ jobs:
             boost-lib: 64
             python-wheel: "cp313"
             python-version: "3.13"
+          - arch: AMD64
+            platform: x64
+            boost-lib: 64
+            python-wheel: "cp314"
+            python-version: "3.14"
 
     steps:
     - uses: actions/checkout@v5
@@ -75,13 +80,21 @@ jobs:
     - name: zlib
       run: |
         $Url = "https://www.zlib.net/zlib132.zip"
-        (New-Object System.Net.WebClient).DownloadFile($Url, "$env:TEMP\zlib.zip")
-        Expand-Archive -Path "$env:TEMP\zlib.zip" -DestinationPath C:\local
-        cd C:\local\zlib-1.3.2
-        mkdir build
-        cd build
-        cmake ..
-        cmake --build . --config Release
+        if ($Url -match '^\[(.+)\]\((.+)\)$') { $Url = $Matches[2] }
+        $ZipPath = Join-Path $env:RUNNER_TEMP "zlib132.zip"
+
+        curl.exe -fL --retry 5 --retry-delay 3 --retry-all-errors -o $ZipPath $Url
+
+        Expand-Archive -Path $ZipPath -DestinationPath C:\local -Force
+
+        $ZlibRoot = "C:\local\zlib-1.3.2"
+        if (!(Test-Path $ZlibRoot)) {
+          Get-ChildItem C:\local | Select-Object Name
+          throw "Expected zlib folder not found: $ZlibRoot"
+        }
+
+        cmake -S $ZlibRoot -B "$ZlibRoot\build"
+        cmake --build "$ZlibRoot\build" --config Release
     - name: eigen
       run: |
         $Url = "https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.zip"
@@ -93,7 +106,7 @@ jobs:
         cmake ..
     - name: Set up Boost
       run: |
-        $Url = "https://archives.boost.io/release/1.80.0/binaries/boost_1_80_0-msvc-14.3-${{ matrix.boost-lib }}.exe"
+        $Url = "https://archives.boost.io/release/1.83.0/binaries/boost_1_83_0-msvc-14.3-${{ matrix.boost-lib }}.exe"
         (New-Object System.Net.WebClient).DownloadFile($Url, "$env:TEMP\boost.exe")
         Start-Process -Wait -FilePath "$env:TEMP\boost.exe" "/SILENT","/SP-","/SUPPRESSMSGBOXES","/DIR=C:\local\boost"
         choco install -y ninja
@@ -122,7 +135,7 @@ jobs:
         cd ${{ github.workspace }}\ORE-SWIG
         python setup.py wrap
     - name: Build ORE Wheels
-      uses: pypa/cibuildwheel@v2.22.0
+      uses: pypa/cibuildwheel@v3.4.1
       env:
         BOOST: C:\local\boost
         BOOST_LIB64: C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.3

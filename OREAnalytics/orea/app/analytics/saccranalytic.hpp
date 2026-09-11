@@ -25,6 +25,14 @@
 #include <orea/app/inputvariables.hpp>
 
 namespace ore {
+namespace data {
+class NettingSetManager;
+class CollateralBalances;
+class CounterpartyManager;
+}
+}
+
+namespace ore {
 namespace analytics {
 
 class SaccrCalculator;
@@ -36,6 +44,7 @@ struct SaCcrVariables : public InputVariables {
 
     QuantLib::ext::shared_ptr<ore::data::NettingSetManager> nettingSetManager_;
     QuantLib::ext::shared_ptr<ore::data::CollateralBalances> collateralBalances_;
+    QuantLib::ext::shared_ptr<ore::data::CounterpartyManager> counterpartyManager_;
 };
 
 class SaCcrAnalyticImpl : public Analytic::Impl {

@@ -23,20 +23,15 @@
 
 #pragma once
 
-#include <ored/portfolio/cashflowutils.hpp>
-#include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/envelope.hpp>
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/instrumentwrapper.hpp>
-#include <ored/portfolio/premiumdata.hpp>
 #include <ored/portfolio/tradeactions.hpp>
-#include <ored/portfolio/tradefactory.hpp>
 #include <ored/utilities/parsers.hpp>
 
 #include <ql/cashflow.hpp>
 #include <ql/instrument.hpp>
 #include <ql/time/date.hpp>
-#include <ql/cashflow.hpp>
 
 namespace ore {
 namespace data {
@@ -44,6 +39,15 @@ using ore::data::XMLNode;
 using ore::data::XMLSerializable;
 using QuantLib::Date;
 using std::string;
+
+// forward declarations (used only via shared_ptr / reference / return type below)
+class EngineFactory;
+class EngineBuilder;
+class ReferenceDataManager;
+class PremiumData;
+class Market;
+struct TradeCashflowReportData;
+
 
 //! Trade base class
 /*! Instrument interface to pricing and risk applications
@@ -55,6 +59,9 @@ using std::string;
 */
 class Trade : public XMLSerializable {
 public:
+
+    //! Enum to control notional calculation behaviour
+    enum class NotionalType { Default, IMSchedule };
 
     //! Default constructor
     Trade() {}
@@ -106,7 +113,7 @@ public:
 
     //! Reset accumulated timings to given values
     void resetPricingStats(const std::size_t numberOfPricings = 0,
-                           const boost::timer::nanosecond_type cumulativePricingTime = 0) {
+                           const unsigned long long cumulativePricingTime = 0) {
         savedNumberOfPricings_ = numberOfPricings;
         savedCumulativePricingTime_ = cumulativePricingTime;
         if (instrument_ != nullptr)
@@ -153,11 +160,8 @@ public:
     enum class LegCashflowInclusion { IfNoEngineCashflows, Never, Always };
     const std::map<size_t, LegCashflowInclusion>& legCashflowInclusion() const { return legCashflowInclusion_; }
 
-    const string& npvCurrency() const { return npvCurrency_; }
-
-    //! Return the current notional in npvCurrency. See individual sub-classes for the precise definition
-    // of notional, for exotic trades this may not be what you expect.
-    virtual QuantLib::Real notional() const { return notional_; }
+    const string& npvCurrency() const { return npvCurrency_; } // of notional, for exotic trades this may not be what you expect.
+    virtual QuantLib::Real notional(NotionalType type = NotionalType::Default) const { return notional_; }
 
     virtual string notionalCurrency() const { return notionalCurrency_; }
 
@@ -178,6 +182,8 @@ public:
 
     //! returns any additional datum.
     template <typename T> T additionalDatum(const std::string& tag) const;
+    //! Try to return any additional datum.
+    template <typename T> QuantLib::ext::optional<T> tryGetAdditionalDatum(const std::string& tag) const;
     //! returns all additional data returned by the trade once built
     const virtual std::map<std::string,QuantLib::ext::any>& additionalData() const;
 
@@ -196,7 +202,7 @@ public:
     void validate() const;
 
     //! Get cumulative timing spent on pricing
-    boost::timer::nanosecond_type getCumulativePricingTime() const {
+    unsigned long long getCumulativePricingTime() const {
         return savedCumulativePricingTime_ + (instrument_ != nullptr ? instrument_->getCumulativePricingTime() : 0);
     }
 
@@ -228,6 +234,9 @@ public:
     /* get build status */
     bool isBuilt() const { return isBuilt_; }
 
+    // default returns the generic maturity wording; derived trades may override to add trade-specific reasons
+    virtual std::string maturityMessage(const QuantLib::Date& asof) const;
+
 protected:
     string tradeType_; // class name of the derived class
     QuantLib::ext::shared_ptr<InstrumentWrapper> instrument_;
@@ -248,7 +257,7 @@ protected:
     Date lastRelevantDate_ = Null<Date>();
 
     std::size_t savedNumberOfPricings_ = 0;
-    boost::timer::nanosecond_type savedCumulativePricingTime_ = 0;
+    unsigned long long savedCumulativePricingTime_ = 0;
     bool isSubTrade_ = false;
     // Utility to add premiums such that they are taken into account in pricing and cash flow projection.
     // For example, an option premium flow is not covered by the underlying option instrument in
@@ -286,6 +295,15 @@ inline T Trade::additionalDatum(const std::string& tag) const {
     QL_REQUIRE(value != additionalData_.end(),
                tag << " not provided");
     return QuantLib::ext::any_cast<T>(value->second);
+}
+
+template <typename T> QuantLib::ext::optional<T> Trade::tryGetAdditionalDatum(const std::string& tag) const {
+    auto it = additionalData_.find(tag);
+    if (it != additionalData_.end()) {
+        if (auto* value = QuantLib::ext::any_cast<T>(&it->second))
+            return *value;
+    }
+    return QuantLib::ext::nullopt;
 }
 
 } // namespace data

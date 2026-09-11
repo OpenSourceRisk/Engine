@@ -26,6 +26,7 @@
 #include <ored/portfolio/schedule.hpp>
 #include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/tradefactory.hpp>
+#include <qle/time/dateutilities.hpp>
 
 namespace ore {
 namespace data {
@@ -43,9 +44,11 @@ public:
         : type_(Type::Array), name_(name), schedule_(schedule) {}
     // derived schedule ctor
     ScriptedTradeEventData(const std::string& name, const std::string& baseSchedule, const std::string& shift,
-                           const std::string& calendar, const std::string& convention)
+                           const std::string& calendar, const std::string& convention,
+                           QuantLib::ext::optional<QuantExt::DateDeltaUnit> shiftUnit = QuantLib::ext::nullopt,
+                           QuantLib::ext::optional<QuantExt::DateDeltaAnchor> shiftAnchor = QuantLib::ext::nullopt)
         : type_(Type::Derived), name_(name), baseSchedule_(baseSchedule), shift_(shift), calendar_(calendar),
-          convention_(convention) {}
+          convention_(convention), shiftUnit_(std::move(shiftUnit)), shiftAnchor_(std::move(shiftAnchor)) {}
 
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(ore::data::XMLDocument& doc) const override;
@@ -58,6 +61,8 @@ public:
     const std::string& shift() const { return shift_; }
     const std::string& calendar() const { return calendar_; }
     const std::string& convention() const { return convention_; }
+    const QuantLib::ext::optional<QuantExt::DateDeltaUnit>& shiftUnit() const { return shiftUnit_; }
+    const QuantLib::ext::optional<QuantExt::DateDeltaAnchor>& shiftAnchor() const { return shiftAnchor_; }
     const bool hasData();
 
 private:
@@ -69,6 +74,8 @@ private:
     std::string shift_;
     std::string calendar_;
     std::string convention_;
+    QuantLib::ext::optional<QuantExt::DateDeltaUnit> shiftUnit_;
+    QuantLib::ext::optional<QuantExt::DateDeltaAnchor> shiftAnchor_;
 };
 
 class ScriptedTradeValueTypeData : public XMLSerializable {
@@ -239,7 +246,7 @@ public:
 
     // Trade interface
     void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
-    QuantLib::Real notional() const override;
+    QuantLib::Real notional(NotionalType type = NotionalType::Default) const override;
     std::string notionalCurrency() const override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(ore::data::XMLDocument& doc) const override;

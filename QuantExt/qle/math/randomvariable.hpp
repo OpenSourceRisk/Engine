@@ -25,6 +25,7 @@
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/patterns/singleton.hpp>
 #include <ql/types.hpp>
+
 #include <functional>
 
 #include <boost/timer/timer.hpp>
@@ -38,6 +39,8 @@
 namespace QuantExt {
 
 using namespace QuantLib;
+
+class RandomVariableRegressionCache;
 
 // statistics
 
@@ -102,7 +105,7 @@ struct Filter {
     void expand();
 
     // pointer to raw data, this is null for deterministic variables
-    bool* data();
+    bool* data() const;
 
 private:
     // for invariants see the corresponding section below in class RandomVariable
@@ -143,7 +146,7 @@ inline bool Filter::at(const Size i) const {
     return operator[](i);
 }
 
-inline bool* Filter::data() { return data_; }
+inline bool* Filter::data() const { return data_; }
 
 bool operator==(const Filter& a, const Filter& b);
 bool operator!=(const Filter& a, const Filter& b);
@@ -172,6 +175,7 @@ struct RandomVariable {
     // interop with ql classes
     explicit RandomVariable(const QuantLib::Array& data, const Real time = Null<Real>());
     explicit operator Array() const;
+    explicit operator std::vector<double>() const;
     void copyToMatrixCol(QuantLib::Matrix&, const Size j) const;
     // modifiers
     void clear();
@@ -249,7 +253,7 @@ struct RandomVariable {
 
     void expand();
     // pointer to raw data, this is null for deterministic variables
-    double* data();
+    double* data() const;
 
     static std::function<void(RandomVariable&)> deleter;
 
@@ -346,13 +350,16 @@ std::vector<RandomVariable> applyCoordinateTransform(const std::vector<const Ran
 /* Create vector of pointers to rvs from vector of rvs */
 std::vector<const RandomVariable*> vec2vecptr(const std::vector<RandomVariable>& values);
 
+// regression cache
+
+
 // compute regression coefficients
 enum class RandomVariableRegressionMethod { QR, SVD };
 Array regressionCoefficients(
     RandomVariable r, std::vector<const RandomVariable*> regressor,
     const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>& basisFn,
     const Filter& filter = Filter(), const RandomVariableRegressionMethod = RandomVariableRegressionMethod::QR,
-    const std::string& debugLabel = std::string());
+    const std::string& debugLabel = std::string(), RandomVariableRegressionCache* cache = nullptr);
 
 // evaluate regression function
 RandomVariable conditionalExpectation(
@@ -360,11 +367,12 @@ RandomVariable conditionalExpectation(
     const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>& basisFn,
     const Array& coefficients);
 
-// compute and evaluate regression in one run
+// compute and evaluate regression in one run (training on regressor, evaluation on finalRegressor, if given)
 RandomVariable conditionalExpectation(
     const RandomVariable& r, const std::vector<const RandomVariable*>& regressor,
     const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>& basisFn,
-    const Filter& filter = Filter(), const RandomVariableRegressionMethod = RandomVariableRegressionMethod::QR);
+    const Filter& filter = Filter(), const RandomVariableRegressionMethod = RandomVariableRegressionMethod::QR,
+    const std::vector<const RandomVariable*>& finalRegressor = {}, RandomVariableRegressionCache* cache = nullptr);
 
 // time zero expectation
 RandomVariable expectation(const RandomVariable& r);
@@ -416,13 +424,18 @@ inline Real RandomVariable::at(const Size i) const {
     return operator[](i);
 }
 
-inline double* RandomVariable::data() { return data_; }
+inline double* RandomVariable::data() const { return data_; }
 
 /*! helper function that returns a LSM basis system with size restriction: the order is reduced until
   the size of the basis system is not greater than the given bound (if this is not null) or the order is 1 */
 std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>
 multiPathBasisSystem(Size dim, Size order, QuantLib::LsmBasisSystem::PolynomialType type,
                      const std::set<std::set<Size>>& varGroups = {}, Size basisSystemSizeBound = Null<Size>());
+
+
+std::size_t hash_value(const RandomVariable& r);
+std::size_t hash_value(const Filter& r);
+
 
 } // namespace QuantExt
 

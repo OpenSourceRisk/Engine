@@ -48,7 +48,7 @@ indices.
 \begin{itemize}
 \item The {\tt UnderlyingData} block specifies one or more underlyings, which can be a trade of one of the following
   types (see the trade type specific sections), or structures with the Derivative or PortfolioIndexTradeData subnode. 
-    \begin{itemize}
+  \begin{itemize}
   \item Bond: See \ref{ss:bond}, the trade data is given in a BondData sub node for a single Bond.
   \item BondFuture: See \ref{ss:bondfuture}, the trade data is given in a BondFuture sub node.
   \item ForwardBond: See \ref{ss:BondForward_refdata}, the trade data is given in a ForwardBondData sub node. Deprecated way of representing bond future trs, consider using BondFuture as the underlying.
@@ -71,24 +71,41 @@ indices.
   \item CashPosition: See \ref{ss:cash_position}, the trade data is given in a CashPositionData sub
   node.
   \item Derivative: An arbitrary underlying derivative trade (of any type covered by ORE), allowing the set up of a so called Portfolio Swap with multiple underlying derivatives. The Derivative subnode has exactly two subnodes:
-      \begin{itemize}
-      \item Id: A string with a unique identifier for the derivative position, typically starting with \emph{DERIV:}. 
-      %Historical prices must be given under the fixing name ``GENERIC-$<Id>$''.
-      \item Trade: The root node of a derivative trade.
-    \end{itemize}
-  \item PortfolioIndexTradeData: This is a Portfolio Swap that references an underlying Basket via the \lstinline!BasketName! identifier. The underlying basket can have an arbitrary number underlying derivatives of any supported TradeType. The PortfolioIndexTradeData subnode has one subnode:
     \begin{itemize}
-      \item BasketName: A string with a unique identifier for the portfolioIndex, matching the underlying reference basket. 
-      %Historical prices must be given under the fixing name ``GENERIC-$<BasketName>$''.
-      \item IndexQuantity: Number of shares of the index.
+    \item Id: A string with a unique identifier for the derivative position, typically starting with \emph{DERIV:}. 
+    %Historical prices must be given under the fixing name ``GENERIC-$<Id>$''.
+    \item Trade: The root node of a derivative trade.
     \end{itemize}
+  \item PortfolioIndexTradeData: This is a Portfolio Swap that references an underlying Basket via the \lstinline!BasketName! identifier.
+    The underlying basket can have an arbitrary number underlying derivatives of any supported TradeType.
+    The PortfolioIndexTradeData subnode has one subnode:
+    \begin{itemize}
+      \item BasketName: A string with a unique identifier for the portfolioIndex, matching the underlying reference basket.
+      \item IndexQuantity: Number of shares of the index.
+      \item \lstinline!PriceIsPerUnit!:
+        The allowable values are \lstinline!true! or \lstinline!false!.
+        When set to \lstinline!false!, the contribution of the basket on a given date is simply the value of the basket.
+        When set to \lstinline!true!, the value of the basket on a given date is interpreted as the unit value of the index.
+        The contribution of the basket to the TRS is then given by this unit value multiplied by the \lstinline!IndexQuantity!.
+    \end{itemize}
+    Historical index fixing levels for the basket should be given under the fixing name \lstinline!GENERIC-<BasketName>!.
   \end{itemize}
 
-  Except for PortfolioIndexTradeData, each trade is specified by a \verb+TradeType+ and a trade type dependent data block as listed above. Listing
-  \ref{lst:trsdata} shows an example for a convertible bond underlying. Listing \ref{lst:trsdata2} shows an example for
-  an equity basket underlying. Listing \ref{lst:trsdata3} shows an example for a bond basket underlying. Listing
-  \ref{lst:trsdata4} shows an example for a Derivative underlying (with 3 underlying trades in this case). Listing
-  \ref{lst:trsdata_portfolio} shows an example for a PortfolioIndexTradeData underlying.
+  Except for \lstinline!PortfolioIndexTradeData!, each trade is specified by a \lstinline!TradeType! and a trade type 
+  dependent data block as listed above.
+  \begin{itemize}
+    \item Listing \ref{lst:trsdata} shows an example for a convertible bond underlying.
+    \item Listing \ref{lst:trsdata2} shows an example for an equity basket underlying.
+    \item Listing \ref{lst:trsdata3} shows an example for a bond basket underlying.
+    \item Listing \ref{lst:trsdata4} shows an example for a Derivative underlying, with 3 underlying trades in this case.
+    \item Listing \ref{lst:trsdata_portfolio} shows an example for a \lstinline!PortfolioIndexTradeData! underlying.
+    \item Listing \ref{lst:trsdata_pitd_bond-future-option} shows an example for a \lstinline!PortfolioIndexTradeData! 
+      underlying consisting of a cash position, a bond future postion and a bond future option. The associated reference 
+      data is shown in Listing \ref{lst:trsdata_pitd_bond-future-option-ref-data}. Note the usage of 
+      \lstinline!ApplyConversionFactor! and \lstinline!UseFuturePrice! as outlined in Section~\ref{ss:bondfuture} to 
+      indicate that we want the bond future price level contributing to the index rather than the NPV of the bond 
+      future trade.
+  \end{itemize}
 
 \item The {\tt ReturnData} block specifies the details of the return leg.
   \begin{itemize}
@@ -121,11 +138,43 @@ indices.
   
       Allowable values: Any valid calendar, see Table \ref{tab:calendar} Calendar. Defaults to the \emph{NullCalendar} (no holidays) if left blank or omitted.
       
-  \item PaymentLag [Optional]: The lag between the reference schedule period end date and the payment date.
+  \item \lstinline!PaymentLag! [optional]:
+  The lag between the, adjusted or unadjusted (see \lstinline!PaymentLagAnchor! below), reference schedule period end 
+  date and the payment date.
   
-    Allowable values: Any valid period, i.e.\ a non-negative whole number, optionally followed by \emph{D} (days), \emph{W} (weeks), \emph{M} (months),
-  \emph{Y} (years). Defaults to \emph{0D} if left blank or omitted. If a whole number is given and no letter, it is assumed that it is a number of  \emph{D} (days).
-    
+  Allowable values: Any valid period.
+  In other words, an integer followed by a string where the last character must be one of 
+  \lstinline!D!, \lstinline!W!, \lstinline!M! or \lstinline!Y!.
+  Compound period definitions also work, for example \lstinline!1Y6M! and \lstinline!-6W4D!.
+  Note that compound periods only work for year and month pairs or week and day pairs.
+  If left blank or omitted, it defaults to \lstinline!0D!.
+  Note also that negative periods are allowed where they make sense.
+  If a whole number is given without the unit suffix, it is assumed that it is a number of days i.e.\ 
+  that the suffix is \lstinline!D!.
+
+  \item \lstinline!PaymentLagUnit! [optional]:
+  Determines how the \lstinline!PaymentLag! is used to calculate the payment date from an anchor date.
+  If omitted, or \lstinline!BusinessDays! is given, the \lstinline!PaymentLag! is applied in the usual way.
+  In other words the anchor date is shifted by the period defined by the \lstinline!PaymentLag! using the 
+  \lstinline!PaymentCalendar! and \lstinline!PaymentConvention!.
+  If \lstinline!CalendarDays! is given, the \lstinline!PaymentLag! period must have day units.
+  In this case, the anchor date is shifted by \lstinline!PaymentLag! \emph{calendar} days.
+  If the resulting date is not a good business day with respect to the \lstinline!PaymentCalendar!,
+  it is adjusted using the \lstinline!PaymentCalendar! and \lstinline!PaymentConvention!.
+  The anchor date used for the payment date generation can be influenced by the \lstinline!PaymentLagAnchor! below.
+
+  Allowable values: \lstinline!BusinessDays! or \lstinline!CalendarDays!.
+  Defaults to \lstinline!BusinessDays! if omitted.
+
+  \item \lstinline!PaymentLagAnchor! [optional]:
+  Determines the base or anchor date to use when calculating a payment date using the \lstinline!PaymentLag!.
+  If omitted, or \lstinline!Adjusted! is given, the anchor date is the underlying schedule date.
+  This schedule date may have had adjustments applied.
+  If \lstinline!Unadjusted! is given, the anchor date is the underlying schedule date 
+  before any adjustments have been applied.
+
+  Allowable values: \lstinline!Adjusted! or \lstinline!Unadjusted!. Defaults to \lstinline!Adjusted! if omitted.
+
   \item PaymentConvention [Optional]: The business day convention to be used when applying the payment lag.
   
     Allowable values: A valid roll convention (\emph{F, MF, P, MP, U, NEAREST}), see Table \ref{tab:convention} Roll Convention. Defaults to \emph{U} if left blank or omitted.
@@ -159,8 +208,8 @@ indices.
     \item a (dirty) price for Bond, ForwardBond and Convertible Bond underlyings, the format is dependent on the price quotation method of the referenced bond:
       \begin{itemize}
       \item Percentage of Par: the InitialPrice should be given as e.g. $1.02$ for $102\%$ relative dirty price
-      \item Currency per Unit: the InitialPrice should be given as e.g. $0.51$ for a dirty amount of $51$ USD per unit
-        of the bond worth (say) $50.0$ USD. 
+      \item Currency per Unit: the InitialPrice should be given as e.g. $99.90$ in currency (InitialPriceCurrency $=$ KRW)
+        for a dirty price quoted as $9{,}990$ KRW per bond unit, where a bond unit is worth $10{,}000$ KRW.
         
         Note that Korean bonds typically use Currency per Unit quotation method, whereas other bonds typically use Percentage of Par.
       \end{itemize}
@@ -593,4 +642,70 @@ Allowable values: \emph{Start}, \emph{End}. Defaults to \emph{Start} if omitted.
 \end{minted}
 \caption{CFD on STOXX50E with initial price 3399.20 EUR}
 \label{lst:trsdata_cfd}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<TotalReturnSwapData>
+  <UnderlyingData>
+    <PortfolioIndexTradeData>
+      <BasketName>TEST-BASKET</BasketName>
+      <IndexQuantity>100000</IndexQuantity>
+      <PriceIsPerUnit>true</PriceIsPerUnit>
+    </PortfolioIndexTradeData>
+  </UnderlyingData>
+  <!-- omitting other data for brevity -->
+</TotalReturnSwapData>
+\end{minted}
+\caption{Generic TRS on a \lstinline!PortfolioIndexTradeData! underlying}
+\label{lst:trsdata_pitd_bond-future-option}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<ReferenceDatum id="TEST-BASKET">
+  <Type>PortfolioBasket</Type>
+  <PortfolioBasketReferenceData>
+    <Components>
+      <Trade>
+        <TradeType>BondFutureOption</TradeType>
+        <BondFutureOptionData>
+          <OptionData>
+            <LongShort>S</LongShort>
+            <OptionType>Put</OptionType>
+            <Style>American</Style>
+            <ExerciseDates>
+              <ExerciseDate>2026-04-01</ExerciseDate>
+            </ExerciseDates>
+          </OptionData>
+          <ContractName>TYM26</ContractName>
+          <ContractNotional>24.0186141</ContractNotional>
+          <Strike>1.0825</Strike>
+        </BondFutureOptionData>
+      </Trade>
+      <Trade>
+        <TradeType>BondFuture</TradeType>
+        <BondFutureData>
+          <ContractName>TYM26</ContractName>
+          <ContractNotional>250.429169</ContractNotional>
+          <LongShort>L</LongShort>
+          <ApplyConversionFactor>false</ApplyConversionFactor>
+          <UseFuturePrice>true</UseFuturePrice>
+        </BondFutureData>
+      </Trade>
+      <Trade>
+        <TradeType>CashPosition</TradeType>
+        <CashPositionData>
+          <Currency>USD</Currency>
+          <Amount>26.26224675</Amount>
+        </CashPositionData>
+      </Trade>
+    </Components>
+  </PortfolioBasketReferenceData>
+</ReferenceDatum>
+\end{minted}
+\caption{The \lstinline!PortfolioIndexTradeData! reference data}
+\label{lst:trsdata_pitd_bond-future-option-ref-data}
 \end{listing}

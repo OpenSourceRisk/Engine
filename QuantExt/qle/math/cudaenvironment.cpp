@@ -162,7 +162,7 @@ public:
                                const std::vector<std::size_t>& args) override;
     void freeVariable(const std::size_t id) override;
     void declareOutputVariable(const std::size_t id) override;
-    voidizeCalculation(std::vector<double*>& output) override;
+    void finalizeCalculation(std::vector<double*>& output) override;
 
     std::vector<std::pair<std::string, std::string>> deviceInfo() const override;
     bool supportsDoublePrecision() const override;
@@ -281,7 +281,7 @@ CudaFramework::CudaFramework() {
         cudaDeviceProp device_prop;
         cudaGetDeviceProperties(&device_prop, 0);
         std::string arch = "compute_" + std::to_string(device_prop.major * 10 + device_prop.minor);
-        char device_name[MAX_N_NAME];
+        [[maybe_unused]] char device_name[MAX_N_NAME];
         std::vector<std::pair<std::string, std::string>> deviceInfo;
         contexts_["CUDA/DEFAULT/" + std::string(device_prop.name)] = new CudaContext(d, deviceInfo, arch, true);
     }
@@ -406,7 +406,7 @@ void CudaContext::init() {
     debugInfo_.nanoSecondsProgramBuild = 0;
     debugInfo_.nanoSecondsCalculation = 0;
 
-    const char* errStr;
+    [[maybe_unused]] const char* errStr;
     maxRandomVariates_ = 0;
 
     // Initialize CUDA context and module

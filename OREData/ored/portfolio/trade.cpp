@@ -18,6 +18,9 @@
 
 #include <ored/portfolio/structuredtradewarning.hpp>
 #include <ored/portfolio/trade.hpp>
+#include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/premiumdata.hpp>
+#include <ored/portfolio/tradefactory.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -194,6 +197,11 @@ void Trade::reset() {
     
 const std::map<std::string, QuantLib::ext::any>& Trade::additionalData() const { return additionalData_; }
 
+std::string Trade::maturityMessage(const QuantLib::Date& asof) const {
+    std::string maturityType = maturityType_.empty() ? "" : maturityType_;
+    return "Trade is Matured. " + maturityType + " [" + ore::data::to_string(maturity_) + "]" + " is On or Before Valuation Date.";
+}
+
 void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
     if (legs_.size() < i + 1)
         return;
@@ -336,19 +344,6 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                 additionalData_["indexingIndex" + label] =
                     index == nullptr ? "na" : IndexNameTranslator::instance().oreName(index->name());
                 additionalData_["indexingMultiplier" + label] = multiplier;
-            }
-            // Convexity adjustment
-            if (auto eqc = QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityCoupon>(flow)) {
-                auto arc = eqc->pricer()->additionalResultCache();
-                auto label = "[" + legID + "][" + std::to_string(j) + "]";
-                if (arc.equityVolatility != Null<Real>())
-                    additionalData_["equityVolatility" + label] = arc.equityVolatility;
-                if (arc.fxVolatility != Null<Real>())
-                    additionalData_["fxVolatility" + label] = arc.fxVolatility;
-                if (arc.equityFxCorrelation != Null<Real>())
-                    additionalData_["equityFxCorrelation" + label] = arc.equityFxCorrelation;
-                if (arc.convexityAdjustment != Null<Real>())
-                    additionalData_["convexityAdjustment" + label] = arc.convexityAdjustment;
             }
         }
     }

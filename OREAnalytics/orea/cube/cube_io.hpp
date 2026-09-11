@@ -67,10 +67,11 @@ private:
 };
 
 QuantLib::ext::shared_ptr<NPVCubeWithMetaData> loadCube(const std::string& filename);
-void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube);
+void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube, unsigned int gzipCompressionLevel = 6);
 
 QuantLib::ext::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(const std::string& filename);
-void saveAggregationScenarioData(const std::string& filename, const AggregationScenarioData& cube);
+void saveAggregationScenarioData(const std::string& filename, const AggregationScenarioData& cube,
+unsigned int gzipCompressionLevel = 6);
 
 } // namespace analytics
 } // namespace ore

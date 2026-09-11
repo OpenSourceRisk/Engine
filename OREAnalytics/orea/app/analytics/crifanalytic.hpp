@@ -22,6 +22,7 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/inputvariables.hpp>
 #include <orea/simm/crifmarket.hpp>
 #include <orea/simm/crifrecord.hpp>
 #include <ored/portfolio/portfolio.hpp>
@@ -33,6 +34,7 @@ namespace analytics {
 
 class InputParameters;
 class Crif;
+class SensitivityStream;
 
 class CrifAnalyticBase {
 public:
@@ -61,12 +63,16 @@ public:
                 double usdSpot) = 0;
 };
 
+struct CrifVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+};
+
 class CrifAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "CRIF";
     static constexpr const char* sensitivityLookUpKey = "SENSITIVITY";
 
-    CrifAnalyticImpl(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs) : Analytic::Impl(inputs) {
+    CrifAnalyticImpl(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs) : Analytic::Impl(inputs, QuantLib::ext::make_shared<CrifVariables>()) {
         setLabel(LABEL);
     }
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -133,24 +139,24 @@ public:
                  const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio = nullptr,
                  const std::string& baseCurrency = "");
 
-    QuantLib::ext::shared_ptr<ore::analytics::Crif>& crif() { return crif_; }
-    const std::string& baseCurrency() const { return baseCurrency_; }
+    QuantLib::ext::shared_ptr<ore::analytics::Crif>& crif() override { return crif_; }
+    const std::string& baseCurrency() const override { return baseCurrency_; }
 
-    void setPortfolioNoSimmExemptions(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio) {
+    void setPortfolioNoSimmExemptions(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio) override {
         portfolioNoSimmExemptions_ = portfolio;
     }
-    const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolioNoSimmExemptions() const {
+    const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolioNoSimmExemptions() const override {
         return portfolioNoSimmExemptions_;
     }
 
-    void setPortfolioSimmExemptions(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio) {
+    void setPortfolioSimmExemptions(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio) override {
         portfolioSimmExemptions_ = portfolio;
     }
-    const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolioSimmExemptions() const {
+    const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolioSimmExemptions() const override {
         return portfolioSimmExemptions_;
     }
 
-    const set<CrifRecord::Regulation>& simmExemptionOverrides() const { return simmExemptionOverrides_; }
+    const set<CrifRecord::Regulation>& simmExemptionOverrides() const override { return simmExemptionOverrides_; }
 
     //! Creates a CRIF from a sensitivity stream
     QuantLib::ext::shared_ptr<Crif>
@@ -162,8 +168,16 @@ public:
                 const std::set<std::string>& modifiedTrades,
                 const QuantLib::ext::shared_ptr<CrifMarket>& crifMarket,
                 const QuantLib::ext::shared_ptr<PortfolioFieldGetter>& fieldGetter,
-                double usdSpot);
+                double usdSpot) override;
     
+    void reset() override {
+        Analytic::reset();
+        offsetScenario_ = nullptr;
+        portfolioNoSimmExemptions_ = nullptr;
+        portfolioSimmExemptions_ = nullptr;
+        crif_ = nullptr;
+    }
+
 private:
     std::string baseCurrency_;
     QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolioNoSimmExemptions_;

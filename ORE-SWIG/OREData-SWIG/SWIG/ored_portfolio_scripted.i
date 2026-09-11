@@ -78,14 +78,14 @@ using ore::data::CommodityWorstOfBasketSwap;
 %rename(NewScheduleData) ore::data::ScriptedTradeScriptData::NewScheduleData;
 %rename(CalibrationData) ore::data::ScriptedTradeScriptData::CalibrationData;
 
+%shared_ptr(ore::data::ScriptedTradeScriptData::NewScheduleData)
+%shared_ptr(ore::data::ScriptedTradeScriptData::CalibrationData)
+
 %template(VectorPairString) std::vector<std::pair<std::string, std::string>>;
 %template(ScriptedTradeEventDataVector) std::vector<ext::shared_ptr<ore::data::ScriptedTradeEventData>>;
 %template(ScriptedTradeValueTypeDataVector) std::vector<ext::shared_ptr<ore::data::ScriptedTradeValueTypeData>>;
 %template(ScriptedTradeNewScheduleDataVector) std::vector<ext::shared_ptr<ore::data::ScriptedTradeScriptData::NewScheduleData>>;
 %template(ScriptedTradeCalibrationDataVector) std::vector<ext::shared_ptr<ore::data::ScriptedTradeScriptData::CalibrationData>>;
-
-%shared_ptr(ore::data::ScriptedTradeScriptData::NewScheduleData)
-%shared_ptr(ore::data::ScriptedTradeScriptData::CalibrationData)
 
 %shared_ptr(ore::data::ScriptedTradeEventData)
 %shared_ptr(ore::data::ScriptedTradeValueTypeData)
@@ -223,7 +223,7 @@ class ScriptedTrade : public Trade {
 public:
     ScriptedTrade(const std::string& tradeType = "ScriptedTrade", const Envelope& env = Envelope());
     void build(const ext::shared_ptr<EngineFactory>&) override;
-    QuantLib::Real notional() const override;
+    QuantLib::Real notional(Trade::NotionalType type = Trade::NotionalType::Default) const override;
     std::string notionalCurrency() const override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
@@ -287,7 +287,7 @@ public:
                 const ext::shared_ptr<Underlying>& underlying, const QuantLib::Date& settlementDate,
                 const std::string& currency);
     void build(const ext::shared_ptr<EngineFactory>&) override;
-    QuantLib::Real notional() const override;
+    QuantLib::Real notional(Trade::NotionalType type = Trade::NotionalType::Default) const override;
     std::string notionalCurrency() const override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;

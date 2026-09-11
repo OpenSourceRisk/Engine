@@ -54,7 +54,9 @@ public:
         //! Dynamic Delta/Gamma VaR order (1 for delta, 2 for delta-gamma)
         const QuantLib::Size ddvOrder,
         //! Actual t0 IM by netting set used to scale the DIM evolution, no scaling if the argument is omitted
-        const std::map<std::string, QuantLib::Real>& currentIM = std::map<std::string, QuantLib::Real>());
+        const std::map<std::string, QuantLib::Real>& currentIM = std::map<std::string, QuantLib::Real>(),
+        //! Explicit DIM scaling override; when set, currentIM-based derivation is skipped
+        QuantLib::Real explicitDimScaling = QuantLib::Null<QuantLib::Real>());
 
     const std::map<std::string, QuantLib::Real>& unscaledCurrentDIM() const override;
     void build() override;
@@ -63,6 +65,7 @@ private:
     QuantLib::ext::shared_ptr<DimHelper> dimHelper_;
     QuantLib::Size ddvOrder_;
     map<string, Real> currentDIM_;
+    QuantLib::Real explicitDimScaling_;
 };
 
 } // namespace analytics

@@ -18,13 +18,13 @@
 
 #include <orea/app/analytics/stresstestanalytic.hpp>
 #include <orea/app/inputparameters.hpp>
-#include <orea/app/reportwriter.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/parsensitivityanalysis.hpp>
 #include <orea/engine/parstressconverter.hpp>
 #include <orea/engine/stresstest.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
+#include <ored/marketdata/inmemoryloader.hpp>
 #include <ored/report/inmemoryreport.hpp>
 
 using namespace ore::data;
@@ -107,19 +107,19 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     
     if (stressVars->scenarioReader_) {
         runStressTest(analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
-                      analytic()->configurations().simMarketParams, stressVars->scenarioReader_, report, cfReport,
-                      inputs_->stressThreshold(), inputs_->stressPrecision(), inputs_->includePastCashflows(),
+                      analytic()->configurations().simMarketParams, stressVars->scenarioReader_, report, loader,
+                      cfReport, inputs_->stressThreshold(), inputs_->stressPrecision(), inputs_->includePastCashflows(),
                       *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
                       inputs_->refDataManager(), inputs_->iborFallbackConfig(), inputs_->continueOnError(),
-                      scenarioReport, inputs_->useAtParCouponsTrades());
+                      scenarioReport, inputs_->useAtParCouponsTrades(), inputs_->nThreads());
     } else {
         QL_REQUIRE(scenarioData, "StressTestAnalytic::runAnalytic: No stress scenario data provided.");
         runStressTest(analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
-                      analytic()->configurations().simMarketParams, scenarioData, report, cfReport,
+                      analytic()->configurations().simMarketParams, scenarioData, report, loader, cfReport,
                       inputs_->stressThreshold(), inputs_->stressPrecision(), inputs_->includePastCashflows(),
                       *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
                       nullptr, inputs_->refDataManager(), inputs_->iborFallbackConfig(), inputs_->continueOnError(),
-                      scenarioReport, inputs_->useAtParCouponsTrades());
+                      scenarioReport, inputs_->useAtParCouponsTrades(), inputs_->nThreads());
     }
 
     analytic()->addReport(label(), "stress", report);

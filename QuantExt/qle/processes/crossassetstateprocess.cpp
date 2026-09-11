@@ -454,8 +454,8 @@ Matrix CrossAssetStateProcess::diffusionOnCorrelatedBrowniansImpl(Time t, const 
     // inf-inf
     for (Size i = 0; i < d; ++i) {
         if (model_->modelType(CrossAssetModel::AssetType::INF, i) == CrossAssetModel::ModelType::DK) {
-            Real alphai = model_->infdk(i)->alpha(t);
-            Real Hi = model_->infdk(i)->H(t);
+            Real alphai = model_->infdk(i)->dkLgmParam()->alpha(t);
+            Real Hi = model_->infdk(i)->dkLgmParam()->H(t);
             // DK z diffusion coefficient
             setValue2(res, alphai, model_, CrossAssetModel::AssetType::INF, i, CrossAssetModel::AssetType::INF, i, 0,
                       0);

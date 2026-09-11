@@ -48,6 +48,8 @@
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
 #include <ql/termstructures/volatility/optionlet/constantoptionletvol.hpp>
+#include <ql/time/period.hpp>
+#include <ql/types.hpp>
 #include <qle/cashflows/blackovernightindexedcouponpricer.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 
@@ -238,8 +240,9 @@ class YoYCapFloorImpliedVolCalculator : public CapFloorImpliedVolCalculator {
 public:
     YoYCapFloorImpliedVolCalculator(const ext::shared_ptr<YoYInflationCapFloor>& cap,
                                     const Handle<YieldTermStructure>& discountCurve,
-                                    const Handle<YoYInflationIndex>& index)
-        : cap_(cap), discountCurve_(discountCurve), index_(index) {
+                                    const Handle<YoYInflationIndex>& index,
+                                    const QuantLib::Period& obsLag)
+        : cap_(cap), discountCurve_(discountCurve), index_(index), obsLag_(obsLag) {
         QL_REQUIRE(cap_ != nullptr, "instrument required");
         QL_REQUIRE((cap_->type() == YoYInflationCapFloor::Type::Cap && !cap_->capRates().empty()) ||
                        (cap_->type() == YoYInflationCapFloor::Type::Floor && !cap_->floorRates().empty()),
@@ -265,7 +268,7 @@ public:
 
     double impliedVol(double initialGuess, double accuracy, double minVol, double maxVol, size_t maxIter,
                       VolatilityType volType, double volDisplacement) const override {
-        auto engineGenerator = pricingEngineFactory(discountCurve_, volType, volDisplacement, index_);
+        auto engineGenerator = pricingEngineFactory(discountCurve_, volType, volDisplacement, index_, obsLag_);
         ImpliedCapFloorVolHelper f(*cap_, engineGenerator, targetValue_);
         NewtonSafe solver;
         solver.setMaxEvaluations(maxIter);
@@ -276,40 +279,42 @@ private:
     ext::shared_ptr<YoYInflationCapFloor> cap_;
     Handle<YieldTermStructure> discountCurve_;
     Handle<YoYInflationIndex> index_;
+    QuantLib::Period obsLag_;
     double targetValue_; 
     std::function<QuantLib::ext::shared_ptr<PricingEngine>(const Handle<Quote>&)>
     pricingEngineFactory(const Handle<YieldTermStructure>& d, VolatilityType type, Real displacement,
-                         const Handle<YoYInflationIndex>& index) const {
+                         const Handle<YoYInflationIndex>& index, const QuantLib::Period& obsLag) const {
         std::function<QuantLib::ext::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator;
+        
         if (type == ShiftedLognormal) {
             if (close_enough(displacement, 0.0))
-                engineGenerator = [&d, &index](const Handle<Quote>& h) {
+                engineGenerator = [&d, &index, &obsLag](const Handle<Quote>& h) {
                     // hardcode A365F as for ir caps, or should we use the dc from the original market vol ts ?
                     // calendar, bdc not needed here, settlement days should be zero so that the
                     // reference date is = evaluation date
                     auto c = Handle<QuantLib::YoYOptionletVolatilitySurface>(
                         QuantLib::ext::make_shared<QuantExt::ConstantYoYOptionletVolatility>(
                             h, 0, NullCalendar(), Unadjusted, Actual365Fixed(),
-                            index->yoyInflationTermStructure()->observationLag(), index->frequency(),
+                            obsLag, index->frequency(),
                             index->interpolated()));
                     return QuantLib::ext::make_shared<QuantExt::YoYInflationBlackCapFloorEngine>(*index, c, d);
                 };
             else
-                engineGenerator = [&d, &index](const Handle<Quote>& h) {
+                engineGenerator = [&d, &index, &obsLag](const Handle<Quote>& h) {
                     auto c = Handle<QuantLib::YoYOptionletVolatilitySurface>(
                         QuantLib::ext::make_shared<QuantExt::ConstantYoYOptionletVolatility>(
                             h, 0, NullCalendar(), Unadjusted, Actual365Fixed(),
-                            index->yoyInflationTermStructure()->observationLag(), index->frequency(),
+                            obsLag, index->frequency(),
                             index->interpolated()));
                     return QuantLib::ext::make_shared<QuantExt::YoYInflationUnitDisplacedBlackCapFloorEngine>(*index, c,
                                                                                                               d);
                 };
         } else if (type == Normal)
-            engineGenerator = [&d, &index](const Handle<Quote>& h) {
+            engineGenerator = [&d, &index, &obsLag](const Handle<Quote>& h) {
                 auto c = Handle<QuantLib::YoYOptionletVolatilitySurface>(
                     QuantLib::ext::make_shared<QuantExt::ConstantYoYOptionletVolatility>(
                         h, 0, NullCalendar(), Unadjusted, Actual365Fixed(),
-                        index->yoyInflationTermStructure()->observationLag(), index->frequency(),
+                        obsLag, index->frequency(),
                         index->interpolated()));
                 return QuantLib::ext::make_shared<QuantExt::YoYInflationBachelierCapFloorEngine>(*index, c, d);
             };
@@ -470,22 +475,14 @@ double impliedVolatility(const RiskFactorKey& key, const ParSensitivityInstrumen
         auto displacement = vtsIt->second->displacement();
         return runImplyCapFloorVolWithBoundExtension(calc, 0.01, volType, displacement);
     } else if (key.keytype == RiskFactorKey::KeyType::YoYInflationCapFloorVolatility) {
-        auto ytsIt = instruments.parYoYCapsYts_.find(key);
-        auto vtsIt = instruments.parYoYCapsVts_.find(key);
-        auto capIt = instruments.parYoYCaps_.find(key);
-        auto indexIt = instruments.parYoYCapsIndex_.find(key);
-
-        QL_REQUIRE(ytsIt != instruments.parYoYCapsYts_.end(),
-                   "getTodaysAndTargetQuotes: no cap yts found for key " << key);
-        QL_REQUIRE(vtsIt != instruments.parYoYCapsVts_.end(),
-                   "getTodaysAndTargetQuotes: no cap vts found for key " << key);
-        QL_REQUIRE(capIt != instruments.parYoYCaps_.end(), "getTodaysAndTargetQuotes: no cap found for key " << key);
-        QL_REQUIRE(indexIt != instruments.parYoYCapsIndex_.end(),
-                   "getTodaysAndTargetQuotes: no yoy index found for key " << key);
-        std::unique_ptr<CapFloorImpliedVolCalculator> calc =
-            std::make_unique<YoYCapFloorImpliedVolCalculator>(capIt->second, ytsIt->second, indexIt->second);
-        auto volType = vtsIt->second->volatilityType();
-        auto displacement = vtsIt->second->displacement();
+        auto yoyCapInstrumentIt = instruments.parYoYCaps_.find(key);
+        QL_REQUIRE(yoyCapInstrumentIt != instruments.parYoYCaps_.end(),
+                   "getTodaysAndTargetQuotes: no yoy par instrument found for key " << key);
+        const auto& yoyCapInstrument = yoyCapInstrumentIt->second;
+        std::unique_ptr<CapFloorImpliedVolCalculator> calc = std::make_unique<YoYCapFloorImpliedVolCalculator>(
+            yoyCapInstrument.cap, yoyCapInstrument.yts, yoyCapInstrument.index, yoyCapInstrument.obsLag);
+        auto volType = yoyCapInstrument.vts->volatilityType();
+        auto displacement = yoyCapInstrument.vts->displacement();
         return runImplyCapFloorVolWithBoundExtension(calc, 0.01, volType, displacement);
     } else {
         QL_FAIL("impliedCapVolatility: Unsupported risk factor key "

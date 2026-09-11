@@ -81,7 +81,7 @@ public:
 struct ParametricVarVariables : public VarVariables {
     void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
 
-    SalvagingAlgorithm::Type varSalvagingAlgorithm_ = SalvagingAlgorithm::None;
+    SalvagingAlgorithm::Type varSalvagingAlgorithm_ = SalvagingAlgorithm::Spectral;
     // Delta, DeltaGammaNormal, MonteCarlo, Cornish-Fisher, Saddlepoint
     std::string varMethod_ = "DeltaGammaNormal";
     Size mcVarSamples_ = 1000000;
@@ -121,6 +121,9 @@ struct HistoricalSimulationVarVariables : public VarVariables {
     bool includeExpectedShortfall_ = false;
     bool riskFactorBreakdown_ = false;
     bool riskClassBreakdown_ = true;
+    bool includeTheta_ = false;
+    bool includePeriodCashflow_ = false;
+    QuantLib::ext::shared_ptr<SensitivityStream> sensitivityStream_;
 };
 
 class HistoricalSimulationVarAnalyticImpl : public VarAnalyticImpl {
@@ -134,9 +137,11 @@ public:
 protected:
     void setVarReport(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) override;
     void addAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
+    std::map<std::string, QuantLib::Real> computeTheta(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) const;
     bool riskFactorBreakdown_ = false;
     bool riskClassBreakdown_ = true;
     bool allowPartialScenarios_ = false;
+    bool sensiBased_ = false;
 };
 
 class HistoricalSimulationVarAnalytic : public VarAnalytic {

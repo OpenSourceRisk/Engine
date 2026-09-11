@@ -24,5 +24,6 @@
 
 %include orea_scenario_stress.i
 %include orea_scenario_sensitivity.i
+%include orea_scenario_loader.i
 
 #endif

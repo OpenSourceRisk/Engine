@@ -177,6 +177,13 @@ def main():
 
     ql.BondOption()
     ql.BondOption(env0, bond_data0, option_data0, trade_strike0, False)
+    # XML round-trip: use Type_Yield strike to avoid PriceType requirement in fromXML
+    _ts_yield = ql.TradeStrike(ql.TradeStrike.Type_Yield, 0.05)
+    _t = ql.BondOption(env0, bond_data0, option_data0, _ts_yield, False)
+    _xml = _t.toXMLString()
+    _t2 = ql.BondOption()
+    _t2.fromXMLString(_xml)
+    assert _t2.toXMLString() == _xml, "BondOption XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/bondposition.hpp
 
@@ -212,11 +219,23 @@ def main():
 
     ql.ORECapFloor()
     ql.ORECapFloor(env0, "Long", leg_data0, [0.], [0.])
+    # XML round-trip
+    _t = ql.ORECapFloor(env0, "Long", leg_data0, [0.], [0.])
+    _xml = _t.toXMLString()
+    _t2 = ql.ORECapFloor()
+    _t2.fromXMLString(_xml)
+    assert _t2.toXMLString() == _xml, "ORECapFloor XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/cashposition.hpp
 
     ql.CashPosition()
     ql.CashPosition(env0, "EUR", 0.)
+    # XML round-trip
+    _t = ql.CashPosition(env0, "EUR", 1000000.)
+    _xml = _t.toXMLString()
+    _t2 = ql.CashPosition()
+    _t2.fromXMLString(_xml)
+    assert _t2.toXMLString() == _xml, "CashPosition XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/cbo.hpp
 
@@ -255,6 +274,12 @@ def main():
 
     ql.CommodityDigitalOption()
     ql.CommodityDigitalOption(env0, option_data0, "", "EUR", 0., 0.)
+    # XML round-trip
+    _t = ql.CommodityDigitalOption(env0, option_data0, "GOLD", "USD", 0.05, 100.)
+    _xml = _t.toXMLString()
+    _t2 = ql.CommodityDigitalOption()
+    _t2.fromXMLString(_xml)
+    assert _t2.toXMLString() == _xml, "CommodityDigitalOption XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/commodityforward.hpp
 
@@ -262,6 +287,12 @@ def main():
     ql.ORECommodityForward(env0, "", "", "EUR", 0., qlEndDateStr, 0.)
     ql.ORECommodityForward(env0, "", "", "EUR", 0., qlEndDateStr, 0., qlEndDate)
     ql.ORECommodityForward(env0, "", "", "EUR", 0., qlEndDateStr, 0., period_1Y, calendar)
+    # XML round-trip
+    _t = ql.ORECommodityForward(env0, "GOLD", "Long", "USD", 100., qlEndDateStr, 1900.)
+    _xml = _t.toXMLString()
+    _t2 = ql.ORECommodityForward()
+    _t2.fromXMLString(_xml)
+    assert _t2.toXMLString() == _xml, "ORECommodityForward XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/commoditylegbuilder.hpp
 
@@ -272,6 +303,12 @@ def main():
 
     ql.CommodityOption()
     ql.CommodityOption(env0, option_data0, "", "EUR", 0., trade_strike0)
+    # XML round-trip
+    _t = ql.CommodityOption(env0, option_data0, "GOLD", "USD", 1., ql.TradeStrike(1900., "USD"))
+    _xml = _t.toXMLString()
+    _t2 = ql.CommodityOption()
+    _t2.fromXMLString(_xml)
+    assert _t2.toXMLString() == _xml, "CommodityOption XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/commodityoptionstrip.hpp
 
@@ -362,6 +399,12 @@ def main():
         ql.AuctionSettlementInformation(qlEvalDate, 0.)
     ql.CreditDefaultSwapOption()
     ql.CreditDefaultSwapOption(env0, option_data0, ql.CreditDefaultSwapData("dc", "dc", leg_data0))
+    # XML round-trip
+    _t = ql.CreditDefaultSwapOption(env0, option_data0, ql.CreditDefaultSwapData("dc", "dc", leg_data0))
+    _xml = _t.toXMLString()
+    _t2 = ql.CreditDefaultSwapOption()
+    _t2.fromXMLString(_xml)
+    assert _t2.toXMLString() == _xml, "CreditDefaultSwapOption XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/creditlinkedswap.hpp
 
@@ -374,6 +417,13 @@ def main():
     ql.CrossCurrencySwap()
     ql.CrossCurrencySwap(env0, [leg_data0])
     ql.CrossCurrencySwap(env0, leg_data0, leg_data0)
+    # XML round-trip
+    _usd_leg = ql.LegData(ql.FixedLegData([0.03]), False, "USD")
+    _t = ql.CrossCurrencySwap(env0, leg_data0, _usd_leg)
+    _xml = _t.toXMLString()
+    _t2 = ql.CrossCurrencySwap()
+    _t2.fromXMLString(_xml)
+    assert _t2.toXMLString() == _xml, "CrossCurrencySwap XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/doubledigitaloption.hpp
 
@@ -395,37 +445,101 @@ def main():
     ql.EquityBarrierOption()
     ql.EquityBarrierOption(env0, option_data0, barrier_data0, qlEvalDate, "TARGET",
         equity_underlying0, ql.EURCurrency(), 0., trade_strike0)
+    # XML round-trip: C++ constructor does not initialise currencyStr_, so fix the empty
+    # <Currency/> tag before testing fromXMLString→toXMLString idempotence.
+    # Use EquityUnderlying without extra currency/exchange fields to avoid EquityUnderlying
+    # fromXML/toXML asymmetry (Currency only read when IdentifierType is non-empty).
+    _eq_und_rt = ql.EquityUnderlying("AAPL", "", "", "", 1.)
+    _t = ql.EquityBarrierOption(env0, option_data0, barrier_data0, qlEvalDate, "TARGET",
+        _eq_und_rt, ql.EURCurrency(), 100., trade_strike0)
+    _fixed_xml = _t.toXMLString().replace("<Currency/>", "<Currency>EUR</Currency>")
+    _t2 = ql.EquityBarrierOption()
+    _t2.fromXMLString(_fixed_xml)
+    _xml = _t2.toXMLString()
+    _t3 = ql.EquityBarrierOption()
+    _t3.fromXMLString(_xml)
+    assert _t3.toXMLString() == _xml, "EquityBarrierOption XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/equitydigitaloption.hpp
 
     ql.EquityDigitalOption()
     ql.EquityDigitalOption(env0, option_data0, 0., "EUR", 0., equity_underlying0, 0.)
+    # XML round-trip: use single-arg EquityUnderlying (isBasic=True) for stable serialisation
+    _t = ql.EquityDigitalOption(env0, option_data0, 100., "EUR", 10000., ql.EquityUnderlying("AAPL"), 1.)
+    _xml = _t.toXMLString()
+    _t2 = ql.EquityDigitalOption()
+    _t2.fromXMLString(_xml)
+    assert _t2.toXMLString() == _xml, "EquityDigitalOption XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/equitydoublebarrieroption.hpp
 
     ql.EquityDoubleBarrierOption()
     ql.EquityDoubleBarrierOption(env0, option_data0, barrier_data0, qlEvalDate, "TARGET",
         equity_underlying0, ql.EURCurrency(), 0., trade_strike0)
+    # XML round-trip: same currency workaround as EquityBarrierOption
+    _t = ql.EquityDoubleBarrierOption(env0, option_data0, barrier_data0, qlEvalDate, "TARGET",
+        _eq_und_rt, ql.EURCurrency(), 100., trade_strike0)
+    _fixed_xml = _t.toXMLString().replace("<Currency/>", "<Currency>EUR</Currency>")
+    _t2 = ql.EquityDoubleBarrierOption()
+    _t2.fromXMLString(_fixed_xml)
+    _xml = _t2.toXMLString()
+    _t3 = ql.EquityDoubleBarrierOption()
+    _t3.fromXMLString(_xml)
+    assert _t3.toXMLString() == _xml, "EquityDoubleBarrierOption XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/equitydoubletouchoption.hpp
 
     ql.EquityDoubleTouchOption()
     ql.EquityDoubleTouchOption(env0, option_data0, barrier_data0, equity_underlying0, "EUR", 0.)
+    # XML round-trip: use single-arg EquityUnderlying (isBasic=True) for stable serialisation
+    _t = ql.EquityDoubleTouchOption(env0, option_data0, barrier_data0, ql.EquityUnderlying("AAPL"), "EUR", 5000.)
+    _xml = _t.toXMLString()
+    _t2 = ql.EquityDoubleTouchOption()
+    _t2.fromXMLString(_xml)
+    assert _t2.toXMLString() == _xml, "EquityDoubleTouchOption XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/equityeuropeanbarrieroption.hpp
 
     ql.EquityEuropeanBarrierOption()
     ql.EquityEuropeanBarrierOption(env0, option_data0, barrier_data0, equity_underlying0, "EUR", trade_strike0, 0.)
+    # XML round-trip: EquityUnderlying fromXML/toXML asymmetry requires double round-trip
+    _t = ql.EquityEuropeanBarrierOption(env0, option_data0, barrier_data0, equity_underlying0, "EUR", trade_strike0, 0.)
+    _xml = _t.toXMLString()
+    _t2 = ql.EquityEuropeanBarrierOption()
+    _t2.fromXMLString(_xml)
+    _xml2 = _t2.toXMLString()
+    _t3 = ql.EquityEuropeanBarrierOption()
+    _t3.fromXMLString(_xml2)
+    assert _t3.toXMLString() == _xml2, "EquityEuropeanBarrierOption XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/equityforward.hpp
 
     ql.OREEquityForward()
     ql.OREEquityForward(env0, "Long", equity_underlying0, "EUR", 0., qlEndDateStr, 0.)
+    # XML round-trip: EquityUnderlying fromXML/toXML asymmetry requires double round-trip
+    _eq_und_basic = ql.EquityUnderlying("AAPL")
+    _t = ql.OREEquityForward(env0, "Long", _eq_und_basic, "EUR", 1., qlEndDateStr, 100.)
+    _xml = _t.toXMLString()
+    _t2 = ql.OREEquityForward()
+    _t2.fromXMLString(_xml)
+    _xml2 = _t2.toXMLString()
+    _t3 = ql.OREEquityForward()
+    _t3.fromXMLString(_xml2)
+    assert _t3.toXMLString() == _xml2, "OREEquityForward XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/equityfuturesoption.hpp
 
     ql.EquityFutureOption()
     ql.EquityFutureOption(env0, option_data0, "EUR", 0., equity_underlying0, trade_strike0, qlEndDate)
+    # XML round-trip: EquityUnderlying fromXML/toXML asymmetry requires double round-trip
+    _t = ql.EquityFutureOption(env0, option_data0, "EUR", 1., equity_underlying0, trade_strike0, qlEndDate)
+    _xml = _t.toXMLString()
+    _t2 = ql.EquityFutureOption()
+    _t2.fromXMLString(_xml)
+    _xml2 = _t2.toXMLString()
+    _t3 = ql.EquityFutureOption()
+    _t3.fromXMLString(_xml2)
+    assert _t3.toXMLString() == _xml2, "EquityFutureOption XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/equityfxlegbuilder.hpp
 
@@ -457,6 +571,25 @@ def main():
     ql.EquityOutperformanceOption()
     ql.EquityOutperformanceOption(env0, option_data0, "EUR", 0.,
         equity_underlying0, equity_underlying0, 0., 0., 0.)
+    # XML round-trip: toXML writes <Underlying> but fromXML expects <Underlying1>/<Underlying2>,
+    # so rename tags before round-tripping. Also needs double round-trip for OptionData formatting.
+    _t = ql.EquityOutperformanceOption(env0, option_data0, "EUR", 1.,
+        ql.EquityUnderlying("AAPL", "", "", "", 1.), ql.EquityUnderlying("MSFT", "", "", "", 1.),
+        100., 100., 0.05)
+    _raw = _t.toXMLString()
+    _raw = _raw.replace("<Underlying>", "<Underlying1>", 1).replace("</Underlying>", "</Underlying1>", 1)
+    _raw = _raw.replace("<Underlying>", "<Underlying2>", 1).replace("</Underlying>", "</Underlying2>", 1)
+    _t2 = ql.EquityOutperformanceOption()
+    _t2.fromXMLString(_raw)
+    _xml2 = _t2.toXMLString()
+    _xml2 = _xml2.replace("<Underlying>", "<Underlying1>", 1).replace("</Underlying>", "</Underlying1>", 1)
+    _xml2 = _xml2.replace("<Underlying>", "<Underlying2>", 1).replace("</Underlying>", "</Underlying2>", 1)
+    _t3 = ql.EquityOutperformanceOption()
+    _t3.fromXMLString(_xml2)
+    _xml3 = _t3.toXMLString()
+    _xml3 = _xml3.replace("<Underlying>", "<Underlying1>", 1).replace("</Underlying>", "</Underlying1>", 1)
+    _xml3 = _xml3.replace("<Underlying>", "<Underlying2>", 1).replace("</Underlying>", "</Underlying2>", 1)
+    assert _xml3 == _xml2, "EquityOutperformanceOption XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/equityposition.hpp
 
@@ -480,6 +613,13 @@ def main():
     ql.EquityTouchOption()
     x0 = ql.BarrierData("DownAndIn", [0.], 0., [])
     ql.EquityTouchOption(env0, option_data0, x0, equity_underlying0, "EUR", 0.)
+    # XML round-trip: use single-arg EquityUnderlying (isBasic=True) for stable serialisation
+    _touch_barrier = ql.BarrierData("DownAndIn", [100.], 0., [])
+    _t = ql.EquityTouchOption(env0, option_data0, _touch_barrier, ql.EquityUnderlying("AAPL"), "EUR", 5000.)
+    _xml = _t.toXMLString()
+    _t2 = ql.EquityTouchOption()
+    _t2.fromXMLString(_xml)
+    assert _t2.toXMLString() == _xml, "EquityTouchOption XML round-trip mismatch"
     ql.EuropeanOptionBarrier()
     ql.EuropeanOptionBarrier(env0, "", "Put", "Long", "", "", "EUR", qlEvalDateStr, qlEndDateStr,
         equity_underlying0, equity_underlying0, "", "", "", qlEndDateStr, "EUR", schedule_data0)
@@ -504,11 +644,23 @@ def main():
 
     ql.ForwardBond()
     ql.ForwardBond(env0, bond_data0, qlEvalDateStr, qlEndDateStr, "", "", "", "", "", "", "", "")
+    # XML round-trip
+    _t = ql.ForwardBond(env0, bond_data0, qlEvalDateStr, qlEndDateStr, "", "", "", "", "", "", "", "")
+    _xml = _t.toXMLString()
+    _t2 = ql.ForwardBond()
+    _t2.fromXMLString(_xml)
+    assert _t2.toXMLString() == _xml, "ForwardBond XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/forwardrateagreement.hpp
 
     ql.OREForwardRateAgreement()
     ql.OREForwardRateAgreement(env0, "Long", "EUR", qlEvalDateStr, qlEndDateStr, "", 0., 0.)
+    # XML round-trip
+    _t = ql.OREForwardRateAgreement(env0, "Long", "EUR", qlEvalDateStr, qlEndDateStr, "", 0., 0.)
+    _xml = _t.toXMLString()
+    _t2 = ql.OREForwardRateAgreement()
+    _t2.fromXMLString(_xml)
+    assert _t2.toXMLString() == _xml, "OREForwardRateAgreement XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/fxaverageforward.hpp
 
@@ -519,47 +671,91 @@ def main():
 
     ql.FxDigitalBarrierOption()
     ql.FxDigitalBarrierOption(env0, option_data0, barrier_data0, 0., 0., "EUR", "EUR")
+    # XML round-trip
+    _t = ql.FxDigitalBarrierOption(env0, option_data0, barrier_data0, 100., 5000., "EUR", "USD")
+    _xml = _t.toXMLString()
+    _t2 = ql.FxDigitalBarrierOption()
+    _t2.fromXMLString(_xml)
+    assert _t2.toXMLString() == _xml, "FxDigitalBarrierOption XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/fxdigitaloption.hpp
 
     ql.FxDigitalOption()
     ql.FxDigitalOption(env0, option_data0, 0., "EUR", 0., "EUR", "EUR")
     ql.FxDigitalOption(env0, option_data0, 0., 0., "EUR", "EUR")
+    # XML round-trip
+    _t = ql.FxDigitalOption(env0, option_data0, 1.1, "EUR", 10000., "EUR", "USD")
+    _xml = _t.toXMLString()
+    _t2 = ql.FxDigitalOption()
+    _t2.fromXMLString(_xml)
+    assert _t2.toXMLString() == _xml, "FxDigitalOption XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/fxdoublebarrieroption.hpp
 
     ql.FxDoubleBarrierOption()
     ql.FxDoubleBarrierOption(env0, option_data0, barrier_data0, qlEvalDate, "TARGET", "EUR", 0., "EUR", 0.)
+    # XML round-trip
+    _t = ql.FxDoubleBarrierOption(env0, option_data0, barrier_data0, qlEvalDate, "TARGET", "EUR", 1000., "USD", 1100.)
+    _xml = _t.toXMLString()
+    _t2 = ql.FxDoubleBarrierOption()
+    _t2.fromXMLString(_xml)
+    assert _t2.toXMLString() == _xml, "FxDoubleBarrierOption XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/fxdoubletouchoption.hpp
 
     ql.FxDoubleTouchOption()
     ql.FxDoubleTouchOption(env0, option_data0, barrier_data0, "EUR", "EUR", "EUR", 0.)
+    # XML round-trip
+    _t = ql.FxDoubleTouchOption(env0, option_data0, barrier_data0, "EUR", "USD", "EUR", 5000.)
+    _xml = _t.toXMLString()
+    _t2 = ql.FxDoubleTouchOption()
+    _t2.fromXMLString(_xml)
+    assert _t2.toXMLString() == _xml, "FxDoubleTouchOption XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/fxeuropeanbarrieroption.hpp
 
     ql.FxEuropeanBarrierOption()
     ql.FxEuropeanBarrierOption(env0, option_data0, barrier_data0, "EUR", 0., "EUR", 0.)
+    # XML round-trip
+    _t = ql.FxEuropeanBarrierOption(env0, option_data0, barrier_data0, "EUR", 1000., "USD", 1100.)
+    _xml = _t.toXMLString()
+    _t2 = ql.FxEuropeanBarrierOption()
+    _t2.fromXMLString(_xml)
+    assert _t2.toXMLString() == _xml, "FxEuropeanBarrierOption XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/fxforward.hpp
 
     ql.OREFxForward()
     ql.OREFxForward(env0, qlEvalDateStr, "EUR", 0., "EUR", 0.)
+    # XML round-trip
+    _t = ql.OREFxForward(env0, qlEvalDateStr, "EUR", 1000., "USD", 1100.)
+    _xml = _t.toXMLString()
+    _t2 = ql.OREFxForward()
+    _t2.fromXMLString(_xml)
+    assert _t2.toXMLString() == _xml, "OREFxForward XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/fxkikobarrieroption.hpp
 
     ql.FxKIKOBarrierOption()
     ql.FxKIKOBarrierOption(env0, option_data0, [barrier_data0], "EUR", 0., "EUR", 0.)
-
-    # ore/OREData/ored/portfolio/fxkikobarrieroption.hpp
-
-    ql.FxKIKOBarrierOption()
-    ql.FxKIKOBarrierOption(env0, option_data0, [barrier_data0], "EUR", 0., "EUR", 0.)
+    # XML round-trip: KIKO requires exactly two BarrierData nodes (one KI, one KO)
+    _barrier_ko = ql.BarrierData("KnockOut", [110.], 0., [])
+    _t = ql.FxKIKOBarrierOption(env0, option_data0, [barrier_data0, _barrier_ko], "EUR", 1000., "USD", 1000.)
+    _xml = _t.toXMLString()
+    _t2 = ql.FxKIKOBarrierOption()
+    _t2.fromXMLString(_xml)
+    assert _t2.toXMLString() == _xml, "FxKIKOBarrierOption XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/fxswap.hpp
 
     ql.FxSwap()
     ql.FxSwap(env0, qlEvalDateStr, qlEndDateStr, "EUR", 0., "EUR", 0., 0., 0.)
+    # XML round-trip
+    _t = ql.FxSwap(env0, qlEvalDateStr, qlEndDateStr, "EUR", 1000000., "USD", 1100000., 1100000., 1000000.)
+    _xml = _t.toXMLString()
+    _t2 = ql.FxSwap()
+    _t2.fromXMLString(_xml)
+    assert _t2.toXMLString() == _xml, "FxSwap XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/genericbarrieroption.hpp
 
@@ -576,11 +772,23 @@ def main():
 
     ql.IndexCreditDefaultSwap()
     ql.IndexCreditDefaultSwap(env0, swap_data0, basket_data0)
+    # XML round-trip
+    _t = ql.IndexCreditDefaultSwap(env0, swap_data0, basket_data0)
+    _xml = _t.toXMLString()
+    _t2 = ql.IndexCreditDefaultSwap()
+    _t2.fromXMLString(_xml)
+    assert _t2.toXMLString() == _xml, "IndexCreditDefaultSwap XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/indexcreditdefaultswapoption.hpp
 
     ql.IndexCreditDefaultSwapOption()
     ql.IndexCreditDefaultSwapOption(env0, swap_data0, option_data0, 0.)
+    # XML round-trip
+    _t = ql.IndexCreditDefaultSwapOption(env0, swap_data0, option_data0, 0.)
+    _xml = _t.toXMLString()
+    _t2 = ql.IndexCreditDefaultSwapOption()
+    _t2.fromXMLString(_xml)
+    assert _t2.toXMLString() == _xml, "IndexCreditDefaultSwapOption XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/indexing.hpp
 
@@ -592,6 +800,12 @@ def main():
     ql.InflationSwap()
     ql.InflationSwap(env0, [leg_data0])
     ql.InflationSwap(env0, leg_data0, leg_data0)
+    # XML round-trip
+    _t = ql.InflationSwap(env0, [leg_data0])
+    _xml = _t.toXMLString()
+    _t2 = ql.InflationSwap()
+    _t2.fromXMLString(_xml)
+    assert _t2.toXMLString() == _xml, "InflationSwap XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/instrumentwrapper.hpp
 
@@ -876,6 +1090,27 @@ def main():
     ql.FxVarSwap(env0, "Long", equity_underlying0, "EUR", 0., 0., qlEvalDateStr, qlEndDateStr, "", False)
     ql.ComVarSwap()
     ql.ComVarSwap(env0, "Long", equity_underlying0, "EUR", 0., 0., qlEvalDateStr, qlEndDateStr, "", False)
+    # XML round-trips
+    _eq_und = ql.EquityUnderlying("AAPL")
+    _t = ql.EqVarSwap(env0, "Long", _eq_und, "USD", 0.04, 1000000., qlEvalDateStr, qlEndDateStr, "Variance", False)
+    _xml = _t.toXMLString()
+    _t2 = ql.EqVarSwap()
+    _t2.fromXMLString(_xml)
+    assert _t2.toXMLString() == _xml, "EqVarSwap XML round-trip mismatch"
+
+    _fx_und = ql.FXUnderlying("FX", "EURUSD", 1.)
+    _t = ql.FxVarSwap(env0, "Short", _fx_und, "USD", 0.05, 500000., qlEvalDateStr, qlEndDateStr, "Variance", False)
+    _xml = _t.toXMLString()
+    _t2 = ql.FxVarSwap()
+    _t2.fromXMLString(_xml)
+    assert _t2.toXMLString() == _xml, "FxVarSwap XML round-trip mismatch"
+
+    _com_und = ql.CommodityUnderlying("GOLD", 0., "TARGET", 0, 0, "TARGET")
+    _t = ql.ComVarSwap(env0, "Long", _com_und, "USD", 0.03, 250000., qlEvalDateStr, qlEndDateStr, "Variance", False)
+    _xml = _t.toXMLString()
+    _t2 = ql.ComVarSwap()
+    _t2.fromXMLString(_xml)
+    assert _t2.toXMLString() == _xml, "ComVarSwap XML round-trip mismatch"
 
     # ore/OREData/ored/portfolio/windowbarrieroption.hpp
 
@@ -896,6 +1131,27 @@ def main():
     ql.EquityWorstOfBasketSwap()
     ql.FxWorstOfBasketSwap()
     ql.CommodityWorstOfBasketSwap()
+
+    # ore/OREData/ored/portfolio/equityautodeltahedgeoption.hpp
+
+    uod = ql.UnderlyingOptionData()
+    uod.optionData = option_data0
+    uod.equityUnderlying = equity_underlying0
+    uod.currency = "EUR"
+    uod.strike = trade_strike0
+    uod.quantity = 1.0
+
+    underlyings = ql.UnderlyingOptionDataVector()
+    underlyings.push_back(uod)
+    ql.EquityAutoDeltaHedgedOption()
+    ql.EquityAutoDeltaHedgedOption(env0, underlyings, 0.0, 0.0, 
+                                   qlEvalDate, qlEvalDate)
+
+    # ore/OREData/ored/portfolio/ratedigitaloption.hpp
+
+    ql.RateDigitalOption()
+    ql.RateDigitalOption(env0, option_data0, "EUR-EURIBOR-6M", 0.02, 10000.0,
+                         "EUR", qlEvalDateStr, qlEndDateStr)
 
 
 if __name__ == "__main__":

@@ -24,18 +24,46 @@
 #pragma once
 
 #include <map>
-#include <orea/scenario/scenariosimmarket.hpp>
-#include <orea/scenario/scenariosimmarketparameters.hpp>
-#include <orea/scenario/sensitivityscenariodata.hpp>
-#include <ored/marketdata/market.hpp>
-#include <ored/portfolio/portfolio.hpp>
 #include <set>
+
+#include <orea/scenario/scenario.hpp>
+#include <orea/scenario/scenariocurvepillar.hpp>
+#include <ored/marketdata/market.hpp>
+#include <ql/time/period.hpp>
+
+namespace QuantLib {
+class CapFloor;
+class Swap;
+class YieldTermStructure;
+class OptionletVolatilityStructure;
+class YoYInflationCapFloor;
+class YoYInflationIndex;
+class Instrument;
+}
+
+namespace ore {
+namespace data {
+class Convention;
+}
+}
 
 namespace ore {
 namespace analytics {
 
+class ScenarioSimMarket;
+class ScenarioSimMarketParameters;
+class SensitivityScenarioData;
+
 class ParSensitivityInstrumentBuilder {
 public:
+    struct YoYCapFloorInstrumentData final {
+        QuantLib::ext::shared_ptr<QuantLib::YoYInflationCapFloor> cap;
+        QuantLib::Handle<QuantLib::YieldTermStructure> yts;
+        QuantLib::Handle<QuantExt::YoYOptionletVolatilitySurface> vts;
+        QuantLib::Handle<QuantLib::YoYInflationIndex> index;
+        QuantLib::Period obsLag;
+    };
+
     struct Instruments {
         //! par helpers (all except cap/floors)
         std::map<ore::analytics::RiskFactorKey, QuantLib::ext::shared_ptr<QuantLib::Instrument>> parHelpers_;
@@ -47,10 +75,7 @@ public:
 
         
         //! par helpers: YoY cap / floors
-        std::map<ore::analytics::RiskFactorKey, QuantLib::Handle<QuantLib::YieldTermStructure>> parYoYCapsYts_;
-        std::map<ore::analytics::RiskFactorKey, QuantLib::Handle<QuantLib::YoYInflationIndex>> parYoYCapsIndex_;
-        std::map<ore::analytics::RiskFactorKey, QuantLib::ext::shared_ptr<QuantLib::YoYInflationCapFloor>> parYoYCaps_;
-        std::map<ore::analytics::RiskFactorKey, QuantLib::Handle<QuantExt::YoYOptionletVolatilitySurface>> parYoYCapsVts_;
+        std::map<ore::analytics::RiskFactorKey, YoYCapFloorInstrumentData> parYoYCaps_;
         //! par QuantLib::Instrument pillars
         std::map<std::string, std::vector<QuantLib::Period>> yieldCurvePillars_, capFloorPillars_, cdsPillars_,
             equityForecastCurvePillars_, zeroInflationPillars_, yoyInflationPillars_, yoyCapFloorPillars_;
@@ -59,6 +84,8 @@ public:
         // ql index names for which we want to remove today's fixing for the purpose of the par sensi calculation
         std::set<std::string> removeTodaysFixingIndices_;
     };
+
+    
 
     ParSensitivityInstrumentBuilder() = default;
 
@@ -72,34 +99,34 @@ public:
                          const std::set<ore::analytics::RiskFactorKey>& relevantRiskFactors = {},
                          const bool continueOnError = false,
                          const std::string& marketConfiguration = ore::data::Market::defaultConfiguration,
-                         const QuantLib::ext::shared_ptr<ore::analytics::Market>& simMarket = nullptr) const;
+                         const QuantLib::ext::shared_ptr<ore::data::Market>& simMarket = nullptr) const;
 
 private:
     //! Dispatcher into the rate curve related makeXXX() methods below
-    std::pair<QuantLib::ext::shared_ptr<Instrument>, Date>
+    std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, QuantLib::Date>
     makeInstrument(const std::string& instType, const QuantLib::Date& asof,
-                   const QuantLib::ext::shared_ptr<Market>& market, string ccy, string otherCcy, string curveName,
-                   string yieldCurveName, string equityForecastCurveName, ScenarioCurvePillar& term,
-                   const QuantLib::ext::shared_ptr<Convention>& convention, bool singleCurve,
+                   const QuantLib::ext::shared_ptr<ore::data::Market>& market, std::string ccy, std::string otherCcy, std::string curveName,
+                   std::string yieldCurveName, std::string equityForecastCurveName, ScenarioCurvePillar& term,
+                   const QuantLib::ext::shared_ptr<ore::data::Convention>& convention, bool singleCurve,
                    std::set<ore::analytics::RiskFactorKey>& parHelperDependencies,
-                   std::set<std::string>& removeTodaysFixingIndices, const string& expDiscountCurve,
-                   const string& marketConfiguration) const;
+                   std::set<std::string>& removeTodaysFixingIndices, const std::string& expDiscountCurve,
+                   const std::string& marketConfiguration) const;
     //! Create Deposit for implying par rate sensitivity from zero rate sensitivity
-    std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date>
+    std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, QuantLib::Date>
     makeDeposit(const QuantLib::Date& asof, const QuantLib::ext::shared_ptr<ore::data::Market>& market, std::string ccy,
                 std::string indexName, std::string yieldCurveName, std::string equityForecastCurveName, QuantLib::Period term,
                 const QuantLib::ext::shared_ptr<ore::data::Convention>& conventions,
                 const std::string& marketConfiguration = ore::data::Market::defaultConfiguration) const;
 
     //! Create FRA for implying par rate sensitivity from zero rate sensitivity
-    std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date>
+    std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, QuantLib::Date>
     makeFRA(const QuantLib::Date& asof, const QuantLib::ext::shared_ptr<ore::data::Market>& market, std::string ccy,
             std::string indexName, std::string yieldCurveName, std::string equityForecastCurveName,
             QuantLib::Period term, const QuantLib::ext::shared_ptr<ore::data::Convention>& conventions,
             const std::string& marketConfiguration = ore::data::Market::defaultConfiguration) const;
 
     //! Create Swap for implying par rate sensitivity from zero rate sensitivity
-    std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date>
+    std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, QuantLib::Date>
     makeSwap(const QuantLib::ext::shared_ptr<ore::data::Market>& market, std::string ccy, std::string indexName,
              std::string yieldCurveName, std::string equityForecastCurveName, QuantLib::Period term,
              const QuantLib::ext::shared_ptr<ore::data::Convention>& conventions, bool singleCurve,
@@ -108,7 +135,7 @@ private:
              const std::string& marketConfiguration = ore::data::Market::defaultConfiguration) const;
 
     //! Create OIS Swap for implying par rate sensitivity from zero rate sensitivity
-    std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date>
+    std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, QuantLib::Date>
     makeOIS(const QuantLib::ext::shared_ptr<ore::data::Market>& market, std::string ccy, std::string indexName,
             std::string yieldCurveName, std::string equityForecastCurveName, QuantLib::Period term,
             const QuantLib::ext::shared_ptr<ore::data::Convention>& conventions, bool singleCurve,
@@ -117,7 +144,7 @@ private:
             const std::string& marketConfiguration = ore::data::Market::defaultConfiguration) const;
 
     //! Create IR Future
-    std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date>
+    std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, QuantLib::Date>
     makeIrFuture(const QuantLib::Date& asof, const QuantLib::ext::shared_ptr<ore::data::Market>& market,
                  std::string ccy, std::string indexName, std::string yieldCurveName,
                  std::string equityForecastCurveName, IrFutureExpiryYearMonth term,
@@ -127,7 +154,7 @@ private:
                  const std::string& marketConfiguration = ore::data::Market::defaultConfiguration) const;
 
     //! Create in-ccy Tenor Basis Swap for implying par rate sensitivity from zero rate sensitivity
-    std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date>
+    std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, QuantLib::Date>
     makeTenorBasisSwap(const QuantLib::Date& asof, const QuantLib::ext::shared_ptr<ore::data::Market>& market, std::string ccy,
                        std::string receiveIndexName, std::string payIndexName, std::string yieldCurveName,
                        std::string equityForecastCurveName, QuantLib::Period term, const QuantLib::ext::shared_ptr<ore::data::Convention>& conventions,
@@ -136,7 +163,7 @@ private:
                        const std::string& marketConfiguration = ore::data::Market::defaultConfiguration) const;
 
     //! Create BMA Basis Swap for implying par rate sensitivity from zero rate sensitivity
-    std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date>
+    std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, QuantLib::Date>
     makeBMABasisSwap(const QuantLib::Date& asof, const QuantLib::ext::shared_ptr<ore::data::Market>& market,
                      std::string ccy, std::string indexName, std::string bmaIndexName, std::string yieldCurveName,
                      std::string equityForecastCurveName, QuantLib::Period term,
@@ -155,11 +182,11 @@ private:
     //! Create Cap/Floor QuantLib::Instrument for implying flat vol sensitivity from optionlet vol sensitivity
     QuantLib::ext::shared_ptr<QuantLib::Swap> makeOisCapFloor(
         const QuantLib::ext::shared_ptr<ore::data::Market>& market, const std::string& ccy, const std::string& indexName, const QuantLib::Period&  term,  const double strike,
-        const Period& rateCompPeriod,  const bool isAtm, std::set<ore::analytics::RiskFactorKey>& parHelperDependencies, const std::string& expDiscountCurve = "",
+        const QuantLib::Period& rateCompPeriod,  const bool isAtm, std::set<ore::analytics::RiskFactorKey>& parHelperDependencies, const std::string& expDiscountCurve = "",
         const std::string& marketConfiguration = ore::data::Market::defaultConfiguration) const;
 
     //! Create Cross Ccy Basis Swap for implying par rate sensitivity from zero rate sensitivity
-    std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date>
+    std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, QuantLib::Date>
     makeCrossCcyBasisSwap(const QuantLib::ext::shared_ptr<ore::data::Market>& market, std::string baseCcy, std::string ccy, QuantLib::Period term,
                           const QuantLib::ext::shared_ptr<ore::data::Convention>& conventions,
                           std::set<ore::analytics::RiskFactorKey>& parHelperDependencies,
@@ -167,14 +194,14 @@ private:
                           const std::string& marketConfiguration = ore::data::Market::defaultConfiguration) const;
 
     //! Create FX Forwrad for implying par rate sensitivity from zero rate sensitivity
-    std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date>
+    std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, QuantLib::Date>
     makeFxForward(const QuantLib::ext::shared_ptr<ore::data::Market>& market, std::string baseCcy, std::string ccy, QuantLib::Period term,
                   const QuantLib::ext::shared_ptr<ore::data::Convention>& conventions,
                   std::set<ore::analytics::RiskFactorKey>& parHelperDependencies,
                   const std::string& marketConfiguration = ore::data::Market::defaultConfiguration) const;
 
     //! Create CDS for implying par rate sensitivity from Hazard Rate sensitivity
-    std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date>
+    std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, QuantLib::Date>
     makeCDS(const QuantLib::ext::shared_ptr<ore::data::Market>& market, std::string name, std::string ccy, QuantLib::Period term,
             const QuantLib::ext::shared_ptr<ore::data::Convention>& conventions,
             std::set<ore::analytics::RiskFactorKey>& parHelperDependencies, const std::string& expDiscountCurve = "",
@@ -198,7 +225,8 @@ private:
 
     //! Create YoY Cap/Floor for implying rate rate sensitivity from yoy optionlet vol sensitivity
     void makeYoYCapFloor(ParSensitivityInstrumentBuilder::Instruments& instruments,
-                         const QuantLib::ext::shared_ptr<Market>& market, std::string indexName, QuantLib::Period term,
+                         const QuantLib::ext::shared_ptr<ore::data::Market>& market, std::string indexName,
+                         QuantLib::Period term,
                          double strike, const QuantLib::ext::shared_ptr<ore::data::Convention>& convention, bool singleCurve,
                          bool fromZero, const std::string& expDiscountCurve, const ore::analytics::RiskFactorKey& key,
                          const std::string& marketConfiguration = ore::data::Market::defaultConfiguration) const;

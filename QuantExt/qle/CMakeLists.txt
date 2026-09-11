@@ -14,7 +14,6 @@ calendars/greece.cpp
 calendars/ice.cpp
 calendars/ireland.cpp
 calendars/islamicweekendsonly.cpp
-calendars/israel.cpp
 calendars/luxembourg.cpp
 calendars/malaysia.cpp
 calendars/mauritius.cpp
@@ -57,6 +56,7 @@ cashflows/iborfracoupon.cpp
 cashflows/indexedcoupon.cpp
 cashflows/interpolatediborcoupon.cpp
 cashflows/interpolatediborcouponpricer.cpp
+cashflows/intradaypowercashflow.cpp
 cashflows/jyyoyinflationcouponpricer.cpp
 cashflows/lognormalcmsspreadpricer.cpp
 cashflows/mcgaussianformulabasedcouponpricer.cpp
@@ -85,6 +85,7 @@ currencies/metals.cpp
 indexes/bondindex.cpp
 indexes/commoditybasisfutureindex.cpp
 indexes/commodityindex.cpp
+indexes/intradaypowerindex.cpp
 indexes/compoequityindex.cpp
 indexes/compositeindex.cpp
 indexes/dividendmanager.cpp
@@ -157,8 +158,8 @@ instruments/payment.cpp
 instruments/rebatedexercise.cpp
 instruments/riskparticipationagreement.cpp
 instruments/riskparticipationagreement_tlock.cpp
-instruments/swapoptimized.cpp
 instruments/subperiodsswap.cpp
+instruments/swapoptimized.cpp
 instruments/syntheticcdo.cpp
 instruments/tenorbasisswap.cpp
 instruments/varianceswap.cpp
@@ -173,11 +174,13 @@ math/differentialevolution_mt.cpp
 math/discretedistribution.cpp
 math/fillemptymatrix.cpp
 math/gpucodegenerator.cpp
+math/gpuqrsolve.cpp
 math/matrixfunctions.cpp
 math/openclenvironment.cpp
 math/randomvariable.cpp
 math/randomvariable_io.cpp
 math/randomvariable_ops.cpp
+math/randomvariable_regressioncache.cpp
 math/randomvariablelsmbasissystem.cpp
 math/stoplightbounds.cpp
 methods/brownianbridgepathinterpolator.cpp
@@ -269,8 +272,8 @@ pricingengines/analyticdkcpicapfloorengine.cpp
 pricingengines/analyticdoublebarrierbinaryengine.cpp
 pricingengines/analyticdoublebarrierengine.cpp
 pricingengines/analyticeuropeanengine.cpp
-pricingengines/analyticeuropeanenginedeltagamma.cpp
 pricingengines/analyticeuropeanengineautodeltahedge.cpp
+pricingengines/analyticeuropeanenginedeltagamma.cpp
 pricingengines/analyticeuropeanforwardengine.cpp
 pricingengines/analytichwswaptionengine.cpp
 pricingengines/analyticjycpicapfloorengine.cpp
@@ -302,8 +305,8 @@ pricingengines/depositengine.cpp
 pricingengines/discountingbondfutureengine.cpp
 pricingengines/discountingbondrepoengine.cpp
 pricingengines/discountingbondtrsengine.cpp
-pricingengines/discountingcommodityforwardengine.cpp
 pricingengines/discountingcommoditycurrencyswapengine.cpp
+pricingengines/discountingcommodityforwardengine.cpp
 pricingengines/discountingcreditlinkedswapengine.cpp
 pricingengines/discountingcurrencyswapengine.cpp
 pricingengines/discountingcurrencyswapenginedeltagamma.cpp
@@ -316,6 +319,7 @@ pricingengines/discountingriskybondenginemultistate.cpp
 pricingengines/discountingswapenginedeltagamma.cpp
 pricingengines/discretizedconvertible.cpp
 pricingengines/fdblackscholesvanillaengine.cpp
+pricingengines/fxdigitalcallspreadengine.cpp
 pricingengines/fdcallablebondevents.cpp
 pricingengines/fdconvertiblebondevents.cpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.cpp
@@ -331,14 +335,14 @@ pricingengines/mccamcurrencyswapengine.cpp
 pricingengines/mccamequityforwardengine.cpp
 pricingengines/mccamfxforwardengine.cpp
 pricingengines/mccamfxoptionengine.cpp
-pricingengines/mccashflowinfo.cpp
+pricingengines/mcenginecashflowinfo.cpp
+pricingengines/mcengineregression.cpp
 pricingengines/mclgmbondengine.cpp
 pricingengines/mclgmfwdbondengine.cpp
 pricingengines/mclgmswapengine.cpp
 pricingengines/mclgmswaptionengine.cpp
 pricingengines/mcmultilegbaseengine.cpp
 pricingengines/mcmultilegoptionengine.cpp
-pricingengines/mcregressionmodel.cpp
 pricingengines/midpointcdoengine.cpp
 pricingengines/midpointcdsenginemultistate.cpp
 pricingengines/midpointindexcdsengine.cpp
@@ -362,6 +366,7 @@ processes/multiassetquantohestonprocess.cpp
 processes/ptdhestonprocess.cpp
 processes/quantohestonprocess.cpp
 python_integration/pythonfunctions.cpp
+quotes/bondfuturequote.cpp
 quotes/logquote.cpp
 termstructures/aposurface.cpp
 termstructures/averagefuturepricehelper.cpp
@@ -381,7 +386,9 @@ termstructures/blackvolsurfacedelta.cpp
 termstructures/blackvolsurfaceproxy.cpp
 termstructures/blackvolsurfacesvi.cpp
 termstructures/blackvolsurfacewithatm.cpp
+termstructures/bondfuturevolstripper.cpp
 termstructures/brlcdiratehelper.cpp
+termstructures/calendarspreadfuturepricetermstructure.cpp
 termstructures/capfloorhelper.cpp
 termstructures/capfloortermvolsurface.cpp
 termstructures/correlationtermstructure.cpp
@@ -393,13 +400,13 @@ termstructures/crossccybasismtmresetswaphelper.cpp
 termstructures/crossccybasisswaphelper.cpp
 termstructures/crossccyfixfloatmtmresetswaphelper.cpp
 termstructures/crossccyfixfloatswaphelper.cpp
-termstructures/calendarspreadfuturepricetermstructure.cpp
 termstructures/crosscurrencypricetermstructure.cpp
 termstructures/datedstrippedoptionlet.cpp
 termstructures/datedstrippedoptionletadapter.cpp
 termstructures/discountratiomodifiedcurve.cpp
 termstructures/dynamiccpivolatilitystructure.cpp
 termstructures/dynamicoptionletvolatilitystructure.cpp
+termstructures/dynamicstype.cpp
 termstructures/dynamicswaptionvolmatrix.cpp
 termstructures/dynamicyoyoptionletvolatilitystructure.cpp
 termstructures/eqcommoptionsurfacestripper.cpp
@@ -413,6 +420,9 @@ termstructures/fxvoltimeweighting.cpp
 termstructures/generatordefaulttermstructure.cpp
 termstructures/hazardspreadeddefaulttermstructure.cpp
 termstructures/iborfallbackcurve.cpp
+termstructures/intradaypowerloadtermstructure.cpp
+termstructures/intradaypowerpricetermstructure.cpp
+termstructures/intradayshapetermstructure.cpp
 termstructures/immfraratehelper.cpp
 termstructures/indexcdsvolstripper.cpp
 termstructures/inflation/constantcpivolatility.cpp
@@ -431,8 +441,6 @@ termstructures/pricetermstructureadapter.cpp
 termstructures/proxyoptionletvolatility.cpp
 termstructures/proxyswaptionvolatility.cpp
 termstructures/sabrparametricvolatility.cpp
-termstructures/svimodeltraits.cpp
-termstructures/sviparametricvolatility.cpp
 termstructures/scenario.cpp
 termstructures/simplemclocalvolstochasticratescorrection.cpp
 termstructures/spreadedblackvolatilitycurve.cpp
@@ -449,10 +457,12 @@ termstructures/spreadedsmilesection2.cpp
 termstructures/spreadedsurvivalprobabilitytermstructure.cpp
 termstructures/spreadedswaptionvolatility.cpp
 termstructures/spreadedyoyvolsurface.cpp
-termstructures/strippedoptionlet.cpp
 termstructures/strippedoptionletadapter2.cpp
+termstructures/strippedoptionletbasebumped.cpp
 termstructures/strippedyoyinflationoptionletvol.cpp
 termstructures/subperiodsswaphelper.cpp
+termstructures/svimodeltraits.cpp
+termstructures/sviparametricvolatility.cpp
 termstructures/swaptionsabrcube.cpp
 termstructures/swaptionvolatilityconverter.cpp
 termstructures/swaptionvolconstantspread.cpp
@@ -472,6 +482,7 @@ utilities/creditcurves.cpp
 utilities/creditindexconstituentcurvecalibration.cpp
 utilities/fairrate.cpp
 utilities/inflation.cpp
+utilities/intradaypower.cpp
 utilities/ratehelpers.cpp
 utilities/time.cpp)
 
@@ -495,7 +506,6 @@ calendars/greece.hpp
 calendars/ice.hpp
 calendars/ireland.hpp
 calendars/islamicweekendsonly.hpp
-calendars/israel.hpp
 calendars/luxembourg.hpp
 calendars/malaysia.hpp
 calendars/mauritius.hpp
@@ -540,6 +550,7 @@ cashflows/iborfracoupon.hpp
 cashflows/indexedcoupon.hpp
 cashflows/interpolatediborcoupon.hpp
 cashflows/interpolatediborcouponpricer.hpp
+cashflows/intradaypowercashflow.hpp
 cashflows/jyyoyinflationcouponpricer.hpp
 cashflows/lognormalcmsspreadpricer.hpp
 cashflows/mcgaussianformulabasedcouponpricer.hpp
@@ -567,7 +578,6 @@ currencies/configurablecurrency.hpp
 currencies/currencycomparator.hpp
 currencies/europe.hpp
 currencies/metals.hpp
-gitversion.hpp
 indexes/behicp.hpp
 indexes/bmaindexwrapper.hpp
 indexes/bondindex.hpp
@@ -653,6 +663,7 @@ instruments/averageois.hpp
 instruments/balanceguaranteedswap.hpp
 instruments/bondbasket.hpp
 instruments/bondfuture.hpp
+instruments/bondfutureoption.hpp
 instruments/bondoption.hpp
 instruments/bondrepo.hpp
 instruments/bondtotalreturnswap.hpp
@@ -699,12 +710,13 @@ instruments/multilegoption.hpp
 instruments/nullinstrument.hpp
 instruments/outperformanceoption.hpp
 instruments/pairwisevarianceswap.hpp
+instruments/pathlevelresult.hpp
 instruments/payment.hpp
 instruments/rebatedexercise.hpp
 instruments/riskparticipationagreement.hpp
 instruments/riskparticipationagreement_tlock.hpp
-instruments/swapoptimized.hpp
 instruments/subperiodsswap.hpp
+instruments/swapoptimized.hpp
 instruments/syntheticcdo.hpp
 instruments/tenorbasisswap.hpp
 instruments/vanillaforwardoption.hpp
@@ -716,7 +728,6 @@ math/bucketeddistribution.hpp
 math/compiledformula.hpp
 math/computeenvironment.hpp
 math/constantinterpolation.hpp
-math/covariancesalvage.hpp
 math/cudaenvironment.hpp
 math/deltagammavar.hpp
 math/differentialevolution_mt.hpp
@@ -726,6 +737,7 @@ math/fillemptymatrix.hpp
 math/flatextrapolation.hpp
 math/flatextrapolation2d.hpp
 math/gpucodegenerator.hpp
+math/gpuqrsolve.hpp
 math/kendallrankcorrelation.hpp
 math/logquadraticinterpolation.hpp
 math/matrixfunctions.hpp
@@ -738,6 +750,7 @@ math/randomvariable.hpp
 math/randomvariable_io.hpp
 math/randomvariable_opcodes.hpp
 math/randomvariable_ops.hpp
+math/randomvariable_regressioncache.hpp
 math/randomvariablelsmbasissystem.hpp
 math/stabilisedglls.hpp
 math/stoplightbounds.hpp
@@ -869,8 +882,8 @@ pricingengines/analyticdkcpicapfloorengine.hpp
 pricingengines/analyticdoublebarrierbinaryengine.hpp
 pricingengines/analyticdoublebarrierengine.hpp
 pricingengines/analyticeuropeanengine.hpp
-pricingengines/analyticeuropeanenginedeltagamma.hpp
 pricingengines/analyticeuropeanengineautodeltahedge.hpp
+pricingengines/analyticeuropeanenginedeltagamma.hpp
 pricingengines/analyticeuropeanforwardengine.hpp
 pricingengines/analytichwswaptionengine.hpp
 pricingengines/analyticjycpicapfloorengine.hpp
@@ -903,8 +916,8 @@ pricingengines/depositengine.hpp
 pricingengines/discountingbondfutureengine.hpp
 pricingengines/discountingbondrepoengine.hpp
 pricingengines/discountingbondtrsengine.hpp
-pricingengines/discountingcommodityforwardengine.hpp
 pricingengines/discountingcommoditycurrencyswapengine.hpp
+pricingengines/discountingcommodityforwardengine.hpp
 pricingengines/discountingcreditlinkedswapengine.hpp
 pricingengines/discountingcurrencyswapengine.hpp
 pricingengines/discountingcurrencyswapenginedeltagamma.hpp
@@ -932,14 +945,14 @@ pricingengines/mccamcurrencyswapengine.hpp
 pricingengines/mccamequityforwardengine.hpp
 pricingengines/mccamfxforwardengine.hpp
 pricingengines/mccamfxoptionengine.hpp
-pricingengines/mccashflowinfo.hpp
+pricingengines/mcenginecashflowinfo.hpp
+pricingengines/mcengineregression.hpp
 pricingengines/mclgmbondengine.hpp
 pricingengines/mclgmfwdbondengine.hpp
 pricingengines/mclgmswapengine.hpp
 pricingengines/mclgmswaptionengine.hpp
 pricingengines/mcmultilegbaseengine.hpp
 pricingengines/mcmultilegoptionengine.hpp
-pricingengines/mcregressionmodel.hpp
 pricingengines/midpointcdoengine.hpp
 pricingengines/midpointcdsenginemultistate.hpp
 pricingengines/midpointindexcdsengine.hpp
@@ -947,6 +960,7 @@ pricingengines/numericalintegrationindexcdsoptionengine.hpp
 pricingengines/numericlgmbgsflexiswapengine.hpp
 pricingengines/numericlgmcallablebondengine.hpp
 pricingengines/numericlgmflexiswapengine.hpp
+pricingengines/fxdigitalcallspreadengine.hpp
 pricingengines/numericlgmmultilegoptionengine.hpp
 pricingengines/pairwisevarianceswapengine.hpp
 pricingengines/paymentdiscountingengine.hpp
@@ -965,7 +979,9 @@ processes/ptdhestonprocess.hpp
 processes/quantohestonprocess.hpp
 python_integration/pythonfunctions.hpp
 quotes/basecorrelationquote.hpp
+quotes/bondfuturequote.hpp
 quotes/compositevectorquote.hpp
+quotes/derivedquote.hpp
 quotes/exceptionquote.hpp
 quotes/logquote.hpp
 termstructures/adjusteddefaultcurve.hpp
@@ -991,8 +1007,10 @@ termstructures/blackvolsurfacedelta.hpp
 termstructures/blackvolsurfaceproxy.hpp
 termstructures/blackvolsurfacesvi.hpp
 termstructures/blackvolsurfacewithatm.hpp
+termstructures/bondfuturevolstripper.hpp
 termstructures/bondyieldshiftedcurvetermstructure.hpp
 termstructures/brlcdiratehelper.hpp
+termstructures/calendarspreadfuturepricetermstructure.hpp
 termstructures/capfloorhelper.hpp
 termstructures/capfloortermvolcurve.hpp
 termstructures/capfloortermvolsurface.hpp
@@ -1001,7 +1019,6 @@ termstructures/commodityaveragebasispricecurve.hpp
 termstructures/commoditybasispricecurve.hpp
 termstructures/commoditybasispricecurvewrapper.hpp
 termstructures/commoditybasispricetermstructure.hpp
-termstructures/calendarspreadfuturepricetermstructure.hpp
 termstructures/correlationtermstructure.hpp
 termstructures/credit/basecorrelationstructure.hpp
 termstructures/credit/spreadedbasecorrelationcurve.hpp
@@ -1053,6 +1070,9 @@ termstructures/interpolateddiscountcurve.hpp
 termstructures/interpolateddiscountcurve2.hpp
 termstructures/interpolatedhazardratecurve.hpp
 termstructures/interpolatedyoycapfloortermpricesurface.hpp
+termstructures/intradayshapetermstructure.hpp
+termstructures/intradaypowerloadtermstructure.hpp
+termstructures/intradaypowerpricetermstructure.hpp
 termstructures/iterativebootstrap.hpp
 termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp
 termstructures/multisectiondefaultcurve.hpp
@@ -1077,8 +1097,6 @@ termstructures/probabilitytraits.hpp
 termstructures/proxyoptionletvolatility.hpp
 termstructures/proxyswaptionvolatility.hpp
 termstructures/sabrparametricvolatility.hpp
-termstructures/svimodeltraits.hpp
-termstructures/sviparametricvolatility.hpp
 termstructures/sabrstrippedoptionletadapter.hpp
 termstructures/scenario.hpp
 termstructures/simplemclocalvolstochasticratescorrection.hpp
@@ -1096,15 +1114,16 @@ termstructures/spreadedsmilesection2.hpp
 termstructures/spreadedsurvivalprobabilitytermstructure.hpp
 termstructures/spreadedswaptionvolatility.hpp
 termstructures/spreadedyoyvolsurface.hpp
-termstructures/staticallycorrectedyieldtermstructure.hpp
 termstructures/strippedcpivolatilitystructure.hpp
-termstructures/strippedoptionlet.hpp
 termstructures/strippedoptionletadapter.hpp
 termstructures/strippedoptionletadapter2.hpp
+termstructures/strippedoptionletbasebumped.hpp
 termstructures/strippedyoyinflationoptionletvol.hpp
 termstructures/subperiodsswaphelper.hpp
 termstructures/survivalprobabilitycurve.hpp
 termstructures/survivalprobabilitycurvefromyield.hpp
+termstructures/svimodeltraits.hpp
+termstructures/sviparametricvolatility.hpp
 termstructures/swaptionsabrcube.hpp
 termstructures/swaptionvolatilityconverter.hpp
 termstructures/swaptionvolconstantspread.hpp
@@ -1115,12 +1134,10 @@ termstructures/terminterpolateddefaultcurve.hpp
 termstructures/weightedyieldtermstructure.hpp
 termstructures/yieldplusdefaultyieldtermstructure.hpp
 termstructures/yoyinflationcurveobservermoving.hpp
-termstructures/yoyinflationcurveobserverstatic.hpp
 termstructures/yoyoptionletsolver.hpp
 termstructures/yoyoptionletsurfacestripper.hpp
 termstructures/yoypricesurfacefromvols.hpp
 termstructures/zeroinflationcurveobservermoving.hpp
-termstructures/zeroinflationcurveobserverstatic.hpp
 time/dateutilities.hpp
 time/futureexpirycalculator.hpp
 time/monthcounter.hpp
@@ -1134,6 +1151,7 @@ utilities/creditindexconstituentcurvecalibration.hpp
 utilities/fairrate.hpp
 utilities/inflation.hpp
 utilities/interpolation.hpp
+utilities/intradaypower.hpp
 utilities/localiborcouponsettings.hpp
 utilities/mcstats.hpp
 utilities/ratehelpers.hpp
@@ -1145,23 +1163,41 @@ utilities/solvers.hpp
 utilities/time.hpp
 version.hpp)
 
-add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_LIST_DIR}/gitversion.hpp
-    COMMAND ${CMAKE_COMMAND}
-            -D IN_FILE=${CMAKE_CURRENT_LIST_DIR}/gitversion.hpp.in
-            -D OUT_FILE=${CMAKE_CURRENT_LIST_DIR}/gitversion.hpp
-            -P "${PROJECT_SOURCE_DIR}/cmake/generateGitVersion.cmake"
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-)
+# Put the generated git version header in the build directory so as not to pollute the source tree.
+set(GIT_VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/gitversion.hpp")
 
-writeAll("qle" "${CMAKE_CURRENT_LIST_DIR}/quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")
-add_library(${QLE_LIB_NAME} ${QuantExt_SRC} ${QuantExt_HDR} "quantext.hpp")
-# This adds Ore::QuantExt as an alias for the target QuantExt. So Ore::QuantExt can be used in the mono-repo build 
+# Add the generated git version header to the list of headers written in quantext.hpp.
+set(QuantExt_PUBLIC_HDR ${QuantExt_HDR})
+list(APPEND QuantExt_PUBLIC_HDR "gitversion.hpp")
+writeAll("qle" "${CMAKE_CURRENT_LIST_DIR}/quantext.hpp" "auto_link.hpp" "${QuantExt_PUBLIC_HDR}")
+
+# Create the QuantExt library target.
+add_library(${QLE_LIB_NAME} ${QuantExt_SRC} ${QuantExt_HDR} "${GIT_VERSION_HEADER}" "quantext.hpp")
+
+# This adds Ore::QuantExt as an alias for the target QuantExt. So Ore::QuantExt can be used in the mono-repo build
 # (locally) and in the split build during CI i.e. build ORE, import ORE CMake targets, build OREPlus.
 add_library(${ORE_PACKAGE_NAME}::${QLE_LIB_NAME} ALIAS ${QLE_LIB_NAME})
 
+# Always generate the git version header, even if it is up to date, to ensure that the git hash is always correct.
+add_custom_target(gitVersionGeneration
+    COMMAND
+        "${CMAKE_COMMAND}"
+        "-DIN_FILE=${CMAKE_CURRENT_LIST_DIR}/gitversion.hpp.in"
+        "-DOUT_FILE=${GIT_VERSION_HEADER}"
+        "-DGIT_HASH=${GIT_HASH}"
+        -P "${PROJECT_SOURCE_DIR}/cmake/generateGitVersion.cmake"
+    BYPRODUCTS
+        "${GIT_VERSION_HEADER}"
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    VERBATIM
+)
+
+# Ensure that the git version header is generated before building the QuantExt library.
+add_dependencies(${QLE_LIB_NAME} gitVersionGeneration)
+
 target_include_directories(${QLE_LIB_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/..>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
@@ -1247,4 +1283,10 @@ install(
     DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
+)
+
+# Install the generated header stored in the build tree.
+install(
+    FILES "${GIT_VERSION_HEADER}"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/qle"
 )

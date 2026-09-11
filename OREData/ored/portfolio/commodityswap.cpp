@@ -16,6 +16,9 @@
   FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ored/portfolio/builders/commodityswap.hpp>
+#include <ored/portfolio/commoditylegdata.hpp>
+#include <ored/portfolio/commodityswap.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/legdata.hpp>
@@ -23,14 +26,12 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <ored/portfolio/builders/commodityswap.hpp>
-#include <ored/portfolio/commoditylegdata.hpp>
-#include <ored/portfolio/commodityswap.hpp>
 #include <ql/cashflows/cashflows.hpp>
-#include <qle/cashflows/commodityindexedcashflow.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
-#include <qle/cashflows/nettedcommoditycashflow.hpp>
+#include <qle/cashflows/commodityindexedcashflow.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
+#include <qle/cashflows/intradaypowercashflow.hpp>
+#include <qle/cashflows/nettedcommoditycashflow.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/instruments/currencyswap.hpp>
 
@@ -99,7 +100,12 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
             floatingLegs[cfld->tag()] = legs_.back();
             if (!cfld->foreignCurrency().empty())
                 tagToForeignCcy[cfld->tag()] = cfld->foreignCurrency();
+        } else if (auto ipf = QuantLib::ext::dynamic_pointer_cast<IntradayPowerFloatingLegData>(legDatum.concreteLegData())) {
+            floatingLegs[ipf->tag()] = legs_.back();
+            if (!ipf->priceCurrency().empty())
+                tagToForeignCcy[ipf->tag()] = ipf->priceCurrency();
         }
+
     }
     DLOG("CommoditySwap::build() built " << floatingLegs.size() << " floating legs for trade " << id());
     // Build any fixed legs skipped above.
@@ -132,6 +138,8 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
                     quantities.push_back(cicf->periodQuantity());
                 } else if (auto ciacf = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(ucf)) {
                     quantities.push_back(ciacf->periodQuantity());
+                } else if (auto powerCf = QuantLib::ext::dynamic_pointer_cast<IntradayPowerCashFlow>(ucf)) {
+                    quantities.push_back(powerCf->periodQuantity());
                 } else {
                     QL_FAIL("Expected a commodity indexed cashflow while building commodity fixed" <<
                         " leg quantities for trade " << id() << ".");
@@ -232,8 +240,8 @@ const std::map<std::string,QuantLib::ext::any>& CommoditySwap::additionalData() 
             additionalData_["legNPV[" + legID + "]"] = cswap->legNPV(i);
             additionalData_["legNPVCCY[" + legID + "]"] = cswap->inCcyLegNPV(i);
         } else if (swap && (!roundNettedFloatingLegs_ || fixedLegIds_.count(i) == 1)) {
-            // if netted output only fixed legs, we add netted leg later
-            additionalData_["legNPV[" + legID + "]"] = swap->legNPV(i);
+            Size fixedLegId = roundNettedFloatingLegs_ ? fixedLegIdxAfterNetting_.at(i) : i;
+            additionalData_["legNPV[" + legID + "]"] = swap->legNPV(fixedLegId);
         } else
             ALOG("commodity swap underlying instrument not set, skip leg npv reporting");
         for (Size j = 0; j < legs[i].size(); ++j) {
@@ -320,6 +328,41 @@ const std::map<std::string,QuantLib::ext::any>& CommoditySwap::additionalData() 
                         additionalData_["weights[" + label + "]"] = weightsVector;
                     }
                 }
+                auto intradayPowerFlow = QuantLib::ext::dynamic_pointer_cast<IntradayPowerCashFlow>(unpackIndexWrappedCashFlow(flow));
+                if (intradayPowerFlow) {
+                    std::vector<std::string> indexVec;
+                    std::vector<Date> indexExpiryVec, pricingDateVec;
+                    std::vector<Real> priceVec;
+                    std::vector<Real> weightsVector;
+                    std::vector<Real> totalDeliveryHoursVec;
+                    std::vector<Real> totalMWhVec;
+                    auto weights = intradayPowerFlow->weights();
+                    for (const auto& [deliveryDate, index] : intradayPowerFlow->indices()) {
+                        indexVec.push_back(index->name());
+                        indexExpiryVec.push_back(index->deliveryDate());
+                        pricingDateVec.push_back(deliveryDate);
+                        priceVec.push_back(index->fixing(deliveryDate));
+                        if (!weights.empty()) {
+                            auto weight = weights.find(deliveryDate);
+                            // Add null for missing weight, dont throw here
+                            weightsVector.push_back(weight != weights.end() ? weight->second : Null<Real>());
+                        }
+                        if (index->loadProfile() != nullptr) {
+                            totalMWhVec.push_back(index->totalLoadMWh());
+                        }
+                    }
+                    additionalData_["index[" + label + "]"] = indexVec;
+                    additionalData_["indexExpiry[" + label + "]"] = indexExpiryVec;
+                    additionalData_["price[" + label + "]"] = priceVec;
+                    additionalData_["pricingDate[" + label + "]"] = pricingDateVec;
+                    additionalData_["periodUnitPrice[" + label + "]"] = intradayPowerFlow->fixing();
+                    additionalData_["weights[" + label + "]"] = weightsVector;
+                    additionalData_["loadProfileTotalDeliveryHours[" + label + "]"] = totalDeliveryHoursVec;
+                    additionalData_["loadProfileTotalMWh[" + label + "]"] = totalMWhVec;
+                    additionalData_["periodQuantity[" + label + "]"] = intradayPowerFlow->periodQuantity();
+                    additionalData_["gearing[" + label + "]"] = intradayPowerFlow->gearing();
+                    additionalData_["spread[" + label + "]"] = intradayPowerFlow->spread();
+                }
                 // CommodityFixedLeg consists of simple cash flows
                 Real flowAmount = 0.0;
                 try {
@@ -377,40 +420,61 @@ const std::map<std::string,QuantLib::ext::any>& CommoditySwap::additionalData() 
     return additionalData_;
 }
 
-QuantLib::Real CommoditySwap::notional() const {
-    // For cross-currency, try to get the notional from the engine's additional results
+QuantLib::Real CommoditySwap::notional(NotionalType type) const {
     if (isXCCY_) {
+        const string key = (type == NotionalType::IMSchedule) ? "aggregatedNotional" : "currentNotional";
         try {
-            return instrument_->qlInstrument(true)->result<Real>("currentNotional");
+            return instrument_->qlInstrument(true)->result<Real>(key);
         } catch (const std::exception& e) {
-            ALOG("Could not retrieve currentNotional from xccy commodity swap engine: " << e.what());
+            ALOG("Could not retrieve " << key << " from xccy commodity swap engine for " << id() << ": " << e.what());
             return Null<Real>();
         }
     }
+
     Date asof = Settings::instance().evaluationDate();
-    Real currentAmount = Null<Real>();
-    // Get maximum current cash flow amount (quantity * strike, quantity * spot/forward price) across legs
-    // include gearings and spreads; 
-    for (Size i = 0; i < legs_.size(); ++i) {
-        for (Size j = 0; j < legs_[i].size(); ++j) {
-            QuantLib::ext::shared_ptr<CashFlow> flow = legs_[i][j];
-            // pick flow with earliest payment date on this leg
-            if (flow->date() > asof) {
-                if (currentAmount == Null<Real>())
-                    currentAmount = flow->amount();
-                else // set on a previous leg already, set to maximum
-                    currentAmount = std::max(currentAmount, flow->amount());
-                break; // move on to the next leg
+    Real result = QL_MIN_REAL;
+    bool found = false;
+
+    if (type == NotionalType::IMSchedule) {
+        // if fixed float let, most participants use the fixed leg notional IM Schedule calculation,
+        // based on a survey, so we follow this
+        if (!fixedLegIds_.empty()) {
+            auto legs = roundNettedFloatingLegs_ ? originalLegsBeforeNetting_ : legs_;
+            for (const auto& i : fixedLegIds_) {
+                Real legAmount = 0.0;
+                for (auto cf = CashFlows::nextCashFlow(legs[i], false, asof); cf != legs[i].end(); ++cf) {
+                    legAmount += (*cf)->amount();
+                    found = true;
+                }
+                result = std::max(result, legAmount);
+            }
+        } else {
+            // only floating legs, use the max of the leg amounts, use the netted legs if netting is on.
+            for (Size i = 0; i < legs_.size(); ++i) {
+                Real legAmount = 0.0;
+                for (auto cf = CashFlows::nextCashFlow(legs_[i], false, asof); cf != legs_[i].end(); ++cf) {
+                    legAmount += (*cf)->amount();
+                    found = true;
+                }
+                result = std::max(result, legAmount);
+            }
+        }
+    } else {
+        // default is max current period notional accros all legs (qty * strike/price)
+        for (Size i = 0; i < legs_.size(); ++i) {
+            auto nextFlow = CashFlows::nextCashFlow(legs_[i], false, asof);
+            if (nextFlow != legs_[i].end()) {
+                auto amount = (*nextFlow)->amount();
+                found = true;
+                result = std::max(result, amount);
             }
         }
     }
+    if (found)
+        return result;
 
-    if (currentAmount != Null<Real>()) {
-        return currentAmount;
-    } else {
-        ALOG("Error retrieving current notional for commodity swap " << id() << " as of " << io::iso_date(asof));
-        return Null<Real>();
-    }
+    ALOG("Error retrieving notional for commodity swap " << id() << " as of " << io::iso_date(asof));
+    return Null<Real>();
 }
 
 std::map<AssetClass, std::set<std::string>>
@@ -509,6 +573,7 @@ void CommoditySwap::buildNettedLegs(const QuantLib::ext::shared_ptr<EngineFactor
     
     // Collect fixed legs directly to the result
     for (const auto& fixedLegId: fixedLegIds_) {
+        fixedLegIdxAfterNetting_[fixedLegId] = legs.size();
         legs.push_back(originalLegsBeforeNetting_[fixedLegId]);
         legPayers.push_back(originalLegPayersBeforeNetting_[fixedLegId]);
         legCurrencies.push_back(originalLegCurrenciesBeforeNetting_[fixedLegId]);
@@ -538,9 +603,11 @@ void CommoditySwap::buildNettedLegs(const QuantLib::ext::shared_ptr<EngineFactor
             vector<ext::shared_ptr<CommodityCashFlow>> cfs;
             vector<bool> payers;
             for (const auto& legId : legIds) {
-                cfs.push_back(ext::dynamic_pointer_cast<CommodityCashFlow>(
-                    unpackIndexWrappedCashFlow(originalLegsBeforeNetting_[legId][i])));
-                QL_REQUIRE(cfs.back(), "NettedCommodityCashFlow: underlying cashflow is not a CommodityCashFlow type");
+                if (auto cf = QuantLib::ext::dynamic_pointer_cast<CommodityCashFlow>(unpackIndexWrappedCashFlow(originalLegsBeforeNetting_[legId][i]))) {
+                    cfs.push_back(cf);
+                } else{
+                    QL_FAIL("NettedCommodityCashFlow: is only supported for commodity cashflows (not intraday power cashflows) for trade " << id() << ".");
+                }
                 payers.push_back(originalLegPayersBeforeNetting_[legId]);
             }
             nettedLeg.push_back(ext::make_shared<NettedCommodityCashFlow>(cfs, payers, nettingPrecision_));
@@ -576,6 +643,10 @@ QuantLib::Leg CommoditySwap::fxSettledLeg(const QuantLib::Leg& leg, const ore::d
         foreignCcy = ld->foreignCurrency();
     else if (auto ld = QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegData>(legData.concreteLegData()))
         foreignCcy = ld->foreignCurrency();
+    else if (auto ld = QuantLib::ext::dynamic_pointer_cast<IntradayPowerFloatingLegData>(legData.concreteLegData()))
+        foreignCcy = ld->priceCurrency();
+    else
+        QL_FAIL("Unsupported leg data type for FX settlement in trade " << id());
 
     fxIndex = buildFxIndex(legData.settlementFxIndex(), legData.currency(), foreignCcy,
                           engineFactory->market(), configuration);

@@ -36,15 +36,24 @@
 namespace QuantExt {
 
 using namespace QuantLib;
+using Dimension = ParametricVolatility::ResidualCorrection::Dimension;
+using std::pair;
+using std::string;
+using std::vector;
 
 SabrParametricVolatility::SabrParametricVolatility(
-    const ModelVariant modelVariant, const std::vector<MarketSmile>& marketSmiles, const MarketModelType marketModelType,
-    const MarketQuoteType inputMarketQuoteType, const Handle<YieldTermStructure> discountCurve,
-    const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>&
-        modelParameters,
-    const std::map<QuantLib::Real, QuantLib::Real>& modelShifts, const Size maxCalibrationAttempts,
-    const Real exitEarlyErrorThreshold, const Real maxAcceptableError)
-    : ParametricVolatility(marketSmiles, marketModelType, inputMarketQuoteType, discountCurve),
+    const ModelVariant modelVariant,
+    const std::vector<MarketSmile>& marketSmiles,
+    const MarketModelType marketModelType,
+    const MarketQuoteType inputMarketQuoteType,
+    const Handle<YieldTermStructure> discountCurve,
+    const ParamInfo& modelParameters,
+    const std::map<QuantLib::Real, QuantLib::Real>& modelShifts,
+    const Size maxCalibrationAttempts,
+    const Real exitEarlyErrorThreshold,
+    const Real maxAcceptableError,
+    ext::optional<ResidualCorrection> residualCorrection)
+    : ParametricVolatility(marketSmiles, marketModelType, inputMarketQuoteType, discountCurve, residualCorrection),
       modelVariant_(modelVariant), modelParameters_(modelParameters), modelShifts_(modelShifts),
       maxCalibrationAttempts_(maxCalibrationAttempts), exitEarlyErrorThreshold_(exitEarlyErrorThreshold),
       maxAcceptableError_(maxAcceptableError) {
@@ -71,9 +80,9 @@ ParametricVolatility::MarketQuoteType SabrParametricVolatility::preferredOutputQ
     }
 }
 
-std::vector<Real> SabrParametricVolatility::getGuess(const std::vector<std::pair<Real, ParameterCalibration>>& params,
-                                                     const std::vector<Real>& randomSeq, const Real forward,
-                                                     const Real lognormalShift) const {
+std::vector<Real> SabrParametricVolatility::getGuess(const SliceParamInfo& params,
+    const std::vector<Real>& randomSeq, const Real forward, const Real lognormalShift) const {
+
     std::vector<Real> result(4);
     for (Size i = 0, j = 0; i < 4; ++i) {
         if (params[i].second != ParametricVolatility::ParameterCalibration::Calibrated) {
@@ -106,8 +115,7 @@ std::vector<Real> SabrParametricVolatility::getGuess(const std::vector<std::pair
     return result;
 }
 
-std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>
-SabrParametricVolatility::defaultModelParameters() const {
+SabrParametricVolatility::SliceParamInfo SabrParametricVolatility::defaultModelParameters() const {
     switch (modelVariant_) {
     case ModelVariant::Hagan2002Lognormal:
         return {{0.0050, ParameterCalibration::Implied},
@@ -275,7 +283,7 @@ std::vector<Real> SabrParametricVolatility::evaluateSabr(const std::vector<Real>
 }
 
 std::tuple<std::vector<Real>, Real, Real, Size> SabrParametricVolatility::calibrateModelParameters(
-    const MarketSmile& marketSmile, const std::vector<std::pair<Real, ParameterCalibration>>& params) const {
+    const MarketSmile& marketSmile, const SliceParamInfo& params, const vector<Real>& convertedMarketQuotes) const {
 
     // determine the number of free parameters
 
@@ -285,34 +293,14 @@ std::tuple<std::vector<Real>, Real, Real, Size> SabrParametricVolatility::calibr
             ++noFreeParams;
 
     // determine the shift for the model (if applicable)
-
-    Real modelLognormalShift;
-    if (modelShifts_.empty()) {
-        modelLognormalShift = marketSmile.lognormalShift;
-    } else {
-        auto it = modelShifts_.find(marketSmile.underlyingLength);
-        QL_REQUIRE(
-            it != modelShifts_.end(),
-            "SabrParametricVolatility::calibrateModelParameters(): model shifts are specified but underlying length "
-                << marketSmile.underlyingLength << " is missing in this specification.");
-        modelLognormalShift = it->second;
-    }
+    Real modelLognormalShift = getLognormalShift(marketSmile);
 
     // get atm vol from market smile, converted to the preferred model vol type
-
-    std::vector<Real> x, y;
-    for (Size i = 0; i < marketSmile.strikes.size(); ++i) {
-        x.push_back(marketSmile.strikes[i]);
-        y.push_back(convert(marketSmile.marketQuotes[i], inputMarketQuoteType_, marketSmile.lognormalShift,
-                            marketSmile.optionTypes.empty() ? QuantLib::ext::nullopt
-                                                            : QuantLib::ext::optional<Option::Type>(marketSmile.optionTypes[i]),
-                            marketSmile.timeToExpiry, marketSmile.strikes[i], marketSmile.forward,
-                            preferredOutputQuoteType(), modelLognormalShift, QuantLib::ext::nullopt));
-    }
-
-    Interpolation m = LinearFlat().interpolate(x.begin(), x.end(), y.begin());
+    Interpolation m = LinearFlat().interpolate(marketSmile.strikes.begin(),
+        marketSmile.strikes.end(), convertedMarketQuotes.begin());
     m.enableExtrapolation();
-    Real atmVol = m(marketSmile.forward);
+    Real fwdForAtmVol = marketSmile.fwdForAtmVol ? *marketSmile.fwdForAtmVol : marketSmile.forward;
+    Real atmVol = m(fwdForAtmVol);
 
     // if there are no free parameters, we pass back fixed parameters (maybe implied alpha) as the result
 
@@ -407,13 +395,7 @@ std::tuple<std::vector<Real>, Real, Real, Size> SabrParametricVolatility::calibr
 
     t.atmVol_ = atmVol;
     t.strikes_ = marketSmile.strikes;
-    for (Size i = 0; i < marketSmile.marketQuotes.size(); ++i) {
-        t.marketQuotes_.push_back(convert(
-            marketSmile.marketQuotes[i], inputMarketQuoteType_, marketSmile.lognormalShift,
-            marketSmile.optionTypes.empty() ? QuantLib::ext::nullopt : QuantLib::ext::optional<Option::Type>(marketSmile.optionTypes[i]),
-            marketSmile.timeToExpiry, marketSmile.strikes[i], marketSmile.forward, preferredOutputQuoteType(),
-            t.lognormalShift_, QuantLib::ext::nullopt));
-    }
+    t.marketQuotes_ = convertedMarketQuotes;
     // we use relative errors w.r.t. the max market quote, because far otm quotes are close to zero
     t.refQuote_ = *std::max_element(t.marketQuotes_.begin(), t.marketQuotes_.end());
 
@@ -592,18 +574,25 @@ void SabrParametricVolatility::calculate() {
     lognormalShifts_.clear();
     calibrationErrors_.clear();
 
+    // Populate the market volatilities converted to the requested output type.
+    populateConvertedMarketQuotes();
+
     // for each market smile calibrate the SABR variant
 
     for (auto const& s : marketSmiles_) {
         auto key = std::make_pair(s.timeToExpiry, s.underlyingLength);
         auto param = modelParameters_.find(key);
-        QL_REQUIRE(param != modelParameters_.end(),
-                   "SabrParametricVolatility::performCalculations(): no model parameter given for ("
-                       << s.timeToExpiry << ", " << s.underlyingLength
-                       << "). All (timeToExpiry, underlyingLength) pairs that are given as market points must be "
-                          "covered by the given model parameters.");
+        QL_REQUIRE(param != modelParameters_.end(), "SabrParametricVolatility: no model parameter given for ("
+            << s.timeToExpiry << ", " << s.underlyingLength << "). All (timeToExpiry, underlyingLength) pairs "
+            "that are given as market points must be covered by the given model parameters.");
+
+        // Conversion may have failed for this smile. If so, we cannot calibrate the model. Will interpolate below.
+        auto itQuotes = convertedMarketQuotes_.find(key);
+        if (itQuotes == convertedMarketQuotes_.end())
+            continue;
+
         try {
-            auto [params, error, shift, noOfAttempts] = calibrateModelParameters(s, param->second);
+            auto [params, error, shift, noOfAttempts] = calibrateModelParameters(s, param->second, itQuotes->second);
             if (error < maxAcceptableError_)
                 calibratedSabrParams_[key] = params;
             calibrationErrors_[key] = error;
@@ -625,6 +614,9 @@ void SabrParametricVolatility::calculate() {
 
     timeToExpiries_ = std::vector<Real>(tmpTimeToExpiries.begin(), tmpTimeToExpiries.end());
     underlyingLengths_ = std::vector<Real>(tmpUnderlyingLengths.begin(), tmpUnderlyingLengths.end());
+
+    // Record if underlying length is relevant. Will be used below to determine how / if we apply residual correction.
+    bool haveUndLengths = !(underlyingLengths_.size() == 1 && underlyingLengths_[0] == Null<Real>());
 
     // build a matrix of calibrated SABR parameters, possibly with null values
 
@@ -750,6 +742,16 @@ void SabrParametricVolatility::calculate() {
     nuInterpolation_.enableExtrapolation();
     rhoInterpolation_.enableExtrapolation();
     lognormalShiftInterpolation_.enableExtrapolation();
+
+    // Residual interpolations.
+    if (residualCorrection_) {
+        QL_REQUIRE(!haveUndLengths, "SabrParametricVolatility: residual correction not yet supported for "
+            "volatility structures with underlying lengths.");
+        if (residualSmiles_.empty())
+            buildResidualSmiles();
+        else
+            updateResidualSmiles();
+    }
 }
 
 Real SabrParametricVolatility::evaluate(const Real timeToExpiry, const Real underlyingLength, const Real strike,
@@ -764,9 +766,10 @@ Real SabrParametricVolatility::evaluate(const Real timeToExpiry, const Real unde
     Real lognormalShift = lognormalShiftInterpolation_(timeToExpiry, underlyingLength);
 
     Real result = evaluateSabr({alpha, beta, nu, rho}, forward, timeToExpiry, lognormalShift, {strike}).front();
-    return convert(result, preferredOutputQuoteType(), lognormalShift, QuantLib::ext::nullopt, timeToExpiry, strike, forward,
-                   outputMarketQuoteType, outputLognormalShift == Null<Real>() ? lognormalShift : outputLognormalShift,
-                   outputOptionType);
+    result += residualCorrection(timeToExpiry, underlyingLength, strike, forward);
+    return convert(result, preferredOutputQuoteType(), lognormalShift, QuantLib::ext::nullopt, timeToExpiry, strike,
+        forward, outputMarketQuoteType, outputLognormalShift == Null<Real>() ? lognormalShift : outputLognormalShift,
+        outputOptionType);
 }
 
 QuantLib::ext::shared_ptr<SabrParametricVolatility> SabrParametricVolatility::clone(
@@ -797,6 +800,243 @@ QuantLib::ext::shared_ptr<SabrParametricVolatility> SabrParametricVolatility::cl
     return QuantLib::ext::make_shared<SabrParametricVolatility>(
         modelVariant_, marketSmiles, marketModelType_, inputMarketQuoteType_, discountCurve_, modelParameters,
         modelShifts_, maxCalibrationAttempts_, exitEarlyErrorThreshold_, maxAcceptableError_);
+}
+
+Real SabrParametricVolatility::getLognormalShift(const ParametricVolatility::MarketSmile& marketSmile) const {
+    if (modelShifts_.empty())
+        return marketSmile.lognormalShift;
+
+    auto it = modelShifts_.find(marketSmile.underlyingLength);
+    QL_REQUIRE(it != modelShifts_.end(), "SabrParametricVolatility: model shifts are specified but underlying length "
+        << marketSmile.underlyingLength << " is missing in this specification.");
+    return it->second;
+}
+
+void SabrParametricVolatility::populateConvertedMarketQuotes() const {
+    for (const auto& marketSmile : marketSmiles_) {
+        auto tteUndKey = std::make_pair(marketSmile.timeToExpiry, marketSmile.underlyingLength);
+        Real modelLognormalShift = getLognormalShift(marketSmile);
+        auto poqt = preferredOutputQuoteType();
+        ext::optional<Option::Type> optType;
+        Size nStrikes = marketSmile.strikes.size();
+
+        // If the conversion fails for any volatility in the smile, we move to the next smile.
+        vector<Real> vols;
+        vols.reserve(nStrikes);
+        try
+        {
+            for (Size i = 0; i < nStrikes; ++i) {
+                if (!marketSmile.optionTypes.empty())
+                    optType = marketSmile.optionTypes[i];
+                vols.push_back(convert(marketSmile.marketQuotes[i], inputMarketQuoteType_, marketSmile.lognormalShift,
+                    optType, marketSmile.timeToExpiry, marketSmile.strikes[i], marketSmile.forward, poqt,
+                    modelLognormalShift));
+            }
+        } catch (const std::exception&) {
+            continue;
+        }
+        convertedMarketQuotes_.emplace(tteUndKey, vols);
+    }
+}
+
+namespace {
+
+// Small helper to convert strike to the correct coordinate system for residual correction below.
+Real strikeCoordinate(Real strike, Real forward, Dimension dimension) {
+    switch (dimension) {
+    case Dimension::AbsoluteStrike:
+        return strike;
+    case Dimension::StrikeMinusForward:
+        return strike - forward;
+    case Dimension::StrikeOverForward:
+        QL_REQUIRE(forward > 0.0, "SabrParametricVolatility: expect positive forward with StrikeOverForward "
+            "dimension when calculating strike coordinates");
+        return strike / forward;
+    }
+    QL_FAIL("SabrParametricVolatility: unsupported strike dimension when calculating strike coordinates");
+}
+
+// Small helper to calculate taper coordinates for residual correction below.
+// The 15% taper fraction is to ensure that the residuals are tapered to zero outside the market strikes.
+// It may need to be reviewed or made configurable.
+pair<Real, Real> boundaryCoordinates(const vector<Real>& marketStrikes, Real forward, Dimension dimension,
+    Real taperFraction = 0.15)
+{
+    QL_REQUIRE(!marketStrikes.empty(), "SabrParametricVolatility: empty market strike vector when calculating "
+        "boundary strike coordinates");
+    QL_REQUIRE(taperFraction > 0.0, "SabrParametricVolatility: taper fraction must be positive when calculating "
+        "boundary strike coordinates");
+    Real left = strikeCoordinate(marketStrikes.front(), forward, dimension);
+    Real right = strikeCoordinate(marketStrikes.back(), forward, dimension);
+    QL_REQUIRE(right > left, "SabrParametricVolatility: invalid or degenerate strike coordinate range");
+    Real width = taperFraction * (right - left);
+    return { left - width, right + width };
+}
+
+}
+
+void SabrParametricVolatility::buildResidualSmiles() const {
+
+    auto dimension = residualCorrection_->dimension;
+
+    for (const auto& marketSmile : marketSmiles_) {
+        auto tteUndKey = std::make_pair(marketSmile.timeToExpiry, marketSmile.underlyingLength);
+
+        // Key string for error messages below.
+        string keyStr = "tte = " + std::to_string(marketSmile.timeToExpiry);
+        if (marketSmile.underlyingLength != Null<Real>())
+            keyStr = "(" + keyStr + ", und_length = " + std::to_string(marketSmile.underlyingLength) + ")";
+
+        // Build the strike coordinates according to the dimension specified in the residual correction.
+        // We will taper the residuals to zero at the edges of the smile => extra 2 points here and in the residuls.
+        vector<Real> strikeCoords;
+        strikeCoords.reserve(marketSmile.strikes.size() + 2);
+        auto [leftCoord, rightCoord] = boundaryCoordinates(marketSmile.strikes, marketSmile.forward, dimension);
+        strikeCoords.push_back(leftCoord);
+        for (Real strike : marketSmile.strikes)
+            strikeCoords.push_back(strikeCoordinate(strike, marketSmile.forward, dimension));
+        strikeCoords.push_back(rightCoord);
+
+        // Calculate the residuals.
+        auto residuals = calculateResiduals(marketSmile, tteUndKey, keyStr);
+
+        // Build the residual smile and store it.
+        residualSmiles_.emplace(tteUndKey, std::make_unique<ResidualSmile>(
+            std::move(strikeCoords), std::move(residuals)));
+    }
+}
+
+void SabrParametricVolatility::updateResidualSmiles() const {
+
+    for (const auto& marketSmile : marketSmiles_) {
+        auto tteUndKey = std::make_pair(marketSmile.timeToExpiry, marketSmile.underlyingLength);
+
+        // Key string for error messages below.
+        string keyStr = "tte = " + std::to_string(marketSmile.timeToExpiry);
+        if (marketSmile.underlyingLength != Null<Real>())
+            keyStr = "(" + keyStr + ", und_length = " + std::to_string(marketSmile.underlyingLength) + ")";
+
+        // Make sure there is an existing residual smile to update.
+        auto itResidualSmile = residualSmiles_.find(tteUndKey);
+        QL_REQUIRE(itResidualSmile != residualSmiles_.end(),
+            "SabrParametricVolatility: no residual smile found for " << keyStr << ".");
+
+        // Calculate the residuals.
+        auto residuals = calculateResiduals(marketSmile, tteUndKey, keyStr);
+
+        // Update the residual smile.
+        itResidualSmile->second->updateResiduals(residuals);
+    }
+}
+
+Real SabrParametricVolatility::residualCorrection(Real timeToExpiry, Real underlyingLength,
+    Real strike, Real forward) const
+{
+    QL_REQUIRE(timeToExpiry >= 0.0, "SabrParametricVolatility: residual correction requested at a "
+        "negative time to expiry (" << timeToExpiry << ")");
+
+    // If no residual correction, return 0.
+    if (residualSmiles_.empty())
+        return 0.0;
+
+    // We should not get to here if underlyingLength != Null<Real>(), because residual correction is not yet supported
+    // for structures with underlying lengths. However, we check it anyway. If / when we want to support residual
+    // correction for structures with underlying lengths, we should separate out the residual correction logic into 
+    // two separate methods, one where underlyingLength == Null<Real>() (1-D) and one where 
+    // underlyingLength != Null<Real>() (2-D).
+    QL_REQUIRE(underlyingLength == Null<Real>(), "SabrParametricVolatility: residual correction not yet supported "
+        "for volatility structures with underlying lengths.");
+
+    // If time to expiry is zero, return 0.0.
+    if (close(timeToExpiry, 0.0))
+        return 0.0;
+
+    // Linear interpolation of error term in the time to expiry dimension, with flat extrapolation beyond last expiry.
+    Real result;
+    TteUndKey searchKey{ timeToExpiry, Null<Real>() };
+    // right is first element in residualSmiles_ with time to expiry >= searchKey.timeToExpiry
+    auto itRight = residualSmiles_.lower_bound(searchKey);
+    if (itRight == residualSmiles_.begin()) {
+        // timeToExpiry in [0, t_1] where t_1 is the first time to expiry in residualSmiles_.
+        // Linearly interpolate the residuals between (0, 0) to (t_1, eps_1) for the value at timeToExpiry.
+        Real rightEps = evaluateResidual(*itRight->second, strike, forward);
+        result = (timeToExpiry / itRight->first.first) * rightEps;
+    } else if (itRight == residualSmiles_.end()) {
+        // timeToExpiry beyond the last expiry in residualSmiles_.
+        // Flat extrapolation using the last residual smile.
+        auto last = std::prev(residualSmiles_.end());
+        result = evaluateResidual(*last->second, strike, forward);
+    } else {
+        // timeToExpiry in [t_i, t_{i+1}] where t_i and t_{i+1} are the time to expiries of the two residual smiles
+        // surrounding timeToExpiry. Linearly interpolate the residuals between (t_i, eps_i) and (t_{i+1}, eps_{i+1})
+        // for the value at timeToExpiry.
+        auto itLeft = std::prev(itRight);
+        Real t1 = itLeft->first.first;
+        Real t2 = itRight->first.first;
+        Real e1 = evaluateResidual(*itLeft->second, strike, forward);
+        Real e2 = evaluateResidual(*itRight->second, strike, forward);
+        result = e1 + (e2 - e1) * (timeToExpiry - t1) / (t2 - t1);
+    }
+    return result;
+}
+
+vector<Real> SabrParametricVolatility::calculateResiduals(const MarketSmile& marketSmile,
+    const TteUndKey& tteUndKey, const string& keyStr) const
+{
+    // Calculate the SABR model volatilities for the market strikes, using the calibrated parameters.
+    const auto& params = calibratedSabrParams_.at(tteUndKey);
+    Real lognormalShift = getLognormalShift(marketSmile);
+    auto modelVols = evaluateSabr(params, marketSmile.forward, marketSmile.timeToExpiry,
+        lognormalShift, marketSmile.strikes);
+
+    // Market volatilities. The conversion of market quotes to the preferred output quote type may have failed for 
+    // this smile. In this case, we set the residuals to zero and return. Should probably improve this but there is 
+    // likely an issue with the market data in this case.
+    auto itQuotes = convertedMarketQuotes_.find(tteUndKey);
+    if (itQuotes == convertedMarketQuotes_.end())
+        return vector<Real>(marketSmile.strikes.size() + 2, 0.0);
+    const auto& marketVols = itQuotes->second;
+
+    // Sanity checks.
+    QL_REQUIRE(modelVols.size() == marketSmile.strikes.size(), "SabrParametricVolatility: model vol size (" <<
+        modelVols.size() << ") and strikes size (" << marketSmile.strikes.size() << ") do not match for " <<
+        keyStr << ".");
+    QL_REQUIRE(modelVols.size() == marketVols.size(), "SabrParametricVolatility: model vol size (" <<
+        modelVols.size() << ") and market vol size (" << marketVols.size() << ") do not match for " <<
+        keyStr << ".");
+
+    // Build the residuals.
+    vector<Real> residuals;
+    residuals.reserve(marketSmile.strikes.size() + 2);
+    residuals.push_back(0.0);
+    for (Size i = 0; i < marketSmile.strikes.size(); ++i)
+        residuals.push_back(marketVols[i] - modelVols[i]);
+    residuals.push_back(0.0);
+
+    return residuals;
+}
+
+Real SabrParametricVolatility::evaluateResidual(const ResidualSmile& residualSmile, Real strike, Real forward) const {
+    Real strikeCoord = strikeCoordinate(strike, forward, residualCorrection_->dimension);
+    return residualSmile.interpolation_(strikeCoord);
+}
+
+SabrParametricVolatility::ResidualSmile::ResidualSmile(vector<Real> strikeCoordinates, vector<Real> residuals)
+    : strikeCoordinates_(std::move(strikeCoordinates)), residuals_(std::move(residuals)) {
+    build();
+}
+
+void SabrParametricVolatility::ResidualSmile::build() {
+    auto interp = ext::make_shared<QuantLib::FritschButlandCubic>(strikeCoordinates_.begin(),
+        strikeCoordinates_.end(), residuals_.begin());
+    interpolation_ = FlatExtrapolation(interp);
+    interpolation_.enableExtrapolation();
+}
+
+void SabrParametricVolatility::ResidualSmile::updateResiduals(const vector<Real>& newResiduals) {
+    QL_REQUIRE(newResiduals.size() == residuals_.size(), "SabrParametricVolatility: unexpected residual size change");
+    std::copy(newResiduals.begin(), newResiduals.end(), residuals_.begin());
+    interpolation_.update();
 }
 
 } // namespace QuantExt

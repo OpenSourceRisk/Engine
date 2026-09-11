@@ -36,6 +36,8 @@
 %include qle_currencies.i
 %include qle_termstructures.i
 %include qle_termstructures_ext.i
+%include qle_termstructures_ext2.i
+%include qle_cms_cashflows.i
 %include qle_crossccyfixfloatswap.i
 %include qle_instruments.i
 %include qle_pricingengines.i
@@ -49,6 +51,8 @@
 %include qle_creditdefaultswap.i
 %include qle_averageoisratehelper.i
 %include qle_processes.i
+%include qle_time.i
+%include qle_math.i
 
 // CrossCcyFixFloatSwapHelper is intentionally not exposed yet.
 

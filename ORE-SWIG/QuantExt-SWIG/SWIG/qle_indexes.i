@@ -31,6 +31,7 @@
 %include inflation.i
 
 %{
+#include <qle/indexes/intradaypowerindex.hpp>
 using QuantExt::BEHICP;
 using QuantExt::BondIndex;
 using QuantExt::BondFuturesIndex;
@@ -89,7 +90,7 @@ class BondIndex : public Index {
 class BondFuturesIndex : public Index {
     public:
         BondFuturesIndex(const std::string& futureContract, const QuantLib::Date& futureExpiryDate = Date(),
-                         const QuantLib::ext::shared_ptr<QuantLib::Bond>& ctd = nullptr,
+                         const ext::shared_ptr<QuantLib::Bond>& ctd = nullptr,
                          const QuantLib::Real conversionFactor = QuantLib::Null<QuantLib::Real>(),
                          const bool dirty = false);
         std::string name() const;
@@ -97,7 +98,7 @@ class BondFuturesIndex : public Index {
         const QuantLib::Date& futureExpiryDate() const;
 
         const std::string& futureContract() const;
-        const QuantLib::ext::shared_ptr<QuantLib::Bond>& ctd();
+        const ext::shared_ptr<QuantLib::Bond>& ctd();
         const bool dirty() const;
 };
 
@@ -253,6 +254,22 @@ public:
         const QuantLib::ext::optional<QuantLib::Handle<PriceTermStructure>>& ts = QuantLib::ext::nullopt) const;
 };
 
+%shared_ptr(QuantExt::IntradayPowerIndex)
+namespace QuantExt {
+class IntradayPowerIndex : public Index {
+  public:
+    IntradayPowerIndex(const std::string& underlyingName,
+                       const QuantLib::Date& deliveryDate,
+                       const QuantLib::Calendar& fixingCalendar);
+    std::string name() const override;
+    QuantLib::Calendar fixingCalendar() const override;
+    QuantLib::Real fixing(const QuantLib::Date& fixingDate,
+                          bool forecastTodaysFixing = false) const override;
+    const QuantLib::Date& deliveryDate() const;
+    QuantLib::Real totalLoadMWh() const;
+};
+} // namespace QuantExt
+
 // QuantLib BMA Index (not yet wrapped in QL v1.14)
 %shared_ptr(BMAIndex)
 class BMAIndex : public InterestRateIndex {
@@ -304,19 +321,102 @@ class Name : public OvernightIndex {
 };
 %enddef
 
+%{
+using QuantExt::TermRateIndex;
+using QuantExt::FallbackIborIndex;
+using QuantExt::FallbackOvernightIndex;
+%}
+
+%shared_ptr(TermRateIndex)
+class TermRateIndex : public IborIndex {
+  public:
+    TermRateIndex(const std::string& familyName,
+                  const Period& tenor,
+                  Natural settlementDays,
+                  const Currency& currency,
+                  const Calendar& fixingCalendar,
+                  BusinessDayConvention convention,
+                  bool endOfMonth,
+                  const DayCounter& dayCounter,
+                  Handle<YieldTermStructure> h = Handle<YieldTermStructure>(),
+                  const ext::shared_ptr<OvernightIndex>& rfrIndex = nullptr);
+    ext::shared_ptr<OvernightIndex> rfrIndex() const;
+};
+
+%define qle_export_termrate_instance(Name)
+%{
+using QuantExt::Name;
+%}
+%shared_ptr(Name)
+class Name : public TermRateIndex {
+  public:
+    Name(const Period& tenor,
+         const Handle<YieldTermStructure>& h =
+                                 Handle<YieldTermStructure>());
+};
+%enddef
+
+%shared_ptr(FallbackIborIndex)
+class FallbackIborIndex : public IborIndex {
+  public:
+    FallbackIborIndex(const ext::shared_ptr<IborIndex> originalIndex,
+                      const ext::shared_ptr<OvernightIndex> rfrIndex,
+                      const Real spread,
+                      const Date& switchDate,
+                      const bool useRfrCurve);
+    FallbackIborIndex(const ext::shared_ptr<IborIndex> originalIndex,
+                      const ext::shared_ptr<OvernightIndex> rfrIndex,
+                      const Real spread,
+                      const Date& switchDate,
+                      const Handle<YieldTermStructure>& forwardingCurve);
+    ext::shared_ptr<IborIndex> originalIndex() const;
+    ext::shared_ptr<OvernightIndex> rfrIndex() const;
+    Real spread() const;
+    const Date& switchDate() const;
+};
+
+%shared_ptr(FallbackOvernightIndex)
+class FallbackOvernightIndex : public OvernightIndex {
+  public:
+    FallbackOvernightIndex(const ext::shared_ptr<OvernightIndex> originalIndex,
+                           const ext::shared_ptr<OvernightIndex> rfrIndex,
+                           const Real spread,
+                           const Date& switchDate,
+                           const bool useRfrCurve);
+    FallbackOvernightIndex(const ext::shared_ptr<OvernightIndex> originalIndex,
+                           const ext::shared_ptr<OvernightIndex> rfrIndex,
+                           const Real spread,
+                           const Date& switchDate,
+                           const Handle<YieldTermStructure>& forwardingCurve);
+    ext::shared_ptr<OvernightIndex> originalIndex() const;
+    ext::shared_ptr<OvernightIndex> rfrIndex() const;
+    Real spread() const;
+    const Date& switchDate() const;
+};
+
+qle_export_xibor_instance(USDAmbor);
 qle_export_xibor_instance(CZKPribor);
+qle_export_xibor_instance(CNHHibor);
+qle_export_xibor_instance(CNHShibor);
+qle_export_xibor_instance(CNYRepoFix);
 qle_export_xibor_instance(DEMLibor);
 qle_export_xibor_instance(DKKCibor);
 qle_export_xibor_instance(HKDHibor);
 qle_export_xibor_instance(HUFBubor);
 qle_export_xibor_instance(IDRIdrfix);
+qle_export_xibor_instance(IDRJibor);
+qle_export_xibor_instance(ILSTelbor);
 qle_export_xibor_instance(INRMifor);
+qle_export_xibor_instance(JPYEYTIBOR);
+qle_export_xibor_instance(KRWCd);
 qle_export_xibor_instance(KRWKoribor);
 qle_export_xibor_instance(MXNTiie);
 qle_export_xibor_instance(MYRKlibor);
 qle_export_xibor_instance(NOKNibor);
 qle_export_xibor_instance(NZDBKBM);
 qle_export_xibor_instance(PHPPhiref);
+qle_export_xibor_instance(RUBKeyRate);
+qle_export_xibor_instance(SAibor);
 qle_export_xibor_instance(SEKStibor);
 qle_export_xibor_instance(SGDSibor);
 qle_export_xibor_instance(SGDSor);
@@ -324,12 +424,59 @@ qle_export_xibor_instance(SKKBribor);
 qle_export_xibor_instance(THBBibor);
 qle_export_xibor_instance(TWDTaibor);
 
+qle_export_overnight_instance(USDAmeribor);
+qle_export_overnight_instance(BOEBaseRateIndex);
 qle_export_overnight_instance(BRLCdi);
+qle_export_overnight_instance(CHFSaron);
 qle_export_overnight_instance(CHFTois);
 qle_export_overnight_instance(CLPCamara);
 qle_export_overnight_instance(COPIbr);
 qle_export_overnight_instance(CORRA);
+qle_export_overnight_instance(DKKCita);
 qle_export_overnight_instance(DKKOis);
+qle_export_overnight_instance(HKDHonia);
+qle_export_overnight_instance(INRMiborOis);
+qle_export_overnight_instance(Nowa);
+qle_export_overnight_instance(PLNPolonia);
+qle_export_overnight_instance(PrimeIndex);
 qle_export_overnight_instance(SEKSior);
+qle_export_overnight_instance(SEKStina);
+qle_export_overnight_instance(Sora);
+qle_export_overnight_instance(THBThor);
+
+// QuantLib-SWIG already exposes the overnight RFR indices. Export the QuantExt term-rate layer here.
+qle_export_termrate_instance(SofrTerm);
+qle_export_termrate_instance(SoniaTerm);
+qle_export_termrate_instance(TonarTerm);
+
+// QuantExt::InterpolatedIborIndex – interpolation between two ibor tenors.
+// Required dependency of InterpolatedIborCoupon (qle_coupons.i).
+%{
+#include <qle/indexes/interpolatediborindex.hpp>
+using QuantExt::InterpolatedIborIndex;
+%}
+
+%shared_ptr(QuantExt::InterpolatedIborIndex)
+namespace QuantExt {
+class InterpolatedIborIndex : public InterestRateIndex {
+  public:
+    InterpolatedIborIndex(
+        const ext::shared_ptr<QuantLib::IborIndex>& shortIndex,
+        const ext::shared_ptr<QuantLib::IborIndex>& longIndex,
+        Size calendarDays,
+        const Rounding& rounding = Rounding(),
+        const Handle<QuantLib::YieldTermStructure>& overwriteEstimationCurve =
+            Handle<QuantLib::YieldTermStructure>(),
+        bool parCouponMode = false);
+
+    const ext::shared_ptr<QuantLib::IborIndex> shortIndex() const;
+    const ext::shared_ptr<QuantLib::IborIndex> longIndex() const;
+    Size calendarDays() const;
+    const Rounding rounding() const;
+    bool parCouponMode() const;
+    Real shortWeight(const Date& fixingDate) const;
+    Real longWeight(const Date& fixingDate) const;
+};
+} // namespace QuantExt
 
 #endif

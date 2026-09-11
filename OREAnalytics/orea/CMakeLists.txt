@@ -42,6 +42,7 @@ app/analytics/scenariogenerationanalytic.cpp
 app/analytics/sensitivitystressanalytic.cpp
 app/analytics/simmanalytic.cpp
 app/analytics/smrcanalytic.cpp
+app/analytics/stressedsimmanalytic.cpp
 app/analytics/stresstestanalytic.cpp
 app/analytics/utilities.cpp
 app/analytics/varanalytic.cpp
@@ -64,6 +65,11 @@ app/oreapp.cpp
 app/parameters.cpp
 app/portfolioanalyser.cpp
 app/reportwriter.cpp
+app/reportwriters/capitalreportwriter.cpp
+app/reportwriters/pricingreportwriter.cpp
+app/reportwriters/scenarioreportwriter.cpp
+app/reportwriters/simmreportwriter.cpp
+app/reportwriters/xvareportwriter.cpp
 app/zerosensitivityloader.cpp
 cube/cube_io.cpp
 cube/cubecsvreader.cpp
@@ -82,6 +88,7 @@ engine/bacvacalculator.cpp
 engine/bufferedsensitivitystream.cpp
 engine/correlationreport.cpp
 engine/cptycalculator.cpp
+engine/cpuaffinity.cpp
 engine/creditindexdecomposition.cpp
 engine/cvasensitivitycubestream.cpp
 engine/cvasensitivityrecord.cpp
@@ -145,6 +152,7 @@ scenario/historicalscenarioreturn.cpp
 scenario/lgmscenariogenerator.cpp
 scenario/scenario.cpp
 scenario/scenariocurvepillar.cpp
+scenario/filteredscenarioreader.cpp
 scenario/scenariofilereader.cpp
 scenario/scenariogenerator.cpp
 scenario/scenariogeneratorbuilder.cpp
@@ -166,7 +174,6 @@ scenario/zerotoparscenariogenerator.cpp
 simm/crif.cpp
 simm/crifconfiguration.cpp
 simm/crifgenerator.cpp
-simm/crifloader.cpp
 simm/crifmarket.cpp
 simm/crifrecord.cpp
 simm/crifrecordgenerator.cpp
@@ -192,6 +199,7 @@ simm/simmconcentrationisdav2_6.cpp
 simm/simmconcentrationisdav2_6_5.cpp
 simm/simmconcentrationisdav2_7_2412.cpp
 simm/simmconcentrationisdav2_8_2506.cpp
+simm/simmconcentrationisdav2_8_2512.cpp
 simm/simmconfiguration.cpp
 simm/simmconfigurationbase.cpp
 simm/simmconfigurationcalibration.cpp
@@ -209,6 +217,7 @@ simm/simmconfigurationisdav2_6.cpp
 simm/simmconfigurationisdav2_6_5.cpp
 simm/simmconfigurationisdav2_7_2412.cpp
 simm/simmconfigurationisdav2_8_2506.cpp
+simm/simmconfigurationisdav2_8_2512.cpp
 simm/simmresults.cpp
 simm/simmtradedata.cpp
 simm/utilities.cpp
@@ -259,6 +268,7 @@ app/analytics/scenariogenerationanalytic.hpp
 app/analytics/sensitivitystressanalytic.hpp
 app/analytics/simmanalytic.hpp
 app/analytics/smrcanalytic.hpp
+app/analytics/stressedsimmanalytic.hpp
 app/analytics/stresstestanalytic.hpp
 app/analytics/utilities.hpp
 app/analytics/varanalytic.hpp
@@ -283,6 +293,11 @@ app/oreapp.hpp
 app/parameters.hpp
 app/portfolioanalyser.hpp
 app/reportwriter.hpp
+app/reportwriters/capitalreportwriter.hpp
+app/reportwriters/pricingreportwriter.hpp
+app/reportwriters/scenarioreportwriter.hpp
+app/reportwriters/simmreportwriter.hpp
+app/reportwriters/xvareportwriter.hpp
 app/structuredanalyticserror.hpp
 app/structuredanalyticswarning.hpp
 app/zerosensitivityloader.hpp
@@ -308,6 +323,7 @@ engine/bacvacalculator.hpp
 engine/bufferedsensitivitystream.hpp
 engine/correlationreport.hpp
 engine/cptycalculator.hpp
+engine/cpuaffinity.hpp
 engine/creditindexdecomposition.hpp
 engine/cvasensitivitycubestream.hpp
 engine/cvasensitivityrecord.hpp
@@ -376,6 +392,7 @@ scenario/lgmscenariogenerator.hpp
 scenario/scenario.hpp
 scenario/scenariocurvepillar.hpp
 scenario/scenariofactory.hpp
+scenario/filteredscenarioreader.hpp
 scenario/scenariofilereader.hpp
 scenario/scenariofilter.hpp
 scenario/scenariogenerator.hpp
@@ -400,7 +417,6 @@ scenario/zerotoparscenariogenerator.hpp
 simm/crif.hpp
 simm/crifconfiguration.hpp
 simm/crifgenerator.hpp
-simm/crifloader.hpp
 simm/crifmarket.hpp
 simm/crifrecord.hpp
 simm/crifrecordgenerator.hpp
@@ -427,6 +443,7 @@ simm/simmconcentrationisdav2_6.hpp
 simm/simmconcentrationisdav2_6_5.hpp
 simm/simmconcentrationisdav2_7_2412.hpp
 simm/simmconcentrationisdav2_8_2506.hpp
+simm/simmconcentrationisdav2_8_2512.hpp
 simm/simmconfiguration.hpp
 simm/simmconfigurationbase.hpp
 simm/simmconfigurationcalibration.hpp
@@ -444,6 +461,7 @@ simm/simmconfigurationisdav2_6.hpp
 simm/simmconfigurationisdav2_6_5.hpp
 simm/simmconfigurationisdav2_7_2412.hpp
 simm/simmconfigurationisdav2_8_2506.hpp
+simm/simmconfigurationisdav2_8_2512.hpp
 simm/simmnamemapper.hpp
 simm/simmresults.hpp
 simm/simmtradedata.hpp

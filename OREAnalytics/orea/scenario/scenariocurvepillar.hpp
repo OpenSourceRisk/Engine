@@ -23,41 +23,23 @@
 
 #pragma once
 
-#include <iostream>
 #include <ored/configuration/conventions.hpp>
 #include <ored/marketdata/expiry.hpp>
 #include <ored/utilities/marketdata.hpp>
+
 #include <variant>
+
 namespace ore {
 namespace analytics {
 
 class IrFutureExpiryYearMonth {
 public:
-    explicit IrFutureExpiryYearMonth(const std::string& str) : str_(str) {
-        QL_REQUIRE(str_.size() == 7 && str_[4] == '-', "IrFutureExpiryYearMonth should be of the form YYYY-MM");
-        year_ = boost::lexical_cast<int>(str_.substr(0, 4));
-        month_ = QuantLib::Month(boost::lexical_cast<int>(str_.substr(5, 2)));
-    }
-
-    QuantLib::Month month() const { return month_; }
-    QuantLib::Year year() const { return year_; }
-
-    std::string toString() const { return str_; }
-
-    void setConvention(const QuantLib::ext::shared_ptr<ore::data::FutureConvention>& convention) {
-        convention_ = convention;
-    }
-
-    QuantLib::Period toPeriod(const QuantLib::Date& referenceDate) const {
-        QL_REQUIRE(convention_ != nullptr, "IRFutureExpiryies are only allowed in the context of par scenarios");
-        bool isMMFuture = !convention_->isOvernightIndexFuture();
-        QuantLib::Date d = isMMFuture
-                               ? getMmFutureExpiryDate(month_, year_, convention_->dateGenerationRule())
-                               : getOiFutureStartEndDate(month_, year_, convention_->tenor(),
-                                                         convention_->dateGenerationRule(), convention_->calendar())
-                                     .second;
-        return QuantLib::Period((d - referenceDate) * QuantLib::Days);
-    }
+    explicit IrFutureExpiryYearMonth(const std::string& str);
+    QuantLib::Month month() const;
+    QuantLib::Year year() const;
+    std::string toString() const;
+    void setConvention(const QuantLib::ext::shared_ptr<ore::data::FutureConvention>& convention);
+    QuantLib::Period toPeriod(const QuantLib::Date& referenceDate) const;
 
 private:
     std::string str_;
@@ -74,20 +56,9 @@ ScenarioCurvePillar parseScenarioCurvePillar(const std::string& str);
 
 std::ostream& operator<<(std::ostream& os, const ScenarioCurvePillar& v);
 
-inline std::vector<QuantLib::Period> scenarioPillarsToPeriodVector(const QuantLib::Date& asof,
-                                                                   const std::vector<ScenarioCurvePillar>& pillars,
-                                                                   bool allowFutureExpiries) {
-    std::vector<QuantLib::Period> result;
-    for (const auto& pillar : pillars) {
-        if (auto p = std::get_if<QuantLib::Period>(&pillar)) {
-            result.push_back(*p);
-        } else if (auto p = std::get_if<IrFutureExpiryYearMonth>(&pillar)) {
-            QL_REQUIRE(allowFutureExpiries, "IR Future expiries are not allowed in this context");
-            result.push_back(p->toPeriod(asof));
-        }
-    }
-    return result;
-}
+std::vector<QuantLib::Period> scenarioPillarsToPeriodVector(const QuantLib::Date& asof,
+                                                            const std::vector<ScenarioCurvePillar>& pillars,
+                                                            bool allowFutureExpiries);
 
 } // namespace analytics
 } // namespace ore

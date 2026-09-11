@@ -33,6 +33,8 @@
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
 
+#include <ql/any.hpp>
+
 namespace QuantExt {
 using namespace QuantLib;
 
@@ -61,6 +63,10 @@ public:
                  const QuantLib::ext::shared_ptr<FxIndex>& fxIndex = nullptr, const bool initialPriceIsInTargetCcy = false,
 		 Real legInitialNotional = Null<Real>(), const Date& legFixingDate = Date());
 
+    //! \name LazyObject interface
+    //@{
+    void performCalculations() const override;
+    //@}
     //! \name CashFlow interface
     //@{
     Real amount() const override { return rate() * nominal(); }
@@ -149,6 +155,7 @@ protected:
     QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
     Real legInitialNotional_;
     Date legFixingDate_;
+    mutable Real rate_;
 };
 
 // inline definitions
@@ -174,7 +181,7 @@ public:
     EquityLeg& withNotionals(const std::vector<Real>& notionals);
     EquityLeg& withPaymentDayCounter(const DayCounter& dayCounter);
     EquityLeg& withPaymentAdjustment(BusinessDayConvention convention);
-    EquityLeg& withPaymentLag(Natural paymentLag);
+    EquityLeg& withPaymentLag(QuantLib::Integer paymentLag);
     EquityLeg& withPaymentCalendar(const Calendar& calendar);
     EquityLeg& withReturnType(EquityReturnType);
     EquityLeg& withDividendFactor(Real);
@@ -193,7 +200,7 @@ private:
     QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
     std::vector<Real> notionals_;
     DayCounter paymentDayCounter_;
-    Natural paymentLag_;
+    QuantLib::Integer paymentLag_;
     BusinessDayConvention paymentAdjustment_;
     Calendar paymentCalendar_;
     EquityReturnType returnType_;

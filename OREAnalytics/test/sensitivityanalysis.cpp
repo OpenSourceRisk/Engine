@@ -18,7 +18,10 @@
 
 #include <boost/test/unit_test.hpp>
 #include <boost/timer/timer.hpp>
+#include <orea/app/reportwriter.hpp>
 #include <orea/cube/inmemorycube.hpp>
+#include <orea/cube/sensicube.hpp>
+#include <orea/cube/sensitivitycube.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/parametricvar.hpp>
@@ -54,6 +57,7 @@
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/report/inmemoryreport.hpp>
 #include <ored/utilities/osutils.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/toplevelfixture.hpp>
@@ -88,6 +92,33 @@ using testsuite::TestConfigurationObjects;
 using testsuite::TestMarket;
 
 namespace {
+struct CommoditySensitivityTestContext {
+    QuantLib::ext::shared_ptr<Scenario> baseScenario;
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensitivityData;
+    QuantLib::ext::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator;
+};
+
+CommoditySensitivityTestContext makeCommoditySensitivityTestContext(const Date& asof, const string& commodityName,
+                                                                     const vector<Period>& simTenors,
+                                                                     const string& sensitivityXml) {
+    auto initMarket = QuantLib::ext::make_shared<TestMarket>(asof);
+    auto simMarketData = QuantLib::ext::make_shared<analytics::ScenarioSimMarketParameters>();
+    simMarketData->baseCcy() = "EUR";
+    simMarketData->setCommodityCurveSimulate(true);
+    simMarketData->setCommodityNames({commodityName});
+    simMarketData->setCommodityCurveTenors(commodityName, simTenors);
+
+    auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(initMarket, simMarketData);
+    auto baseScenario = simMarket->baseScenario();
+    auto scenarioFactory = QuantLib::ext::make_shared<CloneScenarioFactory>(baseScenario);
+    auto sensitivityData = QuantLib::ext::make_shared<SensitivityScenarioData>();
+    sensitivityData->fromXMLString(sensitivityXml);
+
+    return {baseScenario, sensitivityData,
+            QuantLib::ext::make_shared<SensitivityScenarioGenerator>(sensitivityData, baseScenario, simMarketData,
+                                                                      simMarket, scenarioFactory, false)};
+}
+
 void testPortfolioSensitivity(ObservationMode::Mode om) {
     SavedSettings backup;
 
@@ -1055,6 +1086,161 @@ BOOST_AUTO_TEST_CASE(test2dShifts) {
     IndexManager::instance().clearHistories();
 }
 
+BOOST_AUTO_TEST_CASE(testCommodityFixingCalendarBucketPreceding) {
+    BOOST_TEST_MESSAGE("Testing commodity sensitivity fixing-calendar bucketing for preceding weekend pillars");
+
+    SavedSettings backup;
+
+    ObservationMode::Mode backupMode = ObservationMode::instance().mode();
+    ObservationMode::instance().setMode(ObservationMode::Mode::None);
+
+    // 16 Jul 2026 is a Thursday, so under a WeekendsOnly calendar 1D falls on Friday, 2D on Saturday,
+    // 3D on Sunday, and 4D on the following Monday.
+    Date today = Date(16, July, 2026);
+    Settings::instance().evaluationDate() = today;
+    BOOST_TEST_MESSAGE("Today is " << today);
+
+    string commodityName = "COMDTY_GOLD_USD";
+    vector<Period> simTenors = {1 * Days, 2 * Days, 3 * Days, 4 * Days};
+    string sensiXml = "<SensitivityAnalysis>"
+                      "  <CommodityCurves>"
+                      "    <CommodityCurve name=\"COMDTY_GOLD_USD\">"
+                      "      <Currency>USD</Currency>"
+                      "      <ShiftType>Absolute</ShiftType>"
+                      "      <ShiftSize>0.01</ShiftSize>"
+                      "      <ShiftTenors>1D,2D,3D,4D</ShiftTenors>"
+                      "      <Calendar>WeekendsOnly</Calendar>"
+                      "    </CommodityCurve>"
+                      "  </CommodityCurves>"
+                      "</SensitivityAnalysis>";
+    auto context = makeCommoditySensitivityTestContext(today, commodityName, simTenors, sensiXml);
+
+    // Exactly two up-scenarios must exist for this commodity curve: the fixing-tenor 1D scenario, which
+    // represents the fixing-calendar bucket {1D, 2D, 3D}, and the ordinary 4D scenario. No separate 2D
+    // or 3D scenarios are generated.
+    vector<Size> commodityScenarioIndex;    // index into scenarios()/scenarioDescriptions()
+    vector<ShiftScenarioGenerator::ScenarioDescription> commodityUpDescriptions;
+    auto const& descriptions = context.scenarioGenerator->scenarioDescriptions();
+    for (Size i = 0; i < descriptions.size(); ++i) {
+        auto const& d = descriptions[i];
+        if (d.key1().keytype == RiskFactorKey::KeyType::CommodityCurve && d.key1().name == commodityName &&
+            d.type() == ShiftScenarioGenerator::ScenarioDescription::Type::Up) {
+            commodityScenarioIndex.push_back(i);
+            commodityUpDescriptions.push_back(d);
+        }
+    }
+    BOOST_REQUIRE_EQUAL(commodityUpDescriptions.size(), 2);
+    BOOST_CHECK_EQUAL(commodityUpDescriptions[0].key1().index, 0); // fixing tenor is 1D (shiftTenors[0])
+    BOOST_CHECK_EQUAL(commodityUpDescriptions[0].indexDesc1(), "1D");
+    BOOST_CHECK_EQUAL(commodityUpDescriptions[1].key1().index, 3); // fixing tenor is 4D (shiftTenors[3])
+    BOOST_CHECK_EQUAL(commodityUpDescriptions[1].indexDesc1(), "4D");
+
+    QuantLib::ext::shared_ptr<Scenario> bucketScenario =
+        context.scenarioGenerator->scenarios()[commodityScenarioIndex[0]];
+    QuantLib::ext::shared_ptr<Scenario> singletonScenario =
+        context.scenarioGenerator->scenarios()[commodityScenarioIndex[1]];
+
+    Real shiftSize = 0.01;
+    Real tolerance = 1.0e-10;
+    vector<Real> basePrices(simTenors.size());
+    for (Size k = 0; k < simTenors.size(); ++k) {
+        RiskFactorKey key(RiskFactorKey::KeyType::CommodityCurve, commodityName, k);
+        basePrices[k] = context.baseScenario->get(key);
+        Real bucketShifted = bucketScenario->get(key);
+        Real singletonShifted = singletonScenario->get(key);
+        if (k < 3) {
+            // 1D, 2D and 3D are members of the 1D fixing-calendar bucket and each receive the full
+            // configured shift; they remain untouched by the ordinary 4D scenario.
+            BOOST_CHECK_MESSAGE(fabs(bucketShifted - basePrices[k] - shiftSize) < tolerance,
+                                "grid point " << k << " expected the full shift in the 1D bucket scenario");
+            BOOST_CHECK_MESSAGE(fabs(singletonShifted - basePrices[k]) < tolerance,
+                                "grid point " << k << " unexpectedly shifted in the 4D scenario");
+        } else {
+            // 4D is not a member of the 1D bucket: it is untouched by the bucket scenario and receives
+            // the full shift only in its own (ordinary) scenario.
+            BOOST_CHECK_MESSAGE(fabs(bucketShifted - basePrices[k]) < tolerance,
+                                "4D pillar unexpectedly shifted in the 1D bucket scenario");
+            BOOST_CHECK_MESSAGE(fabs(singletonShifted - basePrices[k] - shiftSize) < tolerance,
+                                "4D pillar expected the full shift in its own scenario");
+        }
+    }
+
+    // Bucket members are not required to have equal base prices: fixing-calendar bucketing attributes
+    // shared risk, it does not assert identical delivery prices.
+    BOOST_CHECK(basePrices[0] != basePrices[1]);
+    BOOST_CHECK(basePrices[1] != basePrices[2]);
+
+    ObservationMode::instance().setMode(backupMode);
+    IndexManager::instance().clearHistories();
+}
+
+BOOST_AUTO_TEST_CASE(testCommodityNoFixingCalendarUnchanged) {
+    BOOST_TEST_MESSAGE("Testing that an omitted commodity fixing calendar preserves existing sensitivity "
+                       "scenario generation");
+
+    SavedSettings backup;
+
+    ObservationMode::Mode backupMode = ObservationMode::instance().mode();
+    ObservationMode::instance().setMode(ObservationMode::Mode::None);
+
+    Date today = Date(16, July, 2026);
+    Settings::instance().evaluationDate() = today;
+    BOOST_TEST_MESSAGE("Today is " << today);
+
+    string commodityName = "COMDTY_GOLD_USD";
+    vector<Period> simTenors = {1 * Days, 2 * Days, 3 * Days, 4 * Days};
+    string sensiXml = "<SensitivityAnalysis>"
+                      "  <CommodityCurves>"
+                      "    <CommodityCurve name=\"COMDTY_GOLD_USD\">"
+                      "      <Currency>USD</Currency>"
+                      "      <ShiftType>Absolute</ShiftType>"
+                      "      <ShiftSize>0.01</ShiftSize>"
+                      "      <ShiftTenors>1D,2D,3D,4D</ShiftTenors>"
+                      "    </CommodityCurve>"
+                      "  </CommodityCurves>"
+                      "</SensitivityAnalysis>";
+    auto context = makeCommoditySensitivityTestContext(today, commodityName, simTenors, sensiXml);
+    BOOST_CHECK(!context.sensitivityData->commodityCurveShiftData().at(commodityName)->fixingCalendar);
+
+    // Without a configured calendar, every tenor remains its own scenario.
+    vector<Size> commodityScenarioIndex;
+    vector<ShiftScenarioGenerator::ScenarioDescription> commodityUpDescriptions;
+    auto const& descriptions = context.scenarioGenerator->scenarioDescriptions();
+    for (Size i = 0; i < descriptions.size(); ++i) {
+        auto const& d = descriptions[i];
+        if (d.key1().keytype == RiskFactorKey::KeyType::CommodityCurve && d.key1().name == commodityName &&
+            d.type() == ShiftScenarioGenerator::ScenarioDescription::Type::Up) {
+            commodityScenarioIndex.push_back(i);
+            commodityUpDescriptions.push_back(d);
+        }
+    }
+    BOOST_REQUIRE_EQUAL(commodityUpDescriptions.size(), simTenors.size());
+    for (Size j = 0; j < simTenors.size(); ++j)
+        BOOST_CHECK_EQUAL(commodityUpDescriptions[j].key1().index, j);
+
+    Real shiftSize = 0.01;
+    Real tolerance = 1.0e-10;
+    for (Size j = 0; j < 4; ++j) {
+        QuantLib::ext::shared_ptr<Scenario> scenario = context.scenarioGenerator->scenarios()[commodityScenarioIndex[j]];
+        for (Size k = 0; k < simTenors.size(); ++k) {
+            RiskFactorKey key(RiskFactorKey::KeyType::CommodityCurve, commodityName, k);
+            Real basePrice = context.baseScenario->get(key);
+            Real shifted = scenario->get(key);
+            Real expected = (k == j) ? basePrice + shiftSize : basePrice;
+            BOOST_CHECK_MESSAGE(fabs(shifted - expected) < tolerance, "scenario " << j << ", grid point " << k
+                                                                                  << ": unexpected shifted value");
+        }
+    }
+
+    // Unchanged sensitivity files must continue to round trip without new elements.
+    string xmlOut = context.sensitivityData->toXMLString();
+    BOOST_CHECK(xmlOut.find("Calendar") == string::npos);
+    BOOST_CHECK(xmlOut.find("BusinessDayConvention") == string::npos);
+
+    ObservationMode::instance().setMode(backupMode);
+    IndexManager::instance().clearHistories();
+}
+
 BOOST_AUTO_TEST_CASE(testEquityOptionDeltaGamma) {
 
     BOOST_TEST_MESSAGE("Testing Equity option sensitivities against QL analytic greeks");
@@ -2010,6 +2196,51 @@ BOOST_AUTO_TEST_CASE(testCrossGamma) {
                                                            << cachedResults.size() << ")");
     ObservationMode::instance().setMode(backupMode);
     IndexManager::instance().clearHistories();
+}
+
+BOOST_AUTO_TEST_CASE(testWriteScenarioReportBaseCurrency) {
+    BOOST_TEST_MESSAGE("Testing writeScenarioReport includes Base Currency column...");
+
+    Date asof(14, April, 2016);
+    set<string> tradeIds = {"Trade_1"};
+    Size numScenarios = 2; // base + 1 up scenario
+
+    auto cube = QuantLib::ext::make_shared<SensiCube>(tradeIds, asof, numScenarios);
+    cube->setT0(100.0, 0, 0);
+    cube->set(110.0, 0, 0, 1, 0); // scenario 1: shifted NPV
+
+    RiskFactorKey rfKey(RiskFactorKey::KeyType::DiscountCurve, "EUR", 0);
+    vector<ShiftScenarioGenerator::ScenarioDescription> scenarioDescriptions;
+    scenarioDescriptions.emplace_back(ShiftScenarioGenerator::ScenarioDescription::Type::Base);
+    scenarioDescriptions.emplace_back(ShiftScenarioGenerator::ScenarioDescription::Type::Up, rfKey, "1Y");
+
+    map<RiskFactorKey, Real> targetShiftSizes = {{rfKey, 0.01}};
+    map<RiskFactorKey, Real> actualShiftSizes = {{rfKey, 0.01}};
+    map<RiskFactorKey, ShiftScheme> shiftSchemes = {{rfKey, ShiftScheme::Forward}};
+
+    auto sensiCube = QuantLib::ext::make_shared<SensitivityCube>(
+        cube, scenarioDescriptions, targetShiftSizes, actualShiftSizes, shiftSchemes);
+
+    InMemoryReport report;
+    string baseCurrency = "EUR";
+    ReportWriter().writeScenarioReport(report, {sensiCube}, baseCurrency);
+
+    // Verify 9 columns including Base Currency
+    BOOST_CHECK_EQUAL(report.columns(), 9);
+    BOOST_CHECK_EQUAL(report.header(3), "Base NPV");
+    BOOST_CHECK_EQUAL(report.header(8), "Base Currency");
+
+    // Verify report has exactly 1 data row
+    BOOST_CHECK_EQUAL(report.rows(), 1);
+
+    // Verify column data values including adjacent Base NPV for alignment confidence
+    BOOST_CHECK_CLOSE(boost::get<double>(report.data(3, 0)), 100.0, 1e-8);
+    BOOST_CHECK_EQUAL(boost::get<string>(report.data(8, 0)), baseCurrency);
+
+    // Verify currency pass-through with a different value
+    InMemoryReport report2;
+    ReportWriter().writeScenarioReport(report2, {sensiCube}, "USD");
+    BOOST_CHECK_EQUAL(boost::get<string>(report2.data(8, 0)), "USD");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

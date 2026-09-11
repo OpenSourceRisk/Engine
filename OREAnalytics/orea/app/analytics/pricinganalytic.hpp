@@ -34,12 +34,12 @@ class InputParameters;
  struct PricingVariables : public InputVariables {
     void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
 
-    bool computeTheta_ = false;
-    Period thetaPeriod_ = Period(1, Days);
     bool outputCurves_ = false;
     std::string curvesMarketConfig_ = Market::defaultConfiguration;
     std::string curvesGrid_ = "240,1M";
     std::string curvesCalendar_ = "TARGET";
+    bool computeTheta_ = false;
+    QuantLib::Period thetaPeriod_ = 1 * QuantLib::Days;
 };
 
 /*! Pricing-type analytics
@@ -58,15 +58,6 @@ public:
     const QuantLib::ext::shared_ptr<SensitivityAnalysis>& sensiAnalysis() { return sensiAnalysis_; }
     const QuantLib::ext::shared_ptr<ParSensitivityAnalysis>& parAnalysis() { return parAnalysis_; }
 
-    void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario) {
-        offsetScenario_ = offsetScenario;
-    }
-
-    void setOffsetSimMarketParams(
-        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams) {
-        offsetSimMarketParams_ = offsetSimMarketParams;
-    }
-
     void overwriteResultCurrency(const std::string& ccy);
 
 private:
@@ -74,12 +65,10 @@ private:
     QuantLib::ext::shared_ptr<ParSensitivityAnalysis> parAnalysis_;
 
 protected:
-    QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
-    QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> offsetSimMarketParams_;
     std::optional<std::string> overwriteResultCurrency_;
 };
 
-static const std::set<std::string> pricingAnalyticSubAnalytics {"NPV", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY"};
+static const std::set<std::string> pricingAnalyticSubAnalytics {"NPV", "CURVES", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY"};
 
 class PricingAnalytic : public Analytic {
 public:

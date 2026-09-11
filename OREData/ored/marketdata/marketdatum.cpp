@@ -66,6 +66,8 @@ std::ostream& operator<<(std::ostream& out, const MarketDatum::QuoteType& type) 
         return out << "TRANSITION_PROBABILITY";
     case MarketDatum::QuoteType::CONVERSION_FACTOR:
         return out << "CONVERSION_FACTOR";
+    case MarketDatum::QuoteType::SHAPE_FACTOR:
+        return out << "SHAPE_FACTOR";
     case MarketDatum::QuoteType::NONE:
         return out << "NULL";
     default:
@@ -157,6 +159,8 @@ std::ostream& operator<<(std::ostream& out, const MarketDatum::InstrumentType& t
         return out << "COMMODITY_OPTION";
     case MarketDatum::InstrumentType::COMMODITY_CALENDAR_SPREAD_OPTION:
         return out << "COMMODITY_CALENDAR_SPREAD_OPTION";
+    case MarketDatum::InstrumentType::SHAPE_PROFILE:
+        return out << "SHAPE_PROFILE";
     case MarketDatum::InstrumentType::CPR:
         return out << "CPR";
     case MarketDatum::InstrumentType::RATING:
@@ -238,42 +242,6 @@ CommodityForwardQuote::CommodityForwardQuote(QuantLib::Real value, const QuantLi
     QL_REQUIRE(quoteType == QuoteType::PRICE, "Commodity forward quote must be of type 'PRICE'");
 }
 
-namespace {
-Natural yearFromExpiryString(const std::string& expiry) {
-    QL_REQUIRE(expiry.length() == 7, "The expiry string must be of "
-                                     "the form YYYY-MM");
-    string strExpiryYear = expiry.substr(0, 4);
-    Natural expiryYear;
-    try {
-        expiryYear = lexical_cast<Natural>(strExpiryYear);
-    } catch (const bad_lexical_cast&) {
-        QL_FAIL("Could not convert year string, " << strExpiryYear << ", to number.");
-    }
-    return expiryYear;
-}
-
-Month monthFromExpiryString(const std::string& expiry) {
-    QL_REQUIRE(expiry.length() == 7, "The expiry string must be of "
-                                     "the form YYYY-MM");
-    string strExpiryMonth = expiry.substr(5);
-    Natural expiryMonth;
-    try {
-        expiryMonth = lexical_cast<Natural>(strExpiryMonth);
-    } catch (const bad_lexical_cast&) {
-        QL_FAIL("Could not convert month string, " << strExpiryMonth << ", to number.");
-    }
-    return static_cast<Month>(expiryMonth);
-}
-} // namespace
-
-Natural MMFutureQuote::expiryYear() const { return yearFromExpiryString(expiry_); }
-
-Month MMFutureQuote::expiryMonth() const { return monthFromExpiryString(expiry_); }
-
-Natural OIFutureQuote::expiryYear() const { return yearFromExpiryString(expiry_); }
-
-Month OIFutureQuote::expiryMonth() const { return monthFromExpiryString(expiry_); }
-
 QuantLib::Size SeasonalityQuote::applyMonth() const {
     QL_REQUIRE(month_.length() == 3, "The month string must be of "
                                      "the form MMM");
@@ -342,6 +310,17 @@ CorrelationQuote::CorrelationQuote(Real value, const Date& asof, const string& n
     if (outBool)
         QL_REQUIRE(asof <= outDate, "CorrelationQuote: Invalid CorrelationQuote, expiry date "
             << outDate << " must be after asof date " << asof);
+}
+
+BondFutureOptionQuote::BondFutureOptionQuote(Real value, Date asofDate, const string& name,
+    QuoteType quoteType, string contractName, string expiry, ext::shared_ptr<BaseStrike> strike, bool isCall)
+    : MarketDatum(value, asofDate, name, quoteType, InstrumentType::BOND_FUTURE_OPTION),
+      contractName_(std::move(contractName)), expiry_(std::move(expiry)), strike_(std::move(strike)), isCall_(isCall)
+{
+    // Only support explicit expiry dates for now.
+    Date expiryDate = parseDate(expiry_);
+    QL_REQUIRE(asofDate_ <= expiryDate, "BondFutureOptionQuote: invalid quote, expiry date "
+        << io::iso_date(expiryDate) << " must be on or after asof date " << io::iso_date(asofDate_) << ".");
 }
 
 template <class Archive> void MarketDatum::serialize(Archive& ar, const unsigned int version) {
@@ -419,7 +398,7 @@ template <class Archive> void MMFutureQuote::serialize(Archive& ar, const unsign
 template <class Archive> void OIFutureQuote::serialize(Archive& ar, const unsigned int version) {
     ar& boost::serialization::base_object<MarketDatum>(*this);
     ar& ccy_;
-    ar& expiry_;
+    ar& contractMonth_;
     ar& contract_;
     ar& tenor_;
 }
@@ -720,6 +699,23 @@ template <class Archive> void TransitionProbabilityQuote::serialize(Archive& ar,
     ar& toRating_;
 }
 
+template <class Archive> void BondFutureOptionQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& contractName_;
+    ar& expiry_;
+    ar& strike_;
+    ar& isCall_;
+}
+
+template <class Archive> void IntradayPowerCurveQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& quoteName_;
+    ar& deliveryDate_;
+    ar& startTimeInSec_;
+    ar& timeUnit_;
+    ar& isDST_;
+}
+
 template void MarketDatum::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
 template void MarketDatum::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 template void MoneyMarketQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
@@ -820,6 +816,9 @@ template void BondFutureConversionFactor::serialize(boost::archive::binary_oarch
 template void BondFutureConversionFactor::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 template void TransitionProbabilityQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
 template void TransitionProbabilityQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void BondFutureOptionQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void IntradayPowerCurveQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void IntradayPowerCurveQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
 
 } // namespace data
 } // namespace ore
@@ -873,3 +872,5 @@ BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::BondPriceQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::BondFuturePriceQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::BondFutureConversionFactor);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::TransitionProbabilityQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::BondFutureOptionQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::IntradayPowerCurveQuote);

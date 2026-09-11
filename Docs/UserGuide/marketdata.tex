@@ -35,11 +35,13 @@ Allowable values: Any real number.
   SWAPTION, CAPFLOOR, FX\_OPTION, HAZARD\_RATE, RECOVERY\_RATE, ASSUMED\_RECOVERY\_RATE,
   ZC\_INFLATIONSWAP, YY\_INFLATIONSWAP, ZC\_INFLATIONCAPFLOOR,
   SEASONALITY, EQUITY\_SPOT, EQUITY\_FWD, EQUITY\_DIVIDEND,
-  EQUITY\_OPTION, BOND, INDEX\_CDS\_OPTION, CPR, COMMODITY, COMMODITY\_FWD, COMMODITY\_OPTION} \\
+    EQUITY\_OPTION, BOND, INDEX\_CDS\_OPTION, CPR, COMMODITY, COMMODITY\_FWD, COMMODITY\_OPTION,
+    SHAPE\_PROFILE,
+  BOND\_FUTURE\_OPTION} \\
 \hline
   Quote Type & \emph{BASIS\_SPREAD, CREDIT\_SPREAD, CONV\_CREDIT\_SPREAD, YIELD\_SPREAD, HAZARD\_RATE,
   RATE, RATIO, PRICE, RATE\_LNVOL, RATE\_NVOL, RATE\_SLNVOL,
-  BASE\_CORRELATION, SHIFT} \\
+    BASE\_CORRELATION, SHIFT, SHAPE\_FACTOR} \\
 \hline
   \end{tabular}
   \caption{Allowable values for Instrument and Quote type market data.}
@@ -324,7 +326,7 @@ Example:
     Instrument Type & \emph{MM\_FUTURE} & \\ \hline
     Quote Type & \emph{PRICE} & \\ \hline
     Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the MM Future price\\ \hline
-    Expiry & Alphanumeric string of the form YYYY-MM & Expiry month and year\\ \hline
+    Expiry & Alphanumeric string of the form YYYY-MM or \texttt{[FGHJKMNQUVXZ][0-9]\{1,2\}} & Expiry month and year or delivery month code\\ \hline
     Contract & String & Contract name\\ \hline
     Term & An integer followed by D, W, M or Y & Underlying Term\\ \hline
   \end{tabular}
@@ -332,13 +334,16 @@ Example:
   \label{tab:mmfp_quote}
 \end{table}
 
-Expiry month is quoted here as YYYY-MM. The exact expiry date follows from a date rule defined in the future
-conventions, see \ref{ss:conventions_future}.
+Contract month is quoted here as YYYY-MM or using contract month codes, see table \ref{tab:contract_month_codes}. Contract
+month codes are combined with one or two digits representing the contract year. For a single digit, the decade of the
+valuation date is implied. The underlying dates follow from a date rule defined in the future conventions, see
+\ref{ss:conventions_future}.
 
 \medskip
 Example:
 \begin{itemize}
 \item {MM\_FUTURE/PRICE/EUR/2018-06/LIF3ME/3M}
+\item {MM\_FUTURE/PRICE/EUR/M18/LIF3ME/3M}
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -353,7 +358,7 @@ Example:
     Instrument Type & \emph{OI\_FUTURE} & \\ \hline
     Quote Type & \emph{PRICE} & \\ \hline
     Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the Overnight Index Future price\\ \hline
-    Expiry & Alphanumeric string of the form YYYY-MM & Expiry month and year\\ \hline
+    ContractMonth & Alphanumeric string of the form YYYY-MM or \texttt{[FGHJKMNQUVXZ][0-9]\{1,2\}} & Contract month and year or delivery month code\\ \hline
     Contract & String & Contract name\\ \hline
     Term & An integer followed by M or Y & Underlying Term in months or years \\ \hline
   \end{tabular}
@@ -361,14 +366,40 @@ Example:
   \label{tab:oifp_quote}
 \end{table}
 
-Expiry month is quoted here as YYYY-MM. The exact expiry date follows from a date rule defined in the future
-conventions, see \ref{ss:conventions_future}.
+Contract month is quoted here as YYYY-MM or using contract month codes, see table \ref{tab:contract_month_codes}. Contract
+month codes are combined with one or two digits representing the contract year. For a single digit, the decade of the
+valuation date is implied. The underlying dates follow from a date rule defined in the future conventions, see
+\ref{ss:conventions_future}.
 
 \medskip
 Example: Three Months SOFR Futures (DEC 2019):
 \begin{itemize}
 \item {OI\_FUTURE/PRICE/USD/2019-12/CME:SR3Z2019/3M}
+\item {OI\_FUTURE/PRICE/USD/Z19/CME:SR3Z2019/3M}
 \end{itemize}
+
+
+\begin{table}[H]
+\centering
+  \begin{tabular}{|p{3cm}|p{4.5cm}|p{7cm}|}
+  \hline
+    {\bf Code} & {\bf Month} \\ \hline
+    F & Jan \\
+    G & Feb \\
+    H & Mar \\
+    J & Apr \\
+    K & May \\
+    M & Jun \\
+    N & Jul \\
+    Q & Aug \\
+    U & Sep \\
+    V & Oct \\
+    X & Nov \\
+    Z & Dec \\ \hline
+  \end{tabular}
+  \caption{Contract Month Codes}
+  \label{tab:contract_month_codes}
+\end{table}
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 %\subsection{Equity Futures Price}
@@ -1211,6 +1242,8 @@ Examples:
     \item {COMMODITY\_FWD/PRICE/NYMEX:CL/USD/2030-11-20}
 \end{itemize}
 
+\input{marketdata_intradaypower}
+
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Commodity Option Implied Volatility}
 \label{md:commodity_option_iv}
@@ -1612,6 +1645,76 @@ This quote provides the spread for a specified bond over the benchmark rate.
 Examples:
 \begin{itemize}
 	\item CPR/RATE/SECURITY\_1
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Bond Future Option Implied Volatility}
+\label{md:bond_future_option_iv}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{3cm}|p{5.5cm}|p{5cm}|}
+    \hline
+    {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{BOND\_FUTURE\_OPTION} & \\ \hline
+    Quote Type & \emph{RATE\_LNVOL} & \\ \hline
+    Name & String & Underlying bond future contract name \\ \hline
+    Expiry & Date string & Expiry date of the option \\ \hline
+    Strike & Real & Absolute strike price of the option \\ \hline
+    CallPut & \lstinline!C! or \lstinline!P! & Optional flag indicating if volatility is for call or put \\ \hline
+    \end{tabular}
+    \caption{Bond Future Option Implied Volatility}
+    \label{tab:bond_future_option_iv_quote}
+\end{table}
+
+Note that how the strike from the quote string is interpreted depends on the \lstinline!StrikeFactor! 
+provided in the curve configuration for the bond future volatility structures. The strike from the 
+quote string is divided by this value. So, for example, a strike in the quote string of 
+\lstinline!121.25! along with a \lstinline!StrikeFactor! of \lstinline!100! in the curve configuration 
+would interpret the strike as $1.2125$. Another option in this example would be to use \lstinline!1.2125! 
+directly in the quote string and use a \lstinline!StrikeFactor! of \lstinline!1! in the curve configuration 
+or omit it letting it default to \lstinline!1!.
+
+\medskip
+Example:
+\begin{itemize}
+    \item \lstinline!BOND_FUTURE_OPTION/RATE_LNVOL/TYM26/2026-04-02/121.25/C!
+    \item \lstinline!BOND_FUTURE_OPTION/RATE_LNVOL/TYM26/2026-04-02/121.25/P!
+    \item \lstinline!BOND_FUTURE_OPTION/RATE_LNVOL/TYM26/2026-04-02/1.2125/P!
+    \item \lstinline!BOND_FUTURE_OPTION/RATE_LNVOL/TYM26/2026-04-02/1.2125!
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Bond Future Option Premium}
+\label{md:bond_future_option_premium}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{3cm}|p{5.5cm}|p{5cm}|}
+    \hline
+    {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{BOND\_FUTURE\_OPTION} & \\ \hline
+    Quote Type & \emph{PRICE} & \\ \hline
+    Name & String & Underlying bond future contract name \\ \hline
+    Expiry & Date string & Expiry date of the option \\ \hline
+    Strike & Real & Absolute strike price of the option \\ \hline
+    CallPut & \lstinline!C! or \lstinline!P! & Indicates if premium is for call or put \\ \hline
+    \end{tabular}
+    \caption{Bond Future Option Premium}
+    \label{tab:bond_future_option_premium_quote}
+\end{table}
+
+See comment in Section~\ref{md:bond_future_option_iv} regarding the strike price. Also, note that 
+the \lstinline!CallPut! flag is mandatory for premium quotes.
+
+\medskip
+Example:
+\begin{itemize}
+    \item \lstinline!BOND_FUTURE_OPTION/PRICE/TYM26/2026-04-02/121.25/C!
+    \item \lstinline!BOND_FUTURE_OPTION/PRICE/TYM26/2026-04-02/121.25/P!
+    \item \lstinline!BOND_FUTURE_OPTION/PRICE/TYM26/2026-04-02/1.2125/P!
 \end{itemize}
 
 % %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

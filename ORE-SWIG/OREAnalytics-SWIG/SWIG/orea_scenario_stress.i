@@ -27,6 +27,7 @@ using ore::analytics::parseScenarioCurvePillar;
 %}
 
 %template(PeriodVectorRealMap) std::map<Period, std::vector<Real>>;
+%template(PeriodPeriodPair) std::pair<Period, Period>;
 %template(PeriodPairsRealMap) std::map<pair<Period, Period>, Real>;
 
 %shared_ptr(ore::analytics::StressTestScenarioData);

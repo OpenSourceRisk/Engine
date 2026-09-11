@@ -26,8 +26,9 @@
 
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/legdata.hpp>
-
 #include <ored/portfolio/referencedata.hpp>
+#include <qle/indexes/bondindex.hpp>
+#include <string_view>
 
 namespace ore {
 namespace data {
@@ -129,7 +130,39 @@ struct BondFutureUtils {
                                              const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                                              const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                                              const std::string& securityId);
+
+    //! Get the security IDs underlying a given bond future contract.
+    static std::map<AssetClass, std::set<std::string>> underlyingBondIndices(const std::string& contractName,
+        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager);
+
+    //! Add ISDA taxonomy information to the additional data map.
+    static void addIsdaTaxonomy(std::map<std::string, QuantLib::ext::any>& additionalData);
+
+    struct IndexResults {
+        QuantLib::ext::shared_ptr<BondFutureReferenceDatum> refData;
+        QuantLib::Date futureExpiry;
+        QuantLib::Date futureSettle;
+        std::string ctdSecurityId;
+        QuantLib::Real ctdConversionFactor = QuantLib::Null<QuantLib::Real>();
+        BondBuilder::Result ctdBuilderResult;
+        QuantLib::ext::shared_ptr<QuantExt::BondFuturesIndex> index;
+    };
+
+    //! Perform all steps to create a `BondFuturesIndex` and return all associated intermediate results.
+    static IndexResults createIndex(const std::string& contractName,
+        const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory);
+
 };
+
+/**
+ * Small helper to extract bond future name from a future surface name.
+ * 
+ * Depending on configurations, we may store a single bond future volatility surface for options on an underlying bond 
+ * future contract. In this case, the future surface name will be simply the bond future contract name e.g. `TYH25`. We 
+ * may also store a separate call and put surface in which case the future surface name will be `TYH25_CALL` and
+ * `TYH25_PUT` respectively. This helper extracts the bond future contract name from the future surface name.
+ */
+std::string futureContractName(std::string_view futureSurfaceName);
 
 } // namespace data
 } // namespace ore

@@ -33,26 +33,24 @@ using namespace QuantLib;
 
 class BlackScholesModelBuilder final : public AssetModelBuilderBase {
 public:
-    BlackScholesModelBuilder(const std::vector<Handle<YieldTermStructure>>& curves,
-                             const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
-                             const std::set<Date>& simulationDates, const std::set<Date>& addDates,
-                             const Size timeStepsPerYear = 0, const std::string& calibration = "ATM",
-                             const std::vector<std::vector<Real>>& calibrationStrikes = {},
-                             const Handle<YieldTermStructure>& baseCurve = {}, const bool observeContinuum = false);
-    BlackScholesModelBuilder(const Handle<YieldTermStructure>& curve,
-                             const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
-                             const std::set<Date>& simulationDates, const std::set<Date>& addDates,
-                             const Size timeStepsPerYear = 0, const std::string& calibration = "ATM",
-                             const std::vector<Real>& calibrationStrikes = {},
-                             const Handle<YieldTermStructure>& baseCurve = {}, const bool observeContinuum = false);
+    BlackScholesModelBuilder(
+        const std::vector<Handle<YieldTermStructure>>& curves,
+        const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
+        const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear = 0,
+        const std::string& calibration = "ATM", const std::vector<std::vector<Real>>& calibrationStrikes = {},
+        const Handle<YieldTermStructure>& baseCurve = {},
+        const std::function<std::set<Real>(const TimeGrid&)>& curveTimes = {},
+        const std::function<std::vector<std::set<std::pair<Real, Real>>>(const TimeGrid&)>& volTimesStrikes = {});
+    BlackScholesModelBuilder(
+        const Handle<YieldTermStructure>& curve,
+        const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process, const std::set<Date>& simulationDates,
+        const std::set<Date>& addDates, const Size timeStepsPerYear = 0, const std::string& calibration = "ATM",
+        const std::vector<Real>& calibrationStrikes = {}, const Handle<YieldTermStructure>& baseCurve = {},
+        const std::function<std::set<Real>(const TimeGrid&)>& curveTimes = {},
+        const std::function<std::vector<std::set<std::pair<Real, Real>>>(const TimeGrid&)>& volTimesStrikes = {});
 
     std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> getCalibratedProcesses() const override;
-
     AssetModelWrapper::ProcessType processType() const override;
-
-protected:
-    std::vector<std::vector<Real>> getCurveTimes() const override;
-    std::vector<std::vector<std::pair<Real, Real>>> getVolTimesStrikes() const override;
 
 private:
     const std::string calibration_;

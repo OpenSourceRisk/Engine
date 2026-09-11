@@ -52,9 +52,12 @@ public:
                     const std::vector<QuantLib::Date>& simulationDates = {},
                     const bool reevaluateExerciseInStickyCloseOutDateRun = false);
 
-    void buildComputationGraph(const bool stickyCloseOutDateRun = false,
-                               std::vector<TradeExposure>* tradeExposure = nullptr,
-                               TradeExposureMetaInfo* tradeExposureMetaInfo = nullptr) const override;
+    std::set<std::set<std::string>> relevantCurrencySets() const override;
+    bool isComplexTrade() const override;
+    void buildComputationGraph(
+        const bool stickyCloseOutDateRun = false, std::vector<TradeExposure>* tradeExposure = nullptr,
+        TradeExposureMetaInfo* tradeExposureMetaInfo = nullptr,
+        std::function<std::string(std::set<std::string>)> baseCurrencySuggestions = {}) const override;
     void calculate() const;
 
 protected:
@@ -93,12 +96,16 @@ protected:
     mutable bool includeReferenceDateEvents_ = false;
 
     // set by engine
+    mutable std::set<std::set<std::string>> relevantCurrencySets_;
     mutable std::set<std::string> relevantCurrencies_;
-    mutable std::size_t npv_ = 0;
+    mutable std::map<std::set<std::string>, std::string> currencySetToBaseCurrency_;
+    mutable std::string complexBaseCurrency_;
+    mutable std::size_t npv_ = Null<Size>();
     mutable double npvValue_ = Null<double>();
 
     // cached exercise indicators to be used in sticky close-out date run
     mutable std::vector<std::size_t> cachedExerciseIndicators_;
+    mutable std::vector<std::size_t> cachedExerciseIndicatorsBase_;
 
     // remaining state
     mutable std::size_t cgVersion_ = 0;
@@ -108,26 +115,39 @@ protected:
     mutable std::vector<double> sensis_;
 
 private:
+
     // data structure storing info needed to generate the amount for a cashflow
     struct CashflowInfo {
         Size legNo = Null<Size>(), cfNo = Null<Size>();
         Date payDate = Null<Date>();
         Date exIntoCriterionDate = Null<Date>();
-        std::string payCcy;
-        std::set<std::string> addCcys; // from index, fx linked etc.
+        // pay ccy + if applicable  additional ccys (from index, fx linked etc.)
+        // localBaseCurrency is added here as well during the processing
+        std::set<std::string> currencies;
+        // local base ccy that is used in the flow node
+        std::string localBaseCurrency;
         bool payer = false;
         std::size_t flowNode;
     };
 
+    // get a currency in the intersection of admissable model base currencies and a given set of currencies
+    std::set<std::string> commonBaseCurrency(const std::set<std::string>& currencySet) const;
+
+    // get the relevant currencies for a cashflow
+    std::set<std::string> getCashflowCurrencies(QuantLib::ext::shared_ptr<QuantLib::CashFlow> flow,
+                                                                  const std::string& payCcy) const;
+
     // create the info for a given flow
     CashflowInfo createCashflowInfo(QuantLib::ext::shared_ptr<QuantLib::CashFlow> flow, const std::string& payCcy,
-                                    bool payer, Size legNo, Size cfNo) const;
+                                    const bool payer, const Size legNo, const Size cfNo,
+                                    std::function<std::string(std::set<std::string>)> baseCurrencySuggestions) const;
 
     // create a regression model (i.e. an npv - node in the graph)
-    std::size_t createRegressionModel(const std::size_t amount, const Date& d,
-                                      const std::vector<CashflowInfo>& cashflowInfo,
-                                      const std::function<bool(std::size_t)>& cashflowRelevant,
-                                      const std::size_t filter) const;
+    std::vector<std::size_t> createRegressionModel(const std::size_t amount, const Date& d,
+                                                   const std::vector<CashflowInfo>& cashflowInfo,
+                                                   const std::function<bool(std::size_t)>& cashflowRelevant,
+                                                   const std::size_t filter, const bool localBaseCcy,
+                                                   const bool modelBaseCcy) const;
 };
 
 } // namespace data

@@ -64,7 +64,7 @@ BaseCorrelationCurve::QuoteData BaseCorrelationCurve::loadQuotes(const Date& aso
                                                                  const Loader& loader) const {
     BaseCorrelationCurve::QuoteData res;
     const auto& termStrs = config.terms();
-    QL_REQUIRE(!termStrs.empty(), "BaseCorrelationCurve: need at least one term.");
+    QL_REQUIRE(!termStrs.empty(), "BaseCorrelationCurve: need at least one term in curve config.");
 
     bool termWc = find(termStrs.begin(), termStrs.end(), "*") != termStrs.end();
     if (termWc) {
@@ -88,7 +88,9 @@ BaseCorrelationCurve::QuoteData BaseCorrelationCurve::loadQuotes(const Date& aso
             res.dps.insert(parseReal(dpStr));
         }
         DLOG("Parsed " << res.dps.size() << " unique configured detachment points.");
-        QL_REQUIRE(res.dps.size() > 1, "BaseCorrelationCurve: need at least 2 unique detachment points.");
+        QL_REQUIRE(res.dps.size() > 1,
+                   "BaseCorrelationCurve: need at least 2 unique detachment points in curve config, have "
+                       << dpStrs.size() << ": " << boost::join(dpStrs, ","));
     }
 
     // Read in quotes relevant for the base correlation surface. The points that will be used are stored in data
@@ -328,7 +330,8 @@ void BaseCorrelationCurve::buildFromCorrelations(const BaseCorrelationCurveConfi
 
     DLOG("After processing the quotes, we have " << terms.size() << " unique term(s), " << dps.size()
                                                  << " unique detachment points and " << data.size() << " quotes.");
-    QL_REQUIRE(dps.size() > 1, "BaseCorrelationCurve: need at least 2 unique detachment points.");
+    QL_REQUIRE(dps.size() > 1,
+               "BaseCorrelationCurve: need at least 2 unique detachment points in the quotes, have " << dps.size());
     QL_REQUIRE(dps.size() * terms.size() == data.size(),
                "BaseCorrelationCurve: number of quotes ("
                    << data.size() << ") should equal number of detachment points (" << dps.size()
@@ -613,8 +616,7 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
                 auto targetFunction = [&cdo, &mktUpfront, &baseCorrelQuote, &previousTrancheCleanNPV,
                                        &trancheWidth](const double correlation) {
                     baseCorrelQuote->setValue(correlation);
-                    double implyUpfront = implyUpfront = (cdo->cleanNPV() - previousTrancheCleanNPV) / trancheWidth;
-                    return mktUpfront - implyUpfront;
+                    return mktUpfront - (cdo->cleanNPV() - previousTrancheCleanNPV) / trancheWidth;
                 };
 
                 Brent solver;

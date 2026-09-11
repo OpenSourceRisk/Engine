@@ -24,6 +24,18 @@
 %include scheduler.i
 
 %{
+#include <qle/cashflows/blackaveragebmacouponpricer.hpp>
+#include <qle/cashflows/brlcdicouponpricer.hpp>
+#include <qle/cashflows/cappedflooredaveragebmacoupon.hpp>
+#include <qle/cashflows/cmbcoupon.hpp>
+#include <qle/cashflows/iborfracoupon.hpp>
+#include <qle/cashflows/interpolatediborcoupon.hpp>
+#include <qle/cashflows/interpolatediborcouponpricer.hpp>
+#include <qle/cashflows/rangeaccrualcouponpricer.hpp>
+#include <qle/cashflows/zerofixedcoupon.hpp>
+
+using QuantLib::AverageBMACoupon;
+using QuantExt::BRLCdiCouponPricer;
 using QuantExt::OvernightIndexedCouponBase;
 using QuantExt::AverageONIndexedCoupon;
 using QuantExt::AverageONIndexedCouponPricer;
@@ -33,8 +45,234 @@ using QuantExt::BlackOvernightIndexedCouponPricer;
 using QuantExt::CapFlooredAverageONIndexedCouponPricer;
 using QuantExt::BlackAverageONIndexedCouponPricer;
 using QuantExt::AverageONLeg;
+using QuantExt::CappedFlooredAverageBMACoupon;
+using QuantExt::CapFlooredAverageBMACouponPricer;
+using QuantExt::BlackAverageBMACouponPricer;
+using QuantExt::CmbCoupon;
+using QuantExt::CmbCouponPricer;
+using QuantExt::IborFraCoupon;
+using QuantExt::InterpolatedIborCoupon;
+using QuantExt::InterpolatedIborCouponPricer;
+using QuantExt::BlackInterpolatedIborCouponPricer;
+using QuantExt::RangeAccrualPricerByCallSpread;
+using QuantExt::ZeroFixedCoupon;
 using namespace std;
 %}
+
+%shared_ptr(QuantExt::InterpolatedIborCoupon)
+namespace QuantExt {
+// Use unqualified FloatingRateCoupon so SWIG establishes the Python
+// inheritance chain (QuantLib::FloatingRateCoupon breaks it).
+class InterpolatedIborCoupon : public FloatingRateCoupon {
+    #if !defined(SWIGJAVA) && !defined(SWIGCSHARP)
+    %feature("kwargs") InterpolatedIborCoupon;
+    #endif
+  public:
+    InterpolatedIborCoupon(
+        const QuantLib::Date& paymentDate,
+        const QuantLib::Real nominal,
+        const QuantLib::Date& accrualStart,
+        const QuantLib::Date& accrualEnd,
+        const QuantLib::Size fixingDays,
+        const ext::shared_ptr<QuantExt::InterpolatedIborIndex>& index,
+        QuantLib::Real gearing = 1.0,
+        QuantLib::Real spread = 0.0,
+        const QuantLib::Date& refPeriodStart = QuantLib::Date(),
+        const QuantLib::Date& refPeriodEnd = QuantLib::Date(),
+        const QuantLib::DayCounter& dayCounter = QuantLib::DayCounter(),
+        bool isInArrears = false,
+        const QuantLib::Date& exCouponDate = QuantLib::Date(),
+        const ext::shared_ptr<QuantLib::IborIndex>& iborIndex =
+            nullptr);
+
+    ext::shared_ptr<QuantExt::InterpolatedIborIndex>
+    interpolatedIborIndex() const;
+    const ext::shared_ptr<QuantLib::IborIndex>& iborIndex() const;
+
+    // Explicitly re-declare key FloatingRateCoupon methods so they are
+    // available in Python even in SWIG versions that miss the inheritance.
+    void setPricer(const ext::shared_ptr<FloatingRateCouponPricer>& p);
+    QuantLib::Rate rate() const;
+    QuantLib::Real amount() const;
+    QuantLib::Real nominal() const;
+};
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::InterpolatedIborCouponPricer)
+namespace QuantExt {
+// InterpolatedIborCouponPricer is abstract, but its public constructor and
+// inspectors are part of the wrapped API. Declare the inherited pure virtual
+// interface so SWIG does not generate an invalid direct instantiation.
+class InterpolatedIborCouponPricer : public FloatingRateCouponPricer {
+  public:
+    explicit InterpolatedIborCouponPricer(
+        const QuantLib::Handle<QuantLib::OptionletVolatilityStructure>& v =
+            QuantLib::Handle<QuantLib::OptionletVolatilityStructure>(),
+        QuantLib::ext::optional<bool> useIndexedCoupon =
+            QuantLib::ext::nullopt);
+
+    virtual QuantLib::Real swapletPrice() const = 0;
+    virtual QuantLib::Rate swapletRate() const = 0;
+    virtual QuantLib::Real capletPrice(QuantLib::Rate effectiveCap) const = 0;
+    virtual QuantLib::Rate capletRate(QuantLib::Rate effectiveCap) const = 0;
+    virtual QuantLib::Real floorletPrice(QuantLib::Rate effectiveFloor) const = 0;
+    virtual QuantLib::Rate floorletRate(QuantLib::Rate effectiveFloor) const = 0;
+
+    bool useIndexedCoupon() const;
+    QuantLib::Handle<QuantLib::OptionletVolatilityStructure> capletVolatility() const;
+    void setCapletVolatility(
+        const QuantLib::Handle<QuantLib::OptionletVolatilityStructure>& v =
+            QuantLib::Handle<QuantLib::OptionletVolatilityStructure>());
+};
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::BlackInterpolatedIborCouponPricer)
+namespace QuantExt {
+class BlackInterpolatedIborCouponPricer : public InterpolatedIborCouponPricer {
+    #if !defined(SWIGJAVA) && !defined(SWIGCSHARP)
+    %feature("kwargs") BlackInterpolatedIborCouponPricer;
+    #endif
+  public:
+    enum TimingAdjustment { Black76, BivariateLognormal };
+    BlackInterpolatedIborCouponPricer(
+        const QuantLib::Handle<QuantLib::OptionletVolatilityStructure>& v =
+            QuantLib::Handle<QuantLib::OptionletVolatilityStructure>(),
+        const TimingAdjustment timingAdjustment = Black76,
+        const QuantLib::Handle<QuantLib::Quote> correlation =
+            QuantLib::Handle<QuantLib::Quote>(
+                ext::shared_ptr<QuantLib::Quote>(
+                    new QuantLib::SimpleQuote(1.0))),
+        QuantLib::ext::optional<bool> useIndexedCoupon =
+            QuantLib::ext::nullopt);
+};
+} // namespace QuantExt
+
+%shared_ptr(QuantExt::IborFraCoupon)
+namespace QuantExt {
+// Use unqualified IborCoupon so SWIG establishes the Python inheritance chain.
+class IborFraCoupon : public IborCoupon {
+  public:
+    IborFraCoupon(
+        const QuantLib::Date& startDate,
+        const QuantLib::Date& endDate,
+        QuantLib::Real nominal,
+        const ext::shared_ptr<QuantLib::IborIndex>& index,
+        double strikeRate);
+
+    QuantLib::Real amount() const;
+};
+} // namespace QuantExt
+
+%shared_ptr(AverageBMACoupon)
+class AverageBMACoupon : public FloatingRateCoupon {
+  public:
+    AverageBMACoupon(
+        const Date& paymentDate,
+        Real nominal,
+        const Date& startDate,
+        const Date& endDate,
+        const ext::shared_ptr<BMAIndex>& index,
+        Real gearing = 1.0,
+        Spread spread = 0.0,
+        const Date& refPeriodStart = Date(),
+        const Date& refPeriodEnd = Date(),
+        const DayCounter& dayCounter = DayCounter());
+
+    Date fixingDate() const;
+    std::vector<Date> fixingDates() const;
+    std::vector<Rate> indexFixings() const;
+};
+
+%shared_ptr(CappedFlooredAverageBMACoupon)
+class CappedFlooredAverageBMACoupon : public FloatingRateCoupon {
+  public:
+    CappedFlooredAverageBMACoupon(
+        const ext::shared_ptr<AverageBMACoupon>& underlying,
+        Real cap = Null<Real>(),
+        Real floor = Null<Real>(),
+        bool nakedOption = false,
+        bool includeSpread = false);
+
+    Rate cap() const;
+    Rate floor() const;
+    Rate effectiveCap() const;
+    Rate effectiveFloor() const;
+    Real effectiveCapletVolatility() const;
+    Real effectiveFloorletVolatility() const;
+    Real strippedCapletVolatility() const;
+    Real strippedFloorletVolatility() const;
+    bool isCapped() const;
+    bool isFloored() const;
+    ext::shared_ptr<AverageBMACoupon> underlying() const;
+    bool nakedOption() const;
+    bool includeSpread() const;
+};
+
+%shared_ptr(CapFlooredAverageBMACouponPricer)
+%nodefaultctor CapFlooredAverageBMACouponPricer;
+class CapFlooredAverageBMACouponPricer : public FloatingRateCouponPricer {
+  public:
+    Handle<OptionletVolatilityStructure> capletVolatility() const;
+    Real effectiveCapletVolatility() const;
+    Real effectiveFloorletVolatility() const;
+    Real strippedCapletVolatility() const;
+    Real strippedFloorletVolatility() const;
+};
+
+%shared_ptr(BlackAverageBMACouponPricer)
+class BlackAverageBMACouponPricer : public CapFlooredAverageBMACouponPricer {
+  public:
+    BlackAverageBMACouponPricer(
+        const Handle<OptionletVolatilityStructure>& v);
+};
+
+%shared_ptr(CmbCoupon)
+class CmbCoupon : public FloatingRateCoupon {
+  public:
+    CmbCoupon(
+        const Date& paymentDate,
+        Real nominal,
+        const Date& startDate,
+        const Date& endDate,
+        Natural fixingDays,
+        const ext::shared_ptr<ConstantMaturityBondIndex>& index,
+        Real gearing = 1.0,
+        Spread spread = 0.0,
+        const Date& refPeriodStart = Date(),
+        const Date& refPeriodEnd = Date(),
+        const DayCounter& dayCounter = DayCounter(),
+        bool isInArrears = false,
+        const Date& exCouponDate = Date());
+
+    const ext::shared_ptr<ConstantMaturityBondIndex>& bondIndex() const;
+};
+
+%shared_ptr(CmbCouponPricer)
+class CmbCouponPricer : public FloatingRateCouponPricer {
+  public:
+    CmbCouponPricer();
+};
+
+%shared_ptr(ZeroFixedCoupon)
+class ZeroFixedCoupon : public Coupon {
+  public:
+    ZeroFixedCoupon(
+        const Date& paymentDate,
+        double notional,
+        double rate,
+        const DayCounter& dc,
+        const std::vector<Date>& dates,
+        const Compounding& comp,
+        bool subtractNotional);
+
+    Real amount() const;
+    Real nominal() const;
+    Real rate() const;
+    DayCounter dayCounter() const;
+    Real accruedAmount(const Date& accrualEnd) const;
+    Compounding compounding() const;
+    bool subtractNotional() const;
+};
 
 %shared_ptr(OvernightIndexedCouponBase)
 class OvernightIndexedCouponBase : public FloatingRateCoupon {
@@ -54,7 +292,7 @@ class OvernightIndexedCouponBase : public FloatingRateCoupon {
     const QuantLib::Date& rateComputationEndDate() const;
     bool observationShift() const;
     bool hasLookback() const;
-    const QuantLib::ext::shared_ptr<QuantLib::OvernightIndex>& overnightIndex() const;
+    const ext::shared_ptr<QuantLib::OvernightIndex>& overnightIndex() const;
     bool canApplyTelescopic() const;
     bool telescopicDates() const;
     bool separateRateCompPeriod() const;
@@ -144,6 +382,23 @@ class CapFlooredAverageONIndexedCouponPricer : public FloatingRateCouponPricer {
 class BlackAverageONIndexedCouponPricer : public CapFlooredAverageONIndexedCouponPricer {
   public:
     BlackAverageONIndexedCouponPricer(const Handle<OptionletVolatilityStructure>& v);
+};
+
+// QuantExt::BRLCdiCouponPricer - default-constructible FloatingRateCouponPricer
+// for BRL CDI overnight coupons
+%shared_ptr(BRLCdiCouponPricer)
+class BRLCdiCouponPricer : public FloatingRateCouponPricer {
+  public:
+    BRLCdiCouponPricer();
+};
+
+// QuantExt::RangeAccrualPricerByCallSpread - call-spread digital replication
+// on optionlet vols
+%shared_ptr(RangeAccrualPricerByCallSpread)
+class RangeAccrualPricerByCallSpread : public RangeAccrualPricer {
+  public:
+    RangeAccrualPricerByCallSpread(const Handle<OptionletVolatilityStructure>& ovs,
+                                   Real eps = 1.0e-4);
 };
 
 %shared_ptr(QuantExt::OvernightIndexedCoupon)

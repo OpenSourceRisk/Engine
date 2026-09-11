@@ -34,6 +34,8 @@
 namespace ore {
 namespace analytics {
 
+void XvaStressVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) { }
+
 void XvaStressAnalyticImpl::writeCubes(const std::string& label,
                                        const QuantLib::ext::shared_ptr<Analytic>& xvaAnalytic) {
     if (!inputs_->xvaStressWriteCubes() || xvaAnalytic == nullptr) {
@@ -68,7 +70,7 @@ void XvaStressAnalyticImpl::writeCubes(const std::string& label,
 
 XvaStressAnalyticImpl::XvaStressAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
                                              const QuantLib::ext::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios)
-    : Analytic::Impl(inputs), stressScenarios_(scenarios.value_or(inputs->xvaStressScenarioData())) {
+    : Analytic::Impl(inputs, QuantLib::ext::make_shared<XvaStressVariables>()), stressScenarios_(scenarios.value_or(inputs->xvaStressScenarioData())) {
     setLabel(LABEL);
 }
 
@@ -162,7 +164,6 @@ void XvaStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_ptr<Stress
 
     std::map<std::string, std::vector<QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>> xvaReports;
     auto xvaAnalytic = dependentAnalytic<XvaAnalytic>("XVA");
-    auto xvaImpl = static_cast<XvaAnalyticImpl*>(xvaAnalytic->impl().get());
     for (size_t i = 0; i < scenarioGenerator->samples(); ++i) {
         auto scenario = scenarioGenerator->next(inputs_->asof());
         const std::string& label = scenario != nullptr ? scenario->label() : std::string();
@@ -170,8 +171,7 @@ void XvaStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_ptr<Stress
             xvaAnalytic->reset();
             DLOG("Calculate XVA for scenario " << label);
             CONSOLE("XVA_STRESS: Apply scenario " << label);
-            xvaImpl->setOffsetScenario(scenario);
-            xvaImpl->setOffsetSimMarketParams(analytic()->configurations().simMarketParams);
+            xvaAnalytic->setOffsetScenario(scenario, analytic()->configurations().simMarketParams);
 
             CONSOLE("XVA_STRESS: Calculate Exposure and XVA");
             xvaAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});

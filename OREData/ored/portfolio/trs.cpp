@@ -27,6 +27,7 @@
 
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
+#include <ored/portfolio/utilities.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
 
@@ -75,6 +76,12 @@ void TRS::ReturnData::fromXML(XMLNode* node) {
         payUnderlyingCashFlowsImmediately_ = parseBool(XMLUtils::getNodeValue(n));
     }
     fxTerms_ = XMLUtils::getChildrenValues(node, "FXTerms", "FXIndex", false);
+
+    if (auto tmp = XMLUtils::getChildNode(node, "PaymentLagUnit"))
+        paymentLagUnit_ = parseDateDeltaUnit(XMLUtils::getNodeValue(tmp));
+
+    if (auto tmp = XMLUtils::getChildNode(node, "PaymentLagAnchor"))
+        paymentLagAnchor_ = parseDateDeltaAnchor(XMLUtils::getNodeValue(tmp));
 }
 
 XMLNode* TRS::ReturnData::toXML(XMLDocument& doc) const {
@@ -107,6 +114,10 @@ XMLNode* TRS::ReturnData::toXML(XMLDocument& doc) const {
     if (fxConversion_.has_value()) {
         XMLUtils::addChild(doc, n, "FXConversion", ore::data::to_string(fxConversion_.value()));
     }
+    if (paymentLagUnit_)
+        XMLUtils::addChild(doc, n, "PaymentLagUnit", to_string(*paymentLagUnit_));
+    if (paymentLagAnchor_)
+        XMLUtils::addChild(doc, n, "PaymentLagAnchor", to_string(*paymentLagAnchor_));
     return n;
 }
 
@@ -209,6 +220,8 @@ void TRS::fromXML(XMLNode* node) {
         QL_REQUIRE(portfolioId_ != "", "BasketName must not be empty.");
         portfolioDeriv_ = true;
         indexQuantity_ = XMLUtils::getChildValueAsDouble(underlyingTradeNodes3, "IndexQuantity", false, 1);
+        if (auto n = XMLUtils::getChildNode(underlyingTradeNodes3, "PriceIsPerUnit"))
+            pricePerIndexUnit_ = parseBool(XMLUtils::getNodeValue(n));
     }
     QL_REQUIRE(!underlyingTradeNodes.empty() || !underlyingSubTradeNodes.empty() || !underlyingTradeNodes2.empty() ||
                    !portfolioId_.empty(),
@@ -306,13 +319,22 @@ XMLNode* TRS::toXML(XMLDocument& doc) const {
     XMLNode* underlyingDataNode = doc.allocNode("UnderlyingData");
     XMLUtils::appendNode(dataNode, underlyingDataNode);
 
-    for (Size i = 0; i < underlying_.size(); ++i) {
-        if (underlyingDerivativeId_[i].empty()) {
-            XMLUtils::appendNode(underlyingDataNode, underlying_[i]->toXML(doc));
-        } else {
-            auto d = XMLUtils::addChild(doc, underlyingDataNode, "Derivative");
-            XMLUtils::addChild(doc, d, "Id", underlyingDerivativeId_[i]);
-            XMLUtils::appendNode(d, underlying_[i]->toXML(doc));
+    if (!portfolioId_.empty() && portfolioDeriv_) {
+        XMLNode* pitdNode = doc.allocNode("PortfolioIndexTradeData");
+        XMLUtils::addChild(doc, pitdNode, "BasketName", portfolioId_);
+        XMLUtils::addChild(doc, pitdNode, "IndexQuantity", indexQuantity_);
+        if (pricePerIndexUnit_)
+            XMLUtils::addChild(doc, pitdNode, "PriceIsPerUnit", *pricePerIndexUnit_);
+        XMLUtils::appendNode(underlyingDataNode, pitdNode);
+    } else {
+        for (Size i = 0; i < underlying_.size(); ++i) {
+            if (underlyingDerivativeId_[i].empty()) {
+                XMLUtils::appendNode(underlyingDataNode, underlying_[i]->toXML(doc));
+            } else {
+                auto d = XMLUtils::addChild(doc, underlyingDataNode, "Derivative");
+                XMLUtils::addChild(doc, d, "Id", underlyingDerivativeId_[i]);
+                XMLUtils::appendNode(d, underlying_[i]->toXML(doc));
+            }
         }
     }
 
@@ -356,24 +378,18 @@ TRS::getFxIndex(const QuantLib::ext::shared_ptr<Market> market, const std::strin
     return fx;
 }
 
-/*TRS::FXConversion TRS::ReturnData::parseFXConversion(string fxConv_) { return  (fxConv_ == "Start" ? FXConversion::Start
-                                                                                               : FXConversion::End);
-}*/
+void TRS::reset() {
+    creditRiskCurrency_.clear();
+    creditQualifierMapping_.clear();
+    Trade::reset();
+}
 
 void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("TRS::build() called for id = " << id());
-
-    // clear trade members
-
-    reset();
-
-    creditRiskCurrency_.clear();
-    creditQualifierMapping_.clear();
     notionalCurrency_ = returnData_.currency();
 
     // checks
-
     std::set<bool> fundingLegPayers;
     std::set<std::string> fundingCurrencies;
 
@@ -391,20 +407,34 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE(fundingCurrencies.size() <= 1, "funding leg currencies must match");
     QuantLib::Real portfolioInitialPrice = Null<Real>();
 
+    Real quantityForWrapper = 1;
     if (!portfolioId_.empty() && portfolioDeriv_) {
         populateFromReferenceData(engineFactory->referenceData());
         std::string indexName = "GENERIC-" + portfolioId_;
-        RequiredFixings portfolioFixing;
-        QuantLib::Schedule schedule = makeSchedule(returnData_.scheduleData());
-        Date date = schedule.dates().at(0);
-        portfolioFixing.addFixingDate(date, indexName);
-        requiredFixings_.addData(portfolioFixing);
         IndexNameTranslator::instance().add(indexName, indexName);
         auto underlyingIndex = QuantLib::ext::make_shared<QuantExt::GenericIndex>(indexName);
-        // The try-catch is used to avoid a failure as we load the data (i.e fixings) at the second run after portfolio construction.
-        try {
-            portfolioInitialPrice = underlyingIndex->fixing(date);
-        } catch (...) { }                
+
+        // Only create the return schedule and add a fixing date for its first date if no initial price is provided.
+        // Note: if pricing date is beyond the first valuation schedule period we will not need an initial price or a 
+        //       fixing at the initial valuation date i.e. portfolioInitialPrice below but we look it up anyway.
+        if (returnData_.initialPrice() == Null<Real>()) {
+            RequiredFixings portfolioFixing;
+            QuantLib::Schedule schedule = makeSchedule(returnData_.scheduleData());
+            Date date = schedule.dates().at(0);
+            portfolioFixing.addFixingDate(date, indexName);
+            requiredFixings_.addData(portfolioFixing);
+
+            // The try-catch is used to avoid a failure as we load the data (i.e fixings) at the second run 
+            // after portfolio construction.
+            try {
+                portfolioInitialPrice = underlyingIndex->fixing(date);
+            } catch (...) {}
+        }
+
+        if (pricePerIndexUnit_.value_or(false))
+            quantityForWrapper = indexQuantity_;
+        // Make the portfolio ID available in the TRS trade additional data.
+        additionalData_["IndexName"] = portfolioId_;
     }
 
     // a builder might update the underlying (e.g. promote it from bond to convertible bond)
@@ -449,37 +479,41 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("build valuation and payment dates vectors");
 
-    std::vector<Date> valuationDates, paymentDates;
-
+    // Return base schedule.
     QuantLib::Schedule schedule = makeSchedule(returnData_.scheduleData());
-    QL_REQUIRE(schedule.dates().size() >= 2, "at least two dates required in return schedule");
+    const auto& scheduleDates = schedule.dates();
+    QL_REQUIRE(scheduleDates.size() >= 2, "at least two dates required in return schedule");
 
+    // Valuation dates.
     Calendar observationCalendar = parseCalendar(returnData_.observationCalendar());
-    BusinessDayConvention observationConvention = returnData_.observationConvention().empty()
-                                                      ? Unadjusted
-                                                      : parseBusinessDayConvention(returnData_.observationConvention());
-    Period observationLag = returnData_.observationLag().empty() ? 0 * Days : parsePeriod(returnData_.observationLag());
-
-    Calendar paymentCalendar = parseCalendar(returnData_.paymentCalendar());
-    BusinessDayConvention paymentConvention = returnData_.paymentConvention().empty()
-                                                  ? Unadjusted
-                                                  : parseBusinessDayConvention(returnData_.paymentConvention());
-    PaymentLag paymentLag = parsePaymentLag(returnData_.paymentLag());
-    Period plPeriod = boost::apply_visitor(PaymentLagPeriod(), paymentLag);
-
-    for (auto const& d : schedule.dates()) {
+    const string& obsConv = returnData_.observationConvention();
+    BusinessDayConvention observationConvention = obsConv.empty() ? Unadjusted : parseBusinessDayConvention(obsConv);
+    const string& obsLag = returnData_.observationLag();
+    Period observationLag = obsLag.empty() ? 0 * Days : parsePeriod(obsLag);
+    vector<Date> valuationDates;
+    valuationDates.reserve(scheduleDates.size());
+    for (auto const& d : scheduleDates)
         valuationDates.push_back(observationCalendar.advance(d, -observationLag, observationConvention));
-        if (d != schedule.dates().front())
-            paymentDates.push_back(paymentCalendar.advance(d, plPeriod, paymentConvention));
-    }
 
-    if (!returnData_.paymentDates().empty()) {
-        paymentDates.clear();
-        QL_REQUIRE(returnData_.paymentDates().size() + 1 == valuationDates.size(),
-                   "paymentDates size (" << returnData_.paymentDates().size() << ") does no match valuatioDates size ("
-                                         << valuationDates.size() << ") minus 1");
-        for (auto const& s : returnData_.paymentDates())
-            paymentDates.push_back(parseDate(s));
+    // Payment dates.
+    vector<Date> paymentDates;
+    const auto& pmtDtStrs = returnData_.paymentDates();
+    if (pmtDtStrs.empty()) {
+        // Create payment dates if payment dates are not provided.
+        Calendar paymentCalendar = parseCalendar(returnData_.paymentCalendar());
+        const string& pmtConv = returnData_.paymentConvention();
+        BusinessDayConvention paymentConvention = pmtConv.empty() ? Unadjusted : parseBusinessDayConvention(pmtConv);
+        PaymentLag paymentLag = parsePaymentLag(returnData_.paymentLag());
+        Period plPeriod = boost::apply_visitor(PaymentLagPeriod(), paymentLag);
+        paymentDates = createPaymentDates(returnData_.scheduleData(), schedule, paymentCalendar, paymentConvention,
+            plPeriod, returnData_.paymentLagUnit(), returnData_.paymentLagAnchor());
+    } else {
+        // Use payment dates if they are provided.
+        QL_REQUIRE(pmtDtStrs.size() + 1 == scheduleDates.size(), "TRS: return payment dates size (" <<
+            pmtDtStrs.size() << ") does not match schedule dates size (" << scheduleDates.size() << ") minus 1");
+        paymentDates.reserve(scheduleDates.size() - 1);
+        for (const auto& pmtDtStr : pmtDtStrs)
+            paymentDates.push_back(parseDate(pmtDtStr));
     }
 
     DLOG("valuation schedule:");
@@ -646,8 +680,8 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     if (initialPrice != Null<Real>()) {
         DLOG("initial price is given as " << initialPrice << " " << initialPriceCurrency);
-	initialPrice = convertMinorToMajorCurrency(initialPriceCurrency, initialPrice);
-	DLOG("initial price after conversion to major ccy " << initialPrice);
+        initialPrice = convertMinorToMajorCurrency(initialPriceCurrency, initialPrice);
+        DLOG("initial price after conversion to major ccy " << initialPrice);
     } else {
         DLOG("no initial price is given");
     }
@@ -760,8 +794,11 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
                         if (currentIdx > 0)
                             --currentIdx;
                         Date fixingDate = valuationDates[currentIdx];
-                        for (auto const& [n, _] : indexNamesAndQty)
-                            requiredFixings_.addFixingDate(fixingDate, n, cpn->date(), false, false);
+                        for (auto const& [n, _] : indexNamesAndQty) {
+                            requiredFixings_.addFixingDate(
+                                underlyingIndex[j]->fixingCalendar().adjust(fixingDate, Preceding), n, cpn->date(),
+                                false, false);
+                        }
                         for (auto const& n : fxIndices) {
                             requiredFixings_.addFixingDate(n.second->fixingCalendar().adjust(fixingDate, Preceding),
                                                            n.first, cpn->date(), false, false);
@@ -829,7 +866,8 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
         parseCurrency(returnData_.currency()), valuationDates, paymentDates, fundingLegs, fundingNotionalTypes,
         parseCurrency(fundingCurrency), fundingData_.fundingResetGracePeriod(), returnData_.payer(), fundingLegPayer,
         additionalCashflowLeg, additionalCashflowLegPayer, parseCurrency(additionalCashflowLegCurrency), fxIndexAsset,
-        fxIndexReturn, fxIndexAdditionalCashflows, fxIndices, returnData_.fxConversionAtPeriodEnd());
+        fxIndexReturn, fxIndexAdditionalCashflows, fxIndices, returnData_.fxConversionAtPeriodEnd(),
+        quantityForWrapper, pricePerIndexUnit_.value_or(false));
 
     Handle<YieldTermStructure> additionalCashflowCurrencyDiscountCurve;
     if (!additionalCashflowLeg.empty()) {
@@ -876,7 +914,7 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     }
 }
 
-QuantLib::Real TRS::notional() const {
+QuantLib::Real TRS::notional(NotionalType type) const {
     // try to get the notional from the additional results of the instrument
     try {
         return instrument_->qlInstrument()->result<Real>("currentNotional");
@@ -939,8 +977,9 @@ void TRS::getTradesFromReferenceData(const QuantLib::ext::shared_ptr<PortfolioBa
     DLOG("populating portfolio basket data from reference data");
     QL_REQUIRE(ptfReferenceDatum, "populateFromReferenceData(): empty portfolio reference datum given");
 
-    auto refData = ptfReferenceDatum->getTrades();
     underlying_.clear();
+    underlyingDerivativeId_.clear();
+    auto refData = ptfReferenceDatum->getTrades();
     for (Size i = 0; i < refData.size(); i++) {
         underlyingDerivativeId_.push_back((portfolioId_));
         refData[i]->isSubTrade() = true;

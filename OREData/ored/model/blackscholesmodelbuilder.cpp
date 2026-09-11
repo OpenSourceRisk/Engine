@@ -27,9 +27,10 @@ BlackScholesModelBuilder::BlackScholesModelBuilder(
     const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
     const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
     const std::string& calibration, const std::vector<std::vector<Real>>& calibrationStrikes,
-    const Handle<YieldTermStructure>& baseCurve, const bool observeContinuum)
-    : AssetModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear, baseCurve,
-                            observeContinuum),
+    const Handle<YieldTermStructure>& baseCurve, const std::function<std::set<Real>(const TimeGrid&)>& curveTimes,
+    const std::function<std::vector<std::set<std::pair<Real, Real>>>(const TimeGrid&)>& volTimesStrikes)
+    : AssetModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear, baseCurve, false,
+                            curveTimes, volTimesStrikes),
       calibration_(calibration),
       calibrationStrikes_(calibrationStrikes.empty() ? std::vector<std::vector<Real>>(processes.size())
                                                      : calibrationStrikes) {
@@ -42,34 +43,15 @@ BlackScholesModelBuilder::BlackScholesModelBuilder(
     const Handle<YieldTermStructure>& curve, const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
     const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
     const std::string& calibration, const std::vector<Real>& calibrationStrikes,
-    const Handle<YieldTermStructure>& baseCurve, const bool observeContinuum)
-    : AssetModelBuilderBase(curve, process, simulationDates, addDates, timeStepsPerYear, baseCurve, observeContinuum),
+    const Handle<YieldTermStructure>& baseCurve, const std::function<std::set<Real>(const TimeGrid&)>& curveTimes,
+    const std::function<std::vector<std::set<std::pair<Real, Real>>>(const TimeGrid&)>& volTimesStrikes)
+    : AssetModelBuilderBase(curve, process, simulationDates, addDates, timeStepsPerYear, baseCurve, false, curveTimes,
+                            volTimesStrikes),
       calibration_(calibration), calibrationStrikes_(1, calibrationStrikes) {}
 
 std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> BlackScholesModelBuilder::getCalibratedProcesses() const {
-    // nothing to do, return original processes
-    std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> result(processes_.size());
-    std::transform(processes_.begin(), processes_.end(), result.begin(),
-                   [](const QuantLib::ext::shared_ptr<StochasticProcess>& p) { return p; });
-    return result;
-}
 
-std::vector<std::vector<Real>> BlackScholesModelBuilder::getCurveTimes() const {
-    std::vector<Real> timesExt(discretisationTimeGrid_.begin() + 1, discretisationTimeGrid_.end());
-    for (auto const& d : addDates_) {
-        if (d > curves_.front()->referenceDate()) {
-            timesExt.push_back(curves_.front()->timeFromReference(d));
-        }
-    }
-    std::sort(timesExt.begin(), timesExt.end());
-    auto it = std::unique(timesExt.begin(), timesExt.end(),
-                          [](const Real x, const Real y) { return QuantLib::close_enough(x, y); });
-    timesExt.resize(std::distance(timesExt.begin(), it));
-    return std::vector<std::vector<Real>>(allCurves_.size(), timesExt);
-}
-
-std::vector<std::vector<std::pair<Real, Real>>> BlackScholesModelBuilder::getVolTimesStrikes() const {
-    std::vector<std::vector<std::pair<Real, Real>>> volTimesStrikes;
+    // populate curveTimes, volTimesStrikes for notification filtering
     for (Size i = 0; i < processes_.size(); ++i) {
         Real strike;
         if (calibration_ == "ATM") {
@@ -79,12 +61,16 @@ std::vector<std::vector<std::pair<Real, Real>>> BlackScholesModelBuilder::getVol
         } else {
             QL_FAIL("BlackScholesModelBuilder: calibration '" << calibration_ << "' not known, expected ATM or Deal");
         }
-        volTimesStrikes.push_back(std::vector<std::pair<Real, Real>>());
         for (Size j = 1; j < discretisationTimeGrid_.size(); ++j) {
-            volTimesStrikes.back().push_back(std::make_pair(discretisationTimeGrid_[j], strike));
+            volTimesStrikes_[i].insert(std::make_pair(discretisationTimeGrid_[j], strike));
         }
     }
-    return volTimesStrikes;
+
+    // nothing to do, return original processes
+    std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> result(processes_.size());
+    std::transform(processes_.begin(), processes_.end(), result.begin(),
+                   [](const QuantLib::ext::shared_ptr<StochasticProcess>& p) { return p; });
+    return result;
 }
 
 AssetModelWrapper::ProcessType BlackScholesModelBuilder::processType() const {

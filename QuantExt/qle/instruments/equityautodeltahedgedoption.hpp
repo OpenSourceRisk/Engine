@@ -40,6 +40,7 @@ struct UnderlyingOptionBatch {
     Real premium;
     Currency premiumCurrency;
     Date expiryDate;
+    Date paymentDate; //!< Cash settlement payment date (if empty, defaults to expiryDate)
 };
 
 //! Equity Auto Delta Hedged Option instrument

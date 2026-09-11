@@ -24,6 +24,8 @@ Try the Python examples
 - Re-run the Swap exposure of the first Exposure example: <code> python ore.py </code>
 - Show how to access and post-process ORE in-memory results without reading files: <code> python ore2.py </code>
 - Demonstrate lower-level access to the QuantLib and QuantExt libraries: <code> python commodityforward.py </code>
+- PnL SWIG API showcase notebook: <code> Notebooks/Example_11/ore.ipynb </code>
+- Historical simulation VaR SWIG workflow notebook: <code> Notebooks/Example_12/ore.ipynb </code>
 - Then try any of the Jupyter notebooks, in directories ORE-Python/Notebooks/Example_*;
   install juypter: <code> python -m pip install jupyterlab </code>
   start juypter: <code> python -m jupyterlab & </code>

@@ -1,3 +1,60 @@
+Changes for the 17th ORE release:
+=================================
+
+ORE v17 includes the following notable changes (May 2026 to July 2026)
+
+Important note: ORE v17 contains a breaking change for rate curve building: Overnight index futures are specified by
+their contract month, see the market data section in the user guide for details.
+
+Analytics:
+
+- add date shifts in stress scenario calculations, refactor theta calculation
+- add sensitivity based histsim var
+- support averaging coupons for single currency synthetic swaps in par conversion
+- add money market and overnight ir futures in par conversion
+- support multithreading in stress analytic
+- improve performance of regression analysis in AMC-CG framework
+- fix dim scaling when initial collateral balance has zero initial margin
+- add stressed SIMM analytic
+- add path-level additional results report for scripted trades
+- support for SIMM 2.8+2512
+- support cuda-based variant of qrSolve() for AMC training
+- fix sticky moneyness sensitivity for ir caps
+- fix sticky moneyness sensitivity for comm options
+
+Instrument Coverage and Pricing:
+
+- add callable variant of range accrual instrument and pricer
+- support xva calculations for RPA on vanilla and structured underlyings
+- complete coverage of AMC for scripted trades
+- add fixed strike forward volatility agreement
+- add overnight compounded rate rounding
+- add payment lag unit and anchor to leg data and derived schedule definitions
+- add option on bond future
+- add call-spread based pricing for fx digital options
+- add calibration to effective swaptions for RPA pricing on structured underlyings
+
+Market Data:
+
+- breaking change: overnight index future market datum label to use contract month
+- support contract month codes in money market and overnight interest rate futures
+- add market calibration report for default curves
+- update ILS calendar
+- support intraday power curves
+- add logCubic interpolation in scenario sim market
+
+Interfaces and Reports:
+
+- extend SWIG coverage
+- add base currency to scenario and stress test reports
+- add stacktrace for exceptions (only Linux, OSX)
+- add optional filter for scenario dump output file
+
+Misc:
+
+- various bug fixes
+
+
 Changes for the 16th ORE release:
 =================================
 

@@ -42,6 +42,8 @@ wip An example pricing engine configuration looks as follows.
       <Parameter name="SalvagingAlgorithm">Spectral</Parameter>
       <Parameter name="IndicatorSmoothingForValues">0.0</Parameter>
       <Parameter name="IndicatorSmoothingForDerivatives">0.0</Parameter>
+      <Parameter name="AdditionalResultsPathLevel">false</Parameter>
+      <Parameter name="EnableCgOptimization">false</Parameter>
       <Parameter name="ZeroVolatility">false</Parameter>
       <!-- MC parameter -->
       <Parameter name="Seed">42</Parameter>
@@ -84,7 +86,6 @@ wip An example pricing engine configuration looks as follows.
       <Parameter name="Heston.ProcessDiscretization">QuadraticExponential</Parameter>
       <Parameter name="Heston.QuantoProcessDiscretization">FullTruncation</Parameter>
       <Parameter name="Heston.QuantoTimeStepsPerYear">100</Parameter>
-      <Parameter name="Heston.Debug">true</Parameter>
     </EngineParameters>
   </Product>
 \end{minted}
@@ -147,9 +148,8 @@ The engine parameters have the following meaning:
 \item MesherMaxConcentrationPoints [Optional]: The maximum number of mesher concentration points to use, optional,
   defaults to 9999, in which all calibration strikes from a script are used. For 1 only the first strike from the list
   is used, for 2 the first two strikes, etc.
-\item MesherIsStatic [Optional]: If true, the mesher is built only once and reused under scenario / sensitivity
-  computations. If false, the mesher is rebuilt for each repricing. Optional, defaults to false. For sensitivity runs it
-  should be set to true. Defaults to false.
+\item MesherIsStatic [Optional]: If true, the mesher is built only once and reused under scenario computations, but only
+  for sensitivity runs. If false, the mesher is rebuilt for each repricing. Optional, defaults to false.
 \item RegressionOrder: The order of the polynomial basis to compute conditional expectations via regression
   analysis. Applies to MC only.
 \item SequenceType [Optional]: The sequence type used for pricing. Defaults to SobolBrownianBridge. Possible values
@@ -204,11 +204,13 @@ The engine parameters have the following meaning:
 \item ExternalComputeDevice [Optional]: The external compute device to use if UseExternalComputingDevice is effective.
 \item SalvagingAlgorithm [Optional]: If the correlation matrix is not positive semi definite, an approximation of the
   pseudo square root using asalvaging algorithm can be used.The SalvagingAlgorithm tag chooses this algorithm with the
-  following allowable values: None, Spectral, Hypersphere, LowerDiagonal or Highham. Defaults to Spectral.
+  following allowable values: None, Spectral, Hypersphere, LowerDiagonal, Highham, Principal. Defaults to Spectral.
 \item IndicatorSmoothingForValues [Optional]: smoothing parameter (according to Fries methodology, 2017, ``epsilon'')
   applied to indicator functions in cg-based runs for values calculation. Defaults to $0$.
 \item IndicatorSmoothingForDerivatives: as above, smoothing parameter for derivatives calculation. Defaults to $0.2$.
 \item SqrtSmoothingForDerivatives: as above, smoothing parameter for sqrt derivative calculation. Defaults to $1E-8$.
+\item AdditionalResultsPathLevel: if true, generate additional results on path level
+\item EnableCgOptimization: if true, optimization of cg is enabled
 \item ZeroVolatility [Optional]: enforce zero volatility in model SDEs, default is false
 \item Heston-specific parameters [Optional]:
   \begin{itemize}
@@ -263,10 +265,6 @@ The engine parameters have the following meaning:
     at least one that needs a quanto adjustment, i.e. the HestonQuantoProcessDiscretization might need a finer grid than
     Heston.ProcessDiscretization \\
     Default: Use the value of TimeStepsPerYear above, if missing
-  \item Heston.Debug [Optional]: If set to true or Y, we generate a report (assetmodel\_paths.csv) that contains the spot price realisations
-    across all indices, effective simulation dates and MC samples for each trade; moreover we perform additional consistency
-    checks during Heston path generation. \\
-    Default: false
   \end{itemize}
 \end{itemize}
 
@@ -292,18 +290,18 @@ meant to mark scripts that are suitable for AAD sensitivity computations.
   \scriptsize
   \begin{tabular}{l | l | l | l}
     Product Tag & Examples & Suitable Models & Suitable Engines \\ \hline
-    \verb+SingleAssetOption({AssetClass})+ & FX TaRF & BS, LV, GCAM & MC \\
-    \verb+SingleAssetOptionAD({AssetClass})+ & FX TaRF & BS, LV, GCAM & MC \\
-    \verb+SingleAssetOptionBwd({AssetClass})+ & EQ American Option & BS, LV, GCAM & MC, FD \\
-    \verb+MultiAssetOption({AssetClass})+ & EQ Autocallable & BS, LV, GCAM & MC \\
-    \verb+MultiAssetOptionAD({AssetClass})+ & EQ Autocallable & BS, LV, GCAM & MC \\
+    \verb+SingleAssetOption({AssetClass})+ & FX TaRF & BS, LV, GCAM, H & MC \\
+    \verb+SingleAssetOptionAD({AssetClass})+ & FX TaRF & BS, LV, GCAM, H & MC \\
+    \verb+SingleAssetOptionBwd({AssetClass})+ & EQ American Option & BS, LV, GCAM, H & MC, FD \\
+    \verb+MultiAssetOption({AssetClass})+ & EQ Autocallable & BS, LV, GCAM, H & MC \\
+    \verb+MultiAssetOptionAD({AssetClass})+ & EQ Autocallable & BS, LV, GCAM, H & MC \\
     \verb+SingleUnderlyingIrOption+ & IR TaRN & LGM1F & MC \\
     \verb+SingleUnderlyingIrOptionBwd+ & Bermudan swaption & LGM1F & MC, FD, Conv \\
     \verb+MultiUnderlyingIrOption+ & Cross currency swaption & GCAM & MC \\
     \verb+IrHybrid({AssetClass})+ & IR-EQ basket option & GCAM & MC \\
   \end{tabular}
   \caption{Grouping trades by product tag (Example), models are abbreviated as\\ BS = BlackScholes, LV = LocalVol, GCAM =
-    GaussianCrossAsset}
+    GaussianCrossAsset, H = Heston}
   \label{tab:producttag}
 \end{table}
 

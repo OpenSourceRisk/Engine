@@ -22,6 +22,7 @@
 
 #include <ored/utilities/calendarparser.hpp>
 
+#include <ql/settings.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <qle/calendars/amendedcalendar.hpp>
 #include <qle/calendars/austria.hpp>
@@ -34,7 +35,6 @@
 #include <qle/calendars/ice.hpp>
 #include <qle/calendars/ireland.hpp>
 #include <qle/calendars/islamicweekendsonly.hpp>
-#include <qle/calendars/israel.hpp>
 #include <qle/calendars/luxembourg.hpp>
 #include <qle/calendars/malaysia.hpp>
 #include <qle/calendars/mauritius.hpp>
@@ -58,6 +58,7 @@ using namespace QuantExt;
 CalendarParser::CalendarParser() { reset(); }
 
 QuantLib::Calendar CalendarParser::parseCalendar(const std::string& name) const {
+
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     auto it = calendars_.find(name);
     if (it != calendars_.end())
@@ -338,17 +339,17 @@ void CalendarParser::reset() {
         {"MUR", AmendedCalendar(Mauritius(), "MUR")},
         {"MUS", AmendedCalendar(Mauritius(), "MUR")},
         // fallback to WeekendsOnly for these emerging ccys
-        {"BHD", AmendedCalendar(WeekendsOnly(), "BHD")},
+        {"BHD", AmendedCalendar(IslamicWeekendsOnly(), "BHD")},
         {"CLF", AmendedCalendar(WeekendsOnly(), "CLF")},
-        {"EGP", AmendedCalendar(WeekendsOnly(), "EGP")},
-        {"KWD", AmendedCalendar(WeekendsOnly(), "KWD")},
+        {"EGP", AmendedCalendar(IslamicWeekendsOnly(), "EGP")},
+        {"KWD", AmendedCalendar(IslamicWeekendsOnly(), "KWD")},
         {"KZT", AmendedCalendar(WeekendsOnly(), "KZT")},
         {"MAD", AmendedCalendar(WeekendsOnly(), "MAD")},
         {"MXV", AmendedCalendar(WeekendsOnly(), "MXV")},
         {"NGN", AmendedCalendar(WeekendsOnly(), "MGN")},
-        {"OMR", AmendedCalendar(WeekendsOnly(), "OMR")},
+        {"OMR", AmendedCalendar(IslamicWeekendsOnly(), "OMR")},
         {"PKR", AmendedCalendar(WeekendsOnly(), "PKR")},
-        {"QAR", AmendedCalendar(WeekendsOnly(), "QAR")},
+        {"QAR", AmendedCalendar(IslamicWeekendsOnly(), "QAR")},
         {"UYU", AmendedCalendar(WeekendsOnly(), "UYU")},
         {"TND", AmendedCalendar(WeekendsOnly(), "TND")},
         {"VND", AmendedCalendar(WeekendsOnly(), "VND")},
@@ -359,7 +360,7 @@ void CalendarParser::reset() {
         {"GEL", AmendedCalendar(WeekendsOnly(), "GEL")},
         {"GHS", AmendedCalendar(WeekendsOnly(), "GHS")},
         {"HRK", AmendedCalendar(WeekendsOnly(), "HRK")},
-        {"JOD", AmendedCalendar(WeekendsOnly(), "JOD")},
+        {"JOD", AmendedCalendar(IslamicWeekendsOnly(), "JOD")},
         {"KES", AmendedCalendar(WeekendsOnly(), "KES")},
         {"LKR", AmendedCalendar(WeekendsOnly(), "LKR")},
         {"RSD", AmendedCalendar(WeekendsOnly(), "RSD")},
@@ -391,7 +392,7 @@ void CalendarParser::reset() {
 
         // Other / Legacy
         {"DEN", Denmark()}, // TODO: consider remove it, not ISO
-        {"Telbor", QuantExt::Israel(QuantExt::Israel::Telbor)},
+        {"Telbor", QuantLib::Israel(QuantLib::Israel::Telbor)},
         {"London stock exchange", UnitedKingdom(UnitedKingdom::Exchange)},
         {"LNB", UnitedKingdom()},
         {"New York stock exchange", UnitedStates(UnitedStates::NYSE)},

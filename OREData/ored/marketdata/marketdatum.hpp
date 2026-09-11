@@ -30,6 +30,7 @@
 #include <ored/utilities/strike.hpp>
 #include <qle/utilities/serializationdate.hpp>
 #include <qle/utilities/serializationperiod.hpp>
+#include <qle/utilities/intradaypower.hpp>
 
 #include <ql/currency.hpp>
 #include <ql/quotes/simplequote.hpp>
@@ -115,6 +116,7 @@ public:
         BOND,
         BOND_FUTURE,
         BOND_OPTION,
+        BOND_FUTURE_OPTION,
         INDEX_CDS_OPTION,
         INDEX_CDS_TRANCHE,
         COMMODITY_SPOT,
@@ -122,6 +124,7 @@ public:
         CORRELATION,
         COMMODITY_OPTION,
         COMMODITY_CALENDAR_SPREAD_OPTION,
+        SHAPE_PROFILE,
         CPR,
         RATING,
         NONE
@@ -144,6 +147,7 @@ public:
         SHIFT,
         TRANSITION_PROBABILITY,
         CONVERSION_FACTOR,
+        SHAPE_FACTOR,
         NONE
     };
 
@@ -457,22 +461,21 @@ class MMFutureQuote : public MarketDatum {
 public:
     MMFutureQuote() {}
     //! Constructor
-    MMFutureQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, string expiry,
-                  string contract = "", Period tenor = 3 * Months)
+    MMFutureQuote(Real value, const Date& asofDate, const string& name, QuoteType quoteType, const string& ccy,
+                  const string& expiry, const string& contract = "", const Period& tenor = 3 * Months)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::MM_FUTURE), ccy_(ccy), expiry_(expiry),
           contract_(contract), tenor_(tenor) {}
 
     //! Make a copy of the market datum
     QuantLib::ext::shared_ptr<MarketDatum> clone() override {
-        return QuantLib::ext::make_shared<MMFutureQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, expiry_, contract_, tenor_);
+        return QuantLib::ext::make_shared<MMFutureQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, expiry_,
+                                                         contract_, tenor_);
     }
 
     //! \name Inspectors
     //@{
     const string& ccy() const { return ccy_; }
     const string& expiry() const { return expiry_; }
-    Natural expiryYear() const;
-    Month expiryMonth() const;
     const string& contract() const { return contract_; }
     const Period& tenor() const { return tenor_; }
     //@}
@@ -500,29 +503,28 @@ class OIFutureQuote : public MarketDatum {
 public:
     OIFutureQuote() {}
     //! Constructor
-    OIFutureQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, string expiry,
-                  string contract = "", Period tenor = 3 * Months)
-        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::OI_FUTURE), ccy_(ccy), expiry_(expiry),
-          contract_(contract), tenor_(tenor) {}
-    
+    OIFutureQuote(Real value, const Date& asofDate, const string& name, QuoteType quoteType, const string& ccy,
+                  const string& contractMonth, const string& contract = "", const Period& tenor = 3 * Months)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::OI_FUTURE), ccy_(ccy),
+          contractMonth_(contractMonth), contract_(contract), tenor_(tenor) {}
+
     //! Make a copy of the market datum
     QuantLib::ext::shared_ptr<MarketDatum> clone() override {
-        return QuantLib::ext::make_shared<OIFutureQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, expiry_, contract_, tenor_);
+        return QuantLib::ext::make_shared<OIFutureQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_,
+                                                         contractMonth_, contract_, tenor_);
     }
 
     //! \name Inspectors
     //@{
     const string& ccy() const { return ccy_; }
-    const string& expiry() const { return expiry_; }
-    Natural expiryYear() const;
-    Month expiryMonth() const;
+    const string& contractMonth() const { return contractMonth_; }
     const string& contract() const { return contract_; }
     const Period& tenor() const { return tenor_; }
     //@}
 
 private:
     string ccy_;
-    string expiry_;
+    string contractMonth_;
     string contract_;
     Period tenor_;
     //! Serialization
@@ -2192,6 +2194,101 @@ private:
     template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
+
+/** Bond future option data class.
+ *  
+ *  This class holds single market points of type `BOND_FUTURE_OPTION`.
+ *  
+ *  \ingroup marketdata
+ */
+class BondFutureOptionQuote : public MarketDatum
+{
+public:
+    BondFutureOptionQuote() {}
+    BondFutureOptionQuote(QuantLib::Real value,
+        QuantLib::Date asofDate,
+        const std::string& name,
+        QuoteType quoteType,
+        std::string contractName,
+        std::string expiry,
+        QuantLib::ext::shared_ptr<BaseStrike> strike,
+        bool isCall = true);
+
+    //! Make a copy of the market datum
+    QuantLib::ext::shared_ptr<MarketDatum> clone() override
+    {
+        return QuantLib::ext::make_shared<BondFutureOptionQuote>(quote_->value(), asofDate_, name_, quoteType_,
+            contractName_, expiry_, strike_, isCall_);
+    }
+
+    //! \name Inspectors
+    //@{
+    const std::string& contractName() const { return contractName_; }
+    const std::string& expiry() const { return expiry_; }
+    const QuantLib::ext::shared_ptr<BaseStrike>& strike() const { return strike_; }
+    bool isCall() { return isCall_; }
+    //@}
+
+private:
+    std::string contractName_;
+    std::string expiry_;
+    QuantLib::ext::shared_ptr<BaseStrike> strike_;
+    bool isCall_ = true;
+
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
+};
+
+//! Intraday Power Curve Quote data class
+/*!
+This class holds single market points for intraday power curve shape profiles.
+The name format is: SHAPE_PROFILE/SHAPE_FACTOR/QuoteName/DeliveryDate/StartTimeInSec
+
+Example: SHAPE_PROFILE/SHAPE_FACTOR/PJM_WH_RT/2027-02-02/0
+
+\ingroup marketdata
+*/
+class IntradayPowerCurveQuote : public MarketDatum {
+public:
+    IntradayPowerCurveQuote() {}
+
+    //! Constructor
+    IntradayPowerCurveQuote(QuantLib::Real value, const QuantLib::Date& asofDate, const std::string& name,
+                            QuoteType quoteType, const std::string& quoteName, const QuantLib::Date& deliveryDate,
+                            QuantLib::Size startTime, QuantExt::IntradayPowerTimeUnit timeUnit, bool isDST)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::SHAPE_PROFILE), quoteName_(quoteName),
+          deliveryDate_(deliveryDate), startTimeInSec_(startTime), timeUnit_(timeUnit), isDST_(isDST) {
+        QL_REQUIRE(quoteType == QuoteType::SHAPE_FACTOR, "Quote type must be SHAPE_FACTOR for IntradayPowerCurveQuote");
+    }
+
+    //! Make a copy of the market datum
+    QuantLib::ext::shared_ptr<MarketDatum> clone() override {
+        return QuantLib::ext::make_shared<IntradayPowerCurveQuote>(quote_->value(), asofDate_, name_, quoteType_,
+                                                                   quoteName_, deliveryDate_, startTimeInSec_, timeUnit_, isDST_);
+    }
+
+    //! \name Inspectors
+    //@{
+    const std::string& quoteName() const { return quoteName_; }
+    const QuantLib::Date& deliveryDate() const { return deliveryDate_; }
+    QuantLib::Size startTimeInSec() const { return startTimeInSec_; }
+    QuantExt::IntradayPowerTimeUnit timeUnit() const { return timeUnit_; }
+    bool isDST() const { return isDST_; }
+    //@}
+
+private:
+    std::string quoteName_;
+    QuantLib::Date deliveryDate_;
+    QuantLib::Size startTimeInSec_;
+    QuantExt::IntradayPowerTimeUnit timeUnit_;
+    bool isDST_;
+
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
+};
+
 } // namespace data
 } // namespace ore
 
@@ -2241,3 +2338,5 @@ BOOST_CLASS_EXPORT_KEY(ore::data::BondPriceQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::BondFuturePriceQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::BondFutureConversionFactor);
 BOOST_CLASS_EXPORT_KEY(ore::data::TransitionProbabilityQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::BondFutureOptionQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::IntradayPowerCurveQuote);

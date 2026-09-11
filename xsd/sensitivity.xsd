@@ -8,7 +8,7 @@
       <xs:element type="xs:string" name="ParSensiRemoveFixing" minOccurs="0"/>
       <xs:element type="parConversionMatrixRegularisation" name="ParConversionMatrixRegularisation" minOccurs="0"/>
       <xs:element type="xs:boolean" name="ParConversion" minOccurs="0"/>
-      <xs:element type="discountcurves" name="DiscountCurves"/>
+      <xs:element type="discountcurves" name="DiscountCurves" minOccurs="0"/>
       <xs:element type="indexcurves" name="IndexCurves" minOccurs="0"/>
       <xs:element type="yieldcurves" name="YieldCurves" minOccurs="0"/>
       <xs:element type="fxspots" name="FxSpots" minOccurs="0"/>
@@ -28,10 +28,13 @@
       <xs:element type="basecorrelations" name="BaseCorrelations"  minOccurs="0"/>
       <xs:element type="securityspreads" name="SecuritySpreads"  minOccurs="0"/>
       <xs:element type="commodityCurves" name="CommodityCurves"  minOccurs="0"/>
+      <xs:element type="intradaypowercurves" name="IntradayPowerCurves" minOccurs="0"/>
       <xs:element type="commodityvolatilities" name="CommodityVolatilities" minOccurs="0"/>
       <xs:element type="correlationcurves" name="Correlations" minOccurs="0"/>
+      <xs:element type="sensiBondFutureVolatilities" name="BondFutureVolatilities" minOccurs="0"/>
       <xs:element type="crossgammafilter" name="CrossGammaFilter" minOccurs="0"/>
       <xs:element type="bool" name="ComputeGamma" minOccurs="0"/>
+      <xs:element type="period" name="ThetaPeriod" minOccurs="0"/>
       <xs:element type="bool" name="UseSpreadedTermStructures" minOccurs="0"/>
       <xs:element type="setRiskFactorKeyTypes" name="TwoSidedDeltaKeyTypes" minOccurs="0"/>
     </xs:all>
@@ -210,6 +213,12 @@
   <xs:complexType name="correlationcurves">
     <xs:sequence>
       <xs:element type="correlationcurve" name="Correlation" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="sensiBondFutureVolatilities">
+    <xs:sequence>
+      <xs:element type="sensiBondFutureVolatility" name="BondFutureVolatility" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -576,6 +585,28 @@
       <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element type="xs:string" name="ShiftTenors"/>
       <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
+      <xs:element type="calendar" name="Calendar" minOccurs="0"/>
+      <xs:element type="businessDayConvention" name="BusinessDayConvention" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="name" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="intradaypowercurves">
+    <xs:sequence>
+      <xs:element type="intradaypowercurve" name="IntradayPowerCurve" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="intradaypowercurve">
+    <xs:sequence>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
+      <xs:choice>
+        <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
+        <xs:element type="xs:string" name="Shifts"/>
+      </xs:choice>
+      <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element type="xs:string" name="ShiftTenors"/>
+      <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="name" use="required"/>
   </xs:complexType>
@@ -607,6 +638,20 @@
     </xs:sequence>
     <xs:attribute type="xs:string" name="index1" use="required"/>
     <xs:attribute type="xs:string" name="index2" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="sensiBondFutureVolatility">
+    <xs:sequence>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
+      <xs:choice>
+        <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
+        <xs:element type="xs:string" name="Shifts"/>
+      </xs:choice>
+      <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element type="xs:string" name="ShiftExpiries"/>
+      <xs:element type="xs:string" name="ShiftStrikes" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="name" use="required"/>
   </xs:complexType>
 
   <xs:complexType name="setRiskFactorKeyTypes">

@@ -3,9 +3,7 @@ import os
 import shutil
 import sys
 import argparse
-import collections
-collections.Callable = collections.abc.Callable
-import nose
+import pytest
 import unittest
 import urllib
 import json
@@ -92,4 +90,4 @@ setup_logging()
 create_all_utests()
 
 if __name__ == '__main__':
-    nose.runmodule(name='__main__')
+    sys.exit(pytest.main([__file__]))

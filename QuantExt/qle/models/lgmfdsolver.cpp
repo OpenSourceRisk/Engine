@@ -25,7 +25,7 @@
 
 namespace QuantExt {
 
-LgmFdSolver::LgmFdSolver(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime,
+LgmFdSolver::LgmFdSolver(const QuantLib::Handle<LinearGaussMarkovModel>& model, const Real maxTime,
                          const QuantLib::FdmSchemeDesc scheme, const Size stateGridPoints, const Size timeStepsPerYear,
                          const Real mesherEpsilon)
     : model_(model), maxTime_(maxTime), scheme_(scheme), stateGridPoints_(stateGridPoints),
@@ -44,16 +44,25 @@ Size LgmFdSolver::gridSize() const { return stateGridPoints_; }
 
 RandomVariable LgmFdSolver::stateGrid(Real) const { return mesherLocations_; }
 
-const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& LgmFdSolver::model() const { return model_; }
+const QuantLib::Handle<LinearGaussMarkovModel>& LgmFdSolver::model() const { return model_; }
 
 RandomVariable LgmFdSolver::rollback(const RandomVariable& v, const Real t1, const Real t0, Size steps) const {
-    if (QuantLib::close_enough(t0, t1) || v.deterministic())
+
+    if (v.deterministic())
         return v;
-    QL_REQUIRE(t0 < t1, "LgmCFdSolver::rollback(): t0 (" << t0 << ") < t1 (" << t1 << ") required.");
-    if (steps == Null<Size>())
-        steps = std::max<Size>(1, static_cast<Size>(static_cast<double>(timeStepsPerYear_) * (t1 - t0) + 0.5));
+
+    bool zero_dt = QuantLib::close_enough(t0, t1);
+
+    QL_REQUIRE(t0 < t1 || zero_dt, "LgmFdSolver::rollback(): t0 (" << t0 << ") <= t1 (" << t1 << ") required.");
+
     Array workingArray = static_cast<Array>(v);
-    solver_->rollback(workingArray, t1, t0, steps, 0);
+
+    if (!zero_dt) {
+        if (steps == Null<Size>())
+            steps = std::max<Size>(1, static_cast<Size>(static_cast<double>(timeStepsPerYear_) * (t1 - t0) + 0.5));
+        solver_->rollback(workingArray, t1, t0, steps, 0);
+    }
+
     if (QuantLib::close_enough(t0, 0.0)) {
         Array x = mesher_->locations(0);
         MonotonicCubicNaturalSpline interpolation(x.begin(), x.end(), workingArray.begin());
@@ -62,6 +71,7 @@ RandomVariable LgmFdSolver::rollback(const RandomVariable& v, const Real t1, con
     } else {
         return RandomVariable(workingArray);
     }
+
 }
 
 } // namespace QuantExt

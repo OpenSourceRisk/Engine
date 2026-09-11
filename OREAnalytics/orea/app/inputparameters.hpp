@@ -102,6 +102,7 @@ struct SetupVariables : public InputVariables {
     bool allFixings_ = false;
     bool eomInflationFixings_ = true;
     bool useMarketDataFixings_ = true;
+    Size gzipCompressionLevel_ = 6;
 
     QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio_;
     QuantLib::ext::shared_ptr<ore::data::BasicReferenceDataManager> refDataManager_;
@@ -130,6 +131,7 @@ class InputParameters : public QuantLib::ext::enable_shared_from_this<InputParam
 public:
     InputParameters();
     virtual ~InputParameters() {} 
+    
     
     // load an object directly from Parameters if it exists
     template<class T> bool loadFromParameters(T& obj, const std::string& analytic, const std::string& param) {
@@ -238,9 +240,10 @@ public:
             const std::string& param, const bool mandatory = false, Args... args) {
 
         string str;
+
         // first check if we have a parameter of correct type stored in the Parameters object
         if (parameters_.hasGroup(analytic) && parameters_.has(analytic, param)) {
-            try {            
+            try {
                 obj = parameters_.getParameter<QuantLib::ext::shared_ptr<T>>(analytic, param, false);
                 return true;
             } catch (...) {
@@ -252,7 +255,7 @@ public:
             }
         }
 
-        // first get the string provided if needed
+        // then get the string provided if needed
         if (str.empty()) {
             str = loadParameterString(analytic, param, mandatory);
             if (str.empty()) {
@@ -298,13 +301,19 @@ public:
                                                                        << ") from XML string: " << xmlStr[0]);
         for (const auto& s : xmlStr) {            
             try {
-                obj->fromXMLString(s);
+                std::error_code ec;
+                if (std::filesystem::is_regular_file(s, ec) && !ec)
+                    obj->fromFile(s);
+                else
+                    obj->fromXMLString(s);
             } catch (const std::exception& e) {
                 LOG("InputParameters::loadParameterXML(): Failed loading parameter (" << analytic << "," << param
                                                                                << ") from XML string: " << s << " , error: " << + e.what());
                 if (mandatory)
                     QL_FAIL("InputParameters::loadParameterXML(): mandatory parameter (" + analytic + "," + param +
                                 ") parsing failed, with error: " + e.what());
+                else
+                    return false;
             }
         }
         return true;
@@ -331,14 +340,119 @@ public:
     template <class T, typename... Args>
     bool loadParameterXML(QuantLib::ext::shared_ptr<T>& obj, const std::string& analytic, const std::vector<std::string>& params, const bool mandatory = false, Args... args) {
         auto analytics = std::vector<std::string>({analytic});
-        return loadParameterXML<T>(obj, analytics, params, false, args...);
+        return loadParameterXML<T>(obj, analytics, params, mandatory, args...);
     }
 
     template <class T, typename... Args>
     bool loadParameterXML(QuantLib::ext::shared_ptr<T>& obj, const std::vector<std::string>& analytics,
                           const std::string& param, const bool mandatory = false, Args... args) {
         auto params = std::vector<std::string>({param});
-        return loadParameterXML<T>(obj, analytics, params, false, args...);
+        return loadParameterXML<T>(obj, analytics, params, mandatory, args...);
+    }
+
+    //! load a CSVSerializable object from a CSV string for the given (analytic, param) pair
+    template <class T, typename... Args>
+    bool loadParameterCSV(
+        QuantLib::ext::shared_ptr<T>& obj, const std::string& analytic,
+            const std::string& param, const bool mandatory = false, Args... args) {
+
+        string str;
+
+        // first check if we have a parameter of correct type stored in the Parameters object
+        if (parameters_.hasGroup(analytic) && parameters_.has(analytic, param)) {
+            try {
+                obj = parameters_.getParameter<QuantLib::ext::shared_ptr<T>>(analytic, param, false);
+                return true;
+            } catch (...) {
+            }
+
+            try {
+                str = parameters_.getString(analytic, param, false);
+            } catch (...) {
+            }
+        }
+
+        // then get the string provided if needed
+        if (str.empty()) {
+            str = loadParameterString(analytic, param, mandatory);
+            if (str.empty()) {
+                if (mandatory)
+                    QL_FAIL("InputParameters::loadParameterCSV(): mandatory parameter (" + analytic + "," + param +
+                            ") could not be found");
+                else
+                    return false;
+            }
+        }
+
+        if (!obj)
+            obj = QuantLib::ext::make_shared<T>(args...);
+
+        vector<string> csvStr;
+        try {
+            csvStr = loadParameterCSVString(str);
+        } catch (const std::exception& e) {
+            LOG("InputParameters::loadParameterCSV(): Failed loading parameter ("
+                << analytic << "," << param << ") from CSV string: " << str << " , error: " << +e.what());
+            if (mandatory)
+                QL_FAIL("InputParameters::loadParameterCSV(): mandatory parameter (" + analytic + "," + param +
+                        ") CSV parsing failed, with error: " + e.what());
+        }
+
+        // try original string if no CSV string was found
+        if (csvStr.size() == 0)
+            csvStr.push_back(str);
+
+        TLOG("InputParameters::loadParameterCSV(): loading parameter (" << analytic << "," << param
+                                                                        << ") from CSV string: " << csvStr[0]);
+        for (const auto& s : csvStr) {
+            try {
+                std::error_code ec;
+                if (std::filesystem::is_regular_file(s, ec) && !ec)
+                    obj->fromCSVFile(s);
+                else
+                    obj->fromCSVString(s);
+            } catch (const std::exception& e) {
+                LOG("InputParameters::loadParameterCSV(): Failed loading parameter (" << analytic << "," << param
+                                                                              << ") from CSV string: " << s << " , error: " << +e.what());
+                if (mandatory)
+                    QL_FAIL("InputParameters::loadParameterCSV(): mandatory parameter (" + analytic + "," + param +
+                            ") parsing failed, with error: " + e.what());
+                else
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    template <class T, typename... Args>
+    bool loadParameterCSV(QuantLib::ext::shared_ptr<T>& obj, const std::vector<std::string>& analytics,
+                          const std::vector<std::string>& params, const bool mandatory = false, Args... args) {
+        for (const auto& a : analytics) {
+            for (const auto& p : params) {
+                try {
+                    if (loadParameterCSV<T>(obj, a, p, false, args...))
+                        return true;
+                } catch (...) {
+                }
+            }
+        }
+        if (mandatory)
+            QL_FAIL("InputParameters::loadParameterCSV(): mandatory parameter (" + to_string(analytics) + "," + to_string(params) +
+                    ") parsing failed");
+        return false;
+    }
+
+    template <class T, typename... Args>
+    bool loadParameterCSV(QuantLib::ext::shared_ptr<T>& obj, const std::string& analytic, const std::vector<std::string>& params, const bool mandatory = false, Args... args) {
+        auto analytics = std::vector<std::string>({analytic});
+        return loadParameterCSV<T>(obj, analytics, params, mandatory, args...);
+    }
+
+    template <class T, typename... Args>
+    bool loadParameterCSV(QuantLib::ext::shared_ptr<T>& obj, const std::vector<std::string>& analytics,
+                          const std::string& param, const bool mandatory = false, Args... args) {
+        auto params = std::vector<std::string>({param});
+        return loadParameterCSV<T>(obj, analytics, params, mandatory, args...);
     }
 
     virtual QuantLib::ext::shared_ptr<ScenarioReader> loadScenarioReader(const std::string& analytic,
@@ -368,6 +482,11 @@ public:
         
     //! virtual function to load an XML string for the given (analytic, param) pair
     virtual std::vector<std::string> loadParameterXMLString(const string& rawStr) {
+        return std::vector<std::string>({rawStr});
+    };
+
+    //! virtual function to load a CSV string for the given (analytic, param) pair
+    virtual std::vector<std::string> loadParameterCSVString(const string& rawStr) {
         return std::vector<std::string>({rawStr});
     };
 
@@ -583,6 +702,7 @@ public:
 
     // Setters for Correlation
     void setCorrelationMethod(const std::string& s) { parameters_.set("correlation", "correlationMethod", s); }
+    void setCorrelationUri(const std::string& s) { parameters_.set("xva", "correlationUri", s); }
 
     // Setters for exposure simulation
     void setExposureIncludeTodaysCashFlows(bool b) { parameters_.set("simulation", "includeTodaysCashFlows", b); }
@@ -619,11 +739,11 @@ public:
     void setStoreFlows(bool b) { parameters_.set("simulation", "storeFlows", b); };
     void setStoreExerciseValues(bool b) { parameters_.set("simulation", "storeExerciseValues", b); };
     void setStoreSensis(bool b) { parameters_.set("simulation", "storeSensis", b); };
-    void setAllowPartialScenarios(bool b) { parameters_.set("simulation", "allowPartialScenarios", b); };
-    void setStoreCreditStateNPVs(Size states) { parameters_.set("simulation", "storeCreditStateNPVs", states); };
-    void setStoreSurvivalProbabilities(bool b) { parameters_.set("simulation", "storeSurvivalProbabilities", b); };
-    void setWriteCube(bool b) { parameters_.set("simulation", "writeCube", b); };
-    void setWriteScenarios(bool b) { parameters_.set("simulation", "writeScenarios", b); };
+    void setAllowPartialScenarios(bool b) { parameters_.set("simulation", "allowPartialScenarios", b); }
+    void setStoreCreditStateNPVs(Size states) { parameters_.set("simulation", "storeCreditStateNPVs", states); }
+    void setStoreSurvivalProbabilities(bool b) { parameters_.set("simulation", "storeSurvivalProbabilities", b); }
+    void setWriteCube(bool b) { parameters_.set("simulation", "writeCube", b); }
+    void setWriteScenarios(bool b) { parameters_.set("simulation", "writeScenarios", b); }
     void setExposureSimMarketParams(const std::string& xml) { parameters_.set("simulation", "simulationConfigFile", xml); };
     void setExposureSimMarketParams(const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& xml) { parameters_.set("simulation", "simulationConfigFile", xml); };
     void setScenarioGeneratorData(const std::string& xml) { parameters_.set("simulation", "scenarioGeneratorData", xml); };
@@ -645,6 +765,9 @@ public:
     void setCollateralBalances(const QuantLib::ext::shared_ptr<CollateralBalances>& xml) { parameters_.set("xva", "collateralBalancesFile", xml); };
     void setReportBufferSize(Size s) { setupVariables_.reportBufferSize_ = s; }
     void setCounterpartyManager(const std::string& xml);
+    void setCounterpartyManager(const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& cm) {
+        setupVariables_.counterpartyManager_ = cm;
+    }
     void setCalibrationModel(const std::string& s) { parameters_.set("calibration", "model", s); }
     void setHwCalibrationMode(const std::string& s) { parameters_.set("calibration", "mode", s); }
     void setPcaCalibration(bool b) { parameters_.set("calibration", "pcaCalibration", b); }
@@ -720,6 +843,7 @@ public:
     void setDimDistributionGridSize(Size n) { parameters_.set("xva", "dimDistributionGridSize", n); }
     void setDimLocalRegressionEvaluations(Size s) { parameters_.set("xva", "dimLocalRegressionEvaluations", s); }
     void setDimLocalRegressionBandwidth(Real r) { parameters_.set("xva", "dimLocalRegressionBandwidth", r); }
+    void setDimScaling(Real r) { parameters_.set("xva", "dimScaling", r); }
     // capital value adjustment details
     void setKvaCapitalDiscountRate(Real r) { parameters_.set("xva", "kvaCapitalDiscountRate", r); }
     void setKvaAlpha(Real r) { parameters_.set("xva", "kvaAlpha", r); }
@@ -756,7 +880,6 @@ public:
     void setSensitivityStressScenarioDataFromFile(const std::string& s);
     void setSensitivityStressSensitivityScenarioData(const std::string& xml);
     void setSensitivityStressSensitivityScenarioDataFromFile(const std::string& fileName);
-    void setSensitivityStressCalculateBaseScenario(const bool calcBaseScenario) { sensitivityStressCalcBaseScenario_ = calcBaseScenario; }
 
     // Setters for xvaSensi
     void setXvaSensiSimMarketParams(const std::string& xml);
@@ -803,6 +926,7 @@ public:
         simmCalibrationData_ = s;
     }
     void setSimmCalibrationDataFromFile(const std::string& fileName);
+    void setSimmCalculationCurrency(const std::string& s) { simmCalculationCurrencyCall_ = s; simmCalculationCurrencyPost_ = s; }
     void setSimmCalculationCurrencyCall(const std::string& s) { simmCalculationCurrencyCall_ = s; }
     void setSimmCalculationCurrencyPost(const std::string& s) { simmCalculationCurrencyPost_ = s; }
     void setSimmResultCurrency(const std::string& s) { simmResultCurrency_ = s; }
@@ -936,6 +1060,7 @@ public:
   
     QuantLib::Size maxRetries() const { return maxRetries_; }
     QuantLib::Size nThreads() const { return setupVariables_.nThreads_; }
+    Size gzipCompressionLevel() const { return setupVariables_.gzipCompressionLevel_; }
     bool entireMarket() const { return setupVariables_.entireMarket_; }
     bool allFixings() const { return setupVariables_.allFixings_; }
     bool eomInflationFixings() const { return setupVariables_.eomInflationFixings_; }
@@ -978,7 +1103,7 @@ public:
     bool includePastCashflows() const { return setupVariables_.includePastCashflows_; }
 
     /****************************
-     * Getters for curves/markets
+ * Getters for curves/markets
      ****************************/
     bool outputTodaysMarketCalibration() const { return outputTodaysMarketCalibration_; };
     std::size_t todaysMarketCalibrationPrecision() const { return todaysMarketCalibrationPrecision_; }
@@ -1001,7 +1126,7 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& sensiPricingEngine() const { return sensiPricingEngine_; }
     // const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& sensiTodaysMarketParams() { return sensiTodaysMarketParams_; }
     QuantLib::Size sensiOutputPrecision() const { return sensiOutputPrecision_; }
-        
+
     /****************************
      * Getters for scenario build
      ****************************/
@@ -1014,10 +1139,10 @@ public:
     QuantLib::Real stressThreshold() const { return stressThreshold_; }
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& stressSimMarketParams() const { return stressSimMarketParams_; }
     const QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData>& stressScenarioData() const { return stressScenarioData_; }
-    const QuantLib::ext::shared_ptr<ore::data::EngineData>& stressPricingEngine() const { return stressPricingEngine_; }
     const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& stressSensitivityScenarioData() const {
         return stressSensitivityScenarioData_;
     }
+    const QuantLib::ext::shared_ptr<ore::data::EngineData>& stressPricingEngine() const { return stressPricingEngine_; }
     bool stressOptimiseRiskFactors() const { return stressOptimiseRiskFactors_; }
     double stressLowerBoundCapFloorVolatility() const {
         return stressLowerBoundCapFloorVolatility_;
@@ -1066,7 +1191,6 @@ public:
     sensitivityStressSensitivityScenarioData() const {
         return sensitivityStressSensitivityScenarioData_;
     }
-    bool sensitivityStressCalcBaseScenario() const { return sensitivityStressCalcBaseScenario_; }
     bool xvaStressWriteCubes() const { return xvaStressWriteCubes_; }
 
     // Getters for XVA Explain
@@ -1084,7 +1208,7 @@ public:
      **************************************************/
 
     const QuantLib::Date& cashflowHorizon() const { return cashflowHorizon_; };
-    const QuantLib::Date& portfolioFilterDate() const { return portfolioFilterDate_; }    
+    const QuantLib::Date& portfolioFilterDate() const { return portfolioFilterDate_; }
 
     /******************
      * Getters for SIMM
@@ -1100,6 +1224,7 @@ public:
     const std::string& simmReportingCurrency() const { return simmReportingCurrency_; }
     bool enforceIMRegulations() const { return enforceIMRegulations_; }
     bool removeInvalidCrifRecords() const { return removeInvalidCrifRecords_; }
+    bool useSimmParameters() const { return useSimmParameters_; }
     QuantLib::ext::shared_ptr<SimmConfiguration> getSimmConfiguration();
     bool writeSimmIntermediateReports() const { return writeSimmIntermediateReports_; }
 
@@ -1183,6 +1308,12 @@ public:
         return zeroToParShiftSensitivityScenarioData_;
     }
         
+    /************************************
+     * Getters for portfolio details
+     ************************************/
+    const std::string& detailsConfigType() const { return detailsConfigType_; }
+    void setDetailsConfigType(const std::string& type) { detailsConfigType_ = type; }
+
     /*************************************
      * List of analytics that shall be run
      *************************************/
@@ -1223,12 +1354,16 @@ protected:
     bool mporForward_ = true;
     bool deriveCounterpartyDefaultCurves_ = false;
     std::string additionalMarketDataInput_;
+    std::string fxDeltaMethodOverride_ = "";
 
     /**************
      * NPV analytic
      *************/
     bool outputTodaysMarketCalibration_ = true;
     std::size_t todaysMarketCalibrationPrecision_ = 8;
+
+    // Portfolio Details
+    std::string detailsConfigType_ = "BASIC";
 
     /***********************************
      * CASHFLOW and CASHFLOWNPV analytic
@@ -1355,7 +1490,6 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> sensitivityStressSimMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> sensitivityStressScenarioData_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensitivityStressSensitivityScenarioData_;
-    bool sensitivityStressCalcBaseScenario_ = false;
 
     /*****************
      * XVA Sensitivity analytic
@@ -1384,7 +1518,6 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaExplainSensitivityScenarioData_;
     double xvaExplainShiftThreshold_ = 0;
 };
-
 
 std::vector<std::string> getFileNames(const std::string& fileString, const std::filesystem::path& path);
     

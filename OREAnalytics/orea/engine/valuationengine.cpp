@@ -34,6 +34,7 @@
 #include <ored/utilities/progressbar.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/osutils.hpp>
+#include <qle/models/modelbuilder.hpp>
 
 #include <ql/errors.hpp>
 
@@ -48,8 +49,10 @@ namespace analytics {
 ValuationEngine::ValuationEngine(const Date& today, const QuantLib::ext::shared_ptr<DateGrid>& dg,
                                  const QuantLib::ext::shared_ptr<SimMarket>& simMarket,
                                  const set<std::pair<string, QuantLib::ext::shared_ptr<ModelBuilder>>>& modelBuilders,
-                                 const bool recalibrate)
-    : today_(today), dg_(dg), simMarket_(simMarket), modelBuilders_(modelBuilders), recalibrate_(recalibrate) {
+                                 const bool recalibrate, const QuantLib::ext::shared_ptr<FixingManager>& fixingManager,
+                                 const bool resetAfterEachPath)
+    : today_(today), dg_(dg), simMarket_(simMarket), modelBuilders_(modelBuilders), recalibrate_(recalibrate),
+      fixingManager_(fixingManager), resetAfterEachPath_(resetAfterEachPath) {
 
     QL_REQUIRE(dg_->size() > 0, "Error, DateGrid size must be > 0");
     QL_REQUIRE(today <= dg_->dates().front(), "ValuationEngine: Error today ("
@@ -81,10 +84,14 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
                                 Errors* errors) {
 
     struct SimMarketResetter {
-        SimMarketResetter(QuantLib::ext::shared_ptr<SimMarket> simMarket) : simMarket_(simMarket) {}
-        ~SimMarketResetter() { simMarket_->reset(); }
+        ~SimMarketResetter() {
+            simMarket_->reset();
+            if (fixingManager_)
+                fixingManager_->reset();
+        }
         QuantLib::ext::shared_ptr<SimMarket> simMarket_;
-    } simMarketResetter(simMarket_);
+        QuantLib::ext::shared_ptr<FixingManager> fixingManager_;
+    } simMarketResetter{simMarket_, fixingManager_};
 
     LOG("Build cube with mporStickyDate=" << mporStickyDate << ", dryRun=" << std::boolalpha << dryRun);
 
@@ -189,9 +196,8 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
     }
     LOG("Total number of trades = " << portfolio->size());
 
-    if (!dates.empty() && dates.front() > simMarket_->asofDate()) {
-        // the fixing manager is only required if sim dates contain future dates
-        simMarket_->fixingManager()->initialise(portfolio, simMarket_);
+    if (fixingManager_ != nullptr) {
+        fixingManager_->initialise(portfolio, simMarket_);
     }
 
     Size nTrades = trades.size();
@@ -266,9 +272,12 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
                << (outputCube->samples() == 1 ? "" : "s");
         updateProgress(sample * nTrades, outputCube->samples() * nTrades, detail.str());
 
-        auto fixingTimeStart = data::os::nanosecondsClock();
-        simMarket_->fixingManager()->reset();
-        timings.fixingTime += data::os::nanosecondsClock() - fixingTimeStart;
+        if(resetAfterEachPath_) {
+            if (fixingManager_)
+                fixingManager_->reset();
+            simMarket_->updateDate(simMarket_->asofDate());
+        }
+
     }
 
     if (dryRun) {
@@ -395,8 +404,8 @@ void tradeExercisable(bool enable, const std::vector<QuantLib::ext::shared_ptr<O
 } // namespace
 
 void ValuationEngine::populateCube(
-    const QuantLib::Date& d, size_t cubeDateIndex, size_t sample, bool isValueDate, bool isStickyDate,
-    bool scenarioUpdated, const std::map<std::string, QuantLib::ext::shared_ptr<Trade>>& trades,
+    QuantLib::Date d, size_t cubeDateIndex, size_t sample, bool isValueDate, bool isStickyDate, bool scenarioUpdated,
+    const std::map<std::string, QuantLib::ext::shared_ptr<Trade>>& trades,
     const std::vector<QuantLib::ext::shared_ptr<OptionWrapper>>& optionWrappers, const ErrorPolicy errorPolicy,
     std::vector<bool>& tradeHasT0Error, std::vector<bool>& tradeHasSampleError,
     const std::vector<QuantLib::ext::shared_ptr<ValuationCalculator>>& calculators,
@@ -408,53 +417,72 @@ void ValuationEngine::populateCube(
     QL_REQUIRE(cubeDateIndex >= 0, "first date should be a valuation date");
 
     auto t0 = data::os::nanosecondsClock();
+
     simMarket_->preUpdate();
+
+    if (!scenarioUpdated) {
+        auto tmp = simMarket_->loadNextScenario(d);
+        QL_REQUIRE(dg_->size() <= 1 || tmp == d,
+                   "ValuationEngine::populateCube(): have non-trivial date grid and mismatching scenario date ("
+                       << tmp << ") versus simulated date grid date from engine (" << d << "). Internal error.");
+        d = tmp;
+    }
+    auto t1 = data::os::nanosecondsClock();
+    timings.updateScenarioTime += t1 - t0;
+
+    if (fixingManager_ && fixingManager_->mode() == FixingManager::Mode::Projected && (!isStickyDate || isValueDate)) {
+        fixingManager_->update(d);
+    }
+    auto t2 = data::os::nanosecondsClock();
+    timings.fixingTime += t2 - t1;
+
     if (isValueDate || !isStickyDate) {
         simMarket_->updateDate(d);
     }
-    // We can skip this step, if we have done that above in the close-out date section
-    auto t1 = data::os::nanosecondsClock();
-    timings.updateDateTime += t1 - t0;
-    if (!scenarioUpdated) {
-        simMarket_->updateScenario(d);
-    }
-
-    auto t2 = data::os::nanosecondsClock();
-    timings.updateScenarioTime += t2 - t1;
-
-    simMarket_->postUpdate(d);
     auto t3 = data::os::nanosecondsClock();
-    timings.refreshTime += t3 - t2;
+    timings.updateDateTime += t3 - t2;
 
-    if (!isStickyDate || isValueDate)
-        simMarket_->fixingManager()->update(d);
-    auto t4 = data::os::nanosecondsClock();
-    timings.fixingTime += t4 - t3;
-
-    // Aggregation scenario data update on valuation dates only
-    if (isValueDate) {
-        simMarket_->updateAsd(d);
+    if (!scenarioUpdated) {
+        simMarket_->applyLoadedScenario();
     }
+    auto t4 = data::os::nanosecondsClock();
+    timings.updateScenarioTime += t4 - t3;
+
+    simMarket_->postUpdate();
     auto t5 = data::os::nanosecondsClock();
-    timings.asdTime += t5 - t4;
+    timings.refreshTime += t5 - t4;
+
+    if (fixingManager_ && fixingManager_->mode() == FixingManager::Mode::BackwardFlat &&
+        (!isStickyDate || isValueDate)) {
+        fixingManager_->update(d);
+    }
+    auto t6 = data::os::nanosecondsClock();
+    timings.fixingTime += t6 - t5;
+
+    if (isValueDate) {
+        simMarket_->updateAsd();
+    }
+    auto t7 = data::os::nanosecondsClock();
+    timings.asdTime += t7 - t6;
 
     recalibrateModels();
-    auto t6 = data::os::nanosecondsClock();
-    timings.calibrationTime += t6 - t5;
+    auto t8 = data::os::nanosecondsClock();
+    timings.calibrationTime += t8 - t7;
 
-    if (isStickyDate && !isValueDate) // switch on again, if sticky
+    if (isStickyDate && !isValueDate)
         tradeExercisable(false, optionWrappers);
-    // loop over trades
+
     runCalculators(!isValueDate, trades, errorPolicy, tradeHasT0Error, tradeHasSampleError, calculators, outputCube,
                    outputCubeNettingSet, d, cubeDateIndex, sample, simMarket_->label(), errors);
-    if (isStickyDate && !isValueDate) // switch on again, if sticky
+
+    if (isStickyDate && !isValueDate)
         tradeExercisable(true, optionWrappers);
-    // loop over counterparty names
+
     if (isValueDate) {
         runCalculators(false, counterparties, cptyCalculators, outputCptyCube, d, cubeDateIndex, sample);
     }
 
-    timings.pricingTime += data::os::nanosecondsClock() - t6;
+    timings.pricingTime += data::os::nanosecondsClock() - t8;
 }
 
 } // namespace analytics

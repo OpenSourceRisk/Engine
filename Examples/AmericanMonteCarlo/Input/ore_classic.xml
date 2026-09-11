@@ -68,8 +68,9 @@
       <Parameter name="dva">Y</Parameter>
       <Parameter name="dvaName">BANK</Parameter>
       <Parameter name="fva">Y</Parameter>
-      <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
-      <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
+      <Parameter name="borrowingCurve">BANK_EUR_BORROW</Parameter>
+      <Parameter name="lendingCurve">BANK_EUR_LEND</Parameter>
+      <Parameter name="mva">Y</Parameter>
       <Parameter name="colva">N</Parameter>
       <Parameter name="collateralSpread">0.0000</Parameter>
       <Parameter name="collateralFloor">N</Parameter>

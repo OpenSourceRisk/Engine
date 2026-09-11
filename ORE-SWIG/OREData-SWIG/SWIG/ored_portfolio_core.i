@@ -226,21 +226,22 @@ class InstrumentWrapper {
     InstrumentWrapper();
   public:
     QuantLib::Real NPV() const;
-    QuantLib::ext::shared_ptr<QuantLib::Instrument> qlInstrument() const;
+    ext::shared_ptr<QuantLib::Instrument> qlInstrument() const;
 };
 
 class Trade : public XMLSerializable {
   private:
     Trade();
   public:
+    enum class NotionalType { Default, IMSchedule };
     const std::string& id();
     void setId(const std::string& id);
     const std::string& tradeType();
     const ext::shared_ptr<ore::data::InstrumentWrapper>& instrument();
-    std::vector<std::vector<QuantLib::ext::shared_ptr<QuantLib::CashFlow>>> legs();
+    std::vector<std::vector<ext::shared_ptr<QuantLib::CashFlow>>> legs();
     const ore::data::Envelope& envelope() const;
     const QuantLib::Date& maturity();
-    QuantLib::Real notional();
+    QuantLib::Real notional(NotionalType type = NotionalType::Default);
 };
 
 class Portfolio : public XMLSerializable {

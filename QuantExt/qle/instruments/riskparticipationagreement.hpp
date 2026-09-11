@@ -114,6 +114,7 @@ public:
     bool exerciseIsLong;
     std::vector<QuantLib::ext::shared_ptr<CashFlow>> premium;
     bool nakedOption;
+    // cache
     std::vector<QuantLib::ext::shared_ptr<Instrument>> optionRepresentation;
     std::vector<Real> optionMultiplier;
     std::vector<std::tuple<Date, Date, Date>> optionRepresentationPeriods;
@@ -122,10 +123,12 @@ public:
 
 class RiskParticipationAgreement::results : public Instrument::results {
 public:
+    // cache
     std::vector<QuantLib::ext::shared_ptr<Instrument>> optionRepresentation;
     std::vector<Real> optionMultiplier;
     std::vector<std::tuple<Date, Date, Date>> optionRepresentationPeriods;
     Date optionRepresentationReferenceDate;
+
     void reset() override {
         Instrument::results::reset();
         optionRepresentation.clear();

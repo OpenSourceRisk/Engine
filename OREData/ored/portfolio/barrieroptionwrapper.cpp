@@ -107,7 +107,7 @@ bool SingleBarrierOptionWrapper::strikeAtBarrier(Real strike) const {
 }
 
 bool SingleBarrierOptionWrapper::checkBarrier(Real spot) const {
-        return ::QuantExt::checkBarrier(spot, barrierType_, barrier_, strictBarrier_);
+    return ::QuantExt::checkBarrier(spot, barrierType_, barrier_, strictBarrier_);
 }
 
 bool SingleBarrierOptionWrapper::exercise() const {

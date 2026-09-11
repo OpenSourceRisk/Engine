@@ -33,8 +33,9 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/portfolio/scriptedtrade.hpp>
-#include <orea/simm/crifloader.hpp>
+#include <orea/simm/crif.hpp>
 #include <orea/simm/simmcalibration.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 #include <ql/indexes/iborindex.hpp>
 
 using namespace QuantLib;
@@ -127,6 +128,10 @@ void SetupVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
     inputs->loadParameterXML<Portfolio>(portfolio_, "setup", "portfolioFile");
     scaleUpPortfolio(portfolio_);
     inputs->loadParameterXML<EngineData>(pricingEngine_, "setup", "pricingEnginesFile");
+    ext::shared_ptr<EngineData> pricingEngineOverride;
+    inputs->loadParameterXML<EngineData>(pricingEngineOverride, "setup", "pricingEnginesOverride");
+    if (pricingEngine_ && pricingEngineOverride)
+        pricingEngine_->setEngineDataOverride(pricingEngineOverride);
     inputs->loadParameterXML<TodaysMarketParameters>(todaysMarketParams_, "setup", "marketConfigFile");
     inputs->loadParameterXML<BaselTrafficLightData>(baselTrafficLightConfig_, "setup", "baselTrafficLightConfig");
     inputs->loadParameterXML<CounterpartyManager>(counterpartyManager_, "setup", "counterpartyFile");
@@ -139,6 +144,8 @@ void SetupVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
     inputs->loadParameter<bool>(dryRun_, "setup", "dryRun", false, parseBool);
     inputs->loadParameter<string>(reportNaString_, "setup", "reportNaString", false);
     inputs->loadParameter<Size>(nThreads_, "setup", "nThreads", false, parseInteger);
+    inputs->loadParameter<Size>(gzipCompressionLevel_, "setup", "gzipCompressionLevel", false, parseInteger);
+    QL_REQUIRE(gzipCompressionLevel_ <= 9, "gzipCompressionLevel must be between 0 and 9, got " << gzipCompressionLevel_);
     inputs->loadParameter<bool>(continueOnError_, "setup", "continueOnError", false, parseBool);
     inputs->loadParameter<bool>(allowModelBuilderFallbacks_, "setup", "allowModelBuilderFallbacks", false, parseBool);
     inputs->loadParameter<bool>(lazyMarketBuilding_, "setup", "lazyMarketBuilding", false, parseBool);
@@ -193,26 +200,27 @@ void SetupVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
     }
 
     // Additional results might be its own node or part of npv node for backward compatibility
-    inputs->loadParameter<bool>(outputAdditionalResults_, "additionalResults", "active", false, parseBool);
-    if (!outputAdditionalResults_)
+    bool wasLoaded = inputs->loadParameter<bool>(outputAdditionalResults_, "additionalResults",
+        "active", false, parseBool);
+    if (!wasLoaded)
         inputs->loadParameter<bool>(outputAdditionalResults_, "npv", "additionalResults", false, parseBool);
 
-    inputs->loadParameter<Natural>(additionalResultsReportPrecision_, "additionalResults", "additionalResultsReportPrecision",
-                            false, parseInteger);
-    // additionalResultsReportPrecision was previously part of npv node, but moved to setup, check npv node for backward
-    // compatibility
-    if (!additionalResultsReportPrecision_)
-        inputs->loadParameter<Natural>(additionalResultsReportPrecision_, "npv", "additionalResultsReportPrecision", false,
-                                parseInteger);
+    // additionalResultsReportPrecision was previously part of npv node, but moved to setup, check npv node for 
+    // backward compatibility
+    wasLoaded = inputs->loadParameter<Natural>(additionalResultsReportPrecision_, "additionalResults",
+        "additionalResultsReportPrecision", false, parseInteger);
+    if (!wasLoaded)
+        inputs->loadParameter<Natural>(additionalResultsReportPrecision_, "npv",
+            "additionalResultsReportPrecision", false, parseInteger);
 
-    inputs->loadParameter<bool>(includePastCashflows_, "setup", "includePastCashflows", false, parseBool);
-    // includePastCashflows was previously part of cashflow node, but moved to setup, check npv node for backward
+    // includePastCashflows was previously part of cashflow node, but moved to setup, check cashflow node for backward
     // compatibility
-    if (!includePastCashflows_)
+    wasLoaded = inputs->loadParameter<bool>(includePastCashflows_, "setup", "includePastCashflows", false, parseBool);
+    if (!wasLoaded)
         inputs->loadParameter<bool>(includePastCashflows_, "cashflow", "includePastCashflows", false, parseBool);
 
-    inputs->loadParameter<bool>(computeTheta_, "sensitivity", "computeTheta", false, parseBool);
-    if(!computeTheta_)
+    inputs->loadParameter<bool>(computeTheta_, {"sensitivity", "simm", "crif"}, "computeTheta", false, parseBool);
+    if(computeTheta_)
         inputs->loadParameter<Period>(thetaPeriod_, "sensitivity", "thetaPeriod", false, parsePeriod);
 
 }
@@ -851,19 +859,20 @@ void InputParameters::setCrifFromFile(const std::string& fileName, char eol, cha
     bool updateMappings = true;
     bool aggregateTrades = false;
     bool allowUseCounterpartyTrade = true;
-    auto crifLoader = CsvFileCrifLoader(fileName, getSimmConfiguration(), CrifRecord::additionalHeaders, updateMappings,
-                                        aggregateTrades, allowUseCounterpartyTrade, eol, delim, quoteChar, escapeChar, reportNaString());
-    crif_ = crifLoader.loadCrif();
+    crif_ = QuantLib::ext::make_shared<Crif>(getSimmConfiguration(), CrifRecord::additionalHeaders, updateMappings,
+                                             aggregateTrades, allowUseCounterpartyTrade, eol, delim, quoteChar,
+                                             escapeChar, reportNaString());
+    crif_->fromCSVFile(fileName);
 }
 
 void InputParameters::setCrifFromBuffer(const std::string& csvBuffer, char eol, char delim, char quoteChar, char escapeChar) {
     bool updateMappings = true;
     bool aggregateTrades = false;
     bool allowUseCounterpartyTrade = true;
-    auto crifLoader =
-        CsvBufferCrifLoader(csvBuffer, getSimmConfiguration(), CrifRecord::additionalHeaders, updateMappings,
-                            aggregateTrades, allowUseCounterpartyTrade, eol, delim, quoteChar, escapeChar, reportNaString());
-    crif_ = crifLoader.loadCrif();
+    crif_ = QuantLib::ext::make_shared<Crif>(getSimmConfiguration(), CrifRecord::additionalHeaders, updateMappings,
+                                             aggregateTrades, allowUseCounterpartyTrade, eol, delim, quoteChar,
+                                             escapeChar, reportNaString());
+    crif_->fromCSVString(csvBuffer);
 }
 
 void InputParameters::setSimmNameMapper(const std::string& xml) {
@@ -981,9 +990,9 @@ OutputParameters::OutputParameters(const ext::shared_ptr<Parameters>& params) {
     fileNameMap_["xva_stress"] = xvaStressTestFileName_;
     fileNameMap_["sensitivity_stress"] = sensitivityStressTestFileName_;
     fileNameMap_["var"] = varFileName_;
-    fileNameMap_["parConversionSensitivity"] = parConversionOutputFileName_;
-    fileNameMap_["parConversionJacobi"] = parConversionJacobiFileName_;
-    fileNameMap_["parConversionJacobi_inverse"] = parConversionJacobiInverseFileName_;
+    fileNameMap_["parConversionSensitivity" ] = parConversionOutputFileName_;
+    fileNameMap_["parConversionJacobi" ] = parConversionJacobiFileName_;
+    fileNameMap_["parConversionJacobi_inverse" ] = parConversionJacobiInverseFileName_;
     fileNameMap_["pnl"] = pnlOutputFileName_;
     fileNameMap_["parStress_ZeroStressData"] = parStressTestConversionFile_;
     fileNameMap_["pnl_explain"] = pnlExplainOutputFileName_;

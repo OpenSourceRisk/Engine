@@ -67,6 +67,7 @@ using ore::data::CommodityOptionQuote;
 using ore::data::CorrelationQuote;
 using ore::data::CPRQuote;
 using ore::data::BondPriceQuote;
+using ore::data::BondFutureOptionQuote;
 %}
 
 %shared_ptr(ore::data::BaseStrike)
@@ -115,12 +116,24 @@ using ore::data::BondPriceQuote;
 %shared_ptr(ore::data::CorrelationQuote)
 %shared_ptr(ore::data::CPRQuote)
 %shared_ptr(ore::data::BondPriceQuote)
+%shared_ptr(ore::data::BondFutureOptionQuote)
 
 namespace ore {
 namespace data {
 
-class BaseStrike;
-class Expiry;
+class BaseStrike {
+public:
+    virtual ~BaseStrike() {}
+    virtual void fromString(const std::string& strStrike) = 0;
+    virtual std::string toString() const = 0;
+};
+
+class Expiry {
+public:
+    virtual ~Expiry() {}
+    virtual void fromString(const std::string& strExpiry) = 0;
+    virtual std::string toString() const = 0;
+};
 
 ext::shared_ptr<ore::data::MarketDatum> parseMarketDatum(const Date&, const std::string&, const Real&);
 
@@ -159,6 +172,7 @@ public:
         EQUITY_OPTION,
         BOND,
         BOND_OPTION,
+        BOND_FUTURE_OPTION,
         INDEX_CDS_OPTION,
         COMMODITY_SPOT,
         COMMODITY_FWD,
@@ -285,13 +299,11 @@ public:
 
 class MMFutureQuote : public MarketDatum {
 public:
-    MMFutureQuote(Real value, Date asofDate, const std::string& name,
-                  MarketDatum::QuoteType quoteType, std::string ccy, std::string expiry,
-                  std::string contract = "", Period tenor = 3 * Months);
+    MMFutureQuote(Real value, const Date& asofDate, const std::string& name,
+                  MarketDatum::QuoteType quoteType, const std::string& ccy, const std::string& expiry,
+                  const std::string& contract = "", const Period& tenor = 3 * Months);
     const std::string& ccy() const;
-    const std::string expiry() const;
-    Natural expiryYear() const;
-    Month expiryMonth() const;
+    const std::string& expiry() const;
     const std::string& contract() const;
     const Period& tenor() const;
     %extend {
@@ -303,13 +315,11 @@ public:
 
 class OIFutureQuote : public MarketDatum {
 public:
-    OIFutureQuote(Real value, Date asofDate, const std::string& name,
-                  MarketDatum::QuoteType quoteType, std::string ccy, std::string expiry,
-                  std::string contract = "", Period tenor = 3 * Months);
+    OIFutureQuote(Real value, const Date& asofDate, const std::string& name,
+                  MarketDatum::QuoteType quoteType, const std::string& ccy, const std::string& contractMonth,
+                  const std::string& contract = "", const Period& tenor = 3 * Months);
     const std::string& ccy() const;
-    const std::string expiry() const;
-    Natural expiryYear() const;
-    Month expiryMonth() const;
+    const std::string& contractMonth() const;
     const std::string& contract() const;
     const Period& tenor() const;
     %extend {
@@ -876,6 +886,31 @@ public:
     %extend {
         static const ext::shared_ptr<BondPriceQuote> getFullView(ext::shared_ptr<MarketDatum> baseInput) {
             return ext::dynamic_pointer_cast<BondPriceQuote>(baseInput);
+        }
+    }
+};
+
+class BondFutureOptionQuote : public MarketDatum {
+public:
+    BondFutureOptionQuote(
+        QuantLib::Real value,
+        QuantLib::Date asofDate,
+        const std::string& name,
+        QuoteType quoteType,
+        std::string contractName,
+        std::string expiry,
+        ext::shared_ptr<BaseStrike> strike,
+        bool isCall = true);
+
+    const std::string& contractName() const;
+    const std::string& expiry() const;
+    const ext::shared_ptr<BaseStrike>& strike() const;
+    bool isCall();
+
+    // Not sure if we still need this type of explicit method to expose downcasting but keep it for consistency.
+    %extend {
+        static const ext::shared_ptr<BondFutureOptionQuote> getFullView(ext::shared_ptr<MarketDatum> baseInput) {
+            return ext::dynamic_pointer_cast<BondFutureOptionQuote>(baseInput);
         }
     }
 };

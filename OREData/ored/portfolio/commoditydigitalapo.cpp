@@ -23,6 +23,7 @@
 
 #include <ored/portfolio/commodityapo.hpp>
 #include <ored/portfolio/commoditydigitalapo.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 #include <ql/instruments/compositeinstrument.hpp>
 
 using namespace QuantExt;

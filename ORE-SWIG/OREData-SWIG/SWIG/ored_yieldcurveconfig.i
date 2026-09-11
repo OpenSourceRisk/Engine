@@ -24,6 +24,7 @@
 %include ored_curveconfig.i
 %include ored_curvespec.i
 %include ored_xmlutils.i
+%include ored_bootstrapconfig.i
 
 %shared_ptr(ore::data::YieldCurveSegment)
 namespace ore {
@@ -245,11 +246,13 @@ class FittedBondYieldCurveSegment : public YieldCurveSegment {
 public:
     FittedBondYieldCurveSegment();
     FittedBondYieldCurveSegment(const std::string& typeID, const std::vector<std::string>& quotes,
-                                const std::map<std::string, std::string>& iborIndexCurves, const bool extrapolateFlat);
+                                const std::map<std::string, std::string>& indexCurves, const bool extrapolateFlat,
+                                const map<string, string>& inflationIndexCurves = {});
 
     void fromXML(ore::data::XMLNode* node) override;
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
-    const std::map<std::string, std::string>& iborIndexCurves() const;
+    const std::map<std::string, std::string>& indexCurves() const;
+    const std::map<std::string, std::string>& inflationIndexCurves() const;
     const bool extrapolateFlat() const;
 };
 
@@ -283,11 +286,13 @@ class BondYieldShiftedYieldCurveSegment : public YieldCurveSegment {
 public:
     BondYieldShiftedYieldCurveSegment();
     BondYieldShiftedYieldCurveSegment(const std::string& typeID, const std::string& referenceCurveID, const std::vector<std::string>& quotes,
-                                      const std::map<std::string, std::string>& iborIndexCurves, const bool extrapolateFlat);
+                                      const std::map<std::string, std::string>& indexCurves, const bool extrapolateFlat,
+                                      const map<string, string>& inflationIndexCurves = {});
     void fromXML(ore::data::XMLNode* node) override;
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     const std::string& referenceCurveID() const;
-    const std::map<std::string, std::string>& iborIndexCurves() const;
+    const std::map<std::string, std::string>& indexCurves() const;
+    const std::map<std::string, std::string>& inflationIndexCurves() const;
     const bool extrapolateFlat() const;
 };
 

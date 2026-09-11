@@ -70,6 +70,89 @@ void BasketVarianceSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& f
 
     // set script
 
+    // clang-format off
+    static const std::string basket_variance_swap_amc_script =
+        "REQUIRE {Notional >= 0} AND {Strike >= 0};\n"
+        "REQUIRE {Cap >= 0} AND {Floor >= 0};\n"
+        "\n"
+        "NUMBER i, n;\n"
+        "n = SIZE(Underlyings);\n"
+        "\n"
+        "NUMBER sumOfWeights;\n"
+        "FOR i IN (1, n, 1) DO\n"
+        "  sumOfWeights = sumOfWeights + Weights[i];\n"
+        "END;\n"
+        "REQUIRE sumOfWeights == 1;\n"
+        "\n"
+        "NUMBER d, s, simDateIdx, expectedN, currPrice[n], prevPrice[n];\n"
+        "NUMBER realisedVariance, runningVariance, basketVariation, realisedVariation;\n"
+        "NUMBER strike, cap, floor, currentNotional, payoff;\n"
+        "NUMBER _AMC_NPV[SIZE(_AMC_SimDates)];\n"
+        "NUMBER accruedVariance[SIZE(_AMC_SimDates)];\n"
+        "\n"
+        "expectedN = SIZE(ValuationSchedule) - 1;\n"
+        "\n"
+        "simDateIdx = 1;\n"
+        "FOR s IN (1, SIZE(ObsAndSimDates), 1) DO\n"
+        "  d = DATEINDEX(ObsAndSimDates[s], ValuationSchedule, EQ);\n"
+        "  IF simDateIdx <= SIZE(_AMC_SimDates) THEN\n"
+        "    IF _AMC_SimDates[simDateIdx] == ObsAndSimDates[s] THEN\n"
+        "      accruedVariance[simDateIdx] = (252 / expectedN) * runningVariance;\n"
+        "      simDateIdx = simDateIdx + 1;\n"
+        "    END;\n"
+        "  END;\n"
+        "  IF d > 1 THEN\n"
+        "    basketVariation = 0;\n"
+        "    FOR i IN (1, n, 1) DO\n"
+        "      currPrice[i] = Underlyings[i](ValuationSchedule[d]);\n"
+        "      prevPrice[i] = Underlyings[i](ValuationSchedule[d-1]);\n"
+        "      basketVariation = basketVariation + Weights[i] * ln(currPrice[i]/prevPrice[i]);\n"
+        "    END;\n"
+        "    runningVariance = runningVariance + pow(basketVariation, 2);\n"
+        "  END;\n"
+        "END;\n"
+        "\n"
+        "realisedVariance = (252/expectedN) * runningVariance;\n"
+        "\n"
+        "IF SquaredPayoff == 1 THEN\n"
+        "  realisedVariation = realisedVariance;\n"
+        "  currentNotional = pow(100, 2) * Notional / (2 * 100 * Strike);\n"
+        "  strike = pow(Strike, 2);\n"
+        "ELSE\n"
+        "  realisedVariation = sqrt(realisedVariance);\n"
+        "  currentNotional = 100 * Notional;\n"
+        "  strike = Strike;\n"
+        "END;\n"
+        "\n"
+        "IF Floor > 0 THEN\n"
+        "  IF SquaredPayoff == 1 THEN\n"
+        "    floor = pow(Floor, 2);\n"
+        "  ELSE\n"
+        "    floor = Floor;\n"
+        "  END;\n"
+        "  realisedVariation = max(floor * strike, realisedVariation);\n"
+        "END;\n"
+        "IF Cap > 0 THEN\n"
+        "  IF SquaredPayoff == 1 THEN\n"
+        "    cap = pow(Cap, 2);\n"
+        "  ELSE\n"
+        "    cap = Cap;\n"
+        "  END;\n"
+        "  realisedVariation = min(cap * strike, realisedVariation);\n"
+        "END;\n"
+        "\n"
+        "payoff = LongShort * currentNotional * (realisedVariation - strike);\n"
+        "\n"
+        "Swap = PAY(payoff, ValuationSchedule[SIZE(ValuationSchedule)],\n"
+        "           SettlementDate, PayCcy);\n"
+        "\n"
+        "FOR i IN (1, SIZE(_AMC_SimDates), 1) DO\n"
+        "  IF _AMC_SimDates[i] < SettlementDate THEN\n"
+        "    _AMC_NPV[i] = NPVMEM(Swap, _AMC_SimDates[i], i, 1 > 0, accruedVariance[i]);\n"
+        "  END;\n"
+        "END;\n";
+    // clang-format on
+
     script_ = {// clang-format off
         {"", ScriptedTradeScriptData(
                 "REQUIRE {Notional >= 0} AND {Strike >= 0};\n"
@@ -136,7 +219,19 @@ void BasketVarianceSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& f
              {{"RealisedVariance", "realisedVariance"},
               {"currentNotional", "currentNotional"},
               {"notionalCurrency", "PayCcy"}},
-            {})}};
+            {})},
+        {"AMC", ScriptedTradeScriptData(
+                basket_variance_swap_amc_script,
+                "Swap",
+                {{"RealisedVariance", "realisedVariance"},
+                 {"currentNotional", "currentNotional"},
+                 {"notionalCurrency", "PayCcy"}},
+                {},
+                {ScriptedTradeScriptData::NewScheduleData(
+                    "ObsAndSimDates", "Join", {"_AMC_SimDates", "ValuationSchedule"})},
+                {},
+                {},
+                {})}};
         // clang-format on
 
     // build trade
