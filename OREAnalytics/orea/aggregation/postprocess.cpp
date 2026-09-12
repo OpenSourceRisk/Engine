@@ -325,14 +325,24 @@ void PostProcess::updateNettingSetKVA() {
     Handle<YieldTermStructure> discountCurve = market_->discountCurve(baseCurrency_, configuration_);
     DayCounter dc = ActualActual(ActualActual::ISDA);
 
+    struct KvaParty {
+        string name;
+        Real pdFloor;
+        Real cvaRiskWeight;
+    };
+    // dvaName and the kvaOur* / kvaTheir* parameters are given from the bank's perspective; under flipViewXVA the
+    // counterparty takes the bank's role and vice versa, so every party specific input has to move along
+    const bool flipView = analytics_["flipViewXVA"];
+    QL_REQUIRE(!flipView || !dvaName_.empty(),
+               "PostProcess::updateNettingSetKVA(): dvaName is required when flipViewXVA is set");
+    const KvaParty bank{dvaName_, kvaOurPdFloor_, kvaOurCvaRiskWeight_};
+
     // Loop over all netting sets
     for (const auto& [nettingSetId, pos] : nettingSetIds()) {
-        string cid;
-        if (analytics_["flipViewXVA"]) {
-            cid = dvaName_;
-        } else {
-            cid = nettedExposureCalculator_->counterparty(nettingSetId);
-        }
+        const KvaParty cpty{nettedExposureCalculator_->counterparty(nettingSetId), kvaTheirPdFloor_,
+                            kvaTheirCvaRiskWeight_};
+        const KvaParty& activeOwnParty = flipView ? cpty : bank;
+        const KvaParty& activeCounterparty = flipView ? bank : cpty;
         LOG("KVA for netting set " << nettingSetId);
 
         // Main input are the EPE and ENE profiles, previously computed
@@ -341,9 +351,10 @@ void PostProcess::updateNettingSetKVA() {
 
         // PD from counterparty Dts, floored to avoid 0 ...
         // Today changed to today+1Y to get the one-year PD
-        Handle<DefaultProbabilityTermStructure> cvaDts = market_->defaultCurve(cid, configuration_)->curve();
-        QL_REQUIRE(!cvaDts.empty(), "Default curve missing for counterparty " << cid);
-        Real cvaRR = market_->recoveryRate(cid, configuration_)->value();
+        Handle<DefaultProbabilityTermStructure> cvaDts =
+            market_->defaultCurve(activeCounterparty.name, configuration_)->curve();
+        QL_REQUIRE(!cvaDts.empty(), "Default curve missing for counterparty " << activeCounterparty.name);
+        Real cvaRR = market_->recoveryRate(activeCounterparty.name, configuration_)->value();
         Real PD1 = std::max(cvaDts->defaultProbability(today + 1 * Years), 0.000000000001);
         Real LGD1 = (1 - cvaRR);
 
@@ -351,12 +362,9 @@ void PostProcess::updateNettingSetKVA() {
         Handle<DefaultProbabilityTermStructure> dvaDts;
         Real dvaRR = 0.0;
         Real PD2 = 0;
-        if (analytics_["flipViewXVA"]) {
-            dvaName_ = nettedExposureCalculator_->counterparty(nettingSetId);
-        }
-        if (dvaName_ != "") {
-            dvaDts = market_->defaultCurve(dvaName_, configuration_)->curve();
-            dvaRR = market_->recoveryRate(dvaName_, configuration_)->value();
+        if (activeOwnParty.name != "") {
+            dvaDts = market_->defaultCurve(activeOwnParty.name, configuration_)->curve();
+            dvaRR = market_->recoveryRate(activeOwnParty.name, configuration_)->value();
             PD2 = std::max(dvaDts->defaultProbability(today + 1 * Years), 0.000000000001);
         } else {
             ALOG("dvaName not specified, own PD set to zero for their KVA calculation");
@@ -377,8 +385,8 @@ void PostProcess::updateNettingSetKVA() {
         Real PD99_2 = cnd((icn(PD2) + std::sqrt(rho2) * icn(0.999)) / (std::sqrt(1 - rho2))) - PD2;
 
         // KVA regulatory PD, worst case PD, floored at 0.03 for corporates and banks, not floored for sovereigns
-        Real kva99PD1 = std::max(PD99_1, kvaTheirPdFloor_);
-        Real kva99PD2 = std::max(PD99_2, kvaOurPdFloor_);
+        Real kva99PD1 = std::max(PD99_1, activeCounterparty.pdFloor);
+        Real kva99PD2 = std::max(PD99_2, activeOwnParty.pdFloor);
 
         // Factor B(PD) for the maturity adjustment factor, B(PD) = (0.11852 - 0.05478 * ln(PD)) ^ 2
         Real kvaMatAdjB1 = std::pow((0.11852 - 0.05478 * std::log(PD1)), 2.0);
@@ -388,7 +396,7 @@ void PostProcess::updateNettingSetKVA() {
         DLOG("Our KVA-CCR " << nettingSetId << ": LGD=" << LGD1);
         DLOG("Our KVA-CCR " << nettingSetId << ": rho=" << rho1);
         DLOG("Our KVA-CCR " << nettingSetId << ": PD99=" << PD99_1);
-        DLOG("Our KVA-CCR " << nettingSetId << ": PD Floor=" << kvaTheirPdFloor_);
+        DLOG("Our KVA-CCR " << nettingSetId << ": PD Floor=" << activeCounterparty.pdFloor);
         DLOG("Our KVA-CCR " << nettingSetId << ": Floored PD99=" << kva99PD1);
         DLOG("Our KVA-CCR " << nettingSetId << ": B(PD)=" << kvaMatAdjB1);
 
@@ -396,7 +404,7 @@ void PostProcess::updateNettingSetKVA() {
         DLOG("Their KVA-CCR " << nettingSetId << ": LGD=" << LGD2);
         DLOG("Their KVA-CCR " << nettingSetId << ": rho=" << rho2);
         DLOG("Their KVA-CCR " << nettingSetId << ": PD99=" << PD99_2);
-        DLOG("Their KVA-CCR " << nettingSetId << ": PD Floor=" << kvaOurPdFloor_);
+        DLOG("Their KVA-CCR " << nettingSetId << ": PD Floor=" << activeOwnParty.pdFloor);
         DLOG("Their KVA-CCR " << nettingSetId << ": Floored PD99=" << kva99PD2);
         DLOG("Their KVA-CCR " << nettingSetId << ": B(PD)=" << kvaMatAdjB2);
 
@@ -493,8 +501,8 @@ void PostProcess::updateNettingSetKVA() {
             // TODO: Set MA in CCR capital calculation to 1
             Real kvaCvaMaturity1 = 1.0 + (effMatDenom1 == 0.0 ? 0.0 : effMatNumer1 / effMatDenom1);
             Real kvaCvaMaturity2 = 1.0 + (effMatDenom2 == 0.0 ? 0.0 : effMatNumer2 / effMatDenom2);
-            Real scva1 = kvaTheirCvaRiskWeight_ * kvaCvaMaturity1 * eepe_kva_1;
-            Real scva2 = kvaOurCvaRiskWeight_ * kvaCvaMaturity2 * eepe_kva_2;
+            Real scva1 = activeCounterparty.cvaRiskWeight * kvaCvaMaturity1 * eepe_kva_1;
+            Real scva2 = activeOwnParty.cvaRiskWeight * kvaCvaMaturity2 * eepe_kva_2;
             Real kvaCVAIncrement1 =
                 scva1 * kvaCapitalDiscount * dc.yearFraction(d0, d1) * kvaCapitalHurdle_ * kvaRegAdjustment_;
             Real kvaCVAIncrement2 =
