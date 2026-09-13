@@ -50,8 +50,9 @@ namespace {
 
 class MarketDataLoader : public Loader {
 public:
-    MarketDataLoader();
+    explicit MarketDataLoader(bool cloneZeroSpreadQuotes = false);
     std::vector<QuantLib::ext::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date&) const override;
+    QuantLib::ext::shared_ptr<MarketDatum> get(const std::string& name, const QuantLib::Date& d) const override;
     std::set<QuantLib::Date> asofDates() const override { return {}; }
     std::set<Fixing> loadFixings() const override { return fixings_; }
     std::set<QuantExt::Dividend> loadDividends() const override { return dividends_; }
@@ -63,6 +64,7 @@ private:
     std::map<QuantLib::Date, std::vector<QuantLib::ext::shared_ptr<MarketDatum>>> data_;
     std::set<Fixing> fixings_;
     std::set<QuantExt::Dividend> dividends_;
+    bool cloneZeroSpreadQuotes_;
 };
 
 vector<QuantLib::ext::shared_ptr<MarketDatum>> MarketDataLoader::loadQuotes(const Date& d) const {
@@ -71,7 +73,15 @@ vector<QuantLib::ext::shared_ptr<MarketDatum>> MarketDataLoader::loadQuotes(cons
     return it->second;
 }
 
-MarketDataLoader::MarketDataLoader() {
+QuantLib::ext::shared_ptr<MarketDatum> MarketDataLoader::get(const std::string& name, const Date& d) const {
+    auto marketDatum = Loader::get(name, d);
+    // Clone Zero quotes so allocation follows the deliberately non-chronological lookup order.
+    if (cloneZeroSpreadQuotes_ && marketDatum->instrumentType() == MarketDatum::InstrumentType::ZERO)
+        return marketDatum->clone();
+    return marketDatum;
+}
+
+MarketDataLoader::MarketDataLoader(bool cloneZeroSpreadQuotes) : cloneZeroSpreadQuotes_(cloneZeroSpreadQuotes) {
     // clang-format off
     vector<string> data = boost::assign::list_of
         // borrow spread curve
@@ -80,10 +90,10 @@ MarketDataLoader::MarketDataLoader() {
         ("20160226 ZERO/YIELD_SPREAD/EUR/BANK_EUR_BORROW/A365/10Y -0.0010")
         ("20160226 ZERO/YIELD_SPREAD/EUR/BANK_EUR_BORROW/A365/20Y -0.0010")
         // lending spread curve
-        ("20160226 ZERO/YIELD_SPREAD/EUR/BANK_EUR_LEND/A365/2Y 0.0050")
+        ("20160226 ZERO/YIELD_SPREAD/EUR/BANK_EUR_LEND/A365/2Y 0.0020")
         ("20160226 ZERO/YIELD_SPREAD/EUR/BANK_EUR_LEND/A365/5Y 0.0050")
-        ("20160226 ZERO/YIELD_SPREAD/EUR/BANK_EUR_LEND/A365/10Y 0.0050")
-        ("20160226 ZERO/YIELD_SPREAD/EUR/BANK_EUR_LEND/A365/20Y 0.0050")
+        ("20160226 ZERO/YIELD_SPREAD/EUR/BANK_EUR_LEND/A365/10Y 0.0100")
+        ("20160226 ZERO/YIELD_SPREAD/EUR/BANK_EUR_LEND/A365/20Y 0.0200")
         // Eonia curve
         ("20160226 MM/RATE/EUR/0D/1D -0.0025")
         ("20160226 IR_SWAP/RATE/EUR/0D/1D/1D -0.0025")
@@ -567,10 +577,10 @@ QuantLib::ext::shared_ptr<CurveConfigurations> curveConfigurations() {
     // Lending curve
     segments.clear();
     // clang-format off
-    quotes = {"ZERO/YIELD_SPREAD/EUR/BANK_EUR_LEND/A365/2Y",
-              "ZERO/YIELD_SPREAD/EUR/BANK_EUR_LEND/A365/5Y",
-              "ZERO/YIELD_SPREAD/EUR/BANK_EUR_LEND/A365/10Y",
-              "ZERO/YIELD_SPREAD/EUR/BANK_EUR_LEND/A365/20Y"};
+    quotes = {"ZERO/YIELD_SPREAD/EUR/BANK_EUR_LEND/A365/5Y",
+              "ZERO/YIELD_SPREAD/EUR/BANK_EUR_LEND/A365/20Y",
+              "ZERO/YIELD_SPREAD/EUR/BANK_EUR_LEND/A365/2Y",
+              "ZERO/YIELD_SPREAD/EUR/BANK_EUR_LEND/A365/10Y"};
     // clang-format on
     segments.push_back(QuantLib::ext::make_shared<ZeroSpreadedYieldCurveSegment>(
         "Zero Spread", "EUR-ZERO-CONVENTIONS-TENOR-BASED", quotes, "EUR1D"));
@@ -777,11 +787,11 @@ class F : public TopLevelFixture {
 public:
     QuantLib::ext::shared_ptr<TodaysMarket> market;
 
-    F() {
+    explicit F(bool cloneZeroSpreadQuotes = false) {
         Date asof(26, February, 2016);
         Settings::instance().evaluationDate() = asof;
 
-        auto loader = QuantLib::ext::make_shared<MarketDataLoader>();
+        auto loader = QuantLib::ext::make_shared<MarketDataLoader>(cloneZeroSpreadQuotes);
         auto params = marketParameters();
         auto configs = curveConfigurations();
         auto convs = conventions();
@@ -797,6 +807,29 @@ public:
         market.reset();
     }
 };
+
+class FWithClonedZeroSpreadQuotes : public F {
+public:
+    FWithClonedZeroSpreadQuotes() : F(true) {}
+};
+
+const vector<pair<Period, Real>> lendingCurveSpreads = {
+    {2 * Years, 0.002}, {5 * Years, 0.005}, {10 * Years, 0.010}, {20 * Years, 0.020}};
+
+void checkLendingCurveSpreads(const Handle<YieldTermStructure>& referenceCurve,
+                              const Handle<YieldTermStructure>& spreadedCurve) {
+    const Date today = Settings::instance().evaluationDate();
+    const DayCounter dc = Actual365Fixed();
+    constexpr Real tolerance = 1.0e-5;
+
+    for (const auto& [tenor, expectedSpread] : lendingCurveSpreads) {
+        const Date d = today + tenor;
+        const Real referenceZero = referenceCurve->zeroRate(d, dc, Continuous);
+        const Real spreadedZero = spreadedCurve->zeroRate(d, dc, Continuous);
+        BOOST_CHECK_MESSAGE(fabs(spreadedZero - referenceZero - expectedSpread) < tolerance,
+                            "zero spread at " << io::iso_date(d) << " is not paired with its resolved maturity");
+    }
+}
 
 } // namespace
 
@@ -819,16 +852,15 @@ BOOST_AUTO_TEST_CASE(testZeroSpreadedYieldCurve) {
     Date today = Settings::instance().evaluationDate();
     DayCounter dc = Actual365Fixed();
     Real tolerance = 1.0e-5; // 0.1 bp
-    Real expected1 = 0.005;
     Real expected2 = -0.001;
     for (Size i = 1; i <= 120; i++) {
         Date d = today + i * Months;
         Real z0 = dts->zeroRate(d, dc, Continuous);
-        Real z1 = dtsLend->zeroRate(d, dc, Continuous);
         Real z2 = dtsBorrow->zeroRate(d, dc, Continuous);
-        BOOST_CHECK_MESSAGE(fabs(z1 - z0 - expected1) < tolerance, "error in lending spread curve setup");
         BOOST_CHECK_MESSAGE(fabs(z2 - z0 - expected2) < tolerance, "error in borrowing spread curve setup");
     }
+
+    checkLendingCurveSpreads(dts, dtsLend);
 }
 
 BOOST_AUTO_TEST_CASE(testNormalOptionletVolatility) {
@@ -1037,6 +1069,20 @@ BOOST_AUTO_TEST_CASE(testCorrelationCurve) {
     BOOST_TEST_MESSAGE("NPV Cash 2Y             = " << npvCash);
 
     BOOST_CHECK_SMALL(npvCash - expectedNpv2Y, 0.000001);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(ZeroSpreadRegressionTests, FWithClonedZeroSpreadQuotes)
+
+BOOST_AUTO_TEST_CASE(testZeroSpreadedYieldCurveOrdersNodesByResolvedMaturity) {
+    Handle<YieldTermStructure> referenceCurve = market->discountCurve("EUR");
+    Handle<YieldTermStructure> spreadedCurve = market->yieldCurve("EUR_LEND");
+
+    QL_REQUIRE(!referenceCurve.empty(), "EUR discount curve not found");
+    QL_REQUIRE(!spreadedCurve.empty(), "EUR lending curve not found");
+
+    checkLendingCurveSpreads(referenceCurve, spreadedCurve);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
