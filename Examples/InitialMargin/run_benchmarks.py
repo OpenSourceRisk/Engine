@@ -147,7 +147,7 @@ if args.portfolio != "portfolio_bermudan.xml":
 ####################################################
 
 if args.pathwise:
-    subprocess.call("python3 run_simmcube.py", shell=True)
+    subprocess.call([sys.executable, "run_simmcube.py"])
 
 ########################################################
 # call plot utilities manually specific to portfolio and

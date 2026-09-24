@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 
-import subprocess as p
-                             # Legacy Examples
-cases = [ "run_saccr.py",    # 68
-	  "run_cpm.py"       # 43
-         ]
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+from ore_examples_helper import run_scripts  # noqa
 
-for c in cases:
-    cmd = "python3 " + c;
-    print ("Calling:", cmd)
-    p.call(cmd, shell=True)
+# Legacy Example numbers given below
+cases = [
+    "run_saccr.py",  # 68
+    "run_cpm.py"     # 43
+]
 
+sys.exit(run_scripts(cases))
