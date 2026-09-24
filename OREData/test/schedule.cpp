@@ -24,6 +24,7 @@
 #include <ored/utilities/toplevelfixture.hpp>
 #include <oret/util/fileutilities.hpp>
 #include <oret/util/datapaths.hpp>
+#include <algorithm>
 #include <sstream>
 #include <iomanip>
 #include <fstream>
@@ -122,13 +123,15 @@ BOOST_DATA_TEST_CASE(testDerivedSchedules,
                 xmlFilenamesNoExt.push_back(entry.path().stem().string());
         }
     }
+    // directory_iterator order is unspecified, so sort to match the order of the expected output
+    std::sort(xmlFilenamesNoExt.begin(), xmlFilenamesNoExt.end());
 
     // Read in the collection of ScheduleData objects from file.
     vector<pair<ScheduleData, Schedule>> vecScheduleData;
     for (const auto& xmlFilenameNoExt : xmlFilenamesNoExt) {
-        string filename = testInputDir.string() + "/" + xmlFilenameNoExt + ".xml";
+        fs::path filePath = testInputDir / (xmlFilenameNoExt + ".xml");
         ScheduleData scheduleData;
-        scheduleData.fromFile(TEST_INPUT_FILE(filename));
+        scheduleData.fromFile(filePath.string());
         BOOST_CHECK_EQUAL(scheduleData.name(), xmlFilenameNoExt);
         vecScheduleData.push_back({scheduleData, Schedule()});
     }
