@@ -286,8 +286,15 @@ void SimmBucketMapperBase::fromXML(XMLNode* node) {
             bucketMapping_[riskType][qualifier].insert(mapping);
             TLOG("Added SIMM bucket mapping: {" << riskType << ": {" << qualifier << ", " << bucket << ", " << validFrom << ", " << validTo << ", " << fallback << "}}");
             if (bucket != "Residual") {
-                int bucketInt = ore::data::parseInteger(bucket);
-                QL_REQUIRE(bucketInt >= 1, "found bucket " << bucket << ", expected >= 1"); 
+                // SIMM buckets are positive integers. SA-CCR credit rating
+                // buckets (e.g. AAA, AA, BBB) are non-numeric labels and are
+                // accepted as-is; the >= 1 check applies only to numeric buckets.
+                try {
+                    int bucketInt = ore::data::parseInteger(bucket);
+                    QL_REQUIRE(bucketInt >= 1, "found bucket " << bucket << ", expected >= 1");
+                } catch (const std::exception&) {
+                    // non-integer bucket label (e.g. a credit rating) - allowed
+                }
             }
         }
     }
