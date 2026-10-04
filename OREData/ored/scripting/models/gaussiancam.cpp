@@ -900,6 +900,12 @@ RandomVariable GaussianCam::getFutureBarrierProb(const std::string& index, const
         Real corr = cam_->correlation(CrossAssetModel::AssetType::FX, ccyIdx1 - 1,
                                       CrossAssetModel::AssetType::FX, ccyIdx2 - 1);
         variance = var1 + var2 - 2.0 * corr * std::sqrt(var1 * var2);
+    } else if (ind1 == Null<Size>() && ind2 != Null<Size>()) {
+        // inverted model FX index, i.e. the source currency is the model's base currency:
+        // log(base/S2) = -log(S2/base), so the variance is the one of the model index S2/base
+        Size ccyIdx2 = cam_->ccyIndex(parseCurrency(indexCurrencies_[ind2]));
+        QL_REQUIRE(ccyIdx2 > 0, "GaussianCam::getFutureBarrierProb(): inverted FX index leg is base currency");
+        variance = cam_->fxbs(ccyIdx2 - 1)->variance(t2) - cam_->fxbs(ccyIdx2 - 1)->variance(t1);
     }
     // if both ind1 and ind2 are null (trivial CCY-CCY FX), variance stays zero
 

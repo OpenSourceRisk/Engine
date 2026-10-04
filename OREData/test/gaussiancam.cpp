@@ -37,9 +37,18 @@
 #include <ored/model/irlgmdata.hpp>
 #include <ored/utilities/to_string.hpp>
 
+#include <qle/models/crossassetmodel.hpp>
+#include <qle/models/fxbsconstantparametrization.hpp>
+#include <qle/models/irlgm1fconstantparametrization.hpp>
+
+#include <ql/currencies/america.hpp>
+#include <ql/currencies/europe.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/pricingengines/swaption/blackswaptionengine.hpp>
 #include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
+#include <ql/quotes/simplequote.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/time/daycounters/actual365fixed.hpp>
 
 using namespace ore::data;
 using namespace QuantLib;
@@ -311,6 +320,94 @@ BOOST_AUTO_TEST_CASE(testRepricingCalibrationInstruments) {
                            << scriptPrice << " relative error " << (scriptPrice - analyticalPrice) / analyticalPrice);
         BOOST_CHECK_CLOSE(analyticalPrice, scriptPrice, 1.0);
     }
+}
+
+BOOST_AUTO_TEST_CASE(testBarrierProbInvertedFxIndex) {
+
+    BOOST_TEST_MESSAGE("test ABOVEPROB(), BELOWPROB() in Gaussian CAM for an FX index with source ccy = base ccy...");
+
+    // The model holds USD-EUR (EUR is the base ccy). The inverted index EUR-USD is not a model index, its value
+    // is 1 / USD-EUR. Its barrier hit probabilities must therefore match those of USD-EUR against the inverted
+    // barrier on each path, and in particular they must not collapse to the endpoint check, i.e. to 0 or 1.
+
+    constexpr Size paths = 5000;
+
+    Date asof(7, July, 2019);
+    Settings::instance().evaluationDate() = asof;
+
+    Handle<YieldTermStructure> eurCurve(QuantLib::ext::make_shared<FlatForward>(asof, 0.01, Actual365Fixed()));
+    Handle<YieldTermStructure> usdCurve(QuantLib::ext::make_shared<FlatForward>(asof, 0.02, Actual365Fixed()));
+    Real spot = 0.9;
+    Handle<Quote> usdEurSpot(QuantLib::ext::make_shared<SimpleQuote>(spot));
+
+    std::vector<QuantLib::ext::shared_ptr<Parametrization>> parametrizations = {
+        QuantLib::ext::make_shared<IrLgm1fConstantParametrization>(EURCurrency(), eurCurve, 0.005, 0.01),
+        QuantLib::ext::make_shared<IrLgm1fConstantParametrization>(USDCurrency(), usdCurve, 0.005, 0.01),
+        QuantLib::ext::make_shared<FxBsConstantParametrization>(USDCurrency(), usdEurSpot, 0.15)};
+    Handle<CrossAssetModel> model(QuantLib::ext::make_shared<CrossAssetModel>(parametrizations));
+
+    Date date1 = asof + 6 * Months;
+    Date date2 = asof + 1 * Years;
+
+    std::vector<std::string> modelCcys = {"EUR", "USD"};
+    std::vector<Handle<YieldTermStructure>> modelCurves = {eurCurve, usdCurve};
+    std::vector<Handle<Quote>> modelFxSpots = {usdEurSpot};
+    std::vector<std::string> indices = {"FX-GENERIC-USD-EUR"};
+    std::vector<std::string> indexCurrencies = {"USD"};
+    auto gaussianCam = QuantLib::ext::make_shared<GaussianCam>(
+        model, paths, modelCcys, modelCurves, modelFxSpots,
+        std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>(),
+        std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>(), indices, indexCurrencies,
+        std::set<Date>{date1, date2});
+
+    // barriers on EUR-USD, which trades around 1 / 0.9 = 1.11
+    Real barrierUp = 1.0 / spot * 1.08;
+    Real barrierDown = 1.0 / spot * 0.93;
+
+    auto context = QuantLib::ext::make_shared<Context>();
+    context->scalars["Direct"] = IndexVec{paths, "FX-GENERIC-USD-EUR"};
+    context->scalars["Inverted"] = IndexVec{paths, "FX-GENERIC-EUR-USD"};
+    context->scalars["Date1"] = EventVec{paths, date1};
+    context->scalars["Date2"] = EventVec{paths, date2};
+    context->scalars["BarrierUp"] = RandomVariable(paths, barrierUp);
+    context->scalars["BarrierDown"] = RandomVariable(paths, barrierDown);
+    context->scalars["InverseBarrierUp"] = RandomVariable(paths, 1.0 / barrierUp);
+    context->scalars["InverseBarrierDown"] = RandomVariable(paths, 1.0 / barrierDown);
+    for (auto const& r : {"AboveInverted", "BelowDirect", "BelowInverted", "AboveDirect"})
+        context->scalars[r] = RandomVariable(paths, 0.0);
+
+    std::string script = "AboveInverted = ABOVEPROB(Inverted, Date1, Date2, BarrierUp);\n"
+                         "BelowDirect = BELOWPROB(Direct, Date1, Date2, InverseBarrierUp);\n"
+                         "BelowInverted = BELOWPROB(Inverted, Date1, Date2, BarrierDown);\n"
+                         "AboveDirect = ABOVEPROB(Direct, Date1, Date2, InverseBarrierDown);\n";
+    auto ast = ScriptParser(script).ast();
+    BOOST_REQUIRE(ast);
+    ScriptEngine engine(ast, context, gaussianCam);
+    BOOST_REQUIRE_NO_THROW(engine.run());
+
+    auto check = [&](const std::string& inverted, const std::string& direct) {
+        RandomVariable inv = boost::get<RandomVariable>(context->scalars[inverted]);
+        RandomVariable dir = boost::get<RandomVariable>(context->scalars[direct]);
+        BOOST_REQUIRE_EQUAL(inv.size(), paths);
+        BOOST_REQUIRE_EQUAL(dir.size(), paths);
+        Real maxDiff = 0.0;
+        Size nonTrivial = 0;
+        for (Size i = 0; i < paths; ++i) {
+            maxDiff = std::max(maxDiff, std::abs(inv.at(i) - dir.at(i)));
+            if (inv.at(i) > 1E-6 && inv.at(i) < 1.0 - 1E-6)
+                ++nonTrivial;
+        }
+        BOOST_TEST_MESSAGE(inverted << " = " << expectation(inv).at(0) << ", " << direct << " = "
+                                    << expectation(dir).at(0) << ", max path difference = " << maxDiff << ", "
+                                    << nonTrivial << " of " << paths
+                                    << " paths with a hit probability strictly between 0 and 1");
+        BOOST_CHECK_SMALL(maxDiff, 1E-8);
+        BOOST_CHECK_MESSAGE(nonTrivial > 0, inverted << " only takes the values 0 and 1, i.e. the barrier is "
+                                                        "only checked on the two observation dates");
+    };
+
+    check("AboveInverted", "BelowDirect");
+    check("BelowInverted", "AboveDirect");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
