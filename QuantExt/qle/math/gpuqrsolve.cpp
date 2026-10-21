@@ -197,7 +197,7 @@ bool gpuQrSolveAvailable() {
 
 bool gpuQrSolveApplicable(const Matrix& A, const Array& b) {
 #ifdef ORE_ENABLE_CUDA
-    return gpuQrSolveAvailable() && m >= kGpuMinRows && ensureThreadCtx();
+    return gpuQrSolveAvailable() && A.rows() >= kGpuMinRows && ensureThreadCtx();
 #else
     return false;
 #endif

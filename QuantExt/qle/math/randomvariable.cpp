@@ -1286,7 +1286,8 @@ Array regressionCoefficients(
                                                << r.size() << ") must be geq basis fns size (" << basisFn.size()
                                                << ")");
 
-#ifdef ORE_ENABLE_CUDA
+// LOCAL PATCH: experimental GPU regression hook disabled, A and b are not yet defined here (does not compile).
+#if 0
     if (gpuQrSolveApplicable(A, b))
         return gpuQrSolve(A, b);
 #endif
