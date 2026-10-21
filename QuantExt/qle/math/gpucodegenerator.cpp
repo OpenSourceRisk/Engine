@@ -406,19 +406,16 @@ void GpuCodeGenerator::determineLocalVarReplacements() {
 
     /* mark replacement variables in last part that are also output as to be written to values buffer */
 
-    auto o = outputVars_.begin();
-    auto v = localVarReplacements_[kernelBreakLines_.size() - 1].begin();
+    // LOCAL PATCH: outputVars_ is in declaration order, not sorted by id, so the former two-pointer merge against the
+    // (sorted) replacements skipped any output declared after one with a higher id and never cached it (e.g. the
+    // CVA node, which was then read back as zero). Look the ids up in a set instead.
+    std::set<std::size_t> outputLocalVarIds;
+    for (auto const& o : outputVars_)
+        outputLocalVarIds.insert(o.second);
 
-    while (o != outputVars_.end() && v != localVarReplacements_[kernelBreakLines_.size() - 1].end()) {
-        if (o->second == v->id()) {
-            v->setToBeCached(true);
-            ++o;
-            ++v;
-        } else if (o->second < v->id()) {
-            ++o;
-        } else {
-            ++v;
-        }
+    for (auto const& v : localVarReplacements_[kernelBreakLines_.size() - 1]) {
+        if (outputLocalVarIds.find(v.id()) != outputLocalVarIds.end())
+            v.setToBeCached(true);
     }
 
     /* if a variable is replaced in all parts and is not marked as to be cached in any part, we can remove
@@ -517,13 +514,16 @@ void GpuCodeGenerator::generateOperationCode(const std::size_t i) {
 
     std::string initCode;
 
+    // LOCAL PATCH: declare each local var only once per operation, otherwise an operation with the same var as two
+    // args (e.g. v0 * v0) emits a duplicate declaration and the kernel does not compile.
+    std::set<std::size_t> initialisedHere;
     for (auto const& r : ops_[i].rhs) {
         auto rhsReplacement = r.first == VarType::local ? localVarReplacements_[currentKernelNo_].find(r.second)
                                                         : localVarReplacements_[currentKernelNo_].end();
         if (rhsReplacement != localVarReplacements_[currentKernelNo_].end() &&
             bufferedLocalVarMap_.find(r.second) != bufferedLocalVarMap_.end() &&
             rhsReplacement->firstLhsUse().value_or(max_size) >= rhsReplacement->firstRhsUse().value_or(max_size) &&
-            rhsReplacement->firstRhsUse().value_or(max_size) == i) {
+            rhsReplacement->firstRhsUse().value_or(max_size) == i && initialisedHere.insert(r.second).second) {
             initCode += fpTypeStr_ + " " + getVarStr(r, true) + "=" + getVarStr(r, false) + ";\n";
         }
     }
