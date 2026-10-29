@@ -1241,6 +1241,69 @@ BOOST_AUTO_TEST_CASE(testCommodityNoFixingCalendarUnchanged) {
     IndexManager::instance().clearHistories();
 }
 
+BOOST_AUTO_TEST_CASE(testScenarioGeneratorAbsoluteEquityShiftAndFxVolIndices) {
+
+    BOOST_TEST_MESSAGE("Testing absolute equity spot shifts and the FX volatility factor indices of the generator");
+
+    ObservationMode::instance().setMode(ObservationMode::Mode::None);
+
+    Date today = Date(14, April, 2016);
+    Settings::instance().evaluationDate() = today;
+
+    QuantLib::ext::shared_ptr<Market> initMarket = QuantLib::ext::make_shared<TestMarket>(today);
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData =
+        TestConfigurationObjects::setupSimMarketData5();
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiData =
+        TestConfigurationObjects::setupSensitivityScenarioData5();
+
+    // absolute equity spot shifts of 5 index points
+    const Real shiftSize = 5.0;
+    auto eqData = QuantLib::ext::make_shared<SensitivityScenarioData::SpotShiftData>(*sensiData->equityShiftData()["SP5"]);
+    eqData->shiftType = ShiftType::Absolute;
+    eqData->shiftSize = shiftSize;
+    sensiData->equityShiftData()["SP5"] = eqData;
+
+    // two FX volatility expiry buckets, so that the factor index has to tell the buckets apart
+    auto fxVolData = QuantLib::ext::make_shared<SensitivityScenarioData::VolShiftData>(*sensiData->fxVolShiftData()["EURUSD"]);
+    fxVolData->shiftExpiries = {3 * Months, 5 * Years};
+    sensiData->fxVolShiftData()["EURUSD"] = fxVolData;
+
+    auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(initMarket, simMarketData);
+    QuantLib::ext::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
+    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory =
+        QuantLib::ext::make_shared<CloneScenarioFactory>(baseScenario);
+    auto generator = QuantLib::ext::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData,
+                                                                              simMarket, scenarioFactory, false);
+
+    RiskFactorKey spKey(RiskFactorKey::KeyType::EquitySpot, "SP5", 0);
+    Real base = baseScenario->get(spKey);
+
+    std::set<Size> fxVolIndices;
+    bool foundUp = false, foundDown = false;
+    auto descriptions = generator->scenarioDescriptions();
+    generator->reset();
+    for (const auto& d : descriptions) {
+        auto scenario = generator->next(today);
+        if (d.type() == ShiftScenarioGenerator::ScenarioDescription::Type::Up && d.key1() == spKey) {
+            BOOST_CHECK_CLOSE(scenario->get(spKey), base + shiftSize, 1E-10);
+            foundUp = true;
+        }
+        if (d.type() == ShiftScenarioGenerator::ScenarioDescription::Type::Down && d.key1() == spKey) {
+            BOOST_CHECK_CLOSE(scenario->get(spKey), base - shiftSize, 1E-10);
+            foundDown = true;
+        }
+        if (d.type() == ShiftScenarioGenerator::ScenarioDescription::Type::Up &&
+            d.key1().keytype == RiskFactorKey::KeyType::FXVolatility && d.key1().name == "EURUSD")
+            fxVolIndices.insert(d.key1().index);
+    }
+    BOOST_CHECK(foundUp);
+    BOOST_CHECK(foundDown);
+
+    // one strike and two expiries give the two factors with indices 0 and 1
+    BOOST_CHECK_EQUAL(fxVolIndices.size(), 2U);
+    BOOST_CHECK(fxVolIndices.count(0) == 1 && fxVolIndices.count(1) == 1);
+}
+
 BOOST_AUTO_TEST_CASE(testEquityOptionDeltaGamma) {
 
     BOOST_TEST_MESSAGE("Testing Equity option sensitivities against QL analytic greeks");
