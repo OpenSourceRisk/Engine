@@ -19,6 +19,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/timer/timer.hpp>
 #include <orea/app/reportwriter.hpp>
+#include <orea/app/reportwriters/pricingreportwriter.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/sensicube.hpp>
 #include <orea/cube/sensitivitycube.hpp>
@@ -56,6 +57,7 @@
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
+#include <ored/report/inmemoryreport.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/report/inmemoryreport.hpp>
 #include <ored/utilities/osutils.hpp>
@@ -1302,6 +1304,73 @@ BOOST_AUTO_TEST_CASE(testScenarioGeneratorAbsoluteEquityShiftAndFxVolIndices) {
     // one strike and two expiries give the two factors with indices 0 and 1
     BOOST_CHECK_EQUAL(fxVolIndices.size(), 2U);
     BOOST_CHECK(fxVolIndices.count(0) == 1 && fxVolIndices.count(1) == 1);
+}
+
+BOOST_AUTO_TEST_CASE(testReportWritersConvertToBaseAndTradeCurrency) {
+
+    BOOST_TEST_MESSAGE("Testing the base and trade currency conversions of the NPV and sensitivity reports");
+
+    ObservationMode::instance().setMode(ObservationMode::Mode::None);
+    Date today = Date(14, April, 2016);
+    Settings::instance().evaluationDate() = today;
+    QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>(today);
+    const string config = Market::defaultConfiguration;
+    constexpr Real tol = 1E-8;
+
+    // sensitivity report: the amounts in trade currency are the amounts in the sensitivity currency times the FX rate
+    {
+        SensitivityRecord sr(
+            "T", false, RiskFactorKey(RiskFactorKey::KeyType::DiscountCurve, "EUR", 0), "6M", 0.0001, RiskFactorKey(),
+            "", 0.0, "EUR", 1000.0, 10.0, 2.0);
+        sr.tradeCurrency = "USD";
+        std::vector<SensitivityRecord> records = {sr};
+        auto stream = QuantLib::ext::make_shared<SensitivityInMemoryStream>(records.begin(), records.end());
+        ore::data::InMemoryReport report;
+        PricingReportWriter().writeSensitivityReport(report, stream, Null<Real>(), market, config, 6);
+        ore::data::InMemoryReport& r = report;
+        Real fx = market->fxRate("EURUSD", config)->value();
+        QL_REQUIRE(r.rows() == 1, "expected one row");
+        BOOST_CHECK_CLOSE(boost::get<Real>(r.data(8, 0)), 10.0, tol);          // Delta
+        BOOST_CHECK_CLOSE(boost::get<Real>(r.data(11, 0)), 1000.0 * fx, tol);  // Base NPV(Trade)
+        BOOST_CHECK_CLOSE(boost::get<Real>(r.data(12, 0)), 10.0 * fx, tol);    // Delta(Trade)
+        BOOST_CHECK_CLOSE(boost::get<Real>(r.data(13, 0)), 2.0 * fx, tol);     // Gamma(Trade)
+    }
+
+    // NPV report: a trade in a currency other than the base currency, and one in the base currency
+    {
+        auto data = QuantLib::ext::make_shared<EngineData>();
+        data->model("Swap") = "DiscountedCashflows";
+        data->engine("Swap") = "DiscountingSwapEngine";
+        auto simMarketData = TestConfigurationObjects::setupSimMarketData5();
+        auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(market, simMarketData);
+        auto factory = QuantLib::ext::make_shared<EngineFactory>(data, simMarket);
+        auto portfolio = QuantLib::ext::make_shared<Portfolio>();
+        portfolio->add(buildSwap("1_Swap_EUR", "EUR", true, 10000000.0, 0, 10, 0.03, 0.00, "1Y", "30/360", "6M",
+                                 "A360", "EUR-EURIBOR-6M"));
+        portfolio->add(buildSwap("2_Swap_USD", "USD", true, 10000000.0, 0, 15, 0.02, 0.00, "6M", "30/360", "3M",
+                                 "A360", "USD-LIBOR-3M"));
+        portfolio->build(factory);
+
+        ore::data::InMemoryReport report;
+        PricingReportWriter().writeNpv(report, "EUR", market, config, portfolio);
+        ore::data::InMemoryReport& r = report;
+        Real fx = market->fxRate("USDEUR", config)->value();
+        Size eur = Null<Size>(), usd = Null<Size>();
+        for (Size i = 0; i < r.rows(); ++i) {
+            string id = boost::get<string>(r.data(0, i));
+            if (id == "1_Swap_EUR")
+                eur = i;
+            if (id == "2_Swap_USD")
+                usd = i;
+        }
+        QL_REQUIRE(eur != Null<Size>() && usd != Null<Size>(), "trades not found in the NPV report");
+        // columns: 4 NPV, 6 NPV(Base), 8 Notional, 10 Notional(Base)
+        auto num = [&](Size col, Size row) { return boost::get<Real>(r.data(col, row)); };
+        BOOST_CHECK_CLOSE(num(6, eur), num(4, eur), tol);
+        BOOST_CHECK_CLOSE(num(10, eur), 10000000.0, tol);
+        BOOST_CHECK_CLOSE(num(6, usd), num(4, usd) * fx, tol);
+        BOOST_CHECK_CLOSE(num(10, usd), 10000000.0 * fx, tol);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(testEquityOptionDeltaGamma) {
