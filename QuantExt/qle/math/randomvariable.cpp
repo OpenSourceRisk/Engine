@@ -1034,7 +1034,7 @@ RandomVariable indicatorGt(RandomVariable x, const RandomVariable& y, const Real
             Real delta = getDelta(x - y, eps);
             resumeCalcStats();
             for (Size i = 0; i < x.n_; ++i) {
-                x.data_[i] = falseVal + (trueVal - falseVal) * 1.0 / (1.0 + std::exp(-x.data_[i] / delta));
+                x.data_[i] = falseVal + (trueVal - falseVal) * 1.0 / (1.0 + std::exp(-(x.data_[i] - y[i]) / delta));
             }
             stopCalcStats(x.n_);
             return x;
@@ -1072,7 +1072,7 @@ RandomVariable indicatorGeq(RandomVariable x, const RandomVariable& y, const Rea
             Real delta = getDelta(x - y, eps);
             resumeCalcStats();
             for (Size i = 0; i < x.n_; ++i) {
-                x.data_[i] = falseVal + (trueVal - falseVal) * 1.0 / (1.0 + std::exp(-x.data_[i] / delta));
+                x.data_[i] = falseVal + (trueVal - falseVal) * 1.0 / (1.0 + std::exp(-(x.data_[i] - y[i]) / delta));
             }
             stopCalcStats(x.n_);
             return x;
