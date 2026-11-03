@@ -475,6 +475,9 @@ std::pair<std::size_t, bool> CudaContext::initiateCalculation(const std::size_t 
             hasKernel_[id - 1] = false;
             version_[id - 1] = version;
             releaseModule(module_[id - 1], "initiateCalculation"); // releaseModule will also release the linked kernel
+            // LOCAL PATCH: drop the stale function handles (the OpenCL context clears kernel_ here too), otherwise the
+            // rebuilt calculation appends to them and finalizeCalculation sees more than one kernel.
+            kernel_[id - 1].clear();
             nOutputVariables_[id - 1] = 0;
             nRandomVariables_[id - 1] = 0;
             numOfExpectationInKernel_[id - 1].clear();
@@ -504,6 +507,10 @@ std::pair<std::size_t, bool> CudaContext::initiateCalculation(const std::size_t 
     resultIdUnprocessedE_.clear();
     resultIdFlatE_.clear();
     kernelOfIdCopiedToValues_.clear();
+	// LOCAL PATCH: start every calculation with a fresh source_. It was only cleared after a kernel build, so re-initiating
+	// an existing calculation (e.g. scenario revaluation in sensitivities) grew it by one entry per call until a rebuild saw
+	// hundreds of phantom kernels.
+	source_.clear();
 	source_.push_back("");
     basisFunctionHelper_.clear();
     basisFunctionHelper_.push_back(0);
@@ -910,8 +917,14 @@ std::size_t CudaContext::applyOperation(const std::size_t randomVariableOpCode,
                     }
                     else {
                         // id is conditional expectation calculcated at the beginning of this kernel, not read from values
+                        // LOCAL PATCH: unsigned index underflow if there are not enough result id sets (-> garbage vector copy, std::bad_alloc)
                         std::vector<size_t> secToLast;
-                        secToLast = resultIdCE_[resultIdCE_.size() - (numOfExpectationInKernel_[currentId_ - 1][numOfExpectationInKernel_[currentId_ - 1].size()-2] > 0?3:2)];
+                        {
+                            const auto& nExp = numOfExpectationInKernel_[currentId_ - 1];
+                            const size_t back = (nExp.size() >= 2 && nExp[nExp.size() - 2] > 0) ? 3 : 2;
+                            if (resultIdCE_.size() >= back)
+                                secToLast = resultIdCE_[resultIdCE_.size() - back];
+                        }
                         if (std::find(secToLast.begin(), secToLast.end(), args[i]) != secToLast.end())
                             argStr[i] = "v" + std::to_string(args[i]);
                         else {
@@ -1047,9 +1060,16 @@ std::size_t CudaContext::applyOperation(const std::size_t randomVariableOpCode,
 			source_.back() += "     if (ore_closeEnough(" + argStr[1] + ", 1.0)) partialSum[threadIdx.x] = " + argStr[0] + ";\n"
                               "     else partialSum[threadIdx.x] = 0;\n"
                               "      __syncthreads();\n"
-                              "     for (int s = blockDim.x / 2; s > 0; s >>= 1) {\n"
-                              "         if (threadIdx.x < s) partialSum[threadIdx.x] += partialSum[threadIdx.x + s];\n"
-                              "         __syncthreads();\n"
+                              // LOCAL PATCH: only combine the threads of this block that are active (tid < size), the others
+                              // never write partialSum, so the former full-width reduction added uninitialised shared memory
+                              // whenever the number of samples is not a multiple of the block size.
+                              "     {\n"
+                              "         int nAct = min((int)blockDim.x, " + std::to_string(size_[currentId_ - 1]) + " - (int)(blockIdx.x * blockDim.x));\n"
+                              "         int s0 = 1; while (s0 < nAct) s0 <<= 1; s0 >>= 1;\n"
+                              "         for (int s = s0; s > 0; s >>= 1) {\n"
+                              "             if (threadIdx.x < s && threadIdx.x + s < nAct) partialSum[threadIdx.x] += partialSum[threadIdx.x + s];\n"
+                              "             __syncthreads();\n"
+                              "         }\n"
                               "     }\n"
                               "     if (threadIdx.x == 0) e[blockIdx.x + " + std::to_string(nNUM_BLOCKS_[currentId_ - 1] * expectationCount_) + "] = partialSum[0];\n";
             newKernelE_ +=  "   if (blockIdx.x == " + std::to_string(expectationCount_) + ") {\n"
@@ -1067,7 +1087,22 @@ std::size_t CudaContext::applyOperation(const std::size_t randomVariableOpCode,
             // Conditional Expectation
             // calculate order
             size_t order = settings_.regressionOrder;
-            size_t regressorSize = args.size() - 2;
+            // LOCAL PATCH: drop duplicate regressors (same variable id). A duplicated regressor makes the basis matrix
+            // rank deficient and cuSOLVER's non-pivoted QR (IRSXgels) then returns garbage coefficients (~1e100); the
+            // fitted function space (polynomials in the distinct regressors) is unchanged by dropping duplicates.
+            std::vector<size_t> regIdx;
+            for (size_t i = 2; i < args.size(); ++i) {
+                bool dup = false;
+                for (auto j : regIdx) {
+                    if (args[j] == args[i]) {
+                        dup = true;
+                        break;
+                    }
+                }
+                if (!dup)
+                    regIdx.push_back(i);
+            }
+            size_t regressorSize = regIdx.size();
             while (RandomVariableLsmBasisSystem::size(regressorSize, order) > static_cast<Real>(size_[currentId_ - 1]) && order > 1) {
                 --order;
             }
@@ -1084,8 +1119,8 @@ std::size_t CudaContext::applyOperation(const std::size_t randomVariableOpCode,
             //degree 0
             source_.back() += "      " + strA_unfilter[0] + " = 1.0;\n";
             // degree 1
-            for (size_t i = 2; i < args.size(); ++i) {
-                source_.back() += "      " + strA_unfilter[i-1] + " = " + argStr[i] + ";\n";
+            for (size_t k = 0; k < regressorSize; ++k) {
+                source_.back() += "      " + strA_unfilter[k + 1] + " = " + argStr[regIdx[k]] + ";\n";
             }
             // degree 2+
             if (order >= 2) {
@@ -1280,6 +1315,10 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
                 if (out < nInputVars_)
                     kernelSource += "       output[tid + " + std::to_string(ii * size_[currentId_ - 1]) + "] = input[" +
                                     std::to_string(out) + (inputVarIsScalar_[out] ? "" : " + tid") + "];\n";
+                // LOCAL PATCH: a random variate declared as output must be read from r[], not from a local var
+                else if (out < nInputVars_ + nRandomVariables_[currentId_ - 1])
+                    kernelSource += "       output[tid + " + std::to_string(ii * size_[currentId_ - 1]) + "] = r[tid + " +
+                                    std::to_string((out - nInputVars_) * size_[currentId_ - 1]) + "];\n";
                 else
                     kernelSource += "       output[tid + " + std::to_string(ii * size_[currentId_ - 1]) + "] = v" +
                                     std::to_string(out) + ";\n";
@@ -1295,7 +1334,14 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
                 // output (If last kernel, add output. If not, add values)
                 if (s == source_.size() - 1){
                     size_t ii = 0;
-                    auto secToLast = resultIdCE_[resultIdCE_.size() - (numOfExpectationInKernel_[currentId_ - 1][numOfExpectationInKernel_[currentId_ - 1].size()-2] > 0?3:2)];
+                    // LOCAL PATCH: unsigned index underflow if there are not enough result id sets (-> garbage vector copy, std::bad_alloc)
+                    std::vector<size_t> secToLast;
+                    {
+                        const auto& nExp = numOfExpectationInKernel_[currentId_ - 1];
+                        const size_t back = (nExp.size() >= 2 && nExp[nExp.size() - 2] > 0) ? 3 : 2;
+                        if (resultIdCE_.size() >= back)
+                            secToLast = resultIdCE_[resultIdCE_.size() - back];
+                    }
                     for (auto const& out : outputVariables_) {
                         auto expectationResult = std::find(resultIdFlatE_.begin(), resultIdFlatE_.end(), out) ;
                         if (out < inputVarIsScalar_.size()){
@@ -1312,7 +1358,7 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
                         else if (std::find(secToLast.begin(), secToLast.end(), out) != secToLast.end())
                             outputSource += "       output[tid + " + std::to_string(ii * size_[currentId_ - 1]) + "] = v" +
                                             std::to_string(out) + ";\n";
-                        else if (out < lastResultIdCE_.back()){
+                        else if (!lastResultIdCE_.empty() && out < lastResultIdCE_.back()){
                             auto it = std::find(idCopiedToValues_.begin(), idCopiedToValues_.end(), out);
                             if (it != idCopiedToValues_.end()){
                                 outputSource += "       output[tid + " + std::to_string(ii * size_[currentId_ - 1]) + "] = values[tid + " +

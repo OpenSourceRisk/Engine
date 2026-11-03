@@ -695,8 +695,12 @@ void OpenClContext::updateVariatesPool() {
 
         // clang-format off
         // ported from from QuantLib::InverseCumulativeNormal
-        std::string sourceInvCumN = fpTypeStr + " ore_invCumN(const uint x0);\n" +
-            fpTypeStr + " ore_invCumN(const uint x0) {\n"
+        // LOCAL PATCH: in float, (float)x0 rounds to 2^32 for x0 >= 0xFFFFFF80, so x == 1.0f and the upper tail gives
+        // NaN (log(0), inf / inf). In float the upper half is evaluated by symmetry, -f(UINT_MAX - x0), see wrapper
+        // below. Double precision is unchanged.
+        const std::string invCumNCore = settings_.useDoublePrecision ? "ore_invCumN" : "ore_invCumN_core";
+        std::string sourceInvCumN = fpTypeStr + " " + invCumNCore + "(const uint x0);\n" +
+            fpTypeStr + " " + invCumNCore + "(const uint x0) {\n"
             "    const " + fpTypeStr + " a1_ = -3.969683028665376e+01" + fpSuffix + ";\n"
             "    const " + fpTypeStr + " a2_ = 2.209460984245205e+02" + fpSuffix + ";\n"
             "    const " + fpTypeStr + " a3_ = -2.759285104469687e+02" + fpSuffix + ";\n"
@@ -746,6 +750,12 @@ void OpenClContext::updateVariatesPool() {
             "        return z;\n"
             "    }\n"
             "}\n\n";
+
+        if (!settings_.useDoublePrecision) {
+            sourceInvCumN += "float ore_invCumN(const uint x0) {\n"
+                             "    return x0 > 0x7FFFFFFFu ? -ore_invCumN_core(UINT_MAX - x0) : ore_invCumN_core(x0);\n"
+                             "}\n\n";
+        }
 
         // from QuantLib::MersenneTwisterUniformRng
 
@@ -1351,6 +1361,7 @@ void OpenClContext::copyLocalValuesToDevice(
         }
     }
 
+    const std::size_t firstWriteEvent = runWaitEvents.size();
     std::size_t counter = 0;
     for (auto const& v : vars) {
         std::size_t bid = gpuCodeGenerator_[currentId_ - 1].bufferedLocalVarMap(v.second);
@@ -1363,6 +1374,15 @@ void OpenClContext::copyLocalValuesToDevice(
         QL_REQUIRE(err == CL_SUCCESS,
                    "OpenClContext::copyLocalValuesToDevice(): write values buffer fails: " << errorText(err));
         ++counter;
+    }
+
+    // LOCAL PATCH: the non-blocking writes above read from valuesFloat, which is destroyed on return. In float mode
+    // wait for them to complete, otherwise the device runtime copies from freed memory (segfault).
+    if (!settings_.useDoublePrecision) {
+        cl_int err = clWaitForEvents(runWaitEvents.size() - firstWriteEvent, &runWaitEvents[firstWriteEvent]);
+        QL_REQUIRE(err == CL_SUCCESS,
+                   "OpenClContext::copyLocalValuesToDevice(): wait for write values buffer events fails: "
+                       << errorText(err));
     }
 }
 
