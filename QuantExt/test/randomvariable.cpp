@@ -195,6 +195,32 @@ BOOST_AUTO_TEST_CASE(testBlack) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(testSmoothedIndicatorsCompareWithTheSecondArgument) {
+    BOOST_TEST_MESSAGE("Testing smoothed indicators with a second argument other than zero...");
+
+    // With eps > 0 the indicators are logistic functions of (x - y). Far from x = y they must agree with the exact
+    // indicators for any y, not only for y = 0.
+    constexpr Real eps = 0.05;
+    for (Real y : {-2.0, 0.0, 3.0}) {
+        RandomVariable above(1, y + 1.0), below(1, y - 1.0), yy(1, y);
+        BOOST_CHECK_SMALL(indicatorGt(above, yy, 1.0, 0.0, eps).at(0) - 1.0, 1E-6);
+        BOOST_CHECK_SMALL(indicatorGt(below, yy, 1.0, 0.0, eps).at(0), 1E-6);
+        BOOST_CHECK_SMALL(indicatorGeq(above, yy, 1.0, 0.0, eps).at(0) - 1.0, 1E-6);
+        BOOST_CHECK_SMALL(indicatorGeq(below, yy, 1.0, 0.0, eps).at(0), 1E-6);
+    }
+
+    // at x = y the logistic function is 1/2, whatever the common value
+    RandomVariable a(3, 0.0), b(3, 0.0);
+    a.set(0, 1.0), a.set(1, 5.0), a.set(2, 9.0);
+    b.set(0, 1.0), b.set(1, 5.0), b.set(2, 9.0);
+    // add a spread so that the bandwidth is not zero
+    a.set(0, 1.5), a.set(2, 8.5);
+    RandomVariable r = indicatorGt(a, b, 1.0, 0.0, eps);
+    BOOST_CHECK_CLOSE(r.at(1), 0.5, 1E-10);
+    BOOST_CHECK_GT(r.at(0), 0.5);
+    BOOST_CHECK_LT(r.at(2), 0.5);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

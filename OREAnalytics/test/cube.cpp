@@ -22,6 +22,8 @@
 #include <orea/cube/cube_io.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/cube/jaggedcube.hpp>
+#include <orea/cube/sensicube.hpp>
+#include <orea/cube/sensitivitycube.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/parametricvar.hpp>
@@ -619,6 +621,57 @@ BOOST_AUTO_TEST_CASE(testCubeCompressionLevel) {
 
     // Level 9 should be smaller than or equal to level 1
     BOOST_CHECK_PREDICATE(std::less_equal<std::uintmax_t>(), (size9)(size1));
+}
+
+BOOST_AUTO_TEST_CASE(testSensitivityCubeDeltaGammaTheta) {
+    BOOST_TEST_MESSAGE("Testing delta, gamma and theta of the sensitivity cube with hand-computed values...");
+
+    // One trade, one factor per shift scheme. Target and actual shift sizes differ, so each result is scaled by
+    // target / actual (squared for gamma).
+    using QuantExt::ShiftScheme;
+    RiskFactorKey central(RiskFactorKey::KeyType::DiscountCurve, "EUR", 0);
+    RiskFactorKey forward(RiskFactorKey::KeyType::EquitySpot, "ABC", 0);
+    RiskFactorKey backward(RiskFactorKey::KeyType::FXSpot, "EURUSD", 0);
+
+    std::vector<SensitivityCube::ShiftScenarioDescription> descriptions = {
+        SensitivityCube::ShiftScenarioDescription("Base"),
+        SensitivityCube::ShiftScenarioDescription("Up:DiscountCurve/EUR/0/6M"),
+        SensitivityCube::ShiftScenarioDescription("Down:DiscountCurve/EUR/0/6M"),
+        SensitivityCube::ShiftScenarioDescription("Up:EquitySpot/ABC/0"),
+        SensitivityCube::ShiftScenarioDescription("Down:FXSpot/EURUSD/0"),
+        SensitivityCube::ShiftScenarioDescription(SensitivityCube::ShiftScenarioDescription::Type::Theta,
+                                                  RiskFactorKey(), "1D")};
+
+    auto cube = QuantLib::ext::make_shared<DoublePrecisionSensiCube>(std::set<std::string>{"T"},
+                                                                    QuantLib::Date(5, QuantLib::Feb, 2016),
+                                                                    descriptions.size());
+    cube->setT0(100.0, 0, 0);
+    cube->set(103.0, 0, 0, 1, 0); // central: up
+    cube->set(99.0, 0, 0, 2, 0);  // central: down
+    cube->set(107.0, 0, 0, 3, 0); // forward: up
+    cube->set(96.0, 0, 0, 4, 0);  // backward: down
+    cube->set(99.5, 0, 0, 5, 0);  // theta
+
+    std::map<RiskFactorKey, QuantLib::Real> target = {{central, 0.0001}, {forward, 0.0002}, {backward, 0.0003}};
+    std::map<RiskFactorKey, QuantLib::Real> actual = {{central, 0.0002}, {forward, 0.0001}, {backward, 0.0002}};
+    std::map<RiskFactorKey, ShiftScheme> schemes = {
+        {central, ShiftScheme::Central}, {forward, ShiftScheme::Forward}, {backward, ShiftScheme::Backward}};
+
+    SensitivityCube sc(cube, descriptions, target, actual, schemes);
+
+    constexpr QuantLib::Real tol = 1E-12;
+    // central: (103 - 99) / 2 * (0.0001 / 0.0002) = 1
+    BOOST_CHECK_CLOSE(sc.delta("T", central), 1.0, tol);
+    // forward: (107 - 100) * (0.0002 / 0.0001) = 14
+    BOOST_CHECK_CLOSE(sc.delta("T", forward), 14.0, tol);
+    // backward: (100 - 96) * (0.0003 / 0.0002) = 6
+    BOOST_CHECK_CLOSE(sc.delta("T", backward), 6.0, tol);
+    // gamma: (103 - 2 * 100 + 99) * (0.0001 / 0.0002)^2 = 2 * 0.25 = 0.5
+    BOOST_CHECK_CLOSE(sc.gamma("T", central), 0.5, tol);
+    // theta: the change of value over one day, 99.5 - 100
+    auto theta = sc.theta(0);
+    BOOST_CHECK_CLOSE(theta.first, -0.5, tol);
+    BOOST_CHECK_EQUAL(theta.second, 1 * QuantLib::Days);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
