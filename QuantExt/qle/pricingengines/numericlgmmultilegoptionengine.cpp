@@ -672,7 +672,7 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
         }
 
         Real maxEuropeanNpv = 0.0;
-        Real maxEuropeanTime;
+        Real maxEuropeanTime = 0.0;
         Date maxEuropeanDate;
         for(Size i=0;i<europeanOptionNpv.size();++i) {
             additionalResults_["europeanOptionNpv_" + std::to_string(i)] = europeanOptionNpv[i].at(0);
