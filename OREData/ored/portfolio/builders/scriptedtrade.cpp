@@ -96,6 +96,25 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
                                    const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                                    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
 
+    // The model builders registered with the engine factory below are recalibrated for every sample by the valuation
+    // engine, and they refer to the models owned by this engine builder, which are released when the engine builder is
+    // cleared. If building the engine fails after a model builder was registered, the trade fails and the model is
+    // released, so remove the builders registered by this call or they would be recalibrated with dangling references.
+    struct ModelBuilderGuard {
+        std::set<std::pair<std::string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>>& builders;
+        const std::set<std::pair<std::string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>> before;
+        bool success = false;
+        explicit ModelBuilderGuard(
+            std::set<std::pair<std::string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>>& builders)
+            : builders(builders), before(builders) {}
+        ~ModelBuilderGuard() {
+            if (!success) {
+                for (auto it = builders.begin(); it != builders.end();)
+                    it = before.count(*it) ? std::next(it) : builders.erase(it);
+            }
+        }
+    } modelBuilderGuard(engineFactory()->modelBuilders());
+
     const std::vector<ScriptedTradeEventData>& events = scriptedTrade.events();
     const std::vector<ScriptedTradeValueTypeData>& numbers = scriptedTrade.numbers();
     const std::vector<ScriptedTradeValueTypeData>& indices = scriptedTrade.indices();
@@ -385,6 +404,7 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
                                     << ", generateAdditionalResults = " << generateAdditionalResults()
                                     << ", generateAdditionalResultsPathLevel = "
                                     << generateAdditionalResultsPathLevel_);
+    modelBuilderGuard.success = true;
     return engine;
 }
 

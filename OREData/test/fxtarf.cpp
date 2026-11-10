@@ -123,6 +123,64 @@ BOOST_AUTO_TEST_CASE(testNPV) {
                       tol);
 }
 
+BOOST_AUTO_TEST_CASE(testFailedEngineBuildLeavesNoModelBuilder) {
+    BOOST_TEST_MESSAGE("Testing that a trade whose engine fails to build leaves no model builder behind...");
+
+    ORE_REGISTER_TRADE_BUILDER("ScriptedTrade", ore::data::ScriptedTrade, true)
+    ORE_REGISTER_TRADE_BUILDER("FxTaRF", ore::data::FxTaRF, true)
+    ORE_REGISTER_ENGINE_BUILDER(ore::data::ScriptedTradeEngineBuilder, true)
+
+    Settings::instance().evaluationDate() = Date(31, Dec, 2018);
+    Date asof = Settings::instance().evaluationDate();
+
+    auto conventions = QuantLib::ext::make_shared<Conventions>();
+    conventions->fromFile(TEST_INPUT_FILE("conventions.xml"));
+    InstrumentConventions::instance().setConventions(conventions);
+
+    auto todaysMarketParams = QuantLib::ext::make_shared<TodaysMarketParameters>();
+    todaysMarketParams->fromFile(TEST_INPUT_FILE("todaysmarket.xml"));
+    auto curveConfigs = QuantLib::ext::make_shared<CurveConfigurations>();
+    curveConfigs->fromFile(TEST_INPUT_FILE("curveconfig.xml"));
+    auto loader = QuantLib::ext::make_shared<CSVLoader>();
+    loader->fromFiles(TEST_INPUT_FILE("market.txt"), TEST_INPUT_FILE("fixings.txt"));
+    auto market = QuantLib::ext::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, false);
+
+    // use the computation graph with an external compute device that does not exist: the model and its model builder
+    // are built first, then the engine builder fails when it selects the device
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
+    engineData->fromFile(TEST_INPUT_FILE("pricingengine.xml"));
+    auto& engineParameters = engineData->engineParameters("ScriptedTrade");
+    engineParameters["UseCG"] = "true";
+    engineParameters["UseExternalComputeDevice"] = "true";
+    engineParameters["ExternalComputeDevice"] = "NoSuchApi/NoSuchPlatform/NoSuchDevice";
+    QuantLib::ext::shared_ptr<EngineFactory> factory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
+
+    struct cleanup {
+        ~cleanup() { ore::data::ScriptLibraryStorage::instance().clear(); }
+    } cleanup;
+    ore::data::ScriptLibraryData library;
+    library.fromFile(TEST_INPUT_FILE("scriptlibrary.xml"));
+    ore::data::ScriptLibraryStorage::instance().set(std::move(library));
+
+    Portfolio p;
+    p.fromFile(TEST_INPUT_FILE("FX_TaRF.xml"));
+    BOOST_CHECK_NO_THROW(p.build(factory));
+
+    // all scripted trades failed to build ...
+    Size failed = 0;
+    for (auto const& [id, trade] : p.trades()) {
+        BOOST_CHECK_MESSAGE(trade->tradeType() != "FxTaRF" && trade->tradeType() != "ScriptedTrade",
+                            "trade " << id << " of type " << trade->tradeType() << " should have failed to build");
+        if (trade->tradeType() == "Failed")
+            ++failed;
+    }
+    BOOST_CHECK(failed > 0);
+
+    // ... and the model builders they registered were removed, because they refer to models that no longer exist
+    BOOST_CHECK_MESSAGE(factory->modelBuilders().empty(),
+                        "expected no model builders, found " << factory->modelBuilders().size());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
