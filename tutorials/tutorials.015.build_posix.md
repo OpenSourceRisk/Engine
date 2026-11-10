@@ -69,18 +69,21 @@ Run a selected test, e.g:
 
     ./quantlib-test-suite --log_level=all --run_test="QuantLib test suite/Swap tests"
 
+The QuantExt, OREData and OREAnalytics test suites read their input and expected-result files relative to the
+working directory, so run them from the source test directory, not from the build directory. (CTest does this for you:
+`cd $ORE_ROOT_DIR/build && ctest`.)
+
 ## QuantExt
 
-    cd $ORE_ROOT_DIR/build/QuantExt/test
-    ./quantext-test-suite
+    cd $ORE_ROOT_DIR/QuantExt/test
+    $ORE_ROOT_DIR/build/QuantExt/test/quantext-test-suite
 
 ## OREData
 
-    cd $ORE_ROOT_DIR/build/OREData/test
-    ./ored-test-suite
+    cd $ORE_ROOT_DIR/OREData/test
+    $ORE_ROOT_DIR/build/OREData/test/ored-test-suite -- --base_data_path=.
 
 ## OREAnalytics
 
-    cd $ORE_ROOT_DIR/build/OREAnalytics/test
-    ./orea-test-suite
-
+    cd $ORE_ROOT_DIR/OREAnalytics/test
+    $ORE_ROOT_DIR/build/OREAnalytics/test/orea-test-suite -- --base_data_path=.
