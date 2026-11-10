@@ -26,6 +26,7 @@ bonds.cpp
 bondtrs.cpp
 calendars.cpp
 capfloortermvolcurve.cpp
+cappedflooredovernightindexedcoupon.cpp
 cashflow.cpp
 commodityforward.cpp
 commodityschwartzmodel.cpp
