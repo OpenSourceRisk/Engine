@@ -536,6 +536,11 @@ void CappedFlooredOvernightIndexedCoupon::deepUpdate() {
 void CappedFlooredOvernightIndexedCoupon::performCalculations() const {
     QL_REQUIRE(underlying_->pricer(), "pricer not set");
     Rate swapletRate = nakedOption_ ? 0.0 : underlying_->rate();
+    if (!nakedOption_ && underlying_->observationShift() && !underlying_->separateRateCompPeriod()) {
+        // The wrapper and optionlet rates use the unshifted coupon accrual period.
+        const auto& dates = underlying_->interestDates();
+        swapletRate *= dayCounter().yearFraction(dates.front(), dates.back()) / accrualPeriod();
+    }
     if (floor_ != Null<Real>() || cap_ != Null<Real>())
         pricer()->initialize(*this);
     Rate floorletRate = 0.;
@@ -592,7 +597,7 @@ Rate CappedFlooredOvernightIndexedCoupon::effectiveCap() const {
             return (cap_ / gearing() - underlying_->effectiveSpread());
         } else {
             // A = \min \left( \max \left( g \cdot \frac{\prod (1 + \tau_i f_i) - 1}{\tau} + s, F \right), C \right)
-            return (cap_ - underlying_->effectiveSpread()) / gearing();
+            return (cap_ - underlying_->spread()) / gearing();
         }
     }
 }
@@ -610,7 +615,7 @@ Rate CappedFlooredOvernightIndexedCoupon::effectiveFloor() const {
         if (underlying_->includeSpread()) {
             return (floor_ - underlying_->effectiveSpread());
         } else {
-            return (floor_ - underlying_->effectiveSpread()) / gearing();
+            return (floor_ - underlying_->spread()) / gearing();
         }
     }
 }
