@@ -1,0 +1,14 @@
+{
+  "underlying": "SP5",
+  "currency": "USD",
+  "keyed_vol": 0.16,
+  "keyed_at": "2016-02-05T14:30",
+  "cut": "2016-02-05T21:00",
+  "weight_at_keyed": 2.0,
+  "weight_at_cut": 0.5,
+  "keyed_pillars": {
+    "1M": 0.1271,
+    "6M": 0.25
+  },
+  "asof_times": ["14:30", "15:30", "17:00", "18:30", "20:00", "20:30", "20:50", "20:59"]
+}

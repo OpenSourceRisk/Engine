@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<Portfolio>
+  <!-- ATM spot gold calls at the shared market spot 1155.593, one per cut on 2016-02-05 -->
+  <!-- LBMA Gold Price AM auction, 10:30 London = 10:30 UTC in February -->
+  <Trade id="GOLD_CALL_1030">
+    <TradeType>CommodityOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields>
+        <ExpiryCutTime>10:30Z</ExpiryCutTime>
+      </AdditionalFields>
+    </Envelope>
+    <CommodityOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2016-02-05</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <Name>COMDTY_GOLD_USD</Name>
+      <Currency>USD</Currency>
+      <Strike>1155.593</Strike>
+      <Quantity>1</Quantity>
+      <IsFuturePrice>false</IsFuturePrice>
+    </CommodityOptionData>
+  </Trade>
+  <!-- LBMA Gold Price PM auction, 15:00 London = 15:00 UTC in February -->
+  <Trade id="GOLD_CALL_1500">
+    <TradeType>CommodityOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields>
+        <ExpiryCutTime>15:00Z</ExpiryCutTime>
+      </AdditionalFields>
+    </Envelope>
+    <CommodityOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2016-02-05</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <Name>COMDTY_GOLD_USD</Name>
+      <Currency>USD</Currency>
+      <Strike>1155.593</Strike>
+      <Quantity>1</Quantity>
+      <IsFuturePrice>false</IsFuturePrice>
+    </CommodityOptionData>
+  </Trade>
+  <!-- Control: PM auction next week, interpolated between today's pillars and the keyed 1M pillar -->
+  <Trade id="GOLD_CALL_1500_NEXTWEEK">
+    <TradeType>CommodityOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields>
+        <ExpiryCutTime>15:00Z</ExpiryCutTime>
+      </AdditionalFields>
+    </Envelope>
+    <CommodityOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2016-02-12</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <Name>COMDTY_GOLD_USD</Name>
+      <Currency>USD</Currency>
+      <Strike>1155.593</Strike>
+      <Quantity>1</Quantity>
+      <IsFuturePrice>false</IsFuturePrice>
+    </CommodityOptionData>
+  </Trade>
+</Portfolio>

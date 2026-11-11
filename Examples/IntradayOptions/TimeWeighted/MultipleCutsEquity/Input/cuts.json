@@ -1,0 +1,16 @@
+{
+  "day": "2016-02-05",
+  "shared_market": "../../../Input/market_20160205.txt",
+  "quote_prefix": "EQUITY_OPTION/RATE_LNVOL/SP5/USD/",
+  "quote_suffix": "/ATM/AtmFwd",
+  "keyed_vol": 0.16,
+  "weights": [["00:00", 2.0], ["10:00", 1.5], ["14:00", 1.2], ["16:00", 0.9], ["20:30", 0.5]],
+  "cuts": {"1430": "14:30", "2100": "21:00"},
+  "keyed_pillars": {"1M": 0.1271, "6M": 0.25},
+  "asof_times": ["03:00", "12:00", "14:25", "14:35", "17:00", "20:00", "20:55", "21:30"],
+  "trades": {
+    "SP5_CALL_1430": {"expiry": "2016-02-05", "cut": "14:30", "pillar": "1430"},
+    "SP5_CALL_2100": {"expiry": "2016-02-05", "cut": "21:00", "pillar": "2100"},
+    "SP5_CALL_2100_NEXTWEEK": {"expiry": "2016-02-12", "cut": "21:00"}
+  }
+}
