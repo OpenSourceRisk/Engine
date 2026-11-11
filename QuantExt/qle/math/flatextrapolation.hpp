@@ -58,9 +58,9 @@ private:
                 return i_->primitive(x);
             }
             if (x < i_->xMin()) {
-                return i_->primitive(i_->xMin()) - (i_->xMin() - x);
+                return i_->primitive(i_->xMin()) - (i_->xMin() - x) * i_->operator()(i_->xMin());
             } else {
-                return i_->primitive(i_->xMax()) + (x - i_->xMax());
+                return i_->primitive(i_->xMax()) + (x - i_->xMax()) * i_->operator()(i_->xMax());
             }
         }
         Real derivative(Real x) const override {

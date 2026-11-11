@@ -23,6 +23,7 @@
 #include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <qle/math/flatextrapolation.hpp>
 #include <qle/termstructures/interpolateddiscountcurve2.hpp>
 
 using namespace boost::unit_test_framework;
@@ -32,6 +33,30 @@ using std::vector;
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(DiscountCurveTest)
+
+BOOST_AUTO_TEST_CASE(testFlatExtrapolationPrimitive) {
+    BOOST_TEST_MESSAGE("Testing flat extrapolation primitive...");
+    const vector<Real> x{1.0, 2.0};
+    for (const auto& y : vector<vector<Real>>{{2.0, 4.0}, {-2.0, -4.0}, {0.0, 0.0}, {1.0, 1.0}}) {
+        const auto base = ext::make_shared<LinearInterpolation>(x.begin(), x.end(), y.begin());
+        const QuantExt::FlatExtrapolation curve(base);
+        for (const Real t : vector<Real>{0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0}) {
+            Real expected;
+            if (t < x.front())
+                expected = base->primitive(x.front()) + (t - x.front()) * y.front();
+            else if (t > x.back())
+                expected = base->primitive(x.back()) + (t - x.back()) * y.back();
+            else
+                expected = base->primitive(t);
+            BOOST_CHECK_SMALL(curve.primitive(t, true) - expected, 1e-12);
+        }
+        for (const Real t : vector<Real>{0.5, 1.5, 2.5}) {
+            const Real h = 1e-5;
+            const Real derivative = (curve.primitive(t + h, true) - curve.primitive(t - h, true)) / (2.0 * h);
+            BOOST_CHECK_SMALL(derivative - curve(t, true), 1e-9);
+        }
+    }
+}
 
 BOOST_AUTO_TEST_CASE(testDiscountCurve) {
 
