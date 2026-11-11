@@ -63,6 +63,32 @@ Date parseDate(const string& s) {
     if (s == "")
         return Date();
 
+    // ISO 8601 datetime: <date>T<HH:MM[:SS[.ffffff]]>[Z|+HH:MM|-HH:MM], returned in UTC
+    if (auto t = s.find('T'); t != string::npos) {
+#ifdef QL_HIGH_RESOLUTION_DATE
+        static const std::regex timeOfDay(
+            "^(\\d{2}):(\\d{2})(?::(\\d{2})(?:\\.(\\d{1,6}))?)?(?:Z|([+-])(\\d{2}):(\\d{2}))?$");
+        std::smatch m;
+        const string time = s.substr(t + 1);
+        QL_REQUIRE(std::regex_match(time, m, timeOfDay), "invalid time of day \""
+                                                             << time << "\" in \"" << s
+                                                             << "\", HH:MM[:SS[.ffffff]][Z|+HH:MM|-HH:MM] required");
+        const Date d = parseDate(s.substr(0, t));
+        const int hh = std::stoi(m[1]), mm = std::stoi(m[2]), ss = m[3].matched ? std::stoi(m[3]) : 0;
+        QL_REQUIRE(hh < 24 && mm < 60 && ss < 60, "time of day out of range in \"" << s << "\"");
+        const int us = m[4].matched ? std::stoi(m[4].str() + string(6 - m[4].length(), '0')) : 0;
+        const Date local(d.dayOfMonth(), d.month(), d.year(), hh, mm, ss, us / 1000, us % 1000);
+        if (!m[5].matched)
+            return local;
+        const int oh = std::stoi(m[6]), om = std::stoi(m[7]);
+        QL_REQUIRE(oh < 24 && om < 60, "UTC offset out of range in \"" << s << "\"");
+        const boost::posix_time::minutes offset((m[5] == "+" ? 1 : -1) * (oh * 60 + om));
+        return Date(local.dateTime() - offset);
+#else
+        QL_FAIL("cannot parse datetime \"" << s << "\": time of day requires a build with QL_HIGH_RESOLUTION_DATE");
+#endif
+    }
+
     // guess formats from token number and sizes
     // check permissible lengths
     QL_REQUIRE((s.size() >= 3 && s.size() <= 6) || s.size() == 8 || s.size() == 10,
