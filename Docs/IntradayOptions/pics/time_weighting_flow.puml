@@ -1,0 +1,36 @@
+@startuml
+' Intraday time weighting outside ORE. Render with: plantuml -tsvg time_weighting_flow.puml
+left to right direction
+skinparam shadowing false
+skinparam defaultFontName Serif
+skinparam defaultFontSize 12
+skinparam ArrowColor #6b6b66
+skinparam rectangle {
+  BackgroundColor #ffffff
+  BorderColor #6b6b66
+  RoundCorner 6
+}
+skinparam package {
+  BorderColor #9a9a94
+  FontColor #6b6b66
+  FontStyle plain
+}
+
+package "Outside ORE (ORE Studio)" {
+  rectangle "Volatility keyed\nfor the day" as keyed
+  rectangle "Time weighting model\n(intraday weights)" as model
+  rectangle "Time weighting\nprocess" as process
+  rectangle "Time-weighted volatilities\n(one series per cut)" as vols
+  rectangle "Market data snapshot\n(one per asof, stamped in UTC)" as snapshot
+}
+
+package "ORE" {
+  rectangle "Intraday run\n(prices from the snapshot)" as ore
+}
+
+keyed --> process
+model --> process
+process --> vols
+vols --> snapshot
+snapshot --> ore
+@enduml
