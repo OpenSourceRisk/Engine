@@ -149,13 +149,89 @@ sampleStrikesFromSurface(const std::vector<Date>& dates,
     return {strikes, vols, optionTypes};
 }
 
+// A pillar of an FX vol surface: the quoted expiry, its pillar date and the expiry token used in the quote names
+struct FxVolPillar {
+    QuantLib::ext::shared_ptr<ore::data::Expiry> expiry;
+    Date date;
+    string token;
+};
+
+// A tenor maps to calendar.advance(asof, tenor) as before date expiries existed, a date or datetime is used as given
+Date fxVolPillarDate(const ore::data::Expiry& expiry, const Date& asof, const Calendar& calendar) {
+    if (auto p = dynamic_cast<const ore::data::ExpiryPeriod*>(&expiry))
+        return calendar.advance(asof, p->expiryPeriod());
+    if (auto d = dynamic_cast<const ore::data::ExpiryDate*>(&expiry))
+        return d->expiryDate();
+    QL_FAIL("FX vol expiry '" << expiry << "' must be a tenor or a date");
+}
+
+FxVolPillar fxVolPillar(const QuantLib::ext::shared_ptr<ore::data::Expiry>& expiry, const string& token,
+                        const Date& asof, const Calendar& calendar) {
+    return {expiry, fxVolPillarDate(*expiry, asof, calendar), token};
+}
+
+// Orders pillars by date, equal dates by tenor as the tenor sort did before, and drops pillars at or before the asof
+void sortAndDropExpired(std::vector<FxVolPillar>& pillars, const Date& asof, const string& curveId) {
+    std::stable_sort(pillars.begin(), pillars.end(), [](const FxVolPillar& a, const FxVolPillar& b) {
+        if (a.date != b.date)
+            return a.date < b.date;
+        auto pa = QuantLib::ext::dynamic_pointer_cast<ore::data::ExpiryPeriod>(a.expiry);
+        auto pb = QuantLib::ext::dynamic_pointer_cast<ore::data::ExpiryPeriod>(b.expiry);
+        return pa && pb && pa->expiryPeriod() < pb->expiryPeriod();
+    });
+    pillars.erase(std::remove_if(pillars.begin(), pillars.end(),
+                                 [&asof, &curveId](const FxVolPillar& p) {
+                                     if (p.date > asof)
+                                         return false;
+                                     LOG("FXVolCurve " << curveId << ": expiry " << p.token
+                                                       << " is not after the asof, ignored");
+                                     return true;
+                                 }),
+                  pillars.end());
+}
+
+// Pillars of the explicitly configured expiries, sorted, de-duplicated and filtered in FXVolCurve::init()
+std::vector<FxVolPillar> configuredPillars(const std::vector<string>& expiries, const Date& asof,
+                                           const Calendar& calendar) {
+    std::vector<FxVolPillar> pillars;
+    for (auto const& e : expiries)
+        pillars.push_back(fxVolPillar(ore::data::parseExpiry(e), e, asof, calendar));
+    return pillars;
+}
+
+bool hasExpiry(const std::vector<FxVolPillar>& pillars, const ore::data::Expiry& expiry) {
+    return std::any_of(pillars.begin(), pillars.end(), [&expiry](const FxVolPillar& p) { return *p.expiry == expiry; });
+}
+
+Size pillarIndex(const std::vector<FxVolPillar>& pillars, const ore::data::Expiry& expiry) {
+    return std::find_if(pillars.begin(), pillars.end(), [&expiry](const FxVolPillar& p) { return *p.expiry == expiry; }) -
+           pillars.begin();
+}
+
+// Logs a warning for, or with enforce fails on, each pair of consecutive pillars whose ATM total variance decreases
+void checkAtmVariance(const string& curveId, const Date& asof, const std::vector<Date>& dates,
+                      const std::vector<string>& names, const std::vector<Real>& atmVols, const DayCounter& dc,
+                      bool enforce) {
+    for (Size i = 1; i < dates.size(); ++i) {
+        Real v0 = atmVols[i - 1] * atmVols[i - 1] * dc.yearFraction(asof, dates[i - 1]);
+        Real v1 = atmVols[i] * atmVols[i] * dc.yearFraction(asof, dates[i]);
+        if (v1 >= v0)
+            continue;
+        std::ostringstream msg;
+        msg << "ATM total variance decreases from " << v0 << " at " << names[i - 1] << " to " << v1 << " at "
+            << names[i];
+        QL_REQUIRE(!enforce, "FXVolCurve " << curveId << ": variance must be non-decreasing, " << msg.str());
+        StructuredCurveWarningMessage(curveId, "Decreasing ATM total variance",
+                                      msg.str() + ", set EnforceMonotoneVariance to reject it")
+            .log();
+    }
+}
+
 } // anonymous namespace
 
 void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
                                       QuantLib::ext::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,
                                       const map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves) {
-    vector<Period> unsortedExp;
-
     vector<std::pair<Real, string>> putDeltas, callDeltas;
     bool hasATM = false;
 
@@ -177,6 +253,7 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
     std::sort(callDeltas.begin(), callDeltas.end(), comp);
 
     vector<Date> dates;
+    vector<string> expiryTokens;
     Matrix blackVolMatrix;
 
     string base = "FX_OPTION/RATE_LNVOL/" + sourceCcy_ + "/" + targetCcy_ + "/";
@@ -197,7 +274,7 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
 
         // we save relevant delta quotes to avoid looping twice
         std::vector<QuantLib::ext::shared_ptr<MarketDatum>> data;
-        std::vector<std::string> expiriesStr;
+        std::vector<FxVolPillar> pillars;
         // get list of possible expiries
         std::ostringstream ss;
         ss << MarketDatum::InstrumentType::FX_OPTION << "/RATE_LNVOL/" << spec.unitCcy()<< "/"
@@ -218,23 +295,18 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
                 QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << md->name());
                 if (expiriesWildcard_->matches(tokens[4])) {
                     data.push_back(md);
-                    auto it = std::find(expiries_.begin(), expiries_.end(), q->expiry());
-                    if (it == expiries_.end()) {
-                        expiries_.push_back(q->expiry());
-                        expiriesStr.push_back(tokens[4]);
-                    }
+                    if (!hasExpiry(pillars, *q->optionExpiry()))
+                        pillars.push_back(fxVolPillar(q->optionExpiry(), tokens[4], asof, cal));
                 }
             }
         }
-        unsortedExp = expiries_;
-        std::sort(expiries_.begin(), expiries_.end());
+        sortAndDropExpired(pillars, asof, spec.name());
 
         // we try to find all necessary quotes for each expiry
         vector<Size> validExpiryIdx;
-        Matrix tmpMatrix(expiries_.size(), config->deltas().size());
-        for (Size i = 0; i < expiries_.size(); i++) {
-            Size idx = std::find(unsortedExp.begin(), unsortedExp.end(), expiries_[i]) - unsortedExp.begin();
-            string e = expiriesStr[idx];
+        Matrix tmpMatrix(pillars.size(), config->deltas().size());
+        for (Size i = 0; i < pillars.size(); i++) {
+            string e = pillars[i].token;
             for (Size j = 0; j < deltaNames.size(); ++j) {
                 string qs = base + e + "/" + deltaNames[j];
                 QuantLib::ext::shared_ptr<MarketDatum> md;
@@ -252,7 +324,9 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
                 tmpMatrix[i][j] = q->quote()->value();
                 // if we have found all the quotes then this is a valid expiry
                 if (j == deltaNames.size() - 1) {
-                    dates.push_back(cal.advance(asof, expiries_[i]));
+                    dates.push_back(pillars[i].date);
+                    expiries_.push_back(pillars[i].expiry);
+                    expiryTokens.push_back(pillars[i].token);
                     validExpiryIdx.push_back(i);
                 }
             }
@@ -261,7 +335,7 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
         QL_REQUIRE(validExpiryIdx.size() > 0, "no valid FxVol expiries found");
         DLOG("found " << validExpiryIdx.size() << " valid expiries:");
         for (auto& e : validExpiryIdx)
-            DLOG(expiries_[e]);
+            DLOG(*pillars[e].expiry);
         // we build a matrix with just the valid expiries
         blackVolMatrix = Matrix(validExpiryIdx.size(), config->deltas().size());
         for (Size i = 0; i < validExpiryIdx.size(); i++) {
@@ -271,15 +345,15 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
         }
 
     } else {
-        expiries_ = parseVectorOfValues<Period>(expiriesNoDuplicates_, &parsePeriod);
-        unsortedExp = parseVectorOfValues<Period>(expiriesNoDuplicates_, &parsePeriod);
-        std::sort(expiries_.begin(), expiries_.end());
+        auto pillars = configuredPillars(expiriesNoDuplicates_, asof, cal);
+        sortAndDropExpired(pillars, asof, spec.name());
 
-        blackVolMatrix = Matrix(expiries_.size(), config->deltas().size());
-        for (Size i = 0; i < expiries_.size(); i++) {
-            Size idx = std::find(unsortedExp.begin(), unsortedExp.end(), expiries_[i]) - unsortedExp.begin();
-            string e = expiriesNoDuplicates_[idx];
-            dates.push_back(cal.advance(asof, expiries_[i]));
+        blackVolMatrix = Matrix(pillars.size(), config->deltas().size());
+        for (Size i = 0; i < pillars.size(); i++) {
+            string e = pillars[i].token;
+            dates.push_back(pillars[i].date);
+            expiries_.push_back(pillars[i].expiry);
+            expiryTokens.push_back(pillars[i].token);
             for (Size j = 0; j < deltaNames.size(); ++j) {
                 string qs = base + e + "/" + deltaNames[j];
                 QuantLib::ext::shared_ptr<MarketDatum> md = loader.get(qs, asof);
@@ -316,6 +390,15 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
     // daycounter used for interpolation in time.
     // TODO: push into conventions or config
     DayCounter dc = config->dayCounter();
+    if (hasATM) {
+        std::vector<string> names;
+        std::vector<Real> atmVols;
+        for (Size i = 0; i < expiries_.size(); ++i) {
+            names.push_back(expiryTokens[i]);
+            atmVols.push_back(blackVolMatrix[i][putDeltas.size()]);
+        }
+        checkAtmVariance(spec.name(), asof, dates, names, atmVols, dc, config->enforceMonotoneVariance());
+    }
     std::vector<Real> putDeltasNum, callDeltasNum;
     std::transform(putDeltas.begin(), putDeltas.end(), std::back_inserter(putDeltasNum),
                    [](const std::pair<Real, string>& x) { return x.first; });
@@ -365,7 +448,7 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
 
     // collect relevant market data and populate expiries (as per regex or configured list)
 
-    std::set<Period> expiriesTmp;
+    std::vector<FxVolPillar> expiriesTmp;
 
     std::vector<QuantLib::ext::shared_ptr<FXOptionQuote>> data;
     std::ostringstream ss;
@@ -384,16 +467,16 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
             vector<string> tokens;
             boost::split(tokens, md->name(), boost::is_any_of("/"));
             QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << md->name());
-            if (expiriesWildcard_ && expiriesWildcard_->matches(tokens[4]))
-                expiriesTmp.insert(q->expiry());
+            if (expiriesWildcard_ && expiriesWildcard_->matches(tokens[4]) &&
+                !hasExpiry(expiriesTmp, *q->optionExpiry()))
+                expiriesTmp.push_back(fxVolPillar(q->optionExpiry(), tokens[4], asof, config->calendar()));
             data.push_back(q);
         }
     }
 
-    if (!expiriesWildcard_) {
-        auto tmp = parseVectorOfValues<Period>(expiriesNoDuplicates_, &parsePeriod);
-        expiriesTmp = std::set<Period>(tmp.begin(), tmp.end());
-    }
+    if (!expiriesWildcard_)
+        expiriesTmp = configuredPillars(expiriesNoDuplicates_, asof, config->calendar());
+    sortAndDropExpired(expiriesTmp, asof, spec.name());
 
     // populate quotes
 
@@ -405,7 +488,7 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
     std::vector<Real> atmQuotesTmp(expiriesTmp.size(), Null<Real>());
 
     for (auto const& q : data) {
-        Size expiryIdx = std::distance(expiriesTmp.begin(), expiriesTmp.find(q->expiry()));
+        Size expiryIdx = pillarIndex(expiriesTmp, *q->optionExpiry());
         if (expiryIdx >= expiriesTmp.size())
             continue;
         Strike s = parseStrike(q->strike());
@@ -441,19 +524,23 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
     if (!expiriesWildcard_) {
         Size i = 0;
         for (auto const& e : expiriesTmp) {
-            QL_REQUIRE(dataComplete[i++], "BFRR FX vol surface: incomplete data for expiry " << e);
+            QL_REQUIRE(dataComplete[i++], "BFRR FX vol surface: incomplete data for expiry " << *e.expiry);
         }
     }
 
     // build the final quotes for the expiries that have complete data
 
+    std::vector<Date> dates;
+    std::vector<string> expiryTokens;
     Size i = 0;
     for (auto const& e : expiriesTmp) {
         if (dataComplete[i++]) {
-            expiries_.push_back(e);
-            TLOG("adding expiry " << e << " with complete data");
+            expiries_.push_back(e.expiry);
+            dates.push_back(e.date);
+            expiryTokens.push_back(e.token);
+            TLOG("adding expiry " << *e.expiry << " with complete data");
         } else {
-            TLOG("removing expiry " << e << ", because data is not complete");
+            TLOG("removing expiry " << *e.expiry << ", because data is not complete");
         }
     }
 
@@ -497,10 +584,6 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
         QL_FAIL("BFRR FX vol surface: invalid time interpolation, expected V, V2T");
     }
 
-    std::vector<Date> dates;
-    std::transform(expiries_.begin(), expiries_.end(), std::back_inserter(dates),
-                   [&asof, &config](const Period& p) { return config->calendar().advance(asof, p); });
-
     std::vector<Real> smileDeltasScaled;
     std::transform(smileDeltas.begin(), smileDeltas.end(), std::back_inserter(smileDeltasScaled),
                    [](Size d) { return static_cast<Real>(d) / 100.0; });
@@ -511,6 +594,7 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
 
     // Build the BFRR surface — used directly (non-SVI) or as intermediate for strike conversion (SVI)
     DayCounter dc = config->dayCounter();
+    checkAtmVariance(spec.name(), asof, dates, expiryTokens, atmQuotes, dc, config->enforceMonotoneVariance());
     auto bfrrSurface = QuantLib::ext::make_shared<QuantExt::BlackVolatilitySurfaceBFRR>(
         asof, dates, smileDeltasScaled, bfQuotes, rrQuotes, atmQuotes, dc, config->calendar(),
         fxSpot_, spotDays_, spotCalendar_, domYts_, forYts_, deltaType_, atmType_, switchTenor_,
@@ -569,12 +653,11 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
 
     QL_REQUIRE(!expiriesWildcard_ || isATM, "wildcards only supported for ATM, Delta, BFRR FxVol Curves");
 
-    vector<Period> cExpiries;
-    vector<vector<Period>> expiries;
+    Calendar cal = config->calendar();
+    vector<vector<FxVolPillar>> expiries;
     // Create the regular expression
     if (!expiriesWildcard_) {
-        cExpiries = parseVectorOfValues<Period>(expiriesNoDuplicates_, &parsePeriod);
-        expiries = vector<vector<Period>>(n, cExpiries);
+        expiries = vector<vector<FxVolPillar>>(n, configuredPillars(expiriesNoDuplicates_, asof, cal));
     }
 
     // Load the relevant quotes
@@ -611,7 +694,7 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
                     quotes[idx].push_back(q);
                 }
             } else {
-                auto it = std::find(expiries[idx].begin(), expiries[idx].end(), q->expiry());
+                auto it = expiries[idx].begin() + pillarIndex(expiries[idx], *q->optionExpiry());
                 if (it != expiries[idx].end()) {
                     // we have a hit
                     quotes[idx].push_back(q);
@@ -627,12 +710,26 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
         }
     }
 
+    // sort all quotes by pillar date and drop those at or before the asof
+    for (Size i = 0; i < n; i++) {
+        vector<FxVolPillar> pillars;
+        map<string, QuantLib::ext::shared_ptr<FXOptionQuote>> byName;
+        for (auto const& q : quotes[i]) {
+            pillars.push_back(fxVolPillar(q->optionExpiry(), q->name(), asof, cal));
+            byName[q->name()] = q;
+        }
+        sortAndDropExpired(pillars, asof, spec.name());
+        quotes[i].clear();
+        for (auto const& p : pillars)
+            quotes[i].push_back(byName.at(p.token));
+    }
+
     // Check ATM first
     // Check that we have all the expiries we need
     LOG("FXVolCurve: read " << quotes[0].size() << " ATM vols");
     if (!expiriesWildcard_) {
         QL_REQUIRE(expiries[0].size() == 0,
-                   "No ATM quote found for spec " << spec << " with expiry " << expiries[0].front());
+                   "No ATM quote found for spec " << spec << " with expiry " << *expiries[0].front().expiry);
     }
 
     QL_REQUIRE(quotes[0].size() > 0, "No ATM quotes found for spec " << spec);
@@ -640,29 +737,20 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
     if (!isATM) {
         LOG("FXVolCurve: read " << quotes[1].size() << " RR and " << quotes[2].size() << " BF quotes");
         QL_REQUIRE(expiries[1].size() == 0,
-                   "No RR quote found for spec " << spec << " with expiry " << expiries[1].front());
+                   "No RR quote found for spec " << spec << " with expiry " << *expiries[1].front().expiry);
         QL_REQUIRE(expiries[2].size() == 0,
-                   "No BF quote found for spec " << spec << " with expiry " << expiries[2].front());
-    }
-
-    // sort all quotes
-    for (Size i = 0; i < n; i++) {
-        std::sort(quotes[i].begin(), quotes[i].end(),
-                  [](const QuantLib::ext::shared_ptr<FXOptionQuote>& a, const QuantLib::ext::shared_ptr<FXOptionQuote>& b) -> bool {
-                      return a->expiry() < b->expiry();
-                  });
+                   "No BF quote found for spec " << spec << " with expiry " << *expiries[2].front().expiry);
     }
 
     // daycounter used for interpolation in time.
     // TODO: push into conventions or config
     DayCounter dc = config->dayCounter();
-    Calendar cal = config->calendar();
 
     // build vol curve
     if (isATM && quotes[0].size() == 1) {
         vol_ = QuantLib::ext::shared_ptr<BlackVolTermStructure>(
             new BlackConstantVol(asof, config->calendar(), quotes[0].front()->quote()->value(), dc));
-        expiries_ = {quotes[0].front()->expiry()};
+        expiries_ = {quotes[0].front()->optionExpiry()};
     } else {
 
         Size numExpiries = quotes[0].size();
@@ -670,20 +758,27 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
         vector<vector<Volatility>> vols(n, vector<Volatility>(numExpiries)); // same as above: [0] = ATM, etc.
 
         for (Size i = 0; i < numExpiries; i++) {
-            dates[i] = cal.advance(asof, quotes[0][i]->expiry());
-            expiries_.push_back(quotes[0][i]->expiry());
+            dates[i] = fxVolPillarDate(*quotes[0][i]->optionExpiry(), asof, cal);
+            expiries_.push_back(quotes[0][i]->optionExpiry());
             DLOG("Spec Tenor Vol Variance");
             for (Size idx = 0; idx < n; idx++) {
                 vols[idx][i] = quotes[idx][i]->quote()->value();
                 Real variance = vols[idx][i] * vols[idx][i] * (dates[i] - asof) / 365.0; // approximate variance
-                DLOG(spec << " " << quotes[0][i]->expiry() << " " << vols[idx][i] << " " << variance);
+                DLOG(spec << " " << *quotes[0][i]->optionExpiry() << " " << vols[idx][i] << " " << variance);
             }
         }
 
+        bool enforce = config->enforceMonotoneVariance();
+        if (!enforce) {
+            vector<string> names;
+            for (auto const& q : quotes[0])
+                names.push_back(q->name());
+            checkAtmVariance(spec.name(), asof, dates, names, vols[0], dc, false);
+        }
+
         if (isATM) {
-            // ATM
-            // Set forceMonotoneVariance to false - allowing decreasing variance
-            vol_ = QuantLib::ext::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve(asof, dates, vols[0], dc, false));
+            // ATM, decreasing variance is allowed unless enforceMonotoneVariance is set
+            vol_ = QuantLib::ext::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve(asof, dates, vols[0], dc, enforce));
         } else {
             // Smile
             bool vvFirstApprox = false; // default to VannaVolga second approximation
@@ -692,7 +787,7 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
             }
 
             vol_ = QuantLib::ext::make_shared<QuantExt::FxBlackVannaVolgaVolatilitySurface>(
-                asof, dates, vols[0], vols[1], vols[2], dc, cal, fxSpot_, domYts_, forYts_, false, vvFirstApprox,
+                asof, dates, vols[0], vols[1], vols[2], dc, cal, fxSpot_, domYts_, forYts_, enforce, vvFirstApprox,
                 atmType_, deltaType_, smileDelta / 100.0, switchTenor_, longTermAtmType_, longTermDeltaType_);
         }
     }
@@ -704,7 +799,7 @@ void FXVolCurve::buildSmileAbsoluteCurve(Date asof, FXVolatilityCurveSpec spec, 
                                          const map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves) {
 
     // collect relevant market data and populate expiries (as per regex or configured list)
-    std::set<Period> expiriesTmp;
+    std::vector<FxVolPillar> expiriesTmp;
 
     std::vector<QuantLib::ext::shared_ptr<FXOptionQuote>> data;
     std::ostringstream ss;
@@ -723,22 +818,22 @@ void FXVolCurve::buildSmileAbsoluteCurve(Date asof, FXVolatilityCurveSpec spec, 
             vector<string> tokens;
             boost::split(tokens, md->name(), boost::is_any_of("/"));
             QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << md->name());
-            if (expiriesWildcard_ && expiriesWildcard_->matches(tokens[4]))
-                expiriesTmp.insert(q->expiry());
+            if (expiriesWildcard_ && expiriesWildcard_->matches(tokens[4]) &&
+                !hasExpiry(expiriesTmp, *q->optionExpiry()))
+                expiriesTmp.push_back(fxVolPillar(q->optionExpiry(), tokens[4], asof, config->calendar()));
             data.push_back(q);
         }
     }
 
-    if (!expiriesWildcard_) {
-        auto tmp = parseVectorOfValues<Period>(expiriesNoDuplicates_, &parsePeriod);
-        expiriesTmp = std::set<Period>(tmp.begin(), tmp.end());
-    }
+    if (!expiriesWildcard_)
+        expiriesTmp = configuredPillars(expiriesNoDuplicates_, asof, config->calendar());
+    sortAndDropExpired(expiriesTmp, asof, spec.name());
 
     // populate quotes
     std::vector<std::map<Real, Real>> strikeQuotesTmp(expiriesTmp.size());
 
     for (auto const& q : data) {
-        Size expiryIdx = std::distance(expiriesTmp.begin(), expiriesTmp.find(q->expiry()));
+        Size expiryIdx = pillarIndex(expiriesTmp, *q->optionExpiry());
         if (expiryIdx >= expiriesTmp.size())
             continue;
         Strike s = parseStrike(q->strike());
@@ -760,18 +855,20 @@ void FXVolCurve::buildSmileAbsoluteCurve(Date asof, FXVolatilityCurveSpec spec, 
     if (!expiriesWildcard_) {
         Size i = 0;
         for (auto const& e : expiriesTmp) {
-            QL_REQUIRE(dataComplete[i++], "Absolute FX vol surface: missing data for expiry " << e);
+            QL_REQUIRE(dataComplete[i++], "Absolute FX vol surface: missing data for expiry " << *e.expiry);
         }
     }
 
     // build the final quotes for the expiries that have complete data
+    std::vector<Date> dates;
     Size i = 0;
     for (auto const& e : expiriesTmp) {
         if (dataComplete[i++]) {
-            expiries_.push_back(e);
-            TLOG("adding expiry " << e << " with at least one strike quote");
+            expiries_.push_back(e.expiry);
+            dates.push_back(e.date);
+            TLOG("adding expiry " << *e.expiry << " with at least one strike quote");
         } else {
-            TLOG("removing expiry " << e << ", no strike quote found");
+            TLOG("removing expiry " << *e.expiry << ", no strike quote found");
         }
     }
 
@@ -794,10 +891,6 @@ void FXVolCurve::buildSmileAbsoluteCurve(Date asof, FXVolatilityCurveSpec spec, 
     // build Absolute surface
 
     DLOG("build Absolute fx vol surface with " << expiries_.size() << " expiries");
-
-    std::vector<Date> dates;
-    std::transform(expiries_.begin(), expiries_.end(), std::back_inserter(dates),
-                   [&asof, &config](const Period& p) { return config->calendar().advance(asof, p); });
 
     // Check if an SVI interpolation model is requested
     QuantExt::SviParametricVolatility::ModelVariant sviModelVariant;
@@ -999,18 +1092,26 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
         if (expiriesWildcard_) {
             DLOG("expiry wildcard is used: " << expiriesWildcard_->pattern());
         } else {
-            std::vector<std::tuple<std::string, Period, Date>> tmp;
+            std::vector<std::tuple<std::string, QuantLib::ext::shared_ptr<Expiry>, Date>> tmp;
             for (auto const& e : config->expiries()) {
-                auto p = parsePeriod(e);
-                tmp.push_back(std::make_tuple(e, p, config->calendar().advance(asof, p)));
+                auto p = parseExpiry(e);
+                Date d = fxVolPillarDate(*p, asof, config->calendar());
+                if (d <= asof) {
+                    LOG("FXVolCurve " << spec.name() << ": expiry " << e << " is not after the asof, ignored");
+                    continue;
+                }
+                tmp.push_back(std::make_tuple(e, p, d));
             }
             std::sort(tmp.begin(), tmp.end(),
-                      [](const std::tuple<std::string, Period, Date>& a,
-                         const std::tuple<std::string, Period, Date>& b) -> bool {
+                      [](const std::tuple<std::string, QuantLib::ext::shared_ptr<Expiry>, Date>& a,
+                         const std::tuple<std::string, QuantLib::ext::shared_ptr<Expiry>, Date>& b) -> bool {
                           if (std::get<2>(a) == std::get<2>(b)) {
                               try {
                                   // equal dates => compare periods (might throw!)
-                                  return std::get<1>(a) < std::get<1>(b);
+                                  auto pa = QuantLib::ext::dynamic_pointer_cast<ExpiryPeriod>(std::get<1>(a));
+                                  auto pb = QuantLib::ext::dynamic_pointer_cast<ExpiryPeriod>(std::get<1>(b));
+                                  QL_REQUIRE(pa && pb, "not both tenors");
+                                  return pa->expiryPeriod() < pb->expiryPeriod();
                               } catch (...) {
                                   // period comparison not possible => compare the strings
                                   return std::get<0>(a) < std::get<0>(b);
@@ -1211,8 +1312,12 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                 DeltaVolQuote::AtmType at;
                 TLOG("Delta surface arbitrage analysis result (no calendar spread arbitrage included):");
                 Real maxTime = QL_MAX_REAL;
-                if (!expiries_.empty())
-                    maxTime = vol_->timeFromReference(vol_->optionDateFromTenor(expiries_.back()));
+                if (!expiries_.empty()) {
+                    auto p = QuantLib::ext::dynamic_pointer_cast<ExpiryPeriod>(expiries_.back());
+                    maxTime = vol_->timeFromReference(
+                        p ? vol_->optionDateFromTenor(p->expiryPeriod())
+                          : fxVolPillarDate(*expiries_.back(), asof, vol_->calendar()));
+                }
                 for (Size i = 0; i < times.size(); ++i) {
                     Real t = times[i];
                     if (t <= switchTime || close_enough(t, switchTime)) {

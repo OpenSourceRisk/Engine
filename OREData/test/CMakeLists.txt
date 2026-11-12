@@ -35,6 +35,7 @@ equitymarketdata.cpp
 equityswap.cpp
 equitytrades.cpp
 expiry.cpp
+expirycuttime.cpp
 fittedbondcurve.cpp
 fixings.cpp
 formulaparser.cpp

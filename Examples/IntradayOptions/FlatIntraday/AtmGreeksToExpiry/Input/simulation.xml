@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<Simulation>
+
+  <Market>
+
+    <BaseCurrency>EUR</BaseCurrency>
+
+    <Currencies>
+      <Currency>EUR</Currency>
+      <Currency>USD</Currency>
+    </Currencies>
+
+    <YieldCurves>
+      <Configuration>
+        <Tenors>1D,1W,1M,6M,1Y,2Y,3Y,5Y,7Y,10Y</Tenors>
+        <Interpolation>LogLinear</Interpolation>
+        <Extrapolation>Y</Extrapolation>
+      </Configuration>
+    </YieldCurves>
+
+    <Indices>
+      <Index>EUR-EONIA</Index>
+      <Index>USD-FedFunds</Index>
+    </Indices>
+
+    <Equities>
+      <Names>
+        <Name>SP5</Name>
+      </Names>
+      <DividendTenors>1D,1W,1M,6M,1Y,2Y</DividendTenors>
+    </Equities>
+
+    <!-- Short pillars matter: the sensitivity run reprices on this grid, so without 1D/1W/1M a one hour
+         option would take its vol from the 6M pillar instead of the short end of the pricing surface -->
+    <EquityVolatilities>
+      <Simulate>true</Simulate>
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <Names>
+        <Name>SP5</Name>
+      </Names>
+      <Expiries>1D,1W,1M,6M,1Y,2Y,3Y,5Y</Expiries>
+      <SimulateATMOnly>true</SimulateATMOnly>
+    </EquityVolatilities>
+
+  </Market>
+
+</Simulation>

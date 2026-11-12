@@ -17,6 +17,7 @@ tex_files=(
   "ore/Docs/UserGuide/products.tex"
   "ore/Docs/UserGuide/methods.tex"
   "ore/Docs/Intradaypower/intradaypower.tex"
+  "ore/Docs/IntradayOptions/intradayoptions.tex"
   "ore/Docs/Design/ore_design.tex"
   "ore/Docs/BondPricingConfig/bondpricingconfig.tex"
   "ore/Docs/HullWhiteModel/hullwhitemodel.tex"

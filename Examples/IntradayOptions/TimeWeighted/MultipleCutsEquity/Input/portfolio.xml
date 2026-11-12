@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<Portfolio>
+  <!-- ATM SP5 calls at the shared market spot 2147.56, one per cut on 2016-02-05 -->
+  <!-- Opening cut, 09:30 New York = 14:30 UTC, as for AM settled index options -->
+  <Trade id="SP5_CALL_1430">
+    <TradeType>EquityOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields>
+        <ExpiryCutTime>14:30Z</ExpiryCutTime>
+      </AdditionalFields>
+    </Envelope>
+    <EquityOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2016-02-05</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <Name>SP5</Name>
+      <Currency>USD</Currency>
+      <Strike>2147.56</Strike>
+      <Quantity>1</Quantity>
+    </EquityOptionData>
+  </Trade>
+  <!-- Closing cut, 16:00 New York = 21:00 UTC -->
+  <Trade id="SP5_CALL_2100">
+    <TradeType>EquityOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields>
+        <ExpiryCutTime>21:00Z</ExpiryCutTime>
+      </AdditionalFields>
+    </Envelope>
+    <EquityOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2016-02-05</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <Name>SP5</Name>
+      <Currency>USD</Currency>
+      <Strike>2147.56</Strike>
+      <Quantity>1</Quantity>
+    </EquityOptionData>
+  </Trade>
+  <!-- Control: closing cut next week, interpolated between today's pillars and the keyed 1M pillar -->
+  <Trade id="SP5_CALL_2100_NEXTWEEK">
+    <TradeType>EquityOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields>
+        <ExpiryCutTime>21:00Z</ExpiryCutTime>
+      </AdditionalFields>
+    </Envelope>
+    <EquityOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2016-02-12</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <Name>SP5</Name>
+      <Currency>USD</Currency>
+      <Strike>2147.56</Strike>
+      <Quantity>1</Quantity>
+    </EquityOptionData>
+  </Trade>
+</Portfolio>

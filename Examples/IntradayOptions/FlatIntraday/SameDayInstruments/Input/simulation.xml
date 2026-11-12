@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<Simulation>
+
+  <Market>
+
+    <BaseCurrency>USD</BaseCurrency>
+
+    <Currencies>
+      <Currency>USD</Currency>
+      <Currency>EUR</Currency>
+    </Currencies>
+
+    <YieldCurves>
+      <Configuration>
+        <Tenors>1D,1W,1M,6M,1Y,2Y,3Y,5Y,7Y,10Y</Tenors>
+        <Interpolation>LogLinear</Interpolation>
+        <Extrapolation>Y</Extrapolation>
+      </Configuration>
+    </YieldCurves>
+
+    <Indices>
+      <Index>EUR-EONIA</Index>
+      <Index>USD-FedFunds</Index>
+    </Indices>
+
+    <Equities>
+      <Names>
+        <Name>SP5</Name>
+      </Names>
+      <DividendTenors>1D,1W,1M,6M,1Y,2Y</DividendTenors>
+    </Equities>
+
+    <Commodities>
+      <Simulate>true</Simulate>
+      <Names>
+        <Name>COMDTY_GOLD_USD</Name>
+      </Names>
+      <Tenors>0D,1D,1W,1M,6M,1Y,2Y</Tenors>
+      <DayCounters>
+        <DayCounter name="">A365</DayCounter>
+      </DayCounters>
+    </Commodities>
+
+    <!-- Not simulated: the simulation market then wraps the pricing surface itself. A simulated surface is
+         resampled onto tenors from the asof, which cannot hold the pillar at today's 15:00Z cut. -->
+    <FxVolatilities>
+      <Simulate>false</Simulate>
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <CurrencyPairs>
+        <CurrencyPair>EURUSD</CurrencyPair>
+      </CurrencyPairs>
+      <Expiries>1D,1W,1M,6M,1Y,2Y</Expiries>
+    </FxVolatilities>
+
+    <!-- Short pillars matter: the sensitivity run reprices on these grids, so without 1D/1W/1M a same day
+         option would take its vol from a later pillar instead of the short end of the pricing surface -->
+    <EquityVolatilities>
+      <Simulate>true</Simulate>
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <Names>
+        <Name>SP5</Name>
+      </Names>
+      <Expiries>1D,1W,1M,6M,1Y,2Y,3Y,5Y</Expiries>
+      <SimulateATMOnly>true</SimulateATMOnly>
+    </EquityVolatilities>
+
+    <CommodityVolatilities>
+      <Simulate>true</Simulate>
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <Names>
+        <Name id="COMDTY_GOLD_USD">
+          <Expiries>1D,1W,1M,6M,1Y,2Y</Expiries>
+          <Moneyness>1.0</Moneyness>
+        </Name>
+      </Names>
+      <DayCounter>A365</DayCounter>
+    </CommodityVolatilities>
+
+  </Market>
+
+</Simulation>

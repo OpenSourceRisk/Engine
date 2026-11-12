@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<Portfolio>
+  <!-- ATM call expiring at today's cut, the SP5 close, 16:00 New York = 21:00 UTC -->
+  <Trade id="SAMEDAY_CALL_CUT">
+    <TradeType>EquityOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields>
+        <ExpiryCutTime>21:00Z</ExpiryCutTime>
+      </AdditionalFields>
+    </Envelope>
+    <EquityOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2016-02-05</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <Name>SP5</Name>
+      <Currency>USD</Currency>
+      <Strike>2147.56</Strike>
+      <Quantity>1</Quantity>
+    </EquityOptionData>
+  </Trade>
+  <!-- Control: expires at next week's cut, between today's pillar and the 1M pillar -->
+  <Trade id="NEXTWEEK_CALL_CUT">
+    <TradeType>EquityOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields>
+        <ExpiryCutTime>21:00Z</ExpiryCutTime>
+      </AdditionalFields>
+    </Envelope>
+    <EquityOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2016-02-12</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <Name>SP5</Name>
+      <Currency>USD</Currency>
+      <Strike>2147.56</Strike>
+      <Quantity>1</Quantity>
+    </EquityOptionData>
+  </Trade>
+</Portfolio>

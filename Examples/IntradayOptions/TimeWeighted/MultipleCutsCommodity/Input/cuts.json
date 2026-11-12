@@ -1,0 +1,16 @@
+{
+  "day": "2016-02-05",
+  "shared_market": "../../../Input/market_20160205.txt",
+  "quote_prefix": "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/",
+  "quote_suffix": "/ATM/AtmFwd",
+  "keyed_vol": 0.14,
+  "weights": [["00:00", 2.0], ["07:00", 1.5], ["10:00", 1.2], ["12:00", 0.9], ["14:30", 0.5]],
+  "cuts": {"1030": "10:30", "1500": "15:00"},
+  "keyed_pillars": {"1M": 0.12, "1Y": 0.09},
+  "asof_times": ["03:00", "08:00", "10:25", "10:45", "13:00", "14:55", "15:30"],
+  "trades": {
+    "GOLD_CALL_1030": {"expiry": "2016-02-05", "cut": "10:30", "pillar": "1030"},
+    "GOLD_CALL_1500": {"expiry": "2016-02-05", "cut": "15:00", "pillar": "1500"},
+    "GOLD_CALL_1500_NEXTWEEK": {"expiry": "2016-02-12", "cut": "15:00"}
+  }
+}

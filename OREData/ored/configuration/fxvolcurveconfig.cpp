@@ -221,6 +221,7 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
     timeWeighting_ = XMLUtils::getChildValue(node, "TimeWeighting", false);
 
     butterflyErrorTolerance_ = parseReal(XMLUtils::getChildValue(node, "ButterflyErrorTolerance", false, "0.01"));
+    enforceMonotoneVariance_ = XMLUtils::getChildValueAsBool(node, "EnforceMonotoneVariance", false, false);
 
     if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
         reportConfig_.fromXML(tmp);
@@ -293,6 +294,8 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "TimeInterpolation", to_string(timeInterpolation_));
     XMLUtils::addChild(doc, node, "TimeWeighting", timeWeighting_);
     XMLUtils::addChild(doc, node, "ButterflyErrorTolerance", butterflyErrorTolerance_);
+    if (enforceMonotoneVariance_)
+        XMLUtils::addChild(doc, node, "EnforceMonotoneVariance", true);
     XMLUtils::appendNode(node, reportConfig_.toXML(doc));
 
     if (parametricSmileConfiguration_)

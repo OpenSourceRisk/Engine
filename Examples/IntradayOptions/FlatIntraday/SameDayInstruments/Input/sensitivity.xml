@@ -1,0 +1,59 @@
+<SensitivityAnalysis>
+
+  <DiscountCurves>
+    <DiscountCurve ccy="USD">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1D,1W,1M,6M,1Y,2Y,3Y,5Y,7Y,10Y</ShiftTenors>
+    </DiscountCurve>
+  </DiscountCurves>
+
+  <IndexCurves/>
+
+  <!-- One basis point relative spot shifts: hours before the cut the one standard deviation move of the
+       underlying is a fraction of a percent, so the usual 1% shift straddles the whole gamma peak. -->
+  <FxSpots>
+    <FxSpot ccypair="EURUSD">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+    </FxSpot>
+  </FxSpots>
+
+  <EquitySpots>
+    <EquitySpot equity="SP5">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+    </EquitySpot>
+  </EquitySpots>
+
+  <!-- A single shift tenor moves the whole gold price curve in parallel, the commodity spot delta -->
+  <CommodityCurves>
+    <CommodityCurve name="COMDTY_GOLD_USD">
+      <Currency>USD</Currency>
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1D</ShiftTenors>
+    </CommodityCurve>
+  </CommodityCurves>
+
+  <EquityVolatilities>
+    <EquityVolatility equity="SP5">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <ShiftExpiries>1D,1W,1M,6M,1Y,2Y,3Y,5Y</ShiftExpiries>
+      <ShiftStrikes/>
+    </EquityVolatility>
+  </EquityVolatilities>
+
+  <CommodityVolatilities>
+    <CommodityVolatility name="COMDTY_GOLD_USD">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <ShiftExpiries>1D,1W,1M,6M,1Y,2Y</ShiftExpiries>
+      <ShiftStrikes>1.0</ShiftStrikes>
+    </CommodityVolatility>
+  </CommodityVolatilities>
+
+  <CrossGammaFilter/>
+
+</SensitivityAnalysis>
