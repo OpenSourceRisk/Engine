@@ -136,7 +136,7 @@ accordingly.
 %-------------------------------------------------------------------------------
 
 Three pieces of existing work bear on intraday valuation in ORE: QuantLib's high resolution dates, which give time a
-resolution finer than a day; ORE's intraday power framework, which prices quantities within a day while keeping dates
+resolution finer than a day; ORE's intraday power framework \cite{intradaypower}, which prices quantities within a day while keeping dates
 at day resolution; and ORE's FX volatility surfaces, whose handling of expiries limits what a same day options report
 can do for FX.
 
@@ -172,7 +172,8 @@ not provide is a way to express a time of day in ORE's inputs; that is where our
 
 \subsection{ORE: Intraday Power}\label{sec:intradaypower}
 
-ORE's intraday power framework prices power products that deliver in parts of a day, such as the 09:00 to 10:00
+ORE's intraday power framework, described in the ORE document \textit{ORE Intraday Power Curves and Derivatives}
+by LSEG \cite{intradaypower}, prices power products that deliver in parts of a day, such as the 09:00 to 10:00
 hour. It works in the default build, at day resolution. A commodity curve gives the price for each day, and intraday
 shape factors, loaded as market data through the curve configuration, distribute it over the buckets of the day; they
 can mix granularities, such as 15 minute buckets near term and hourly buckets further out, and carry their own
@@ -1684,6 +1685,9 @@ The evidence in this document rests on the following, and has the following limi
 \bibitem{quantlib} QuantLib: a free/open source library for quantitative finance, \url{https://www.quantlib.org}
 
 \bibitem{ore} Open Source Risk Engine (ORE), \url{https://www.opensourcerisk.org}
+
+\bibitem{intradaypower} LSEG: ORE Intraday Power Curves and Derivatives, Open Source Risk Engine documentation,
+  30 April 2026, \texttt{Docs/intradaypower.pdf}
 
 \bibitem{qlhighres} Spanderen, Klaus: preprocessor directive to toggle between the existing date class and a high
   resolution datetime class, QuantLib commit f5b2d8f, 12 August 2015,
