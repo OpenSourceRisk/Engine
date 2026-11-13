@@ -14,6 +14,24 @@ This build requires:
 - gcc
 - Boost
 - CMake
+- SWIG and the Python development headers (required to build the ORE Python
+  bindings, which are enabled by default via `ORE_BUILD_SWIG=ON`)
+- Eigen3 (optional but recommended; if it is not found, ORE is built without
+  Eigen support)
+- Doxygen (optional; used to generate the API documentation when
+  `ORE_BUILD_DOC=ON`, which is the default)
+
+On Ubuntu/Debian these can be installed with:
+
+    sudo apt install build-essential cmake libboost-all-dev
+    sudo apt install swig python3-dev
+    sudo apt install libeigen3-dev
+    sudo apt install doxygen
+
+If you do not need the Python bindings or the documentation, you can instead
+disable them when configuring (see below), e.g:
+
+    cmake .. -DORE_BUILD_SWIG=OFF -DORE_BUILD_DOC=OFF
 
 # Source code
 
