@@ -22,3 +22,5 @@
 - [Credit Model](creditmodel.pdf): A proof of concept credit portfolio model implementation in ORE inspired by Credit Metrics, integrating credit and market risk
 
 - [Formula Coupon](formulabasedcoupon.pdf): Predecessor of the scripted trade framework, supporting composite coupons with multiple indices
+
+- [Intraday Options](intradayoptions.pdf): Valuation of options expiring on the valuation date using intraday date resolution, including intraday time weighting of volatility and current limitations

@@ -84,7 +84,9 @@ public:
     const string& payoffType2() const { return payoffType2_; }
     const string& style() const { return style_; }
     const bool& payoffAtExpiry() const { return payoffAtExpiry_; }
-    const vector<string>& exerciseDates() const { return exerciseDates_; }
+    /*! In builds with QL_HIGH_RESOLUTION_DATE a date-only exercise date gets a time of day: the trade's
+        Envelope/AdditionalFields/ExpiryCutTime if present, else 23:59:59 UTC when it falls on the evaluation day. */
+    vector<string> exerciseDates() const;
     const ScheduleData& exerciseDatesSchedule() const { return exerciseDatesSchedule_; }
     const string& noticePeriod() const { return noticePeriod_; }
     const string& noticeCalendar() const { return noticeCalendar_; }
@@ -171,6 +173,12 @@ private:
     string cashSettlementCurrency_;
     string cashSettlementFxIndex_; 
     string cashSettlementFixingDate_; 
+#ifdef QL_HIGH_RESOLUTION_DATE
+    string expiryCutTime_;
+    string tradeId_;
+    string tradeType_;
+    mutable bool expiryDayWarned_ = false;
+#endif
 };
 
 // Helper class to build an exercise instance for Bermudan swaptions and related instruments from given option data.

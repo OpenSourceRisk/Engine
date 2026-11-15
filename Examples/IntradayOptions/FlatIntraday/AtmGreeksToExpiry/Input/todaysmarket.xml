@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<!-- Only what the SP5 options need. In-currency OIS discounting keeps curve building free of past
+     fixings, see the note on fixings in the Readme. -->
+<TodaysMarket>
+  <Configuration id="default">
+    <DiscountingCurvesId>default</DiscountingCurvesId>
+    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
+  </Configuration>
+  <DiscountingCurves id="default">
+    <DiscountingCurve currency="EUR">Yield/EUR/EUR1D</DiscountingCurve>
+    <DiscountingCurve currency="USD">Yield/USD/USD1D</DiscountingCurve>
+  </DiscountingCurves>
+  <IndexForwardingCurves id="default">
+    <Index name="EUR-EONIA">Yield/EUR/EUR1D</Index>
+    <Index name="USD-FedFunds">Yield/USD/USD1D</Index>
+  </IndexForwardingCurves>
+  <FxSpots id="default">
+    <FxSpot pair="EURUSD">FX/EUR/USD</FxSpot>
+  </FxSpots>
+  <EquityCurves id="default">
+    <EquityCurve name="SP5">Equity/USD/SP5</EquityCurve>
+  </EquityCurves>
+  <EquityVolatilities id="default">
+    <EquityVolatility name="SP5">EquityVolatility/USD/SP5</EquityVolatility>
+  </EquityVolatilities>
+</TodaysMarket>

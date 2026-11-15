@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<PricingEngines>
+  <Product type="Swap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingSwapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="FxOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="FxDigitalOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="FxTouchOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticDigitalAmericanEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CommodityOption">
+    <Model>BlackScholes</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="EquityOption">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="EquityDigitalOption">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="EquityBarrierOption">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>AnalyticBarrierEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <!-- Hours before the cut the usual settings fail:
+       - TimeGridPerYear times the time to expiry gives a single time step, which overprices the put by 23% at
+         seven hours. TimeGridMinimumSize restores a fine grid.
+       - Crank-Nicolson (Douglas) steps without damping keep the oscillations from the payoff kink, and the
+         spot gamma comes out 60% too high at twelve hours. Damping steps remove them.
+       - With EnforceMonotoneVariance and 100 steps the put prices 0.5% below its European twin at 14:00. -->
+  <Product type="EquityOptionAmerican">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>FdBlackScholesVanillaEngine</Engine>
+    <EngineParameters>
+      <Parameter name="Scheme">Douglas</Parameter>
+      <Parameter name="TimeGridPerYear">100</Parameter>
+      <Parameter name="TimeGridMinimumSize">1000</Parameter>
+      <Parameter name="XGrid">1000</Parameter>
+      <Parameter name="DampingSteps">4</Parameter>
+      <Parameter name="EnforceMonotoneVariance">false</Parameter>
+    </EngineParameters>
+  </Product>
+</PricingEngines>

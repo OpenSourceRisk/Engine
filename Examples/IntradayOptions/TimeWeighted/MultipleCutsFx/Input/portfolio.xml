@@ -1,0 +1,112 @@
+<?xml version="1.0"?>
+<Portfolio>
+  <!-- ATM EURUSD calls, EUR 1000 against USD at the shared market spot 1.132337, one per cut on 2016-02-05 -->
+  <!-- Tokyo cut, 15:00 Tokyo = 06:00 UTC -->
+  <Trade id="EURUSD_CALL_0600">
+    <TradeType>FxOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields>
+        <ExpiryCutTime>06:00Z</ExpiryCutTime>
+      </AdditionalFields>
+    </Envelope>
+    <FxOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2016-02-05</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <BoughtCurrency>EUR</BoughtCurrency>
+      <BoughtAmount>1000</BoughtAmount>
+      <SoldCurrency>USD</SoldCurrency>
+      <SoldAmount>1132.337</SoldAmount>
+    </FxOptionData>
+  </Trade>
+  <!-- 08:30 New York = 13:30 UTC, a cut at the US data release -->
+  <Trade id="EURUSD_CALL_1330">
+    <TradeType>FxOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields>
+        <ExpiryCutTime>13:30Z</ExpiryCutTime>
+      </AdditionalFields>
+    </Envelope>
+    <FxOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2016-02-05</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <BoughtCurrency>EUR</BoughtCurrency>
+      <BoughtAmount>1000</BoughtAmount>
+      <SoldCurrency>USD</SoldCurrency>
+      <SoldAmount>1132.337</SoldAmount>
+    </FxOptionData>
+  </Trade>
+  <!-- New York cut, 10:00 New York = 15:00 UTC -->
+  <Trade id="EURUSD_CALL_1500">
+    <TradeType>FxOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields>
+        <ExpiryCutTime>15:00Z</ExpiryCutTime>
+      </AdditionalFields>
+    </Envelope>
+    <FxOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2016-02-05</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <BoughtCurrency>EUR</BoughtCurrency>
+      <BoughtAmount>1000</BoughtAmount>
+      <SoldCurrency>USD</SoldCurrency>
+      <SoldAmount>1132.337</SoldAmount>
+    </FxOptionData>
+  </Trade>
+  <!-- Control: New York cut next week, interpolated between the keyed 1W and 1M pillars -->
+  <Trade id="EURUSD_CALL_1500_NEXTWEEK">
+    <TradeType>FxOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields>
+        <ExpiryCutTime>15:00Z</ExpiryCutTime>
+      </AdditionalFields>
+    </Envelope>
+    <FxOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2016-02-12</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <BoughtCurrency>EUR</BoughtCurrency>
+      <BoughtAmount>1000</BoughtAmount>
+      <SoldCurrency>USD</SoldCurrency>
+      <SoldAmount>1132.337</SoldAmount>
+    </FxOptionData>
+  </Trade>
+</Portfolio>

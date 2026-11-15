@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<Simulation>
+
+  <Market>
+
+    <BaseCurrency>EUR</BaseCurrency>
+
+    <Currencies>
+      <Currency>EUR</Currency>
+      <Currency>USD</Currency>
+    </Currencies>
+
+    <YieldCurves>
+      <Configuration>
+        <Tenors>1D,1W,1M,6M,1Y,2Y,3Y,5Y,7Y,10Y</Tenors>
+        <Interpolation>LogLinear</Interpolation>
+        <Extrapolation>Y</Extrapolation>
+      </Configuration>
+    </YieldCurves>
+
+    <Indices>
+      <Index>EUR-EONIA</Index>
+      <Index>USD-FedFunds</Index>
+    </Indices>
+
+    <Equities>
+      <Names>
+        <Name>SP5</Name>
+      </Names>
+      <DividendTenors>1D,1W,1M,6M,1Y,2Y</DividendTenors>
+    </Equities>
+
+    <!-- Not simulated: the simulation market then wraps the pricing surface itself. A simulated surface is
+         resampled onto tenors from the asof, which cannot hold the pillar at today's cut. -->
+    <EquityVolatilities>
+      <Simulate>false</Simulate>
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <Names>
+        <Name>SP5</Name>
+      </Names>
+      <Expiries>1D,1W,1M,6M,1Y,2Y,3Y,5Y</Expiries>
+      <SimulateATMOnly>true</SimulateATMOnly>
+    </EquityVolatilities>
+
+  </Market>
+
+</Simulation>

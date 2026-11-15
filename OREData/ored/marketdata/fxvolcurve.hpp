@@ -27,6 +27,7 @@
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/correlationcurve.hpp>
 #include <ored/marketdata/curvespec.hpp>
+#include <ored/marketdata/expiry.hpp>
 #include <ored/marketdata/fxtriangulation.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
@@ -74,7 +75,7 @@ private:
     Handle<YieldTermStructure> domYts_, forYts_;
     string sourceCcy_, targetCcy_;
     std::vector<string> expiriesNoDuplicates_;
-    std::vector<Period> expiries_;
+    std::vector<QuantLib::ext::shared_ptr<Expiry>> expiries_;
     QuantLib::ext::optional<Wildcard> expiriesWildcard_;
     Size spotDays_;
     Calendar spotCalendar_;

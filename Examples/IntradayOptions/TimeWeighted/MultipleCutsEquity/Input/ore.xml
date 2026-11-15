@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<ORE>
+  <Setup>
+    <!-- Requires an ORE build with QL_HIGH_RESOLUTION_DATE=ON. Times are UTC. run_multiple_cuts_equity.py
+         writes one copy of this file per asof, replacing the asof, market data file and output path. -->
+    <Parameter name="asofDate">ASOF</Parameter>
+    <Parameter name="inputPath">Input</Parameter>
+    <Parameter name="outputPath">OUTPUT</Parameter>
+    <Parameter name="logFile">log.txt</Parameter>
+    <Parameter name="logMask">31</Parameter>
+    <Parameter name="marketDataFile">MARKET</Parameter>
+    <Parameter name="fixingDataFile">../../../../Input/fixings_20160205.txt</Parameter>
+    <Parameter name="implyTodaysFixings">N</Parameter>
+    <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
+    <Parameter name="conventionsFile">../../../../Input/conventions.xml</Parameter>
+    <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
+    <Parameter name="pricingEnginesFile">../../../../Input/pricingengine.xml</Parameter>
+    <Parameter name="portfolioFile">portfolio.xml</Parameter>
+    <Parameter name="observationModel">None</Parameter>
+  </Setup>
+  <Markets>
+    <Parameter name="pricing">default</Parameter>
+  </Markets>
+  <Analytics>
+    <Analytic type="npv">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="baseCurrency">USD</Parameter>
+      <Parameter name="outputFileName">npv.csv</Parameter>
+    </Analytic>
+    <Analytic type="additionalResults">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="outputFileName">additional_results.csv</Parameter>
+      <Parameter name="additionalResultsReportPrecision">12</Parameter>
+    </Analytic>
+  </Analytics>
+</ORE>

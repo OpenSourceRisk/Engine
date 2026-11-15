@@ -551,9 +551,10 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
 
     calculate();
 
-    /* minimum supported time is 1D, i.e. if t is smaller, we return the vol at 1D */
+    /* minimum supported time is 1D, i.e. if t is smaller, we return the vol at 1D, or at the first expiry if that is
+       earlier (an intraday expiry) */
 
-    t = std::max(t, 1.0 / 365.0);
+    t = std::max(t, std::min(1.0 / 365.0, expiryTimes_.front()));
 
     t = t <= expiryTimes_.back() ? t : expiryTimes_.back();
 

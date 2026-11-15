@@ -1245,9 +1245,18 @@ public:
     //! Constructor
     FXOptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string unitCcy, string ccy,
                   Period expiry, string strike)
+        : FXOptionQuote(value, asofDate, name, quoteType, unitCcy, ccy, QuantLib::ext::make_shared<ExpiryPeriod>(expiry),
+                        strike) {}
+
+    //! Constructor for an expiry given as a tenor or as a date (or a datetime in the intraday build)
+    FXOptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string unitCcy, string ccy,
+                  const QuantLib::ext::shared_ptr<Expiry>& expiry, string strike)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::FX_OPTION), unitCcy_(unitCcy), ccy_(ccy),
           expiry_(expiry), strike_(strike) {
 
+        QL_REQUIRE(QuantLib::ext::dynamic_pointer_cast<ExpiryPeriod>(expiry_) ||
+                       QuantLib::ext::dynamic_pointer_cast<ExpiryDate>(expiry_),
+                   "FXOptionQuote " << name << ": expiry must be a tenor or a date");
         Strike s = parseStrike(strike);
         QL_REQUIRE(s.type == Strike::Type::DeltaCall || s.type == Strike::Type::DeltaPut ||
                        s.type == Strike::Type::ATM || s.type == Strike::Type::BF || s.type == Strike::Type::RR || s.type == Strike::Type::Absolute,
@@ -1263,13 +1272,20 @@ public:
     //@{
     const string& unitCcy() const { return unitCcy_; }
     const string& ccy() const { return ccy_; }
-    const Period& expiry() const { return expiry_; }
+    //! The tenor of a quote with a tenor expiry, throws for a quote with a date expiry
+    const Period& expiry() const {
+        auto p = QuantLib::ext::dynamic_pointer_cast<ExpiryPeriod>(expiry_);
+        QL_REQUIRE(p, "FXOptionQuote " << name_ << " has a date expiry, use optionExpiry()");
+        return p->expiryPeriod();
+    }
+    //! The expiry as a tenor (ExpiryPeriod) or as a date (ExpiryDate)
+    const QuantLib::ext::shared_ptr<Expiry>& optionExpiry() const { return expiry_; }
     const string& strike() const { return strike_; }
     //@}
 private:
     string unitCcy_;
     string ccy_;
-    Period expiry_;
+    QuantLib::ext::shared_ptr<Expiry> expiry_;
     string strike_; // TODO: either: ATM, 25RR, 25BF. Should be an enum?
     //! Serialization
     friend class boost::serialization::access;

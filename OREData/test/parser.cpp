@@ -44,6 +44,8 @@ using namespace std;
 
 using ore::data::CommodityForwardQuote;
 using ore::data::CommoditySpotQuote;
+using ore::data::ExpiryDate;
+using ore::data::ExpiryPeriod;
 using ore::data::FXOptionQuote;
 using ore::data::MarketDatum;
 using ore::data::parseMarketDatum;
@@ -330,6 +332,55 @@ BOOST_AUTO_TEST_CASE(testDatePeriodParsing) {
     // BOOST_CHECK_THROW(ore::data::parseDateOrPeriod(".3M", d, p, isDate), QuantLib::Error);
     BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("3M.", d, p, isDate), QuantLib::Error);
     BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("xx17-06-05", d, p, isDate), QuantLib::Error);
+}
+
+BOOST_AUTO_TEST_CASE(testDateTimeParsing) {
+
+    BOOST_TEST_MESSAGE("Testing DateTime parsing...");
+
+#ifdef QL_HIGH_RESOLUTION_DATE
+    BOOST_CHECK_EQUAL(ore::data::parseDate("2017-06-05T16:30"), Date(5, Jun, 2017, 16, 30, 0));
+    BOOST_CHECK_EQUAL(ore::data::parseDate("2017-06-05T16:30:15"), Date(5, Jun, 2017, 16, 30, 15));
+    BOOST_CHECK_EQUAL(ore::data::parseDate("2017-06-05T16:30:15.25"), Date(5, Jun, 2017, 16, 30, 15, 250, 0));
+    BOOST_CHECK_EQUAL(ore::data::parseDate("2017-06-05T16:30:15.000001"),
+                      Date(5, Jun, 2017, 16, 30, 15, 0, 1));
+    BOOST_CHECK_EQUAL(ore::data::parseDate("20170605T00:00"), Date(5, Jun, 2017));
+    BOOST_CHECK_EQUAL(ore::data::parseDate("05/06/2017T09:05"), Date(5, Jun, 2017, 9, 5, 0));
+    // a datetime is ordered within its day
+    BOOST_CHECK(ore::data::parseDate("2017-06-05T09:00") < ore::data::parseDate("2017-06-05T16:00"));
+    BOOST_CHECK(ore::data::parseDate("2017-06-05T09:00") > Date(5, Jun, 2017));
+
+    BOOST_CHECK_THROW(ore::data::parseDate("2017-06-05T"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDate("2017-06-05T16"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDate("2017-06-05T24:00"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDate("2017-06-05T16:60"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDate("2017-06-05T16:30:60"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDate("2017-06-05T16:30:15.1234567"), QuantLib::Error);
+
+    // UTC designator and offsets, the result is in UTC
+    BOOST_CHECK_EQUAL(ore::data::parseDate("2017-06-05T16:30Z"), Date(5, Jun, 2017, 16, 30, 0));
+    BOOST_CHECK_EQUAL(ore::data::parseDate("2017-06-05T16:30+01:00"), Date(5, Jun, 2017, 15, 30, 0));
+    BOOST_CHECK_EQUAL(ore::data::parseDate("2016-02-05T16:00-05:00"), Date(5, Feb, 2016, 21, 0, 0));
+    BOOST_CHECK_EQUAL(ore::data::parseDate("2016-02-05T16:00:30.5+05:30"), Date(5, Feb, 2016, 10, 30, 30, 500, 0));
+    BOOST_CHECK_EQUAL(ore::data::parseDate("2016-02-05T16:00+00:00"), Date(5, Feb, 2016, 16, 0, 0));
+    BOOST_CHECK_EQUAL(ore::data::parseDate("2016-02-05T22:00-05:00"), Date(6, Feb, 2016, 3, 0, 0));
+    BOOST_CHECK_EQUAL(ore::data::parseDate("2016-02-05T06:00+09:00"), Date(4, Feb, 2016, 21, 0, 0));
+    BOOST_CHECK_EQUAL(ore::data::parseDate("2016-12-31T20:00-05:00"), Date(1, Jan, 2017, 1, 0, 0));
+    BOOST_CHECK_EQUAL(ore::data::parseDate("2016-03-01T01:00+02:00"), Date(29, Feb, 2016, 23, 0, 0));
+
+    BOOST_CHECK_THROW(ore::data::parseDate("2017-06-05T16:30+5"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDate("2017-06-05T16:30+05"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDate("2017-06-05T16:30+0500"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDate("2017-06-05T16:30+24:00"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDate("2017-06-05T16:30+05:60"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDate("2017-06-05T16:30Z+01:00"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDate("2017-06-05T16:30z"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDate("2017-06-05T16:30 +01:00"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDate("2017-06-05T16:30T17:00"), QuantLib::Error);
+#else
+    BOOST_CHECK_THROW(ore::data::parseDate("2017-06-05T16:30"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDate("2017-06-05T16:30-05:00"), QuantLib::Error);
+#endif
 }
 
 BOOST_AUTO_TEST_CASE(testMarketDatumParsing) {
@@ -903,6 +954,43 @@ BOOST_AUTO_TEST_CASE(testMarketDatumParsing) {
             BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/1M", value), Error);
             BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/2019-12", value), Error);
         }
+    }
+
+    // expiry given as a tenor, a date or (intraday build) a datetime
+    {
+        Date d(29, Jul, 2019);
+        auto fxOption = [&d](const string& input) {
+            return QuantLib::ext::dynamic_pointer_cast<FXOptionQuote>(parseMarketDatum(d, input, 0.1));
+        };
+
+        auto q = fxOption("FX_OPTION/RATE_LNVOL/EUR/USD/1M/ATM");
+        BOOST_REQUIRE(q);
+        BOOST_CHECK(*q->optionExpiry() == ExpiryPeriod(1 * Months));
+        BOOST_CHECK(q->expiry() == 1 * Months);
+
+        q = fxOption("FX_OPTION/RATE_LNVOL/EUR/USD/2019-08-07/ATM");
+        BOOST_REQUIRE(q);
+        BOOST_CHECK(*q->optionExpiry() == ExpiryDate(Date(7, Aug, 2019)));
+        BOOST_CHECK_THROW(q->expiry(), Error);
+        BOOST_CHECK_EQUAL(q->strike(), "ATM");
+
+        auto clone = QuantLib::ext::dynamic_pointer_cast<FXOptionQuote>(q->clone());
+        BOOST_REQUIRE(clone);
+        BOOST_CHECK(*clone->optionExpiry() == ExpiryDate(Date(7, Aug, 2019)));
+
+#ifdef QL_HIGH_RESOLUTION_DATE
+        q = fxOption("FX_OPTION/RATE_LNVOL/EUR/USD/2019-07-29T15:00Z/25RR");
+        BOOST_REQUIRE(q);
+        BOOST_CHECK(*q->optionExpiry() == ExpiryDate(Date(29, Jul, 2019, 15, 0, 0)));
+        BOOST_CHECK_EQUAL(q->strike(), "25RR");
+#else
+        BOOST_CHECK_THROW(fxOption("FX_OPTION/RATE_LNVOL/EUR/USD/2019-07-29T15:00Z/ATM"), Error);
+#endif
+
+        BOOST_CHECK_THROW(fxOption("FX_OPTION/RATE_LNVOL/EUR/USD/c1/ATM"), Error);
+        BOOST_CHECK_THROW(fxOption("FX_OPTION/RATE_LNVOL/EUR/USD/1X/ATM"), Error);
+        BOOST_CHECK_THROW(fxOption("FX_OPTION/RATE_LNVOL/EUR/USD/2019-13-01/ATM"), Error);
+        BOOST_CHECK_THROW(fxOption("FX_OPTION/RATE_LNVOL/EUR/USD/2019-07-29T25:00Z/ATM"), Error);
     }
 }
 

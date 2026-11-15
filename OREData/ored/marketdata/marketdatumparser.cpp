@@ -622,7 +622,7 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
         QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName);
         const string& unitCcy = tokens[2];
         const string& ccy = tokens[3];
-        Period expiry = parsePeriod(tokens[4]);
+        auto expiry = parseExpiry(tokens[4]);
         const string& strike = tokens[5];
         return QuantLib::ext::make_shared<FXOptionQuote>(value, asof, datumName, quoteType, unitCcy, ccy, expiry, strike);
     }

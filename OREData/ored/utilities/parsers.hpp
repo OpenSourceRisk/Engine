@@ -78,6 +78,10 @@ using std::string;
 
 //! Convert std::string to QuantLib::Date
 /*!
+  Accepts an ISO 8601 datetime <date>T<HH:MM[:SS[.ffffff]]>[Z|+HH:MM|-HH:MM], where <date> is any supported date
+  format. The result is in UTC: an offset is subtracted, and a datetime without designator is taken as UTC. A time of
+  day requires a build with QL_HIGH_RESOLUTION_DATE.
+
   \ingroup utilities
 */
 QuantLib::Date parseDate(const string& s);

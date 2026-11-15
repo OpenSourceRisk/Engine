@@ -125,6 +125,8 @@ public:
     const string& fxIndexTag() const { return fxIndexTag_; }
     const ReportConfig& reportConfig() const { return reportConfig_; }
     double butterflyErrorTolerance() const { return butterflyErrorTolerance_; }
+    //! If true, a decreasing ATM total variance between consecutive pillars fails the build, else it is logged
+    bool enforceMonotoneVariance() const { return enforceMonotoneVariance_; }
     const QuantLib::ext::optional<ParametricSmileConfiguration>& parametricSmileConfiguration() const {
         return parametricSmileConfiguration_;
     }
@@ -149,6 +151,7 @@ public:
     string& baseVolatility2() { return baseVolatility2_; }
     string& fxIndexTag() { return fxIndexTag_; }
     double& butterflyErrorTolerance() { return butterflyErrorTolerance_; }
+    bool& enforceMonotoneVariance() { return enforceMonotoneVariance_; }
     //@}
 
 private:
@@ -176,6 +179,7 @@ private:
     string fxIndexTag_;
     ReportConfig reportConfig_;
     double butterflyErrorTolerance_ = 0.01;
+    bool enforceMonotoneVariance_ = false;
     QuantLib::ext::optional<ParametricSmileConfiguration> parametricSmileConfiguration_;
 };
 

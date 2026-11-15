@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<Portfolio>
+  <!-- ATM options expiring at 16:00 on the asof date (asof is 15:00, so one hour to expiry) -->
+  <Trade id="SAMEDAY_CALL_1600">
+    <TradeType>EquityOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields>
+        <ExpiryCutTime>16:00Z</ExpiryCutTime>
+      </AdditionalFields>
+    </Envelope>
+    <EquityOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2016-02-05</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <Name>SP5</Name>
+      <Currency>USD</Currency>
+      <Strike>2147.56</Strike>
+      <Quantity>1</Quantity>
+    </EquityOptionData>
+  </Trade>
+  <Trade id="SAMEDAY_PUT_1600">
+    <TradeType>EquityOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields>
+        <ExpiryCutTime>16:00Z</ExpiryCutTime>
+      </AdditionalFields>
+    </Envelope>
+    <EquityOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Put</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2016-02-05</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <Name>SP5</Name>
+      <Currency>USD</Currency>
+      <Strike>2147.56</Strike>
+      <Quantity>1</Quantity>
+    </EquityOptionData>
+  </Trade>
+  <!-- Control: a two year option with a date-only expiry, priced from the same intraday asof -->
+  <Trade id="CONTROL_CALL_2Y">
+    <TradeType>EquityOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <EquityOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2018-02-05</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <Name>SP5</Name>
+      <Currency>USD</Currency>
+      <Strike>2147.56</Strike>
+      <Quantity>1</Quantity>
+    </EquityOptionData>
+  </Trade>
+</Portfolio>

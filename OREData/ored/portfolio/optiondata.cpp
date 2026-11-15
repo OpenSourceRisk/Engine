@@ -19,10 +19,13 @@
 #include <ored/portfolio/optiondata.hpp>
 
 #include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/structuredtradewarning.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 
 #include <qle/instruments/rebatedexercise.hpp>
+
+#include <rapidxml.hpp>
 
 using namespace QuantLib;
 
@@ -68,6 +71,37 @@ void OptionData::fromXML(XMLNode* node) {
         exerciseDatesSchedule_.fromXML(exScheduleNode);
     }
 
+#ifdef QL_HIGH_RESOLUTION_DATE
+    expiryCutTime_.clear();
+    tradeId_.clear();
+    tradeType_.clear();
+    expiryDayWarned_ = false;
+    XMLNode* trade = node->parent();
+    while (trade && XMLUtils::getNodeName(trade) != "Trade" && XMLUtils::getNodeName(trade) != "SubTrade")
+        trade = trade->parent();
+    if (trade) {
+        tradeId_ = XMLUtils::getAttribute(trade, "id");
+        tradeType_ = XMLUtils::getAnyChildValue(trade, {"TradeType", "SubTradeType"}, false);
+        if (XMLNode* envelope = XMLUtils::getChildNode(trade, "Envelope"))
+            if (XMLNode* additionalFields = XMLUtils::getChildNode(envelope, "AdditionalFields"))
+                expiryCutTime_ = XMLUtils::getChildValue(additionalFields, "ExpiryCutTime", false);
+    }
+    if (!expiryCutTime_.empty()) {
+        try {
+            parseDate("2000-01-01T" + expiryCutTime_);
+        } catch (const std::exception& e) {
+            QL_FAIL("invalid Envelope/AdditionalFields/ExpiryCutTime \"" << expiryCutTime_
+                                                                         << "\": " << e.what());
+        }
+        QL_REQUIRE(!exScheduleNode, "Envelope/AdditionalFields/ExpiryCutTime requires ExerciseDates, it cannot be "
+                                    "combined with an ExerciseSchedule");
+        for (const auto& d : exerciseDates_)
+            QL_REQUIRE(d.find('T') == string::npos, "Envelope/AdditionalFields/ExpiryCutTime cannot be combined with "
+                                                    "the time of day in ExerciseDate \""
+                                                        << d << "\"");
+    }
+#endif
+
     automaticExercise_ = QuantLib::ext::nullopt;
     if (XMLNode* n = XMLUtils::getChildNode(node, "AutomaticExercise"))
         automaticExercise_ = parseBool(XMLUtils::getNodeValue(n));
@@ -92,6 +126,37 @@ void OptionData::fromXML(XMLNode* node) {
         cashSettlementFxIndex_ = XMLUtils::getChildValue(settlementDataNode, "FXIndex", true);
         cashSettlementFixingDate_ = XMLUtils::getChildValue(settlementDataNode, "FixingDate", false);
     }
+}
+
+vector<string> OptionData::exerciseDates() const {
+#ifdef QL_HIGH_RESOLUTION_DATE
+    const Date eval = Settings::instance().evaluationDate();
+    const Date evalDay(eval.dayOfMonth(), eval.month(), eval.year());
+    vector<string> resolved;
+    resolved.reserve(exerciseDates_.size());
+    for (const auto& d : exerciseDates_) {
+        if (d.find('T') != string::npos) {
+            resolved.push_back(d);
+        } else if (!expiryCutTime_.empty()) {
+            resolved.push_back(d + "T" + expiryCutTime_);
+        } else if (parseDate(d) == evalDay) {
+            if (!expiryDayWarned_) {
+                StructuredTradeWarningMessage(tradeId_, tradeType_, "Expiry cut time missing",
+                                              "ExerciseDate " + d +
+                                                  " is the evaluation date and Envelope/AdditionalFields/"
+                                                  "ExpiryCutTime is not set, using 23:59:59 UTC")
+                    .log();
+                expiryDayWarned_ = true;
+            }
+            resolved.push_back(d + "T23:59:59Z");
+        } else {
+            resolved.push_back(d);
+        }
+    }
+    return resolved;
+#else
+    return exerciseDates_;
+#endif
 }
 
 XMLNode* OptionData::toXML(XMLDocument& doc) const {
