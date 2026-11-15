@@ -170,24 +170,35 @@ FxVolPillar fxVolPillar(const QuantLib::ext::shared_ptr<ore::data::Expiry>& expi
     return {expiry, fxVolPillarDate(*expiry, asof, calendar), token};
 }
 
-// Orders pillars by date, equal dates by tenor as the tenor sort did before, and drops pillars at or before the asof
+// Orders pillars by date, equal dates by tenor, or by token where tenors do not compare (e.g. 1M and 30D) or one
+// expiry is a date, drops pillars at or before the asof and of pillars with equal dates keeps the last
 void sortAndDropExpired(std::vector<FxVolPillar>& pillars, const Date& asof, const string& curveId) {
     std::stable_sort(pillars.begin(), pillars.end(), [](const FxVolPillar& a, const FxVolPillar& b) {
         if (a.date != b.date)
             return a.date < b.date;
         auto pa = QuantLib::ext::dynamic_pointer_cast<ore::data::ExpiryPeriod>(a.expiry);
         auto pb = QuantLib::ext::dynamic_pointer_cast<ore::data::ExpiryPeriod>(b.expiry);
-        return pa && pb && pa->expiryPeriod() < pb->expiryPeriod();
+        if (pa && pb) {
+            try {
+                return pa->expiryPeriod() < pb->expiryPeriod();
+            } catch (...) {
+            }
+        }
+        return a.token < b.token;
     });
-    pillars.erase(std::remove_if(pillars.begin(), pillars.end(),
-                                 [&asof, &curveId](const FxVolPillar& p) {
-                                     if (p.date > asof)
-                                         return false;
-                                     LOG("FXVolCurve " << curveId << ": expiry " << p.token
-                                                       << " is not after the asof, ignored");
-                                     return true;
-                                 }),
-                  pillars.end());
+    std::vector<FxVolPillar> kept;
+    for (Size i = 0; i < pillars.size(); ++i) {
+        const FxVolPillar& p = pillars[i];
+        if (p.date <= asof) {
+            LOG("FXVolCurve " << curveId << ": expiry " << p.token << " is not after the asof, ignored");
+        } else if (i + 1 < pillars.size() && pillars[i + 1].date == p.date) {
+            LOG("FXVolCurve " << curveId << ": expiry " << p.token << " has the same date as expiry "
+                              << pillars[i + 1].token << ", ignored");
+        } else {
+            kept.push_back(p);
+        }
+    }
+    pillars.swap(kept);
 }
 
 // Pillars of the explicitly configured expiries, sorted, de-duplicated and filtered in FXVolCurve::init()

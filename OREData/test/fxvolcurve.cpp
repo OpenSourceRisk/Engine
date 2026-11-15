@@ -268,6 +268,36 @@ BOOST_AUTO_TEST_CASE(testFxVolAtmDatePillars) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(testFxVolTenorAndDateOnSameDay) {
+
+    BOOST_TEST_MESSAGE("Testing FX vol curves with a tenor and a date expiry on the same day");
+
+    // 1W from the asof is 7 Jan 2019, so 1W and 2019-01-07 are one pillar, and the date sorts after the tenor
+    Date asof = marketDate;
+    Date sameDay(7, Jan, 2019);
+    BOOST_REQUIRE_EQUAL(TARGET().advance(asof, 1 * Weeks), sameDay);
+    vector<pair<Date, Real>> pillars = {{sameDay, 0.062}, {TARGET().advance(asof, 1 * Months), 0.07117}};
+
+    for (auto const& expiries : {string("*"), string("1W,2019-01-07,1M")}) {
+        BOOST_TEST_MESSAGE("Expiries " << expiries);
+        auto market =
+            fxVolMarket(asof, atmConfig(expiries), {{"1W/ATM", 0.06}, {"2019-01-07/ATM", 0.062}, {"1M/ATM", 0.07117}});
+        checkAtmPillars(market->fxVol("EURUSD"), asof, pillars);
+    }
+
+    auto delta = fxVolMarket(asof, smileConfig("<SmileType>Delta</SmileType><Deltas>25P,ATM,25C</Deltas>"),
+                             {{"1W/25P", 0.065}, {"1W/ATM", 0.06}, {"1W/25C", 0.059},
+                              {"2019-01-07/25P", 0.066}, {"2019-01-07/ATM", 0.062}, {"2019-01-07/25C", 0.061},
+                              {"1M/25P", 0.075}, {"1M/ATM", 0.07117}, {"1M/25C", 0.07}});
+    checkDeltaSurfaceAtm(delta->fxVol("EURUSD"), sameDay, 0.062);
+
+    auto bfrr = fxVolMarket(asof, smileConfig("<SmileType>BFRR</SmileType><SmileDelta>25</SmileDelta>"),
+                            {{"1W/ATM", 0.06}, {"1W/25RR", -0.004}, {"1W/25BF", 0.0015},
+                             {"2019-01-07/ATM", 0.062}, {"2019-01-07/25RR", -0.004}, {"2019-01-07/25BF", 0.0015},
+                             {"1M/ATM", 0.07117}, {"1M/25RR", -0.005}, {"1M/25BF", 0.002}});
+    checkBfrrSurfaceAtm(bfrr, asof, sameDay, 0.062);
+}
+
 BOOST_AUTO_TEST_CASE(testFxVolSmileDatePillars) {
 
     BOOST_TEST_MESSAGE("Testing FX delta and BFRR vol surfaces with a date pillar");
