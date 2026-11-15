@@ -141,9 +141,13 @@ private:
     QuantLib::ext::shared_ptr<StructuredLogger> logger_ = QuantLib::ext::make_shared<StructuredLogger>();
 };
 
+// The error names the pillars where the ATM total variance decreases
 bool nonDecreasingVarianceError(const Error& e) {
     BOOST_TEST_MESSAGE(e.what());
-    return string(e.what()).find("variance must be non-decreasing") != string::npos;
+    string what(e.what());
+    return what.find("variance must be non-decreasing") != string::npos &&
+           what.find("ATM total variance decreases from") != string::npos && what.find("1M") != string::npos &&
+           what.find("2M") != string::npos;
 }
 
 // Checks the ATM vol at each pillar equals its quote, with the pillar a tenor from asof or a date

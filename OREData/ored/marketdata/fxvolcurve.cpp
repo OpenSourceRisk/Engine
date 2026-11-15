@@ -201,7 +201,7 @@ void sortAndDropExpired(std::vector<FxVolPillar>& pillars, const Date& asof, con
     pillars.swap(kept);
 }
 
-// Pillars of the explicitly configured expiries, sorted, de-duplicated and filtered in FXVolCurve::init()
+// Pillars of the given expiries, in the given order
 std::vector<FxVolPillar> configuredPillars(const std::vector<string>& expiries, const Date& asof,
                                            const Calendar& calendar) {
     std::vector<FxVolPillar> pillars;
@@ -705,7 +705,8 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
                     quotes[idx].push_back(q);
                 }
             } else {
-                auto it = expiries[idx].begin() + pillarIndex(expiries[idx], *q->optionExpiry());
+                auto it = std::find_if(expiries[idx].begin(), expiries[idx].end(),
+                                       [&q](const FxVolPillar& p) { return *p.expiry == *q->optionExpiry(); });
                 if (it != expiries[idx].end()) {
                     // we have a hit
                     quotes[idx].push_back(q);
@@ -780,12 +781,10 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
         }
 
         bool enforce = config->enforceMonotoneVariance();
-        if (!enforce) {
-            vector<string> names;
-            for (auto const& q : quotes[0])
-                names.push_back(q->name());
-            checkAtmVariance(spec.name(), asof, dates, names, vols[0], dc, false);
-        }
+        vector<string> names;
+        for (auto const& q : quotes[0])
+            names.push_back(q->name());
+        checkAtmVariance(spec.name(), asof, dates, names, vols[0], dc, enforce);
 
         if (isATM) {
             // ATM, decreasing variance is allowed unless enforceMonotoneVariance is set
@@ -1103,41 +1102,10 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
         if (expiriesWildcard_) {
             DLOG("expiry wildcard is used: " << expiriesWildcard_->pattern());
         } else {
-            std::vector<std::tuple<std::string, QuantLib::ext::shared_ptr<Expiry>, Date>> tmp;
-            for (auto const& e : config->expiries()) {
-                auto p = parseExpiry(e);
-                Date d = fxVolPillarDate(*p, asof, config->calendar());
-                if (d <= asof) {
-                    LOG("FXVolCurve " << spec.name() << ": expiry " << e << " is not after the asof, ignored");
-                    continue;
-                }
-                tmp.push_back(std::make_tuple(e, p, d));
-            }
-            std::sort(tmp.begin(), tmp.end(),
-                      [](const std::tuple<std::string, QuantLib::ext::shared_ptr<Expiry>, Date>& a,
-                         const std::tuple<std::string, QuantLib::ext::shared_ptr<Expiry>, Date>& b) -> bool {
-                          if (std::get<2>(a) == std::get<2>(b)) {
-                              try {
-                                  // equal dates => compare periods (might throw!)
-                                  auto pa = QuantLib::ext::dynamic_pointer_cast<ExpiryPeriod>(std::get<1>(a));
-                                  auto pb = QuantLib::ext::dynamic_pointer_cast<ExpiryPeriod>(std::get<1>(b));
-                                  QL_REQUIRE(pa && pb, "not both tenors");
-                                  return pa->expiryPeriod() < pb->expiryPeriod();
-                              } catch (...) {
-                                  // period comparison not possible => compare the strings
-                                  return std::get<0>(a) < std::get<0>(b);
-                              }
-                          }
-                          // different dates => compare them
-                          return std::get<2>(a) < std::get<2>(b);
-                      });
-            Date lastDate = Date::maxDate();
-            for (Size i = tmp.size(); i > 0; --i) {
-                if (std::get<2>(tmp[i - 1]) == lastDate)
-                    continue;
-                expiriesNoDuplicates_.insert(expiriesNoDuplicates_.begin(), std::get<0>(tmp[i - 1]));
-                lastDate = std::get<2>(tmp[i - 1]);
-            }
+            auto pillars = configuredPillars(config->expiries(), asof, config->calendar());
+            sortAndDropExpired(pillars, asof, spec.name());
+            for (auto const& p : pillars)
+                expiriesNoDuplicates_.push_back(p.token);
 
             DLOG("expiries in configuration:")
             for (auto const& e : config->expiries()) {
