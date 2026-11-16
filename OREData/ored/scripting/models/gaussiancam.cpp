@@ -890,16 +890,22 @@ RandomVariable GaussianCam::getFutureBarrierProb(const std::string& index, const
         }
     } else if (ind1 != Null<Size>() && ind2 != Null<Size>()) {
         // triangulated FX: log(S1/S2) = log(S1/base) - log(S2/base)
-        // variance = var1 + var2 - 2 * corr * sqrt(var1 * var2)
+        // Integrate the instantaneous cross variance over the observation interval.
         Size ccyIdx1 = cam_->ccyIndex(parseCurrency(indexCurrencies_[ind1]));
         Size ccyIdx2 = cam_->ccyIndex(parseCurrency(indexCurrencies_[ind2]));
         QL_REQUIRE(ccyIdx1 > 0 && ccyIdx2 > 0,
                    "GaussianCam::getFutureBarrierProb(): triangulated FX index leg is base currency");
-        Real var1 = cam_->fxbs(ccyIdx1 - 1)->variance(t2) - cam_->fxbs(ccyIdx1 - 1)->variance(t1);
-        Real var2 = cam_->fxbs(ccyIdx2 - 1)->variance(t2) - cam_->fxbs(ccyIdx2 - 1)->variance(t1);
         Real corr = cam_->correlation(CrossAssetModel::AssetType::FX, ccyIdx1 - 1,
                                       CrossAssetModel::AssetType::FX, ccyIdx2 - 1);
-        variance = var1 + var2 - 2.0 * corr * std::sqrt(var1 * var2);
+        const auto fx1 = cam_->fxbs(ccyIdx1 - 1);
+        const auto fx2 = cam_->fxbs(ccyIdx2 - 1);
+        variance = (*cam_->integrator())(
+            [&fx1, &fx2, corr](const Real t) {
+                const Real s1 = fx1->sigma(t), s2 = fx2->sigma(t);
+                // This nonnegative form avoids cancellation for nearly identical legs.
+                return (s1 - s2) * (s1 - s2) + 2.0 * (1.0 - corr) * s1 * s2;
+            },
+            t1, t2);
     }
     // if both ind1 and ind2 are null (trivial CCY-CCY FX), variance stays zero
 

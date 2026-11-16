@@ -41,9 +41,60 @@
 #include <ql/pricingengines/swaption/blackswaptionengine.hpp>
 #include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
 
+#include <qle/models/fxbspiecewiseconstantparametrization.hpp>
+#include <qle/models/irlgm1fconstantparametrization.hpp>
+#include <ql/currencies/america.hpp>
+#include <ql/currencies/europe.hpp>
+#include <ql/math/comparison.hpp>
+#include <ql/quotes/simplequote.hpp>
+#include <ql/settings.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/time/daycounters/actual365fixed.hpp>
+#include <algorithm>
+#include <cmath>
+#include <numeric>
+
 using namespace ore::data;
 using namespace QuantLib;
 using namespace QuantExt;
+
+namespace {
+
+struct CrossFxBarrierCase {
+    std::string name;
+    Array knots1, sigmas1, knots2, sigmas2;
+    Real correlation;
+    int startDay, endDay;
+    Real barrier = 1.2;
+};
+
+Real crossFxVolatility(const Array& knots, const Array& sigmas, Real t) {
+    return sigmas[std::upper_bound(knots.begin(), knots.end(), t) - knots.begin()];
+}
+
+Real integratedCrossFxVariance(const CrossFxBarrierCase& c, Real t1, Real t2) {
+    std::vector<Real> cuts{t1, t2};
+    for (const auto& knots : {c.knots1, c.knots2}) {
+        for (Real knot : knots) {
+            if (t1 < knot && knot < t2)
+                cuts.push_back(knot);
+        }
+    }
+    std::sort(cuts.begin(), cuts.end());
+    cuts.erase(std::unique(cuts.begin(), cuts.end()), cuts.end());
+    Real result = 0.0;
+    for (Size i = 1; i < cuts.size(); ++i) {
+        const Real t = 0.5 * (cuts[i - 1] + cuts[i]);
+        const Real s1 = crossFxVolatility(c.knots1, c.sigmas1, t);
+        const Real s2 = crossFxVolatility(c.knots2, c.sigmas2, t);
+        // Exact segment sum, independent of CAM's numerical integrator and marginal variances.
+        result += (cuts[i] - cuts[i - 1]) *
+                  ((s1 - s2) * (s1 - s2) + 2.0 * (1.0 - c.correlation) * s1 * s2);
+    }
+    return result;
+}
+
+} // namespace
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::data::TopLevelFixture)
 
@@ -310,6 +361,83 @@ BOOST_AUTO_TEST_CASE(testRepricingCalibrationInstruments) {
                            << calibrationExpiries[i] << " analyticalPrice= " << analyticalPrice << " scriptPrice="
                            << scriptPrice << " relative error " << (scriptPrice - analyticalPrice) / analyticalPrice);
         BOOST_CHECK_CLOSE(analyticalPrice, scriptPrice, 1.0);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(testCrossFxBarrierIntegratedVariance) {
+    const std::vector<CrossFxBarrierCase> cases{
+        {"shifted unequal knots", {.25, .7}, {.1, .22, .15}, {.4}, {.23, .11}, .6, 55, 347},
+        {"zero duration", {.5}, {.1, .3}, {.5}, {.3, .1}, .8, 250, 250},
+        {"perfect correlation", {.5}, {.1, .3}, {.5}, {.3, .1}, 1.0, 0, 365},
+        {"perfect anticorrelation", {.5}, {.1, .3}, {.5}, {.3, .1}, -1.0, 0, 365},
+        {"nearly identical", {.5}, {.1, .3}, {.5}, {.1000000001, .3000000001}, 1.0 - 1E-12, 0, 365,
+         1.0000001},
+        {"identical", {.5}, {.1, .3}, {.5}, {.1, .3}, 1.0, 0, 365},
+        {"proportional", {.4}, {.1, .3}, {.4}, {.2, .6}, .8, 0, 365},
+        {"constant", {}, {.1}, {}, {.3}, .8, 0, 365},
+        {"zero correlation", {.5}, {.1, .3}, {.5}, {.3, .1}, 0.0, 0, 365},
+        {"same common bucket", {.5}, {.1, .3}, {.5}, {.3, .1}, .8, 37, 146},
+        {"crossing", {.5}, {.1, .3}, {.5}, {.3, .1}, .8, 0, 365}};
+
+    const Date today(1, January, 2025);
+    Settings::instance().evaluationDate() = today;
+    const Handle<YieldTermStructure> curve(ext::make_shared<FlatForward>(today, 0.0, Actual365Fixed()));
+    const Handle<Quote> spot(ext::make_shared<SimpleQuote>(1.0));
+
+    for (const auto& c : cases) {
+        BOOST_TEST_CONTEXT(c.name) {
+            const Date d1 = today + c.startDay, d2 = today + c.endDay;
+            const Real t1 = c.startDay / 365.0, t2 = c.endDay / 365.0;
+            std::vector<ext::shared_ptr<Parametrization>> parametrizations;
+            for (const Currency& currency : std::vector<Currency>{USDCurrency(), EURCurrency(), GBPCurrency()}) {
+                parametrizations.push_back(ext::make_shared<Lgm1fConstantParametrization<YieldTermStructure>>(
+                    currency, curve, 0.0, .01));
+            }
+            parametrizations.push_back(ext::make_shared<FxBsPiecewiseConstantParametrization>(
+                EURCurrency(), spot, c.knots1, c.sigmas1));
+            parametrizations.push_back(ext::make_shared<FxBsPiecewiseConstantParametrization>(
+                GBPCurrency(), spot, c.knots2, c.sigmas2));
+            Matrix correlation(5, 5, 0.0);
+            for (Size i = 0; i < 5; ++i)
+                correlation[i][i] = 1.0;
+            correlation[3][4] = correlation[4][3] = c.correlation;
+            const auto cam = ext::make_shared<CrossAssetModel>(parametrizations, correlation);
+            const auto fallback = ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig());
+            const auto model = ext::make_shared<GaussianCam>(
+                Handle<CrossAssetModel>(cam), 1, std::vector<std::string>{"USD", "EUR", "GBP"},
+                std::vector<Handle<YieldTermStructure>>{curve, curve, curve}, std::vector<Handle<Quote>>{spot, spot},
+                std::vector<std::pair<std::string, ext::shared_ptr<InterestRateIndex>>>{},
+                std::vector<std::pair<std::string, ext::shared_ptr<ZeroInflationIndex>>>{},
+                std::vector<std::string>{"FX-GENERIC-EUR-USD", "FX-GENERIC-GBP-USD"},
+                std::vector<std::string>{"EUR", "GBP"}, std::set<Date>{today, d1, d2}, fallback,
+                std::vector<Size>{0, 1, 2, 3, 4});
+
+            // Constant injected log states isolate the bridge variance from sampling and simulation error.
+            std::vector<Real> times{0.0, t1, t2};
+            std::sort(times.begin(), times.end());
+            times.erase(std::unique(times.begin(), times.end()), times.end());
+            std::vector<size_t> indexes(times.size());
+            std::iota(indexes.begin(), indexes.end(), 0);
+            std::vector<std::vector<RandomVariable>> paths(
+                times.size(), std::vector<RandomVariable>(5, RandomVariable(1, 0.0)));
+            model->injectPaths(&times, &paths, &indexes, &indexes);
+
+            const Real hit = model->barrierProbability("FX-GENERIC-EUR-GBP", d1, d2,
+                                                      RandomVariable(1, c.barrier), true)[0];
+            const Real inverseHit = model->barrierProbability("FX-GENERIC-GBP-EUR", d1, d2,
+                                                             RandomVariable(1, 1.0 / c.barrier), false)[0];
+            const Real variance = integratedCrossFxVariance(c, t1, t2);
+            if (c.name == "crossing")
+                BOOST_CHECK_SMALL(variance - .052, 1E-14);
+            const Real expectedHit = close_enough(variance, 0.0)
+                                         ? 0.0
+                                         : std::exp(-2.0 * std::pow(std::log(c.barrier), 2) / variance);
+            const Real tolerance = c.name == "nearly identical" ? 2E-9 : 2E-10;
+            BOOST_CHECK(std::isfinite(hit) && hit >= 0.0 && hit <= 1.0);
+            BOOST_CHECK_SMALL(hit - expectedHit, tolerance);
+            BOOST_CHECK_SMALL(inverseHit - expectedHit, tolerance);
+            BOOST_CHECK_SMALL(hit - inverseHit, tolerance);
+        }
     }
 }
 
