@@ -1339,7 +1339,20 @@ Array regressionCoefficients(
         const Matrix& V = svd->V();
         const Matrix& U = svd->U();
         const Array& w = svd->singularValues();
-        Real threshold = r.size() * QL_EPSILON * w[0];
+        // Filtered-out paths are zero-padded implementation rows, not observations.
+        // Use the dimensions of the effective design matrix for the rank tolerance.
+        Size sampleSize = r.size();
+        if (filter.initialised()) {
+            if (filter.deterministic()) {
+                sampleSize = filter[0] ? filter.size() : 0;
+            } else {
+                sampleSize = 0;
+                for (Size i = 0; i < filter.size(); ++i)
+                    if (filter[i])
+                        ++sampleSize;
+            }
+        }
+        Real threshold = std::max(sampleSize, basisFn.size()) * QL_EPSILON * w[0];
         res = Array(basisFn.size(), 0.0);
         for (Size i = 0; i < basisFn.size(); ++i) {
             if (w[i] > threshold) {
