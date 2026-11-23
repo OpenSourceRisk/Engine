@@ -1315,10 +1315,6 @@ Array regressionCoefficients(
                 a.copyToMatrixCol(A, j);
         }
 
-        if (filter.size() > 0) {
-            r = applyFilter(r, filter);
-        }
-
         if (regressionMethod == RandomVariableRegressionMethod::SVD) {
             svd = ext::make_shared<SVD>(A);
         } else if (regressionMethod == RandomVariableRegressionMethod::QR) {
@@ -1332,6 +1328,10 @@ Array regressionCoefficients(
     } else {
         cache->getMatrixDecomposition(cacheKey, qr_q, qr_r, qr_lipvt, svd);
     }
+
+    // Each response must use the same row mask as the cached design matrix.
+    if (filter.initialised())
+        r = applyFilter(std::move(r), filter);
 
     Array b = static_cast<Array>(r);
     Array res;

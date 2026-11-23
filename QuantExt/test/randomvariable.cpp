@@ -34,6 +34,7 @@
 #include <boost/math/distributions/normal.hpp>
 
 #include <iostream>
+#include <limits>
 #include <iomanip>
 
 using namespace QuantExt;
@@ -136,6 +137,45 @@ BOOST_AUTO_TEST_CASE(testSvdRegressionExcludedRows) {
                                                 RandomVariableRegressionMethod::SVD);
     BOOST_CHECK_SMALL(single[0] - 1.0, 1e-12);
     BOOST_CHECK_SMALL(single[1], 1e-12);
+}
+
+BOOST_AUTO_TEST_CASE(testCachedRegressionMasksEachResponse) {
+    BOOST_TEST_MESSAGE("Testing filtered QR and SVD against changed cached responses...");
+
+    // Both masked-in regressors are orthogonal to the constant, each other,
+    // and the response residual x*z. Their exact coefficients are known.
+    const Size n = 17;
+    const Size included[] = {1, 3, 5, 8, 10, 12, 14, 16};
+    RandomVariable one(n, 1.0), x(n, 0.0), z(n, 0.0);
+    Filter filter(n, false);
+    for (Size i = 0; i < 8; ++i) {
+        filter.set(included[i], true);
+        x.set(included[i], i & 1 ? -1.0 : 1.0);
+        z.set(included[i], i & 2 ? -1.0 : 1.0);
+    }
+    const std::vector<const RandomVariable*> regressors = {&one, &x, &z};
+    const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>> basis = {
+        [](const auto& r) { return *r[0]; }, [](const auto& r) { return *r[1]; },
+        [](const auto& r) { return *r[2]; }};
+
+    for (auto method : {RandomVariableRegressionMethod::SVD, RandomVariableRegressionMethod::QR}) {
+        RandomVariableRegressionCache cache;
+        Real intercept = 0.0;
+        for (Real omitted : {std::numeric_limits<Real>::quiet_NaN(), std::numeric_limits<Real>::infinity(),
+                             -std::numeric_limits<Real>::infinity()}) {
+            ++intercept;
+            RandomVariable y(n, omitted);
+            y.expand();
+            for (const auto i : included)
+                y.set(i, intercept + 2.0 * x[i] - 3.0 * z[i] + x[i] * z[i] / 8.0);
+            const Array c = regressionCoefficients(y, regressors, basis, filter, method, "", &cache);
+            BOOST_CHECK_SMALL(c[0] - intercept, 1e-12);
+            BOOST_CHECK_SMALL(c[1] - 2.0, 1e-12);
+            BOOST_CHECK_SMALL(c[2] + 3.0, 1e-12);
+        }
+        BOOST_CHECK_EQUAL(cache.miss(), 1);
+        BOOST_CHECK_EQUAL(cache.hit(), 2);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(testFilter) {
