@@ -24,6 +24,9 @@
 // clang-format on
 
 #include <qle/math/randomvariable.hpp>
+#include <qle/math/randomvariable_regressioncache.hpp>
+
+#include <cmath>
 
 #include <ql/time/date.hpp>
 #include <ql/pricingengines/blackformula.hpp>
@@ -31,6 +34,7 @@
 #include <boost/math/distributions/normal.hpp>
 
 #include <iostream>
+#include <limits>
 #include <iomanip>
 
 using namespace QuantExt;
@@ -39,6 +43,140 @@ using namespace QuantLib;
 BOOST_AUTO_TEST_SUITE(QuantExtTestSuite)
 
 BOOST_AUTO_TEST_SUITE(RandomVariableTest)
+
+BOOST_AUTO_TEST_CASE(testSvdRegressionExcludedRows) {
+    BOOST_TEST_MESSAGE("Testing SVD regression rank tolerance with excluded paths...");
+
+    const Real small = std::ldexp(1.0, -49);
+    const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>> basis = {
+        [](const std::vector<const RandomVariable*>& x) { return *x[0]; },
+        [](const std::vector<const RandomVariable*>& x) { return *x[1]; }};
+
+    // The two active rows form diag(1, 2^-49). Padding with excluded paths
+    // must not change which singular values are retained.
+    for (Size n : {Size(2), Size(16), Size(64)}) {
+        RandomVariable x(n, 17.0), z(n, -23.0), y(n, 101.0);
+        Filter active(n, false);
+        // Interleave padding as well as append it: active-row positions are irrelevant.
+        const Size first = n == 2 ? 0 : n / 2;
+        const Size second = n - 1;
+        x.set(first, 1.0);
+        z.set(first, 0.0);
+        y.set(first, 1.0);
+        x.set(second, 0.0);
+        z.set(second, small);
+        y.set(second, small);
+        active.set(first, true);
+        active.set(second, true);
+        const std::vector<const RandomVariable*> regressors = {&x, &z};
+        RandomVariableRegressionCache cache;
+        for (Size repeat = 0; repeat < 2; ++repeat) {
+            const Array c = regressionCoefficients(y, regressors, basis, active,
+                RandomVariableRegressionMethod::SVD, "", &cache);
+            BOOST_CHECK_SMALL(c[0] - 1.0, 1e-12);
+            BOOST_CHECK_SMALL(c[1] - 1.0, 1e-12);
+        }
+        BOOST_CHECK_EQUAL(cache.miss(), 1);
+        BOOST_CHECK_EQUAL(cache.hit(), 1);
+        const Array qr = regressionCoefficients(y, regressors, basis, active,
+                                                RandomVariableRegressionMethod::QR);
+        BOOST_CHECK_SMALL(qr[0] - 1.0, 1e-12);
+        BOOST_CHECK_SMALL(qr[1] - 1.0, 1e-12);
+    }
+
+    // Compare with physically compacted active observations on a non-diagonal,
+    // overdetermined design, rather than relying only on the diagonal witness.
+    RandomVariable compactX(4, 0.0), compactZ(4, 0.0), compactY(4, 0.0);
+    RandomVariable paddedX(20, 37.0), paddedZ(20, -19.0), paddedY(20, 73.0);
+    Filter included(20, false);
+    const Real xs[] = {1.0, 2.0, -1.0, 3.0};
+    const Real zs[] = {2.0, -1.0, 4.0, 1.0};
+    const Real ys[] = {3.0, 7.0, -2.0, 11.0};
+    const Size positions[] = {2, 8, 13, 19};
+    for (Size i = 0; i < 4; ++i) {
+        compactX.set(i, xs[i]);
+        compactZ.set(i, zs[i]);
+        compactY.set(i, ys[i]);
+        paddedX.set(positions[i], xs[i]);
+        paddedZ.set(positions[i], zs[i]);
+        paddedY.set(positions[i], ys[i]);
+        included.set(positions[i], true);
+    }
+    const Array compact = regressionCoefficients(compactY, {&compactX, &compactZ}, basis,
+                                                 Filter(), RandomVariableRegressionMethod::SVD);
+    const Array padded = regressionCoefficients(paddedY, {&paddedX, &paddedZ}, basis,
+                                                included, RandomVariableRegressionMethod::SVD);
+    for (Size i = 0; i < compact.size(); ++i)
+        BOOST_CHECK_SMALL(padded[i] - compact[i], 1e-12);
+
+    // Unfiltered zero-valued observations still count. This patch does not
+    // redefine the existing rank policy for an unfiltered design matrix.
+    RandomVariable x(16, 0.0), z(16, 0.0), y(16, 0.0);
+    x.set(0, 1.0);
+    z.set(1, small);
+    y.set(0, 1.0);
+    y.set(1, small);
+    const std::vector<const RandomVariable*> regressors = {&x, &z};
+    for (const Filter& f : {Filter(), Filter(16, true)}) {
+        const Array c = regressionCoefficients(y, regressors, basis, f,
+                                                RandomVariableRegressionMethod::SVD);
+        BOOST_CHECK_SMALL(c[0] - 1.0, 1e-12);
+        BOOST_CHECK_SMALL(c[1], 1e-12);
+    }
+
+    const Array none = regressionCoefficients(y, regressors, basis, Filter(16, false),
+                                              RandomVariableRegressionMethod::SVD);
+    BOOST_CHECK_SMALL(none[0], 1e-12);
+    BOOST_CHECK_SMALL(none[1], 1e-12);
+
+    // Fewer active observations than columns: keep the column-count floor
+    // in max(active rows, columns); the pseudoinverse is still well-defined.
+    Filter one(16, false);
+    one.set(0, true);
+    const Array single = regressionCoefficients(y, regressors, basis, one,
+                                                RandomVariableRegressionMethod::SVD);
+    BOOST_CHECK_SMALL(single[0] - 1.0, 1e-12);
+    BOOST_CHECK_SMALL(single[1], 1e-12);
+}
+
+BOOST_AUTO_TEST_CASE(testCachedRegressionMasksEachResponse) {
+    BOOST_TEST_MESSAGE("Testing filtered QR and SVD against changed cached responses...");
+
+    // Both masked-in regressors are orthogonal to the constant, each other,
+    // and the response residual x*z. Their exact coefficients are known.
+    const Size n = 17;
+    const Size included[] = {1, 3, 5, 8, 10, 12, 14, 16};
+    RandomVariable one(n, 1.0), x(n, 0.0), z(n, 0.0);
+    Filter filter(n, false);
+    for (Size i = 0; i < 8; ++i) {
+        filter.set(included[i], true);
+        x.set(included[i], i & 1 ? -1.0 : 1.0);
+        z.set(included[i], i & 2 ? -1.0 : 1.0);
+    }
+    const std::vector<const RandomVariable*> regressors = {&one, &x, &z};
+    const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>> basis = {
+        [](const auto& r) { return *r[0]; }, [](const auto& r) { return *r[1]; },
+        [](const auto& r) { return *r[2]; }};
+
+    for (auto method : {RandomVariableRegressionMethod::SVD, RandomVariableRegressionMethod::QR}) {
+        RandomVariableRegressionCache cache;
+        Real intercept = 0.0;
+        for (Real omitted : {std::numeric_limits<Real>::quiet_NaN(), std::numeric_limits<Real>::infinity(),
+                             -std::numeric_limits<Real>::infinity()}) {
+            ++intercept;
+            RandomVariable y(n, omitted);
+            y.expand();
+            for (const auto i : included)
+                y.set(i, intercept + 2.0 * x[i] - 3.0 * z[i] + x[i] * z[i] / 8.0);
+            const Array c = regressionCoefficients(y, regressors, basis, filter, method, "", &cache);
+            BOOST_CHECK_SMALL(c[0] - intercept, 1e-12);
+            BOOST_CHECK_SMALL(c[1] - 2.0, 1e-12);
+            BOOST_CHECK_SMALL(c[2] + 3.0, 1e-12);
+        }
+        BOOST_CHECK_EQUAL(cache.miss(), 1);
+        BOOST_CHECK_EQUAL(cache.hit(), 2);
+    }
+}
 
 BOOST_AUTO_TEST_CASE(testFilter) {
     BOOST_TEST_MESSAGE("Testing filter...");
