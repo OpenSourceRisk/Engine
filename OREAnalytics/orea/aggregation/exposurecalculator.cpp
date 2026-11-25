@@ -96,6 +96,10 @@ void ExposureCalculator::build() {
             nettingSetMporPositiveFlow_[nettingSetId] = vector<vector<Real>>(dates_.size(), vector<Real>(cube_->samples(), 0.0));
             nettingSetMporNegativeFlow_[nettingSetId] = vector<vector<Real>>(dates_.size(), vector<Real>(cube_->samples(), 0.0));
         }
+        vector<vector<Real>>& nsDefaultValue = nettingSetDefaultValue_[nettingSetId];
+        vector<vector<Real>>& nsCloseOutValue = nettingSetCloseOutValue_[nettingSetId];
+        vector<vector<Real>>& nsMporPositiveFlow = nettingSetMporPositiveFlow_[nettingSetId];
+        vector<vector<Real>>& nsMporNegativeFlow = nettingSetMporNegativeFlow_[nettingSetId];
 
         // Identify the next break date if provided, default is trade maturity.
         Date nextBreakDate = trade->maturity();
@@ -199,10 +203,10 @@ void ExposureCalculator::build() {
                 Real npv = exposureProfilesUseCloseOutValues_ ? closeOutValue : defaultValue;
                 epe[j + 1] += std::max(npv, 0.0) / cube_->samples();
                 ene[j + 1] += std::max(-npv, 0.0) / cube_->samples();
-                nettingSetDefaultValue_[nettingSetId][j][k] += defaultValue;
-                nettingSetCloseOutValue_[nettingSetId][j][k] += closeOutValue;
-                nettingSetMporPositiveFlow_[nettingSetId][j][k] += positiveCashFlow;
-                nettingSetMporNegativeFlow_[nettingSetId][j][k] += negativeCashFlow;
+                nsDefaultValue[j][k] += defaultValue;
+                nsCloseOutValue[j][k] += closeOutValue;
+                nsMporPositiveFlow[j][k] += positiveCashFlow;
+                nsMporNegativeFlow[j][k] += negativeCashFlow;
                 distribution[k] = npv;
                 if (multiPath_) {
                     exposureCube_->set(std::max(npv, 0.0), tradeId, d, k, ExposureIndex::EPE);
